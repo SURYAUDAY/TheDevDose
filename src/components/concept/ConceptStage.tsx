@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Mascot } from "@/components/character/Mascot";
 import { MetaphorScene } from "@/components/character/MetaphorScene";
 import { ConceptVisual } from "./visualizers";
+import { track } from "@/lib/track";
 
 /**
  * The prominent, always-visible animated stage at the top of a topic. When a
@@ -15,10 +16,12 @@ export function ConceptStage({
   conceptKey,
   metaphorTemplateId,
   seedText,
+  topicId,
 }: {
   conceptKey: string | null;
   metaphorTemplateId: string;
   seedText: string;
+  topicId?: string;
 }) {
   const [replay, setReplay] = useState(0);
   const hasConcept = Boolean(conceptKey);
@@ -33,7 +36,10 @@ export function ConceptStage({
               {hasConcept ? "See how it works" : "Think of it like…"}
             </span>
             <button
-              onClick={() => setReplay((r) => r + 1)}
+              onClick={() => {
+                setReplay((r) => r + 1);
+                track("scene_replayed", { topicId, conceptKey });
+              }}
               className="rounded-md px-2 py-1 text-xs text-slate-400 transition hover:bg-white/5 hover:text-slate-200"
             >
               ↻ Replay

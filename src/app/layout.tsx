@@ -3,11 +3,24 @@ import Link from "next/link";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { AuthNav } from "@/components/AuthNav";
+import { LangToggle } from "@/components/LangToggle";
 
 export const metadata: Metadata = {
-  title: "TheDevDose — Interview Prep, One Dose at a Time",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://thedevdose.vercel.app"),
+  title: {
+    default: "TheDevDose — Interview Prep, One Dose at a Time",
+    template: "%s · TheDevDose",
+  },
   description:
-    "Animated, playground-driven interview prep across JavaScript, TypeScript, React, Backend, GenAI, and System Design.",
+    "Animated, playground-driven interview prep across JavaScript, TypeScript, React, Backend, GenAI, and System Design — 448 topics with runnable code and spaced repetition.",
+  openGraph: {
+    title: "TheDevDose — Interview Prep, One Dose at a Time",
+    description:
+      "Animated explanations, a real in-browser code playground, and a sequential roadmap from JavaScript to System Design.",
+    type: "website",
+    siteName: "TheDevDose",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({
@@ -28,12 +41,13 @@ export default function RootLayout({
                 </span>
               </Link>
               <nav className="flex items-center gap-1 text-sm text-slate-400">
-                <Link href="/learn" className="rounded-md px-3 py-1.5 hover:bg-white/5 hover:text-slate-100">
+                <Link href="/learn" className="hidden rounded-md px-3 py-1.5 hover:bg-white/5 hover:text-slate-100 sm:block">
                   Roadmap
                 </Link>
-                <Link href="/review" className="rounded-md px-3 py-1.5 hover:bg-white/5 hover:text-slate-100">
+                <Link href="/review" className="hidden rounded-md px-3 py-1.5 hover:bg-white/5 hover:text-slate-100 sm:block">
                   Review
                 </Link>
+                <LangToggle />
                 <AuthNav />
               </nav>
             </div>

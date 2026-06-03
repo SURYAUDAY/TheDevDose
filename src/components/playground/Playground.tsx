@@ -285,8 +285,9 @@ export function Playground({
       </div>
 
       {/* Editor */}
+      <div className="h-60 sm:h-80">
       <MonacoEditor
-        height="320px"
+        height="100%"
         theme="vs-dark"
         language={monacoLang}
         value={sources[active]}
@@ -309,6 +310,7 @@ export function Playground({
           smoothScrolling: true,
         }}
       />
+      </div>
 
       {/* Output */}
       <div className="border-t border-white/10">

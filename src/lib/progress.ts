@@ -109,6 +109,9 @@ async function bumpStreakAndActivity(userId: string) {
     create: { userId, current, longest, lastActiveDay: today },
     update: { current, longest, lastActiveDay: today },
   });
+  if (current > (streak?.current ?? 0)) {
+    await prisma.event.create({ data: { userId, name: "streak_incremented", props: { current } } });
+  }
 }
 
 /** Mark a topic complete for a user, enforcing the unlock invariant. Idempotent. */
@@ -147,9 +150,12 @@ export async function completeTopic(
     update: { status: "completed", completedAt: now },
   });
   await prisma.user.update({ where: { id: userId }, data: { xp: { increment: XP_PER_TOPIC } } });
+  await prisma.event.create({
+    data: { userId, name: "xp_awarded", props: { amount: XP_PER_TOPIC, reason: "topic_completed", topicId } },
+  });
   await bumpStreakAndActivity(userId);
 
-  // Phase-completion achievement + timestamp.
+  // Phase-completion achievement + timestamp + unlock of the next phase.
   const after = await getProgressSummary(userId, true);
   if (after.phaseStatus[topic.phaseId] === "completed") {
     await prisma.achievement
@@ -160,6 +166,13 @@ export async function completeTopic(
       create: { userId, phaseId: topic.phaseId, status: "completed", completedAt: now },
       update: { status: "completed", completedAt: now },
     });
+    await prisma.event.create({ data: { userId, name: "phase_completed", props: { phaseId: topic.phaseId } } });
+    const phases = getPhases();
+    const idx = phases.findIndex((p) => p.id === topic.phaseId);
+    const nextPhase = phases[idx + 1];
+    if (nextPhase) {
+      await prisma.event.create({ data: { userId, name: "phase_unlocked", props: { phaseId: nextPhase.id } } });
+    }
   }
 
   await prisma.event.create({

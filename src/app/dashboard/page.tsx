@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { dbConfigured } from "@/lib/db";
 import { getLearnerDashboard } from "@/lib/analytics";
 import { ProgressRing, StatCard, Heatmap } from "@/components/charts/Charts";
+import { AchievementsGrid } from "@/components/AchievementsGrid";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard — TheDevDose" };
@@ -84,6 +85,15 @@ export default async function DashboardPage() {
         </h2>
         <Heatmap data={d.activity} />
       </section>
+
+      <div className="mt-8">
+        <AchievementsGrid
+          completed={d.overall.completed}
+          longestStreak={d.streak.longest}
+          codeRuns={d.codeRuns.total}
+          phasesCompleted={d.phases.filter((p) => p.pct >= 100).length}
+        />
+      </div>
     </Shell>
   );
 }

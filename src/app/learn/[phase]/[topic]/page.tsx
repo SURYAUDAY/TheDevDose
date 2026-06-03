@@ -13,11 +13,13 @@ import { Prose } from "@/components/Prose";
 import { CodeBlock } from "@/components/CodeBlock";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Playground } from "@/components/playground/Playground";
+import { ReactLivePreview } from "@/components/playground/ReactLivePreview";
 import { CompleteButton } from "@/components/progress/CompleteButton";
 import { ConceptStage } from "@/components/concept/ConceptStage";
 import { resolveConceptKey } from "@/components/concept/concepts";
 import { generateMcqs } from "@/lib/quiz";
 import { TopicQuiz } from "@/components/quiz/TopicQuiz";
+import { TopicViewTracker } from "@/components/analytics/Trackers";
 
 export function generateStaticParams() {
   const params: { phase: string; topic: string }[] = [];
@@ -34,7 +36,13 @@ export async function generateMetadata({
 }) {
   const { phase, topic } = await params;
   const t = getTopic(phase, topic);
-  return { title: t ? `${t.title} — TheDevDose` : "TheDevDose" };
+  if (!t) return { title: "Topic" };
+  const desc = t.sections.simple_en.replace(/\s+/g, " ").slice(0, 155).trim();
+  return {
+    title: t.title,
+    description: desc,
+    openGraph: { title: `${t.title} · TheDevDose`, description: desc, type: "article" },
+  };
 }
 
 export default async function TopicPage({
@@ -53,6 +61,7 @@ export default async function TopicPage({
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-10">
+      <TopicViewTracker topicId={t.id} phaseId={t.phaseId} />
       <nav className="flex items-center gap-2 text-sm text-slate-400">
         <Link href={`/learn/${p.id}`} className="hover:text-slate-200">
           {p.title}
@@ -85,6 +94,7 @@ export default async function TopicPage({
           conceptKey={resolveConceptKey(t.slug, t.title, t.phaseCode)}
           metaphorTemplateId={t.metaphor.templateId}
           seedText={t.metaphor.seedText}
+          topicId={t.id}
         />
       </div>
 
@@ -118,6 +128,11 @@ export default async function TopicPage({
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             {plan.runnable ? "Code playground" : "Code"}
           </h2>
+
+          {/* Live, interactive render of the real React component. */}
+          {plan.reference?.language === "jsx" && (
+            <ReactLivePreview source={plan.reference.source} />
+          )}
 
           {/* Illustrative "real" code that can't run in-browser (JSX, SDK calls, …). */}
           {plan.reference && (

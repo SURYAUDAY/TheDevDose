@@ -14,7 +14,7 @@ export async function generateMetadata({
 }) {
   const { phase } = await params;
   const p = getPhase(phase);
-  return { title: p ? `${p.title} — TheDevDose` : "TheDevDose" };
+  return p ? { title: p.title, description: p.blurb } : { title: "Phase" };
 }
 
 export default async function PhasePage({
