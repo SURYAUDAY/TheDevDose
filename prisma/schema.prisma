@@ -45,6 +45,7 @@ model User {
   achievements   Achievement[]
   events         Event[]
   reviews        Review[]
+  savedCode      SavedCode[]
 }
 
 // --- NextAuth standard tables (used when OAuth is added later) ---
@@ -181,6 +182,21 @@ model Event {
   @@index([name])
   @@index([userId])
   @@index([ts])
+}
+
+// A learner's edited playground code, saved per (user, topic, file) so it syncs
+// across devices and survives navigation. Anonymous users fall back to localStorage.
+model SavedCode {
+  id        String   @id @default(cuid())
+  userId    String
+  topicId   String
+  fileName  String
+  source    String
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId, fileName])
+  @@index([userId, topicId])
 }
 
 // Spaced-repetition schedule (SM-2). One row per (user, card). Card content is

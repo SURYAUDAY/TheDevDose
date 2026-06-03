@@ -28,8 +28,11 @@ interface LogLine {
 }
 
 type Status = "idle" | "running" | "done" | "error" | "timeout";
+type SaveState = "idle" | "saving" | "saved" | "local";
 
 const RUN_TIMEOUT_MS = 8000;
+const SAVE_DEBOUNCE_MS = 900;
+const lsKey = (topicId: string, name: string) => `tdd:code:${topicId}:${name}`;
 const MONACO_LANG: Partial<Record<Language, string>> = {
   javascript: "javascript",
   typescript: "typescript",
@@ -63,13 +66,87 @@ export function Playground({
   const [logs, setLogs] = useState<LogLine[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [duration, setDuration] = useState<number | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [authed, setAuthed] = useState(false);
 
   const workerRef = useRef<Worker | null>(null);
   const runIdRef = useRef(0);
+  const editedRef = useRef(false);
 
   useEffect(() => {
     return () => workerRef.current?.terminate();
   }, []);
+
+  // Restore saved code on open (backend when signed in, else localStorage).
+  useEffect(() => {
+    if (!topicId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/code?topicId=${encodeURIComponent(topicId)}`, { cache: "no-store" });
+        const data = await res.json();
+        if (cancelled) return;
+        if (data.authed) {
+          setAuthed(true);
+          if (data.files && Object.keys(data.files).length) {
+            setSources(files.map((f) => data.files[f.name] ?? f.source));
+            setSaveState("saved");
+            return;
+          }
+        }
+        // localStorage fallback (anonymous or no server-side copy)
+        if (typeof window !== "undefined") {
+          let any = false;
+          const restored = files.map((f) => {
+            const v = window.localStorage.getItem(lsKey(topicId, f.name));
+            if (v != null) any = true;
+            return v ?? f.source;
+          });
+          if (any) {
+            setSources(restored);
+            setSaveState("local");
+          }
+        }
+      } catch {
+        /* offline / not signed in — keep originals */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topicId]);
+
+  // Autosave edits (debounced). Only fires after a real edit, never on restore.
+  useEffect(() => {
+    if (!topicId || !editedRef.current) return;
+    const handle = setTimeout(async () => {
+      if (typeof window !== "undefined") {
+        files.forEach((f, i) => window.localStorage.setItem(lsKey(topicId, f.name), sources[i]));
+      }
+      if (!authed) {
+        setSaveState("local");
+        return;
+      }
+      setSaveState("saving");
+      try {
+        const res = await fetch("/api/code", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            topicId,
+            files: files.map((f, i) => ({ name: f.name, source: sources[i] })),
+          }),
+        });
+        const ok = (await res.json())?.ok;
+        setSaveState(ok ? "saved" : "local");
+      } catch {
+        setSaveState("local");
+      }
+    }, SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sources]);
 
   const workerUrl = runLanguage === "python" ? "/workers/py-runner.js" : "/workers/js-runner.js";
 
@@ -127,6 +204,7 @@ export function Playground({
   };
 
   const reset = () => {
+    editedRef.current = true; // persist the revert to original
     setSources(files.map((f) => f.source));
     setLogs([]);
     setStatus("idle");
@@ -178,6 +256,13 @@ export function Playground({
           ))}
         </div>
         <div className="flex items-center gap-2 pr-1">
+          {saveState === "saving" && <span className="text-[11px] text-slate-500">Saving…</span>}
+          {saveState === "saved" && <span className="text-[11px] text-emerald-400/80">✓ Saved</span>}
+          {saveState === "local" && (
+            <span className="text-[11px] text-slate-500" title="Sign in to sync across devices">
+              Saved on device
+            </span>
+          )}
           <span className="rounded-full bg-white/5 px-2 py-0.5 font-mono text-[11px] text-slate-400">
             {LANGUAGE_LABEL[runLanguage]}
           </span>
@@ -205,13 +290,14 @@ export function Playground({
         theme="vs-dark"
         language={monacoLang}
         value={sources[active]}
-        onChange={(val) =>
+        onChange={(val) => {
+          editedRef.current = true;
           setSources((prev) => {
             const next = prev.slice();
             next[active] = val ?? "";
             return next;
-          })
-        }
+          });
+        }}
         options={{
           minimap: { enabled: false },
           fontSize: 13,
