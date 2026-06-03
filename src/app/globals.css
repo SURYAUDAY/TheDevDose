@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-slate-950 text-slate-200 antialiased;
+    background-image:
+      radial-gradient(60rem 60rem at 110% -10%, rgba(99, 102, 241, 0.12), transparent 60%),
+      radial-gradient(50rem 50rem at -10% 10%, rgba(56, 189, 248, 0.08), transparent 55%);
+    background-attachment: fixed;
+  }
+  ::selection {
+    background: rgba(129, 140, 248, 0.35);
+  }
+}
+
+/* ---- Mascot + metaphor-scene animations (M5) ---- */
+@keyframes tdd-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes tdd-blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes tdd-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes tdd-steam { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 40% { opacity: 0.7; } 100% { opacity: 0; transform: translateY(-16px) scale(1.4); } }
+@keyframes tdd-pop { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes tdd-wave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(20deg); } 75% { transform: rotate(-12deg); } }
+@keyframes tdd-celebrate { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-12px); } 60% { transform: translateY(0); } }
+@keyframes tdd-shake { 0%, 100% { transform: translateX(0) rotate(0); } 20% { transform: translateX(-3px) rotate(-3deg); } 60% { transform: translateX(3px) rotate(3deg); } }
+@keyframes tdd-sparkle { 0% { opacity: 0; transform: scale(0); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0); } }
+@keyframes tdd-spin-slow { to { transform: rotate(360deg); } }
+@keyframes tdd-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes tdd-flow { 0% { transform: translateX(0); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateX(var(--tdd-flow, 56px)); opacity: 0; } }
+@keyframes tdd-turn { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-28deg); } }
+
+.tdd-bob { animation: tdd-bob 3s ease-in-out infinite; }
+.tdd-float { animation: tdd-float 3.4s ease-in-out infinite; }
+.tdd-blink { animation: tdd-blink 4.2s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.tdd-wave { animation: tdd-wave 0.9s ease-in-out infinite; transform-origin: bottom center; transform-box: fill-box; }
+.tdd-celebrate { animation: tdd-celebrate 0.7s ease-in-out infinite; }
+.tdd-shake { animation: tdd-shake 0.5s ease-in-out infinite; }
+.tdd-spin-slow { animation: tdd-spin-slow 9s linear infinite; transform-origin: center; transform-box: fill-box; }
+.tdd-fade-up { animation: tdd-fade-up 0.6s ease both; }
+.tdd-pop { animation: tdd-pop 0.5s ease both; }
+.tdd-steam { animation: tdd-steam 2.4s ease-out infinite; }
+.tdd-sparkle { animation: tdd-sparkle 1.4s ease-in-out infinite; }
+.tdd-flow { animation: tdd-flow 2.2s linear infinite; }
+.tdd-turn { animation: tdd-turn 2.6s ease-in-out infinite; transform-origin: 50% 80%; transform-box: fill-box; }
+
+/* ---- Concept-visualizer animations ---- */
+/* A frame pushes onto a stack, stays, then pops off — staggered delays make
+   several frames stack up and unwind in sequence (LIFO). */
+@keyframes tdd-frame {
+  0% { opacity: 0; transform: translateY(14px) scaleY(0.6); }
+  10% { opacity: 1; transform: translateY(0) scaleY(1); }
+  62% { opacity: 1; transform: translateY(0) scaleY(1); }
+  78%, 100% { opacity: 0; transform: translateY(14px) scaleY(0.6); }
+}
+@keyframes tdd-rise { 0% { opacity: 0; transform: translateY(12px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes tdd-pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.14); opacity: 1; } }
+/* Two-state crossfade (e.g. promise pending -> settled). */
+@keyframes tdd-stateA { 0%, 42% { opacity: 1; } 52%, 96% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes tdd-stateB { 0%, 42% { opacity: 0; } 52%, 96% { opacity: 1; } 100% { opacity: 0; } }
+/* A token travels along X (queue -> stack / pipeline). Distance via --tdd-go. */
+@keyframes tdd-go { 0%, 10% { transform: translateX(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateX(var(--tdd-go, 60px)); opacity: 0; } }
+/* A seek dot hops outward through scopes and back. */
+@keyframes tdd-seek { 0%, 12% { transform: translate(0, 0); } 44%, 60% { transform: translate(var(--tdd-sx, -38px), var(--tdd-sy, -34px)); } 92%, 100% { transform: translate(0, 0); } }
+
+.tdd-frame { animation: tdd-frame 4.4s ease-in-out infinite; }
+.tdd-rise { animation: tdd-rise 0.5s ease both; }
+.tdd-pulse { animation: tdd-pulse 1.8s ease-in-out infinite; }
+.tdd-stateA { animation: tdd-stateA 3.8s ease-in-out infinite; }
+.tdd-stateB { animation: tdd-stateB 3.8s ease-in-out infinite; }
+.tdd-go { animation: tdd-go 2.6s ease-in-out infinite; }
+.tdd-seek { animation: tdd-seek 3.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tdd-bob, .tdd-float, .tdd-blink, .tdd-wave, .tdd-celebrate, .tdd-shake,
+  .tdd-spin-slow, .tdd-fade-up, .tdd-pop, .tdd-steam, .tdd-sparkle, .tdd-flow, .tdd-turn,
+  .tdd-frame, .tdd-rise, .tdd-pulse, .tdd-stateA, .tdd-stateB, .tdd-go, .tdd-seek {
+    animation: none !important;
+  }
+}
