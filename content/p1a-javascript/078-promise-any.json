@@ -1,0 +1,64 @@
+{
+  "id": "p1a-078",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 78,
+  "orderInPhase": 78,
+  "slug": "promise-any",
+  "title": "Promise.any",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "promise.any"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Fetching the same resource from several mirrors/CDNs and using whichever responds successfully first: `Promise.any([cdn1, cdn2, cdn3])` returns the first goo…"
+  },
+  "sections": {
+    "simple_en": "`Promise.any([...])` fulfils with the value of the FIRST promise to FULFIL (succeed), ignoring rejections along the way. It's effectively 'give me the first success'.\n\nIt only rejects if EVERY promise rejects, in which case it rejects with an `AggregateError` containing all the individual reasons. Contrast with `Promise.race` (first to settle, success or failure) and `Promise.all` (all must succeed).",
+    "hinglish": "`Promise.any([...])` PEHLE FULFIL (succeed) hone wale promise ki value ke saath fulfil hota hai, beech ke rejections ignore karte hue. Ye basically 'mujhe pehla success do' hai.\nYe tabhi reject hota hai jab HAR promise reject ho, us case me ek `AggregateError` ke saath jisme saare individual reasons hote hain. `Promise.race` (pehle settle, success ya failure) aur `Promise.all` (sabko succeed karna hai) se compare karo.",
+    "keyPoints": [
+      "Fulfils with the first promise to FULFIL; ignores rejections.",
+      "Rejects only if ALL reject — with an `AggregateError` of reasons.",
+      "Differs from `race` (first to settle) and `all` (all must succeed).",
+      "Use for redundancy: first responsive source wins.",
+      "AggregateError's `.errors` array holds every rejection reason."
+    ],
+    "real_world": "Fetching the same resource from several mirrors/CDNs and using whichever responds successfully first: `Promise.any([cdn1, cdn2, cdn3])` returns the first good response and only fails if every mirror is down.",
+    "followups": [
+      {
+        "q": "When does Promise.any reject?",
+        "a": "Only when every promise rejects. It then rejects with an `AggregateError` whose `.errors` array contains all the individual rejection reasons."
+      },
+      {
+        "q": "Difference between any and race?",
+        "a": "`any` resolves with the first fulfilment and ignores rejections; `race` settles with the first promise to settle, even if that's a rejection."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Promise.any returns the first SUCCESS.\n\nconst okAfter = (v, ms) => new Promise((r) => setTimeout(() => r(v), ms));\nconst failAfter = (m, ms) => new Promise((_, rej) =>\n  setTimeout(() => rej(new Error(m)), ms));\n\nfunction firstSuccess() {\n  return Promise.any([\n    failAfter(\"down1\", 5),\n    okAfter(\"mirror2\", 10),\n    failAfter(\"down3\", 1),\n  ]); // resolves to \"mirror2\" (first to FULFIL)\n}\n\nfunction allFail() {\n  return Promise.any([failAfter(\"a\", 1), failAfter(\"b\", 2)])\n    .catch((err) => err.constructor.name); // \"AggregateError\"\n}\n\nmodule.exports = { firstSuccess, allFail };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { firstSuccess, allFail } = require(\"./solution\");\n\nfirstSuccess().then((v) => {\n  console.log(\"first success:\", v); // mirror2\n  console.assert(v === \"mirror2\", \"ignores rejections, takes first success\");\n\n  allFail().then((name) => {\n    console.log(\"when all fail:\", name); // AggregateError\n    console.assert(name === \"AggregateError\", \"rejects with AggregateError if all fail\");\n    console.log(\"Promise.any assertions passed.\");\n  });\n});",
+      "expectedOutput": "first success: mirror2\nwhen all fail: AggregateError\nPromise.any assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p4-016",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 16,
+  "orderInPhase": 16,
+  "slug": "max-tokens",
+  "title": "max_tokens",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "max",
+    "tokens"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "A tweet-generator sets max_tokens to a small value so replies stay short and cheap."
+  },
+  "sections": {
+    "simple_en": "max_tokens caps how many tokens the model is allowed to generate in its response. It limits the output length only — not the input — though input plus output together must still fit within the model's context window. It's a key control for cost, latency, and preventing runaway responses.\n\nIf the model reaches the cap before finishing naturally, the response is truncated and the API reports finish_reason='length' (versus 'stop' for a natural ending). Set max_tokens high enough to avoid cutting off useful answers, but low enough to control cost and keep responses tight.",
+    "hinglish": "max_tokens cap karta hai ki model apne response mein kitne tokens generate kar sakta hai. Ye sirf output length limit karta hai — input nahi — halaanki input plus output saath mein abhi bhi model ke context window mein fit hone chahiye. Ye cost, latency, aur runaway responses rokne ka ek key control hai.\n\nAgar model naturally finish hone se pehle cap tak pahunch jaye, response truncate ho jaata hai aur API finish_reason='length' report karta hai (natural ending ke liye 'stop' ke ulta). max_tokens itna high set karo ki useful answers cut na hon, par itna low ki cost control rahe aur responses tight rahein.",
+    "keyPoints": [
+      "Caps the number of OUTPUT tokens the model may generate.",
+      "Limits output length only; input + output must fit the context window.",
+      "Controls cost, latency, and prevents runaway responses.",
+      "finish_reason='length' means it was truncated; 'stop' = natural ending.",
+      "Set high enough to avoid cut-offs, low enough to control cost."
+    ],
+    "real_world": "A tweet-generator sets max_tokens to a small value so replies stay short and cheap. A long-form report endpoint sets it much higher — and watches for finish_reason='length' to detect and handle answers that were cut off mid-sentence.",
+    "followups": [
+      {
+        "q": "Does max_tokens limit the input too?",
+        "a": "No — it only caps the generated output. The input length is separate, but input and output combined must fit within the model's total context window."
+      },
+      {
+        "q": "How do you know if a response was truncated?",
+        "a": "Check finish_reason: 'length' means the output hit the max_tokens cap and was cut off; 'stop' means the model ended naturally (or hit a stop sequence)."
+      },
+      {
+        "q": "Why set max_tokens at all?",
+        "a": "To control cost and latency and to prevent overly long or runaway outputs. Right-sizing it keeps responses tight while leaving enough room to finish the answer."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI max_tokens code (needs an API key). The Python-runnable demo below simulates generation hitting the cap so the finish_reason behavior is verifiable here.",
+      "source": "# max_tokens — cap the length of the generated output.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef summarize(text: str, max_tokens: int) -> dict:\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        max_tokens=max_tokens,   # hard cap on OUTPUT tokens (not input)\n        messages=[{\"role\": \"user\", \"content\": f\"Summarize:\\n{text}\"}],\n    )\n    choice = response.choices[0]\n    return {\n        \"text\": choice.message.content,\n        \"finish_reason\": choice.finish_reason,  # 'stop' = natural end, 'length' = hit the cap\n        \"completion_tokens\": response.usage.completion_tokens,\n    }\n\n# Input + output must both fit in the model's context window. Set max_tokens to\n# control cost and latency, but leave enough room to avoid truncated answers\n# (finish_reason == 'length' signals truncation).",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# max_tokens — caps how many tokens the model may GENERATE (not the input length)\ndef generate(prompt_tokens, max_tokens):\n    # Toy generator: emits tokens until it hits a natural stop or the max_tokens cap.\n    full_response = [\"The\", \"answer\", \"is\", \"that\", \"Python\", \"is\", \"great\", \".\", \"<eos>\"]\n    out, finish_reason = [], \"stop\"\n    for i, tok in enumerate(full_response):\n        if len(out) >= max_tokens:\n            finish_reason = \"length\"; break        # truncated by the cap\n        if tok == \"<eos>\":\n            break                                   # natural stop\n        out.append(tok)\n    return {\"text\": \" \".join(out), \"tokens_used\": len(out), \"finish_reason\": finish_reason}\n\nshort = generate(prompt_tokens=10, max_tokens=3)\nfull = generate(prompt_tokens=10, max_tokens=50)\nprint(\"max_tokens=3 ->\", short)\nprint(\"max_tokens=50 ->\", full)\nassert short[\"finish_reason\"] == \"length\" and short[\"tokens_used\"] == 3\nassert full[\"finish_reason\"] == \"stop\"\nprint(\"\\nmax_tokens limits the OUTPUT length; input + output must both fit in the context window.\")\nprint(\"finish_reason='length' means the cap cut it off; 'stop' means it ended naturally.\")\nprint(\"Set it to control cost and avoid truncated answers.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "max_tokens=3 -> {'text': 'The answer is', 'tokens_used': 3, 'finish_reason': 'length'}\nmax_tokens=50 -> {'text': 'The answer is that Python is great .', 'tokens_used': 8, 'finish_reason': 'stop'}\n\nmax_tokens limits the OUTPUT length; input + output must both fit in the context window.\nfinish_reason='length' means the cap cut it off; 'stop' means it ended naturally.\nSet it to control cost and avoid truncated answers.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

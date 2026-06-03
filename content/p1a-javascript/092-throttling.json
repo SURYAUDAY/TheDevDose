@@ -1,0 +1,64 @@
+{
+  "id": "p1a-092",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 92,
+  "orderInPhase": 92,
+  "slug": "throttling",
+  "title": "Throttling",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "throttling"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An infinite-scroll page that checks 'are we near the bottom?' at most every 200ms while the user scrolls — frequent enough to feel instant, but not running o…"
+  },
+  "sections": {
+    "simple_en": "Throttling limits a function to run at most once per specified interval, no matter how many times it's called. Unlike debouncing (which waits for a pause), throttling guarantees a steady, regular execution rate during continuous activity.\n\nIt's ideal for events that fire continuously and where you want periodic updates — scroll position tracking, mouse-move handlers, drag events, or rate-limiting button clicks. Throttling keeps the handler responsive while capping how often the expensive work happens.",
+    "hinglish": "Throttling ek function ko ek specified interval me zyada se zyada ek baar chalne deta hai, chahe kitni baar bhi call ho. Debouncing (jo pause ka wait karta hai) ke विपरीत, throttling continuous activity ke dauraan ek steady, regular execution rate guarantee karta hai.\nYe un events ke liye ideal hai jo continuously fire hote hain aur jahan aapko periodic updates chahiye — scroll position tracking, mouse-move handlers, drag events, ya button clicks rate-limit karna. Throttling handler ko responsive rakhta hai jabki mehnga kaam kitni baar ho ye cap karta hai.",
+    "keyPoints": [
+      "Runs at most once per `interval`, regardless of call frequency.",
+      "Guarantees a steady execution rate during continuous activity.",
+      "Use for scroll, mousemove, drag, resize, and click rate-limiting.",
+      "Debounce = run after it stops; throttle = run regularly while active.",
+      "Variants control leading/trailing edge execution."
+    ],
+    "real_world": "An infinite-scroll page that checks 'are we near the bottom?' at most every 200ms while the user scrolls — frequent enough to feel instant, but not running on every single scroll event.",
+    "followups": [
+      {
+        "q": "When would you choose throttle over debounce?",
+        "a": "When you need regular updates during continuous activity — like tracking scroll or mouse position — rather than a single action after the activity stops."
+      },
+      {
+        "q": "What's the difference between leading and trailing throttle?",
+        "a": "Leading-edge fires immediately on the first call of each interval; trailing-edge fires at the end of the interval with the latest args. Many implementations support both."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// A leading-edge throttle: runs immediately, then ignores calls within interval.\n\nfunction throttle(fn, interval) {\n  let lastTime = 0;\n  return function (...args) {\n    const now = Date.now();\n    if (now - lastTime >= interval) {\n      lastTime = now;\n      return fn.apply(this, args);\n    }\n  };\n}\n\nmodule.exports = { throttle };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { throttle } = require(\"./solution\");\n\n(async () => {\n  let calls = 0;\n  const onScroll = throttle(() => calls++, 30);\n\n  // burst of calls -> only first runs (leading edge)\n  onScroll(); onScroll(); onScroll();\n  console.log(\"after burst:\", calls); // 1\n\n  await new Promise((r) => setTimeout(r, 40));\n  onScroll(); // interval passed -> runs again\n  console.log(\"after interval:\", calls); // 2\n\n  console.assert(calls === 2, \"throttle allows one call per interval\");\n  console.log(\"throttling assertions passed.\");\n})();",
+      "expectedOutput": "after burst: 1\nafter interval: 2\nthrottling assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

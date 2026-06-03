@@ -1,0 +1,69 @@
+{
+  "id": "p3-074",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 74,
+  "orderInPhase": 74,
+  "slug": "realtime-updates",
+  "title": "Realtime updates",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "realtime",
+    "updates"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "In a collaborative document editor, each user editing doc 42 joins the 'doc:42' room."
+  },
+  "sections": {
+    "simple_en": "Realtime updates push changes to interested clients the instant they happen, rather than making clients poll. Building this combines two things: a transport that keeps clients connected (WebSockets or SSE) and a pub/sub mechanism that fans an update out to exactly the right clients — typically grouped into 'rooms' or channels (a document, a chat, a game).\n\nLibraries like Socket.IO provide rooms, broadcasting, and reconnection on top of WebSockets. A client joins a room; when something changes, the server emits the event to that room so only its members receive it. Across multiple servers, a shared backplane (e.g., Redis) ensures rooms span all instances.",
+    "hinglish": "Realtime updates changes ko interested clients tak hote hi push karte hain, clients ko poll karwane ke bajaye. Ise build karne mein do cheezein combine hoti hain: ek transport jo clients ko connected rakhe (WebSockets ya SSE) aur ek pub/sub mechanism jo update ko exactly sahi clients tak fan out kare — aksar 'rooms' ya channels mein grouped (ek document, ek chat, ek game).\n\nSocket.IO jaisi libraries WebSockets ke upar rooms, broadcasting aur reconnection deti hain. Client ek room join karta hai; jab kuch badle, server us room ko event emit karta hai taaki sirf uske members receive karein. Multiple servers ke across, ek shared backplane (jaise Redis) ensure karta hai rooms sab instances mein span karein.",
+    "keyPoints": [
+      "Push changes to clients instantly instead of polling.",
+      "Combine a transport (WebSocket/SSE) with pub/sub fan-out.",
+      "Group clients into rooms/channels; emit only to the relevant room.",
+      "Socket.IO adds rooms, broadcasting, and auto-reconnect over WebSockets.",
+      "Across servers, use a shared backplane (Redis adapter) so rooms span instances."
+    ],
+    "real_world": "In a collaborative document editor, each user editing doc 42 joins the 'doc:42' room. When one user types, the server broadcasts the change to everyone else in that room — and only that room — so all collaborators see edits live while unrelated documents are unaffected.",
+    "followups": [
+      {
+        "q": "What two pieces make up a realtime system?",
+        "a": "A persistent transport (WebSockets or SSE) to keep clients connected, and a pub/sub fan-out mechanism (often rooms/channels) to deliver each update only to the clients that care about it."
+      },
+      {
+        "q": "What are 'rooms' for?",
+        "a": "Grouping connected clients so a broadcast targets only the relevant subset — e.g., participants of one chat or document — instead of every connected client."
+      },
+      {
+        "q": "How do you scale realtime across multiple servers?",
+        "a": "Use a shared backplane like the Socket.IO Redis adapter so that an event emitted on one server is propagated to clients connected to other instances, keeping rooms consistent cluster-wide."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Socket.IO code (rooms/broadcast). The Node-runnable demo below verifies room-scoped fan-out so the targeting is verifiable here.",
+      "source": "// Realtime updates — rooms and broadcasts with Socket.IO.\nconst { Server } = require(\"socket.io\");\nconst io = new Server(3000, { cors: { origin: \"*\" } });\n\nio.on(\"connection\", (socket) => {\n  // Clients join a \"room\" (e.g., a document or chat channel).\n  socket.on(\"join\", (docId) => {\n    socket.join(`doc:${docId}`);\n  });\n\n  // An edit is broadcast to everyone else in the same room.\n  socket.on(\"edit\", ({ docId, change }) => {\n    socket.to(`doc:${docId}`).emit(\"edit\", change); // to all in room except sender\n  });\n\n  socket.on(\"disconnect\", () => { /* cleanup */ });\n});\n\n// Server can also push from elsewhere in the app:\n//   io.to(`doc:42`).emit(\"notification\", { text: \"Saved\" });\n//\n// Socket.IO adds rooms, auto-reconnect, and fallbacks over raw WebSockets.\n// For multiple servers, use the Redis adapter so rooms span all instances.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Realtime updates — pub/sub rooms broadcast changes to subscribed clients\nfunction createRealtime(){\n  const rooms = {}; // room -> Set of client callbacks\n  return {\n    join(room, client){ (rooms[room] ||= new Set()).add(client); },\n    leave(room, client){ rooms[room]?.delete(client); },\n    broadcast(room, event){ let n = 0; (rooms[room] || new Set()).forEach(c => { c(event); n++; }); return n; },\n  };\n}\nconst rt = createRealtime();\nconst received = { a: [], b: [], c: [] };\nconst clientA = (e) => received.a.push(e);\nconst clientB = (e) => received.b.push(e);\nconst clientC = (e) => received.c.push(e);\nrt.join(\"doc:42\", clientA); rt.join(\"doc:42\", clientB); rt.join(\"doc:99\", clientC);\nconst delivered = rt.broadcast(\"doc:42\", { type: \"edit\", text: \"hello\" });\nconsole.log(\"Delivered to doc:42 subscribers:\", delivered);\nconsole.log(\"A got:\", JSON.stringify(received.a), \"| C got:\", JSON.stringify(received.c));\nconsole.assert(delivered === 2 && received.c.length === 0, \"only room subscribers receive updates\");\nconsole.log(\"Realtime = transport (WebSocket/SSE) + pub/sub fan-out to the right clients (rooms/channels).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Delivered to doc:42 subscribers: 2\nA got: [{\"type\":\"edit\",\"text\":\"hello\"}] | C got: []\nRealtime = transport (WebSocket/SSE) + pub/sub fan-out to the right clients (rooms/channels).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

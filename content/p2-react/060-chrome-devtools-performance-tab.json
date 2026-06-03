@@ -1,0 +1,71 @@
+{
+  "id": "p2-060",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 60,
+  "orderInPhase": 60,
+  "slug": "chrome-devtools-performance-tab",
+  "title": "Chrome DevTools — Performance tab",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "chrome",
+    "devtools",
+    "performance",
+    "tab"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Scrolling a long list feels janky."
+  },
+  "sections": {
+    "simple_en": "The Performance tab records a timeline of everything the browser does — scripting, rendering, layout, and painting — so you can find what makes the page slow or janky. You record a session while interacting, then read the flame chart to see exactly which functions ran and how long they took.\n\nKey things to hunt for are long tasks (blocks over 50ms that freeze the main thread), layout thrashing (repeated forced reflows), and heavy scripting. Fixing these — by breaking up work, memoizing, or avoiding sync layout reads — improves responsiveness and Web Vitals like INP.",
+    "hinglish": "Performance tab browser jo kuch karta hai — scripting, rendering, layout, painting — uska timeline record karta hai taaki page slow ya janky kyun hai pata chale. Aap interact karte hue session record karte ho, phir flame chart se dekhte ho kaun se functions chale aur kitna time liya.\n\nDhoondhne layak: long tasks (50ms se zyada blocks jo main thread freeze karte hain), layout thrashing (baar-baar forced reflow), aur heavy scripting. Inhe fix karna — kaam todna, memoize karna, sync layout reads avoid karna — responsiveness aur INP behtar karta hai.",
+    "keyPoints": [
+      "Records a timeline of scripting, rendering, layout, and painting.",
+      "Flame chart shows which functions ran and how long they took.",
+      "Hunt for long tasks (>50ms) that block the main thread and hurt INP.",
+      "Spot layout thrashing (forced synchronous reflows) and heavy scripting.",
+      "Profile a production build; dev-mode overhead skews the numbers."
+    ],
+    "real_world": "Scrolling a long list feels janky. A Performance recording shows a long task: each item forces a synchronous layout read inside a loop. Batching reads/writes (or virtualizing the list) removes the long task and scrolling becomes smooth.",
+    "followups": [
+      {
+        "q": "What is a 'long task' and why does it matter?",
+        "a": "A main-thread task over ~50ms. It blocks input and rendering, causing jank and poor INP. Breaking work into smaller chunks keeps the page responsive."
+      },
+      {
+        "q": "What is layout thrashing?",
+        "a": "Repeatedly writing styles then reading layout (e.g., offsetHeight) in a loop, forcing synchronous reflows each time. Batch reads then writes to avoid it."
+      },
+      {
+        "q": "Why profile a production build?",
+        "a": "Development React includes extra checks and warnings that inflate timings; a production build reflects what users actually experience."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "DevTools profiling techniques (used in the browser, not shipped app code). The Node-runnable demo below simulates finding long tasks in a trace.",
+      "source": "// Chrome DevTools — Performance tab (profiling technique, not app code).\n// Record a session to find long tasks, layout thrashing, and slow renders.\n\nexport default function HeavyComponent({ items }) {\n  // A common performance pitfall this panel reveals: forcing layout in a loop.\n  function badMeasure() {\n    items.forEach((el) => {\n      // Reading offsetHeight after a style write forces synchronous layout\n      // (\"layout thrashing\") — the Performance tab shows purple layout spikes.\n      el.style.height = \"auto\";\n      const h = el.offsetHeight; // forced reflow each iteration\n      console.log(h);\n    });\n  }\n\n  // How to use the panel:\n  // 1) Open Performance, click Record, interact, then Stop.\n  // 2) Look for long yellow \"Scripting\" blocks and red \"long task\" markers.\n  // 3) Use the flame chart to find the slow function call stack.\n  return <button onClick={badMeasure}>Measure</button>;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Chrome DevTools (Performance tab) — find long tasks in a trace\nconst tasks = [\n  { name: \"parse HTML\", ms: 12 },\n  { name: \"evaluate script\", ms: 220 },   // long task (> 50ms blocks main thread)\n  { name: \"layout\", ms: 18 },\n  { name: \"render list\", ms: 95 },         // long task\n  { name: \"paint\", ms: 8 },\n];\nconst LONG_TASK = 50;\nconst longTasks = tasks.filter(t => t.ms > LONG_TASK);\nconst totalBlocking = longTasks.reduce((s, t) => s + (t.ms - LONG_TASK), 0); // TBT-style\nconsole.log(\"Total main-thread time:\", tasks.reduce((s, t) => s + t.ms, 0) + \"ms\");\nlongTasks.forEach(t => console.log(`LONG TASK: ${t.name} (${t.ms}ms)`));\nconsole.log(\"Total Blocking Time:\", totalBlocking + \"ms\");\nconsole.assert(longTasks.length === 2, \"two long tasks flagged\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Total main-thread time: 353ms\nLONG TASK: evaluate script (220ms)\nLONG TASK: render list (95ms)\nTotal Blocking Time: 215ms\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

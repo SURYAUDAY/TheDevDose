@@ -1,0 +1,65 @@
+{
+  "id": "p1b-022",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 22,
+  "orderInPhase": 22,
+  "slug": "function-typing",
+  "title": "Function Typing",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "function",
+    "typing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Typing an event handler or array callback — `const onChange: (value: string) => void` — ensures every assignment and call matches the expected signature, cat…"
+  },
+  "sections": {
+    "simple_en": "TypeScript lets you type a function's parameters and its return value, and also type a variable that HOLDS a function. A function type looks like `(a: number, b: number) => number` — listing parameter types and the return type after `=>`.\n\nYou can annotate parameters inline, declare a reusable function type via a type alias or interface, and let TypeScript INFER return types (though annotating them documents intent and catches mistakes). Callbacks are typed the same way, which makes higher-order functions safe.",
+    "hinglish": "TypeScript aapko function ke parameters aur uski return value type karne deta hai, aur ek aisa variable bhi type karne deta hai jo function HOLD karta hai. Function type aisa dikhta hai `(a: number, b: number) => number` — parameter types aur `=>` ke baad return type.\nAap parameters inline annotate kar sakte ho, type alias ya interface se reusable function type declare kar sakte ho, aur TypeScript ko return types INFER karne de sakte ho (bhale annotate karna intent document karta hai aur galtiyaan pakadta hai). Callbacks bhi isi tarah type hote hain, jisse higher-order functions safe ho jaate hain.",
+    "keyPoints": [
+      "Function type syntax: `(params) => ReturnType`.",
+      "Type parameters and return value; return type can be inferred.",
+      "Type a variable that holds a function with a function type.",
+      "Reusable function types via type alias/interface.",
+      "Callbacks are typed too, making HOFs type-safe."
+    ],
+    "real_world": "Typing an event handler or array callback — `const onChange: (value: string) => void` — ensures every assignment and call matches the expected signature, catching mismatched callbacks before runtime.",
+    "followups": [
+      {
+        "q": "How do you write the type of a function?",
+        "a": "Using `(paramName: ParamType, ...) => ReturnType`. For example `(a: number, b: number) => number`. This can annotate a variable, a parameter (callback), or be aliased for reuse."
+      },
+      {
+        "q": "Do you have to annotate return types?",
+        "a": "No — TypeScript infers them. But annotating return types documents intent and catches accidental wrong returns, which is valuable on public/complex functions."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — typing functions and callbacks.\n\ntype BinaryOp = (a: number, b: number) => number;\n\nexport const add: BinaryOp = (a, b) => a + b;     // params inferred from type\nexport const multiply: BinaryOp = (a, b) => a * b;\n\n// A higher-order function with a typed callback parameter.\nexport function transform(nums: number[], fn: (n: number) => number): number[] {\n  return nums.map(fn);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { add, multiply, transform } from \"./solution\";\n\nconsole.log(add(2, 3));                 // 5\nconsole.log(multiply(4, 5));            // 20\nconsole.log(transform([1, 2, 3], (n) => n * 10)); // [10,20,30]\n\nconsole.assert(add(2, 3) === 5, \"typed add\");\nconsole.assert(multiply(4, 5) === 20, \"typed multiply\");\nconsole.assert(JSON.stringify(transform([1, 2], (n) => n + 1)) === \"[2,3]\", \"typed callback\");\nconsole.log(\"function-typing assertions passed.\");",
+      "expectedOutput": "5\n20\n[ 10, 20, 30 ]\nfunction-typing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

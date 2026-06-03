@@ -1,0 +1,65 @@
+{
+  "id": "p1a-093",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 93,
+  "orderInPhase": 93,
+  "slug": "fetch-api",
+  "title": "fetch API",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "fetch",
+    "api"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "Loading data into a dashboard: `const res = await fetch('/api/users'); if (!res.ok) throw new Error(res.status); const users = await res.json();` — the expli…"
+  },
+  "sections": {
+    "simple_en": "`fetch(url, options)` is the modern, promise-based browser (and Node 18+) API for making HTTP requests. It returns a promise that resolves to a `Response` object; you then call `response.json()` (or `.text()`) — itself a promise — to read the body.\n\nImportant gotcha: fetch only rejects on network failures, NOT on HTTP error statuses. A 404 or 500 still resolves, so you must check `response.ok` (or `response.status`) yourself. You configure method, headers, and body via the options object.",
+    "hinglish": "`fetch(url, options)` HTTP requests banane ka modern, promise-based browser (aur Node 18+) API hai. Ye ek promise return karta hai jo ek `Response` object me resolve hota hai; phir aap `response.json()` (ya `.text()`) call karte ho — jo khud ek promise hai — body padhne ke liye.\nImportant gotcha: fetch sirf network failures par reject karta hai, HTTP error statuses par NAHI. 404 ya 500 bhi resolve ho jaata hai, isliye aapko khud `response.ok` (ya `response.status`) check karna padta hai. Method, headers, aur body options object se configure karte ho.",
+    "keyPoints": [
+      "Promise-based HTTP API; returns a `Response` object.",
+      "Read the body with `response.json()` / `.text()` (also promises).",
+      "Does NOT reject on 404/500 — check `response.ok` / `response.status`.",
+      "Configure method/headers/body via the options object.",
+      "Pairs with async/await and AbortController for cancellation."
+    ],
+    "real_world": "Loading data into a dashboard: `const res = await fetch('/api/users'); if (!res.ok) throw new Error(res.status); const users = await res.json();` — the explicit `res.ok` check catches server errors fetch would otherwise pass through.",
+    "followups": [
+      {
+        "q": "Does fetch reject on a 404 or 500?",
+        "a": "No. fetch only rejects on network-level failures. HTTP error statuses still resolve, so you must check `response.ok` (or `response.status`) and handle errors yourself."
+      },
+      {
+        "q": "How do you read JSON from a fetch response?",
+        "a": "Call `await response.json()`, which returns a promise for the parsed body. Use `.text()` for plain text or `.blob()`/`.arrayBuffer()` for binary."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// A robust fetch wrapper that treats HTTP errors as failures.\n// (Test uses a mocked global.fetch so it runs in Node.)\n\nasync function getJSON(url) {\n  const res = await fetch(url);\n  if (!res.ok) throw new Error(\"HTTP \" + res.status);\n  return res.json();\n}\n\nmodule.exports = { getJSON };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (global.fetch is mocked for a deterministic demo) ---\nconst { getJSON } = require(\"./solution\");\n\n// Mock fetch: returns ok for /good, a 404 for /missing\nglobal.fetch = (url) => Promise.resolve(\n  url === \"/good\"\n    ? { ok: true, status: 200, json: () => Promise.resolve({ id: 1, name: \"Asha\" }) }\n    : { ok: false, status: 404, json: () => Promise.resolve(null) }\n);\n\n(async () => {\n  const user = await getJSON(\"/good\");\n  console.log(\"user:\", user); // { id:1, name:'Asha' }\n\n  let errMsg = null;\n  try { await getJSON(\"/missing\"); } catch (e) { errMsg = e.message; }\n  console.log(\"error:\", errMsg); // HTTP 404\n\n  console.assert(user.name === \"Asha\", \"parses json on success\");\n  console.assert(errMsg === \"HTTP 404\", \"throws on non-ok status\");\n  console.log(\"fetch API assertions passed.\");\n})();",
+      "expectedOutput": "user: { id: 1, name: 'Asha' }\nerror: HTTP 404\nfetch API assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

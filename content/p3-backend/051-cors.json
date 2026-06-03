@@ -1,0 +1,68 @@
+{
+  "id": "p3-051",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 51,
+  "orderInPhase": 51,
+  "slug": "cors",
+  "title": "CORS",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "cors"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A React app at app.example.com calls an API at api.example.com."
+  },
+  "sections": {
+    "simple_en": "CORS (Cross-Origin Resource Sharing) is a browser security mechanism that controls whether a web page from one origin may read responses from a different origin. By default the same-origin policy blocks cross-origin reads; the server opts in by sending Access-Control-Allow-* headers naming which origins, methods, and headers are permitted.\n\nFor non-simple requests the browser first sends a preflight OPTIONS request to check what's allowed before sending the real one. CORS is enforced by the browser, not the server, and it is not authentication — it only governs which origins can read your responses, so you still need real auth and an explicit allowlist of trusted origins.",
+    "hinglish": "CORS (Cross-Origin Resource Sharing) ek browser security mechanism hai jo control karta hai ki ek origin ka web page doosre origin se responses padh sakta hai ya nahi. Default same-origin policy cross-origin reads block karti hai; server Access-Control-Allow-* headers bhej kar opt-in karta hai jisme allowed origins, methods, headers hote hain.\n\nNon-simple requests ke liye browser pehle ek preflight OPTIONS request bhejta hai ki kya allowed hai, real request se pehle. CORS browser enforce karta hai, server nahi, aur ye authentication nahi hai — ye sirf govern karta hai kaun se origins response padh sakte hain, isliye real auth aur trusted origins ki explicit allowlist zaroori hai.",
+    "keyPoints": [
+      "Browser mechanism controlling cross-origin reads (same-origin policy by default).",
+      "Server opts in via Access-Control-Allow-Origin/Methods/Headers.",
+      "Preflight OPTIONS checks permissions before non-simple requests.",
+      "Enforced by the browser, NOT the server — and it is not authentication.",
+      "Use an explicit origin allowlist; set credentials:true to allow cookies."
+    ],
+    "real_world": "A React app at app.example.com calls an API at api.example.com. Without CORS headers, the browser blocks the response. The API adds the app's origin to its allowlist and returns Access-Control-Allow-Origin, so the browser lets the app read the data — while still blocking unknown sites like evil.com.",
+    "followups": [
+      {
+        "q": "Is CORS a server-side security feature?",
+        "a": "No — it's enforced by the browser to protect users. It governs which origins may read responses; it doesn't authenticate or stop non-browser clients (like curl) from calling your API."
+      },
+      {
+        "q": "What triggers a preflight request?",
+        "a": "Non-simple requests — e.g., methods like PUT/DELETE, custom headers, or certain content types. The browser sends an OPTIONS request first to confirm the actual request is allowed."
+      },
+      {
+        "q": "Why not just use Access-Control-Allow-Origin: *?",
+        "a": "A wildcard exposes the API to any site and can't be combined with credentials (cookies). Use an explicit allowlist of trusted origins, especially for authenticated endpoints."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + cors middleware code. The Node-runnable demo below verifies the origin allowlist and preflight logic so the behavior is verifiable here.",
+      "source": "// CORS — configure cross-origin access with the cors middleware.\nconst express = require(\"express\");\nconst cors = require(\"cors\");\nconst app = express();\n\nconst allowedOrigins = [\"https://app.example.com\", \"https://admin.example.com\"];\n\napp.use(cors({\n  origin: (origin, callback) => {\n    // allow same-origin/non-browser (no origin) and whitelisted origins\n    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);\n    callback(new Error(\"Not allowed by CORS\"));\n  },\n  methods: [\"GET\", \"POST\", \"PUT\", \"DELETE\"],\n  allowedHeaders: [\"Content-Type\", \"Authorization\"],\n  credentials: true,          // allow cookies/Authorization on cross-origin requests\n  maxAge: 86400,              // cache preflight for a day\n}));\n\napp.get(\"/api/data\", (req, res) => res.json({ ok: true }));\napp.listen(3000);\n// CORS is a browser security feature. The server declares which origins may\n// read its responses; the browser enforces it. It is NOT server-side auth.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CORS — decide which cross-origin requests the browser is allowed to read\nconst allowedOrigins = [\"https://app.example.com\", \"https://admin.example.com\"];\nfunction corsHeaders(origin, method){\n  const headers = {};\n  if (allowedOrigins.includes(origin)){\n    headers[\"Access-Control-Allow-Origin\"] = origin;\n    headers[\"Access-Control-Allow-Credentials\"] = \"true\";\n    if (method === \"OPTIONS\"){                      // preflight\n      headers[\"Access-Control-Allow-Methods\"] = \"GET,POST,PUT,DELETE\";\n      headers[\"Access-Control-Allow-Headers\"] = \"Content-Type,Authorization\";\n      headers[\"Access-Control-Max-Age\"] = \"86400\";\n    }\n  }\n  return headers;\n}\nconsole.log(\"Allowed GET:\", JSON.stringify(corsHeaders(\"https://app.example.com\", \"GET\")));\nconsole.log(\"Preflight:\", JSON.stringify(corsHeaders(\"https://app.example.com\", \"OPTIONS\")));\nconsole.log(\"Blocked origin:\", JSON.stringify(corsHeaders(\"https://evil.com\", \"GET\")));\nconsole.assert(!(\"Access-Control-Allow-Origin\" in corsHeaders(\"https://evil.com\", \"GET\")), \"evil origin not allowed\");\nconsole.assert(corsHeaders(\"https://app.example.com\", \"GET\")[\"Access-Control-Allow-Origin\"] === \"https://app.example.com\", \"trusted origin echoed\");\nconsole.log(\"CORS is enforced by the browser, not the server \\u2014 it controls cross-origin reads.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Allowed GET: {\"Access-Control-Allow-Origin\":\"https://app.example.com\",\"Access-Control-Allow-Credentials\":\"true\"}\nPreflight: {\"Access-Control-Allow-Origin\":\"https://app.example.com\",\"Access-Control-Allow-Credentials\":\"true\",\"Access-Control-Allow-Methods\":\"GET,POST,PUT,DELETE\",\"Access-Control-Allow-Headers\":\"Content-Type,Authorization\",\"Access-Control-Max-Age\":\"86400\"}\nBlocked origin: {}\nCORS is enforced by the browser, not the server — it controls cross-origin reads.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

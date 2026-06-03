@@ -1,0 +1,67 @@
+{
+  "id": "p1b-069",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 69,
+  "orderInPhase": 69,
+  "slug": "import-type-type-only-imports",
+  "title": "import type (type-only imports)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "import",
+    "type",
+    "type-only",
+    "imports"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Importing only a `User` interface for annotations with `import type { User } from \"./models\"` guarantees the models module isn't pulled into the runtime bund…"
+  },
+  "sections": {
+    "simple_en": "`import type { X } from \"./module\"` imports something used ONLY as a type. The compiler guarantees it's erased from the output JavaScript, so it never causes a runtime import or side effect. There's also `export type` and inline `import { type X, value }`.\n\nType-only imports make intent explicit, prevent accidental runtime dependencies on type-only modules, and help bundlers/`isolatedModules` strip types correctly. They're a best practice in modern codebases for clearly separating type imports from value imports.",
+    "hinglish": "`import type { X } from \"./module\"` kisi aisi cheez ko import karta hai jo SIRF type ki tarah use hoti hai. Compiler guarantee karta hai ki ye output JavaScript se erase ho jaaye, isliye ye kabhi runtime import ya side effect nahi karta. `export type` aur inline `import { type X, value }` bhi hote hain.\nType-only imports intent explicit banate hain, type-only modules par accidental runtime dependencies rokte hain, aur bundlers/`isolatedModules` ko types sahi strip karne me help karte hain. Ye modern codebases me type imports ko value imports se clearly alag karne ki best practice hain.",
+    "keyPoints": [
+      "`import type {...}` imports types only; erased from output.",
+      "No runtime import or side effect occurs.",
+      "Also `export type` and inline `import { type X, value }`.",
+      "Helps isolatedModules/bundlers strip types correctly.",
+      "Best practice for separating type vs value imports."
+    ],
+    "real_world": "Importing only a `User` interface for annotations with `import type { User } from \"./models\"` guarantees the models module isn't pulled into the runtime bundle just to satisfy a type reference.",
+    "followups": [
+      {
+        "q": "What does `import type` guarantee?",
+        "a": "That the import is used only as a type and is fully erased from the emitted JavaScript — it causes no runtime import or side effect."
+      },
+      {
+        "q": "Why use type-only imports?",
+        "a": "They make intent explicit, prevent accidental runtime dependencies on type-only modules, and help tools with `isolatedModules` reliably strip types during compilation/bundling."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// In a real project across files:\n//\n//   // models.ts\n//   export interface User { id: number; name: string; }\n//\n//   // consumer.ts\n//   import type { User } from \"./models\"; // erased at runtime\n//   function greet(u: User) { return \"Hi \" + u.name; }\n//\n// Type-only imports produce NO runtime import. Below (single file) shows the\n// equivalent typed usage; the type reference is compile-time only.\n\nexport interface User { id: number; name: string; }\n\nexport function greet(u: User): string {\n  return \"Hi \" + u.name;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { greet } from \"./solution\";\nimport type { User } from \"./solution\"; // type-only: erased at runtime\n\nconst user: User = { id: 1, name: \"Asha\" };\nconsole.log(greet(user)); // Hi Asha\n\nconsole.assert(greet(user) === \"Hi Asha\", \"type-only import used for annotation\");\nconsole.log(\"import-type assertions passed.\");",
+      "expectedOutput": "Hi Asha\nimport-type assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "generatedFrom": "content-src",
+  "totalTopics": 448,
+  "phases": [
+    {
+      "id": "p1a-javascript",
+      "code": "P1A",
+      "title": "JavaScript Foundations",
+      "order": 1,
+      "primaryLanguage": "javascript",
+      "topicCount": 103,
+      "missingNumbers": [],
+      "blurb": "The execution model, scope, closures, types, async, and the higher-order patterns interviews lean on hardest."
+    },
+    {
+      "id": "p1b-typescript",
+      "code": "P1B",
+      "title": "TypeScript",
+      "order": 2,
+      "primaryLanguage": "typescript",
+      "topicCount": 77,
+      "missingNumbers": [],
+      "blurb": "The type system end to end: primitives, unions, generics, narrowing, utility types, and config."
+    },
+    {
+      "id": "p2-react",
+      "code": "P2",
+      "title": "React",
+      "order": 3,
+      "primaryLanguage": "jsx",
+      "topicCount": 72,
+      "missingNumbers": [],
+      "blurb": "How React works under the hood — the VDOM, hooks, composition patterns, and the performance toolkit."
+    },
+    {
+      "id": "p3-backend",
+      "code": "P3",
+      "title": "Backend",
+      "order": 4,
+      "primaryLanguage": "javascript",
+      "topicCount": 95,
+      "missingNumbers": [],
+      "blurb": "HTTP, Node, Express, SQL & NoSQL, auth, security, queues, and the DevOps that ships them."
+    },
+    {
+      "id": "p4-genai",
+      "code": "P4",
+      "title": "GenAI + RAG",
+      "order": 5,
+      "primaryLanguage": "python",
+      "topicCount": 50,
+      "missingNumbers": [],
+      "blurb": "LLMs, prompting, generation parameters, embeddings, vector search, RAG, and agents."
+    },
+    {
+      "id": "p5-system-design",
+      "code": "P5",
+      "title": "System Design",
+      "order": 6,
+      "primaryLanguage": "javascript",
+      "topicCount": 51,
+      "missingNumbers": [],
+      "blurb": "DSA foundations, scaling, caching, sharding, classic design questions, and interview-round prep."
+    }
+  ]
+}

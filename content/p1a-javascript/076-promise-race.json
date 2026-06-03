@@ -1,0 +1,64 @@
+{
+  "id": "p1a-076",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 76,
+  "orderInPhase": 76,
+  "slug": "promise-race",
+  "title": "Promise.race",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "promise.race"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "Adding a timeout to a slow network request: `Promise.race([fetch(url), timeout(5000)])` rejects after 5s if the fetch hasn't completed, letting you show a 't…"
+  },
+  "sections": {
+    "simple_en": "`Promise.race([...])` returns a promise that settles as soon as the FIRST input promise settles — whether it fulfils or rejects. It adopts that first settled promise's value or reason and ignores the rest (which keep running but are discarded).\n\nThe classic use is timeouts: race a real operation against a promise that rejects after N milliseconds, so whichever happens first wins. Be aware it settles on the first to FINISH, success or failure alike — unlike `Promise.any`, which waits for the first SUCCESS.",
+    "hinglish": "`Promise.race([...])` ek promise return karta hai jo tab settle hota hai jab PEHLA input promise settle ho — chahe woh fulfil ho ya reject. Woh us pehle settled promise ki value/reason le leta hai aur baaki ignore kar deta hai (jo chalte rehte hain par discard).\nClassic use timeouts hai: ek real operation ko ek aise promise se race karwao jo N milliseconds baad reject ho, taaki jo pehle ho woh jeete. Dhyaan rakho ye pehle FINISH hone wale par settle hota hai, success ya failure dono — `Promise.any` ke विपरीत, jo pehle SUCCESS ka wait karta hai.",
+    "keyPoints": [
+      "Settles with the first promise to settle (fulfil OR reject).",
+      "Other promises keep running but their outcomes are ignored.",
+      "Primary use: timeouts (race an op against a timer rejection).",
+      "Differs from `any` (first success) and `all` (all successes).",
+      "An empty array → the promise never settles."
+    ],
+    "real_world": "Adding a timeout to a slow network request: `Promise.race([fetch(url), timeout(5000)])` rejects after 5s if the fetch hasn't completed, letting you show a 'taking too long' message.",
+    "followups": [
+      {
+        "q": "Does Promise.race wait for a successful result?",
+        "a": "No. It settles with the first promise to settle, whether that's a fulfilment or a rejection. If you need the first success specifically, use `Promise.any`."
+      },
+      {
+        "q": "What's a common real-world use of Promise.race?",
+        "a": "Implementing timeouts — racing an operation against a timer that rejects, so the slower one is abandoned and you can fail fast or show a fallback."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Promise.race for a timeout wrapper.\n\nconst after = (value, ms) => new Promise((r) => setTimeout(() => r(value), ms));\nconst timeout = (ms) => new Promise((_, rej) =>\n  setTimeout(() => rej(new Error(\"timeout\")), ms));\n\nfunction withTimeout(promise, ms) {\n  return Promise.race([promise, timeout(ms)]);\n}\n\nmodule.exports = { after, withTimeout };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { after, withTimeout } = require(\"./solution\");\n\n// fast op beats the timeout\nwithTimeout(after(\"done\", 5), 50).then((v) => {\n  console.log(\"won:\", v); // done\n  console.assert(v === \"done\", \"fast op wins the race\");\n\n  // slow op loses to the timeout\n  withTimeout(after(\"slow\", 50), 5).catch((err) => {\n    console.log(\"lost:\", err.message); // timeout\n    console.assert(err.message === \"timeout\", \"timeout wins when op is slow\");\n    console.log(\"Promise.race assertions passed.\");\n  });\n});",
+      "expectedOutput": "won: done\nlost: timeout\nPromise.race assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

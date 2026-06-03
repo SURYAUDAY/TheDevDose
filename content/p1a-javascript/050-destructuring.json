@@ -1,0 +1,64 @@
+{
+  "id": "p1a-050",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 50,
+  "orderInPhase": 50,
+  "slug": "destructuring",
+  "title": "Destructuring",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "destructuring"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "React hooks return arrays you destructure (`const [count, setCount] = useState(0)`), and function options are commonly destructured with defaults: `function…"
+  },
+  "sections": {
+    "simple_en": "Destructuring is a concise syntax for unpacking values from arrays or properties from objects into distinct variables. Array destructuring is position-based (`const [a, b] = arr`); object destructuring is name-based (`const {x, y} = obj`).\n\nIt supports default values (`const {timeout = 1000} = opts`), renaming (`const {x: posX} = obj`), nested patterns, and combining with the rest operator. It makes function parameters, swapping variables, and working with API responses far cleaner.",
+    "hinglish": "Destructuring arrays se values ya objects se properties ko alag variables me unpack karne ka concise syntax hai. Array destructuring position-based hai (`const [a, b] = arr`); object destructuring name-based (`const {x, y} = obj`).\nYe default values (`const {timeout = 1000} = opts`), renaming (`const {x: posX} = obj`), nested patterns, aur rest operator ke saath combine support karta hai. Ye function parameters, variables swap karna, aur API responses ke saath kaam karna kaafi saaf bana deta hai.",
+    "keyPoints": [
+      "Array destructuring is positional; object destructuring is by property name.",
+      "Defaults: `const {n = 0} = obj` fills in when the value is undefined.",
+      "Renaming: `const {x: newName} = obj`.",
+      "Supports nesting and combining with rest (`const [a, ...rest] = arr`).",
+      "Great for function parameters, variable swaps, and unpacking API data."
+    ],
+    "real_world": "React hooks return arrays you destructure (`const [count, setCount] = useState(0)`), and function options are commonly destructured with defaults: `function connect({ host = 'localhost', port = 5432 } = {}) {}`.",
+    "followups": [
+      {
+        "q": "How do you provide default values in destructuring?",
+        "a": "Add `= value` after the variable: `const { timeout = 1000 } = opts`. The default applies only when the unpacked value is `undefined`."
+      },
+      {
+        "q": "How do you rename a variable while destructuring an object?",
+        "a": "Use a colon: `const { originalKey: newName } = obj`. `newName` becomes the variable holding `obj.originalKey`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Destructuring: defaults, renaming, nesting, swap.\n\nfunction configure({ host = \"localhost\", port = 5432, secure = false } = {}) {\n  return host + \":\" + port + (secure ? \" (TLS)\" : \"\");\n}\n\nfunction swap(a, b) {\n  [a, b] = [b, a]; // swap without a temp variable\n  return [a, b];\n}\n\nfunction unpackNested(data) {\n  const { user: { name, address: { city } } } = data;\n  return name + \" from \" + city;\n}\n\nmodule.exports = { configure, swap, unpackNested };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { configure, swap, unpackNested } = require(\"./solution\");\n\nconsole.log(configure());                          // localhost:5432\nconsole.log(configure({ port: 8080, secure: true })); // localhost:8080 (TLS)\nconsole.log(swap(1, 2));                            // [2,1]\nconsole.log(unpackNested({ user: { name: \"Asha\", address: { city: \"Pune\" } } }));\n\nconsole.assert(configure() === \"localhost:5432\", \"defaults applied\");\nconsole.assert(configure({ port: 8080, secure: true }) === \"localhost:8080 (TLS)\", \"partial override\");\nconsole.assert(JSON.stringify(swap(1, 2)) === \"[2,1]\", \"swap works\");\nconsole.assert(unpackNested({ user: { name: \"Asha\", address: { city: \"Pune\" } } }) === \"Asha from Pune\", \"nested destructuring\");\nconsole.log(\"destructuring assertions passed.\");",
+      "expectedOutput": "localhost:5432\nlocalhost:8080 (TLS)\n[ 2, 1 ]\nAsha from Pune\ndestructuring assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

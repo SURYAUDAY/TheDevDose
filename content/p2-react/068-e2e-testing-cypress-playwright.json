@@ -1,0 +1,71 @@
+{
+  "id": "p2-068",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 68,
+  "orderInPhase": 68,
+  "slug": "e2e-testing-cypress-playwright",
+  "title": "E2E testing (Cypress / Playwright)",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "e2e",
+    "testing",
+    "cypress",
+    "playwright"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A checkout flow is protected by an E2E test: log in, add an item, go to checkout, pay, and assert 'Order confirmed'."
+  },
+  "sections": {
+    "simple_en": "End-to-end (E2E) testing drives the real application in a real browser, simulating complete user journeys — visiting pages, filling forms, clicking buttons, and asserting outcomes. Unlike unit tests, E2E tests verify that all the pieces (frontend, routing, APIs) work together from the user's perspective.\n\nCypress and Playwright are the leading tools. They provide commands to navigate, interact, and assert, with automatic waiting for elements, screenshots/videos on failure, and the ability to run across browsers (Playwright especially). E2E tests are slower and more brittle than unit tests, so cover critical flows rather than everything.",
+    "hinglish": "End-to-end (E2E) testing real application ko real browser mein chalata hai, complete user journeys simulate karke — pages visit karna, forms bharna, buttons click karna, aur outcomes assert karna. Unit tests ke ulat, E2E verify karta hai ki saare pieces (frontend, routing, APIs) user ke perspective se saath kaam karte hain.\n\nCypress aur Playwright leading tools hain. Ye navigate/interact/assert ke commands dete hain, elements ka automatic wait, failure par screenshots/videos, aur multiple browsers (khaaskar Playwright). E2E tests slow aur thode brittle hote hain, isliye critical flows cover karo, sab kuch nahi.",
+    "keyPoints": [
+      "Drives the real app in a real browser to test full user journeys.",
+      "Verifies frontend + routing + APIs work together end to end.",
+      "Cypress / Playwright: navigate, interact, assert, with auto-waiting.",
+      "Captures screenshots/videos on failure; Playwright runs cross-browser.",
+      "Slower and more brittle — cover critical flows, not every detail."
+    ],
+    "real_world": "A checkout flow is protected by an E2E test: log in, add an item, go to checkout, pay, and assert 'Order confirmed'. If a deploy breaks any step — a broken route, a failing API — the test fails in CI before customers ever hit it.",
+    "followups": [
+      {
+        "q": "How do E2E tests differ from unit tests?",
+        "a": "Unit tests check small pieces in isolation; E2E tests run the whole app in a browser to verify complete user flows across frontend, routing, and backend together."
+      },
+      {
+        "q": "Why not E2E-test everything?",
+        "a": "E2E tests are slower and more brittle than unit/integration tests. Use them for critical user journeys and rely on faster tests for the bulk of coverage (the testing pyramid)."
+      },
+      {
+        "q": "Cypress vs Playwright — a quick distinction?",
+        "a": "Both are excellent; Playwright offers strong multi-browser support and parallelism out of the box, while Cypress has a very developer-friendly interactive runner. Choice often comes down to team preference."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Cypress E2E test code (run with the Cypress runner). The Node-runnable demo below simulates the command/assertion flow so the output is verifiable here.",
+      "source": "// E2E testing — drive the real app in a browser (Cypress example).\n// cypress/e2e/checkout.cy.js\n\ndescribe(\"checkout flow\", () => {\n  it(\"lets a user log in and buy an item\", () => {\n    cy.visit(\"/login\");\n    cy.get('input[name=\"email\"]').type(\"asha@example.com\");\n    cy.get('input[name=\"password\"]').type(\"secret123\");\n    cy.contains(\"button\", \"Log in\").click();\n\n    cy.url().should(\"include\", \"/shop\");          // assertion on navigation\n    cy.contains(\".product\", \"Phone\").find(\"button\").click(); // add to cart\n    cy.get('[data-testid=\"cart-count\"]').should(\"have.text\", \"1\");\n\n    cy.contains(\"button\", \"Checkout\").click();\n    cy.contains(\"Order confirmed\").should(\"be.visible\");\n  });\n});\n\n// Playwright equivalent uses: await page.goto(), page.click(), expect(page)...",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// E2E testing (Cypress/Playwright) — drive a fake app with commands + assertions\nfunction createApp(){\n  return { url: \"/\", loggedIn: false, cart: 0 };\n}\nfunction createTestRunner(app){\n  const steps = [];\n  const api = {\n    visit(url){ app.url = url; steps.push(`visit ${url}`); return api; },\n    click(action){\n      if (action === \"login\") app.loggedIn = true;\n      if (action === \"add-to-cart\") app.cart++;\n      steps.push(`click ${action}`); return api;\n    },\n    expectUrl(url){ if (app.url !== url) throw new Error(`url ${app.url} != ${url}`); steps.push(`expect url ${url}`); return api; },\n    expectCart(n){ if (app.cart !== n) throw new Error(`cart ${app.cart} != ${n}`); steps.push(`expect cart ${n}`); return api; },\n  };\n  return api;\n}\nconst app = createApp();\nconst cy = createTestRunner(app);\ncy.visit(\"/login\").click(\"login\").visit(\"/shop\")\n  .click(\"add-to-cart\").click(\"add-to-cart\")\n  .expectUrl(\"/shop\").expectCart(2);\nconsole.log(\"E2E flow passed. Logged in:\", app.loggedIn, \"| Cart:\", app.cart);\nconsole.assert(app.loggedIn && app.cart === 2, \"user logged in with 2 items\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "E2E flow passed. Logged in: true | Cart: 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

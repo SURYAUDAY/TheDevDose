@@ -1,0 +1,66 @@
+{
+  "id": "p1a-070",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 70,
+  "orderInPhase": 70,
+  "slug": "synchronous-vs-asynchronous-javascript",
+  "title": "Synchronous vs Asynchronous JavaScript",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "synchronous",
+    "asynchronous",
+    "javascript"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A web page fetching data: a synchronous request would freeze the whole tab until the server replies."
+  },
+  "sections": {
+    "simple_en": "Synchronous code runs line by line, each statement blocking the next until it completes. Because JavaScript has a single call stack, a long synchronous task (like a heavy loop) freezes everything — including the UI in a browser.\n\nAsynchronous code lets long operations (timers, network requests, file I/O) run in the background and notify you later via callbacks, promises, or async/await, without blocking the main thread. The event loop coordinates when those results re-enter the call stack.",
+    "hinglish": "Synchronous code line-by-line chalta hai, har statement agle ko block karta hai jab tak complete na ho. Kyunki JavaScript me single call stack hai, ek lamba synchronous task (jaise bhari loop) sab kuch freeze kar deta hai — browser me UI bhi.\nAsynchronous code lambe operations (timers, network requests, file I/O) ko background me chalne deta hai aur baad me callbacks, promises, ya async/await se notify karta hai, bina main thread block kiye. Event loop coordinate karta hai ki woh results kab call stack me wapas aayein.",
+    "keyPoints": [
+      "Synchronous: blocking, line-by-line; long tasks freeze the single thread.",
+      "Asynchronous: non-blocking; long ops run elsewhere and report back later.",
+      "JS is single-threaded; async concurrency comes from the runtime + event loop.",
+      "Async results arrive via callbacks, promises, or async/await.",
+      "Use async for I/O (network, disk, timers) to keep the UI/server responsive."
+    ],
+    "real_world": "A web page fetching data: a synchronous request would freeze the whole tab until the server replies. An asynchronous `fetch` lets the page stay interactive and updates the UI when the response arrives.",
+    "followups": [
+      {
+        "q": "If JavaScript is single-threaded, how does it do async work?",
+        "a": "The runtime (browser/Node) handles timers, network, and I/O outside the main thread, then queues their callbacks. The event loop pushes those callbacks onto the single call stack when it's empty."
+      },
+      {
+        "q": "What happens if you run a long synchronous loop in the browser?",
+        "a": "It blocks the single thread, freezing the UI — no clicks, scrolls, or rendering — until the loop finishes. Heavy work should be made async or offloaded (e.g. to a Web Worker)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Showing async scheduling: sync runs first, async later.\n\nfunction ordering() {\n  const order = [];\n  order.push(\"sync-start\");\n  setTimeout(() => order.push(\"timeout\"), 0); // async, runs after stack clears\n  Promise.resolve().then(() => order.push(\"promise\")); // microtask\n  order.push(\"sync-end\");\n  return order; // at this moment: only sync entries\n}\n\n// Helper returning the final order after async tasks settle.\nfunction finalOrder() {\n  return new Promise((resolve) => {\n    const order = [\"sync-start\", \"sync-end\"];\n    Promise.resolve().then(() => order.push(\"promise\"));\n    setTimeout(() => { order.push(\"timeout\"); resolve(order); }, 0);\n  });\n}\n\nmodule.exports = { ordering, finalOrder };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { ordering, finalOrder } = require(\"./solution\");\n\nconsole.log(\"immediate:\", ordering()); // ['sync-start','sync-end']\n\nfinalOrder().then((order) => {\n  console.log(\"final:\", order); // ['sync-start','sync-end','promise','timeout']\n  console.assert(order[0] === \"sync-start\", \"sync first\");\n  console.assert(order.indexOf(\"promise\") < order.indexOf(\"timeout\"), \"microtask before macrotask\");\n  console.log(\"sync/async assertions passed.\");\n});\n\nconsole.assert(JSON.stringify(ordering()) === '[\"sync-start\",\"sync-end\"]', \"async deferred\");",
+      "expectedOutput": "immediate: [ 'sync-start', 'sync-end' ]\nfinal: [ 'sync-start', 'sync-end', 'promise', 'timeout' ]\nsync/async assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

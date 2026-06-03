@@ -1,0 +1,64 @@
+{
+  "id": "p1a-036",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 36,
+  "orderInPhase": 36,
+  "slug": "classes",
+  "title": "Classes",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "classes"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "pipeline",
+    "seedText": "A `BankAccount` class with a private `#balance` field exposes `deposit`/`withdraw` methods and a `static fromJSON()` factory — encapsulating data and behavio…"
+  },
+  "sections": {
+    "simple_en": "ES6 classes provide a clean, familiar syntax for creating objects and handling inheritance. A class has a `constructor` for initialisation, instance methods (placed on the prototype), static methods (called on the class itself), and can use `extends`/`super` for inheritance.\n\nClasses are syntactic sugar over prototypes — not a new object model. They also bring features like private fields (`#field`), getters/setters, and static blocks. Class bodies always run in strict mode and class declarations are not hoisted for use before definition (TDZ-like).",
+    "hinglish": "ES6 classes objects banane aur inheritance handle karne ka ek saaf, jaana-pehchana syntax dete hain. Class me initialisation ke liye `constructor`, instance methods (prototype par), static methods (class par hi call), aur inheritance ke liye `extends`/`super` hote hain.\nClasses prototypes ke upar syntactic sugar hain — koi naya object model nahi. Inme private fields (`#field`), getters/setters, aur static blocks jaise features bhi hain. Class body hamesha strict mode me chalti hai aur class declarations definition se pehle use ke liye hoist nahi hote (TDZ-jaisa).",
+    "keyPoints": [
+      "`constructor` initialises instances; methods go on the prototype automatically.",
+      "`static` members belong to the class, not instances.",
+      "Private fields use `#name` and are inaccessible outside the class.",
+      "Classes are sugar over prototypes; class body is strict mode by default.",
+      "Class declarations are in a TDZ — not usable before their definition line."
+    ],
+    "real_world": "A `BankAccount` class with a private `#balance` field exposes `deposit`/`withdraw` methods and a `static fromJSON()` factory — encapsulating data and behaviour the way most modern codebases structure domain models.",
+    "followups": [
+      {
+        "q": "Are JavaScript classes a different model from prototypes?",
+        "a": "No. Classes are syntactic sugar over prototype-based inheritance. Methods still live on the prototype; `extends` still builds a prototype chain."
+      },
+      {
+        "q": "How do you make a class member truly private?",
+        "a": "Use a private field with the `#` prefix (e.g. `#balance`). It's only accessible inside the class body and cannot be read or written from outside."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// A class with private field, getter, static method, and instance methods.\n\nclass BankAccount {\n  #balance;                       // private field\n  constructor(initial = 0) { this.#balance = initial; }\n\n  deposit(amt) { this.#balance += amt; return this; } // chainable\n  withdraw(amt) {\n    if (amt > this.#balance) throw new Error(\"Insufficient\");\n    this.#balance -= amt; return this;\n  }\n  get balance() { return this.#balance; }            // getter\n\n  static fromJSON(json) { return new BankAccount(JSON.parse(json).balance); }\n}\n\nmodule.exports = { BankAccount };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { BankAccount } = require(\"./solution\");\n\nconst acc = new BankAccount(100);\nacc.deposit(50).withdraw(30);     // chaining\nconsole.log(\"balance:\", acc.balance); // 120\n\nconst restored = BankAccount.fromJSON('{\"balance\": 999}');\nconsole.log(\"restored:\", restored.balance); // 999\n\nconsole.assert(acc.balance === 120, \"deposit/withdraw chain\");\nconsole.assert(restored.balance === 999, \"static factory works\");\nconsole.assert(acc[\"#balance\"] === undefined, \"private field not accessible by string\");\nlet threw = false; try { acc.withdraw(99999); } catch { threw = true; }\nconsole.assert(threw, \"overdraw throws\");\nconsole.log(\"classes assertions passed.\");",
+      "expectedOutput": "balance: 120\nrestored: 999\nclasses assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

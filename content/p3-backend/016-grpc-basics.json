@@ -1,0 +1,69 @@
+{
+  "id": "p3-016",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 16,
+  "orderInPhase": 16,
+  "slug": "grpc-basics",
+  "title": "gRPC basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "grpc",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "In a microservices backend, the orders service calls the inventory service via gRPC."
+  },
+  "sections": {
+    "simple_en": "gRPC is a high-performance RPC (Remote Procedure Call) framework. You define services and message types in a .proto file (Protocol Buffers), and gRPC generates strongly-typed client/server code. Calls feel like local function calls but run over the network using compact binary serialization on HTTP/2.\n\nCompared to REST/JSON, gRPC is faster and smaller on the wire, strongly typed via the proto contract, and supports streaming (client, server, and bidirectional) thanks to HTTP/2. It's popular for internal service-to-service communication in microservices, less so for public browser-facing APIs.",
+    "hinglish": "gRPC ek high-performance RPC (Remote Procedure Call) framework hai. Aap services aur message types ek .proto file (Protocol Buffers) mein define karte ho, aur gRPC strongly-typed client/server code generate karta hai. Calls local function calls jaisi lagti hain par network par compact binary serialization se HTTP/2 par chalti hain.\n\nREST/JSON ke comparison mein gRPC wire par fast aur chhota, proto contract se strongly typed, aur streaming (client, server, bidirectional) support karta hai HTTP/2 ki wajah se. Microservices mein internal service-to-service communication ke liye popular, public browser APIs ke liye kam.",
+    "keyPoints": [
+      "RPC framework: define services/messages in .proto (Protocol Buffers).",
+      "Strongly typed; generates client/server stubs from the contract.",
+      "Compact binary over HTTP/2 — faster and smaller than REST/JSON.",
+      "Supports unary and streaming (client/server/bidirectional) calls.",
+      "Best for internal microservice communication, not public web APIs."
+    ],
+    "real_world": "In a microservices backend, the orders service calls the inventory service via gRPC. The shared .proto guarantees both sides agree on types, and the binary HTTP/2 transport keeps latency low even at high request volumes between services.",
+    "followups": [
+      {
+        "q": "Why is gRPC faster than REST/JSON?",
+        "a": "It serializes data as compact binary Protocol Buffers (not verbose JSON) and uses HTTP/2 with multiplexing and streaming, reducing payload size and round-trip overhead."
+      },
+      {
+        "q": "Why isn't gRPC common for public browser APIs?",
+        "a": "Browsers can't speak raw gRPC directly (it needs gRPC-Web + a proxy), and binary contracts are less convenient for public consumers than JSON/REST."
+      },
+      {
+        "q": "What does the .proto file define?",
+        "a": "The service methods and their request/response message types. It's the strongly-typed contract from which client and server code is generated."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real gRPC service code (Node + @grpc/grpc-js + a .proto contract). The Node-runnable demo below simulates the unary round-trip.",
+      "source": "// gRPC basics — define a service in protobuf, implement it in Node.\n// greeter.proto\n//   syntax = \"proto3\";\n//   service Greeter { rpc SayHello (HelloRequest) returns (HelloReply); }\n//   message HelloRequest { string name = 1; }\n//   message HelloReply   { string message = 1; }\n\nconst grpc = require(\"@grpc/grpc-js\");\nconst protoLoader = require(\"@grpc/proto-loader\");\n\nconst pkgDef = protoLoader.loadSync(\"greeter.proto\");\nconst proto = grpc.loadPackageDefinition(pkgDef);\n\nconst server = new grpc.Server();\nserver.addService(proto.Greeter.service, {\n  // Unary RPC: one request -> one response, sent as binary protobuf over HTTP/2.\n  SayHello: (call, callback) => {\n    callback(null, { message: `Hello, ${call.request.name}` });\n  },\n});\n\nserver.bindAsync(\"0.0.0.0:50051\", grpc.ServerCredentials.createInsecure(), () =>\n  console.log(\"gRPC server on :50051\")\n);\n// gRPC: strongly-typed contracts, compact binary, HTTP/2 streaming — great for\n// service-to-service communication (vs REST/JSON for public web APIs).",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// gRPC basics — a typed service contract + unary call with (de)serialization\nconst proto = {\n  service: \"Greeter\",\n  methods: { SayHello: { request: [\"name\"], response: [\"message\"] } },\n};\nfunction serialize(obj, fields){ return fields.map(f => `${f}=${obj[f]}`).join(\";\"); } // wire format (mimics protobuf)\nfunction deserialize(str){ return Object.fromEntries(str.split(\";\").map(p => p.split(\"=\"))); }\n\n// Server implements the method per the contract:\nfunction SayHello(req){ return { message: `Hello, ${req.name}` }; }\n\n// Client call: serialize request -> server -> serialize response\nconst wireReq = serialize({ name: \"Asha\" }, proto.methods.SayHello.request);\nconst req = deserialize(wireReq);\nconst wireRes = serialize(SayHello(req), proto.methods.SayHello.response);\nconsole.log(\"Wire request: \", wireReq);\nconsole.log(\"Wire response:\", wireRes);\nconsole.log(\"Decoded:\", JSON.stringify(deserialize(wireRes)));\nconsole.assert(deserialize(wireRes).message === \"Hello, Asha\", \"unary RPC round-trip\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Wire request:  name=Asha\nWire response: message=Hello, Asha\nDecoded: {\"message\":\"Hello, Asha\"}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

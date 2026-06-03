@@ -1,0 +1,65 @@
+{
+  "id": "p1a-060",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 60,
+  "orderInPhase": 60,
+  "slug": "shallow-copy",
+  "title": "Shallow Copy",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "shallow",
+    "copy"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Updating one field of a flat state object in React with `{...state, name: 'new'}` — perfect when the data is shallow."
+  },
+  "sections": {
+    "simple_en": "A shallow copy duplicates only the top level of an object or array. The new container is separate, but any nested objects/arrays are still shared by reference with the original — they are not duplicated.\n\nCommon ways to make a shallow copy: spread (`{...obj}`, `[...arr]`), `Object.assign({}, obj)`, `Array.prototype.slice()`, and `Array.from()`. Shallow copies are fast and often sufficient, but mutating a nested value affects both copies.",
+    "hinglish": "Shallow copy object ya array ke sirf top level ko duplicate karti hai. Naya container alag hota hai, par koi bhi nested objects/arrays abhi bhi original ke saath reference se shared rehte hain — woh duplicate nahi hote.\nShallow copy banane ke common tarike: spread (`{...obj}`, `[...arr]`), `Object.assign({}, obj)`, `Array.prototype.slice()`, aur `Array.from()`. Shallow copies fast aur aksar kaafi hoti hain, par nested value mutate karne par dono copies affect hoti hain.",
+    "keyPoints": [
+      "Copies the top level only; nested objects/arrays remain shared by reference.",
+      "Tools: spread, `Object.assign`, `slice`, `Array.from`.",
+      "Fast and usually enough for flat data.",
+      "Mutating a nested value is visible in both the copy and the original.",
+      "For independent nested data you need a deep copy."
+    ],
+    "real_world": "Updating one field of a flat state object in React with `{...state, name: 'new'}` — perfect when the data is shallow. Bugs appear when the state has nested objects and you only shallow-copy.",
+    "followups": [
+      {
+        "q": "What does a shallow copy NOT duplicate?",
+        "a": "Nested objects and arrays. Only the top-level container is new; nested references still point to the same underlying objects as the original."
+      },
+      {
+        "q": "Name three ways to shallow-copy.",
+        "a": "Spread (`{...obj}` / `[...arr]`), `Object.assign({}, obj)`, and array methods like `slice()` or `Array.from()`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Shallow copy: top level independent, nested shared.\n\nfunction shallowCopy(obj) {\n  return { ...obj };\n}\n\nfunction demonstrate() {\n  const original = { name: \"Asha\", address: { city: \"Pune\" } };\n  const copy = shallowCopy(original);\n  copy.name = \"Ravi\";              // top-level: independent\n  copy.address.city = \"Mumbai\";   // nested: SHARED\n  return {\n    originalName: original.name,        // \"Asha\" (unchanged)\n    originalCity: original.address.city, // \"Mumbai\" (changed via shared ref!)\n    sharedNested: original.address === copy.address,\n  };\n}\n\nmodule.exports = { shallowCopy, demonstrate };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { demonstrate } = require(\"./solution\");\n\nconsole.log(demonstrate());\n\nconst r = demonstrate();\nconsole.assert(r.originalName === \"Asha\", \"top-level change isolated\");\nconsole.assert(r.originalCity === \"Mumbai\", \"nested change leaked (shared ref)\");\nconsole.assert(r.sharedNested === true, \"nested object is shared\");\nconsole.log(\"shallow copy assertions passed.\");",
+      "expectedOutput": "{ originalName: 'Asha', originalCity: 'Mumbai', sharedNested: true }\nshallow copy assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

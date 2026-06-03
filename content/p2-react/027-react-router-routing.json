@@ -1,0 +1,70 @@
+{
+  "id": "p2-027",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 27,
+  "orderInPhase": 27,
+  "slug": "react-router-routing",
+  "title": "React Router (routing)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "react",
+    "router",
+    "routing"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An e-commerce SPA shows the product list at /products, a single product at /products/:id, and the cart at /cart — all without reloading."
+  },
+  "sections": {
+    "simple_en": "React Router is the standard library for client-side routing in React single-page apps. It maps URL paths to components and updates the view without a full page reload, using the browser's History API to keep the URL in sync with what's rendered.\n\nYou declare routes with <Routes> and <Route>, navigate with <Link> or the useNavigate hook, and read URL data with hooks like useParams and useSearchParams. A catch-all route (path=\"*\") handles unknown URLs as a 404.",
+    "hinglish": "React Router single-page apps mein client-side routing ke liye standard library hai. Ye URL paths ko components se map karta hai aur bina full reload ke view update karta hai, History API use karke.\n\nAap <Routes> aur <Route> se routes declare karte ho, <Link> ya useNavigate se navigate karte ho, aur useParams/useSearchParams se URL data padhte ho. path=\"*\" wala route 404 handle karta hai.",
+    "keyPoints": [
+      "Client-side routing: maps URLs to components without full page reloads.",
+      "Core pieces: <BrowserRouter>, <Routes>, <Route path element>.",
+      "Navigate with <Link> (declarative) or useNavigate (programmatic).",
+      "Read URL data with useParams (path), useSearchParams (query), useLocation.",
+      "Use path=\"*\" as a catch-all for 404 pages."
+    ],
+    "real_world": "An e-commerce SPA shows the product list at /products, a single product at /products/:id, and the cart at /cart — all without reloading. Clicking a product updates the URL and swaps in the detail component instantly, and the back button still works.",
+    "followups": [
+      {
+        "q": "How is client-side routing different from server routing?",
+        "a": "Server routing returns a new HTML document per URL; client-side routing swaps components in the same loaded page using the History API, so navigation is instant and stateful."
+      },
+      {
+        "q": "How do you navigate after an action (e.g., login)?",
+        "a": "Use the useNavigate hook: const navigate = useNavigate(); then navigate('/dashboard'). <Link> is for user-clickable navigation."
+      },
+      {
+        "q": "How do you handle unknown URLs?",
+        "a": "Add a route with path=\"*\" at the end; it matches anything not matched earlier and can render a 404 page."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// React Router: declare routes and navigate between pages.\nimport React from \"react\";\nimport { BrowserRouter, Routes, Route, Link } from \"react-router-dom\";\n\nfunction Home() { return <h2>Home</h2>; }\nfunction About() { return <h2>About</h2>; }\nfunction NotFound() { return <h2>404 — Not Found</h2>; }\n\nexport default function App() {\n  return (\n    <BrowserRouter>\n      <nav>\n        <Link to=\"/\">Home</Link> | <Link to=\"/about\">About</Link>\n      </nav>\n      <Routes>\n        <Route path=\"/\" element={<Home />} />\n        <Route path=\"/about\" element={<About />} />\n        <Route path=\"*\" element={<NotFound />} /> {/* fallback */}\n      </Routes>\n    </BrowserRouter>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React Router — match a pathname to a route component\nconst routes = [\n  { path: \"/\",        component: \"Home\" },\n  { path: \"/about\",   component: \"About\" },\n  { path: \"/contact\", component: \"Contact\" },\n];\nfunction matchRoute(pathname){\n  const r = routes.find(r => r.path === pathname);\n  return r ? r.component : \"NotFound\";\n}\nconsole.log(\"/        ->\", matchRoute(\"/\"));\nconsole.log(\"/about   ->\", matchRoute(\"/about\"));\nconsole.log(\"/missing ->\", matchRoute(\"/missing\"));\nconsole.assert(matchRoute(\"/about\") === \"About\", \"about route\");\nconsole.assert(matchRoute(\"/missing\") === \"NotFound\", \"fallback 404\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "/        -> Home\n/about   -> About\n/missing -> NotFound\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

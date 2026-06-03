@@ -1,0 +1,71 @@
+{
+  "id": "p3-017",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 17,
+  "orderInPhase": 17,
+  "slug": "api-documentation-swagger-openapi",
+  "title": "API documentation (Swagger / OpenAPI)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "api",
+    "documentation",
+    "swagger",
+    "openapi"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A backend team publishes Swagger UI at /api-docs."
+  },
+  "sections": {
+    "simple_en": "OpenAPI is a standard specification for describing REST APIs — their endpoints, methods, parameters, request/response schemas, and status codes — in a machine-readable format (YAML/JSON). Swagger is the tooling around it, most notably Swagger UI, which turns a spec into interactive, browsable documentation where developers can try endpoints live.\n\nGood API docs reduce integration friction, serve as a contract between frontend and backend, and can drive code generation (clients, server stubs) and validation. Specs can be written by hand or generated from code annotations (e.g., swagger-jsdoc).",
+    "hinglish": "OpenAPI REST APIs ko describe karne ka ek standard specification hai — endpoints, methods, parameters, request/response schemas, status codes — machine-readable format (YAML/JSON) mein. Swagger uske aas-paas ki tooling hai, khaaskar Swagger UI jo spec ko interactive, browsable documentation bana deta hai jahan developers live endpoints try kar sakte hain.\n\nAchhi API docs integration friction kam karti hain, frontend-backend ke beech contract banti hain, aur code generation (clients, server stubs) aur validation drive kar sakti hain. Specs haath se likhi ja sakti hain ya code annotations se generate (swagger-jsdoc).",
+    "keyPoints": [
+      "OpenAPI: a standard, machine-readable spec for REST APIs (YAML/JSON).",
+      "Swagger UI renders the spec as interactive, try-it-out documentation.",
+      "Acts as a contract between frontend and backend teams.",
+      "Enables client/server code generation and request validation.",
+      "Write specs by hand or generate from code annotations (swagger-jsdoc)."
+    ],
+    "real_world": "A backend team publishes Swagger UI at /api-docs. Frontend developers explore every endpoint, see exact request/response shapes, and test calls in the browser — cutting back-and-forth questions and keeping both sides aligned on the API contract.",
+    "followups": [
+      {
+        "q": "Difference between OpenAPI and Swagger?",
+        "a": "OpenAPI is the specification standard; Swagger is the set of tools (Swagger UI, Editor, Codegen) built around it. The spec format was renamed from 'Swagger' to 'OpenAPI'."
+      },
+      {
+        "q": "How can docs stay in sync with code?",
+        "a": "Generate the spec from code annotations (e.g., swagger-jsdoc) or validate requests/responses against the spec in tests, so drift between docs and implementation is caught."
+      },
+      {
+        "q": "What else can an OpenAPI spec drive besides docs?",
+        "a": "Client SDK generation, server stub scaffolding, request/response validation, mock servers, and contract testing — it's a single source of truth for the API."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + Swagger UI code. The Node-runnable demo below builds and validates an OpenAPI spec object.",
+      "source": "// API documentation — serve interactive Swagger UI from an OpenAPI spec.\nconst express = require(\"express\");\nconst swaggerUi = require(\"swagger-ui-express\");\nconst app = express();\n\nconst openApiSpec = {\n  openapi: \"3.0.0\",\n  info: { title: \"User API\", version: \"1.0.0\" },\n  paths: {\n    \"/users\": {\n      get: { summary: \"List users\", responses: { 200: { description: \"OK\" } } },\n      post: {\n        summary: \"Create user\",\n        responses: { 201: { description: \"Created\" }, 400: { description: \"Bad Request\" } },\n      },\n    },\n  },\n};\n\n// Interactive docs at /api-docs — try requests right in the browser.\napp.use(\"/api-docs\", swaggerUi.serve, swaggerUi.setup(openApiSpec));\napp.listen(3000, () => console.log(\"Docs: http://localhost:3000/api-docs\"));\n// Tools like swagger-jsdoc can generate this spec from JSDoc comments on routes.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// API documentation — build a minimal OpenAPI spec from route metadata\nconst routes = [\n  { method: \"get\",  path: \"/users\",     summary: \"List users\",  responses: { 200: \"OK\" } },\n  { method: \"post\", path: \"/users\",     summary: \"Create user\", responses: { 201: \"Created\", 400: \"Bad Request\" } },\n  { method: \"get\",  path: \"/users/{id}\",summary: \"Get user\",    responses: { 200: \"OK\", 404: \"Not Found\" } },\n];\nfunction buildOpenAPI(routes){\n  const spec = { openapi: \"3.0.0\", info: { title: \"User API\", version: \"1.0.0\" }, paths: {} };\n  for (const r of routes){\n    spec.paths[r.path] = spec.paths[r.path] || {};\n    spec.paths[r.path][r.method] = { summary: r.summary, responses: r.responses };\n  }\n  return spec;\n}\nconst spec = buildOpenAPI(routes);\nconsole.log(\"Documented paths:\", Object.keys(spec.paths).join(\", \"));\nconsole.log(\"POST /users responses:\", Object.keys(spec.paths[\"/users\"].post.responses).join(\", \"));\nconsole.assert(spec.openapi === \"3.0.0\" && Object.keys(spec.paths).length === 2, \"valid spec built\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Documented paths: /users, /users/{id}\nPOST /users responses: 201, 400\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

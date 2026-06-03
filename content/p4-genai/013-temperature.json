@@ -1,0 +1,68 @@
+{
+  "id": "p4-013",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 13,
+  "orderInPhase": 13,
+  "slug": "temperature",
+  "title": "temperature",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "temperature"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A code-generation feature uses temperature 0 so it returns the same correct solution every time, while the app's 'creative tagline generator' uses temperatur…"
+  },
+  "sections": {
+    "simple_en": "Temperature is a sampling parameter that controls the randomness of an LLM's output. Technically, it rescales the next-token probability distribution before sampling: a low temperature sharpens it (the model almost always picks the most likely token — focused, deterministic), while a high temperature flattens it (more varied, creative, sometimes erratic).\n\nUse low temperature (around 0–0.3) for tasks needing accuracy and consistency — factual Q&A, code, data extraction — where you want repeatable results. Use higher temperature (around 0.7–1.0) for creative tasks like brainstorming or story writing where variety is desirable. At temperature 0, output is effectively greedy and near-deterministic.",
+    "hinglish": "Temperature ek sampling parameter hai jo LLM ke output ki randomness control karta hai. Technically, ye next-token probability distribution ko sampling se pehle rescale karta hai: low temperature use sharpen karta hai (model lagbhag hamesha sabse likely token chunta hai — focused, deterministic), jabki high temperature use flatten karta hai (zyada varied, creative, kabhi erratic).\n\nLow temperature (lagbhag 0–0.3) accuracy aur consistency waale tasks ke liye use karo — factual Q&A, code, data extraction — jahan repeatable results chahiye. Higher temperature (lagbhag 0.7–1.0) creative tasks jaise brainstorming ya story writing ke liye jahan variety achhi hai. Temperature 0 par output effectively greedy aur near-deterministic hota hai.",
+    "keyPoints": [
+      "Controls randomness by rescaling the next-token probability distribution.",
+      "Low temp -> peaked/deterministic (picks the likeliest token).",
+      "High temp -> flatter/varied (more creative, sometimes erratic).",
+      "Low (0–0.3): facts, code, extraction. Higher (0.7–1.0): creative work.",
+      "Temperature 0 is effectively greedy/near-deterministic."
+    ],
+    "real_world": "A code-generation feature uses temperature 0 so it returns the same correct solution every time, while the app's 'creative tagline generator' uses temperature 0.9 to produce a fresh, varied set of ideas on each click.",
+    "followups": [
+      {
+        "q": "What does temperature actually change?",
+        "a": "It scales the logits before the softmax, changing how peaked or flat the next-token probability distribution is. Lower temperature concentrates probability on the top tokens; higher spreads it out."
+      },
+      {
+        "q": "When would you use temperature 0?",
+        "a": "For deterministic, repeatable outputs — factual answers, code, data extraction, classification — where you want the most likely (and consistent) result every time."
+      },
+      {
+        "q": "Should you tune temperature and top_p together?",
+        "a": "Usually adjust one, not both. They both affect randomness via the distribution, and tuning both at once makes behavior harder to reason about."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI temperature code (needs an API key). The Python-runnable demo below computes the temperature-scaled softmax so the effect on the distribution is verifiable here.",
+      "source": "# temperature — control randomness/creativity of generation.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef generate(prompt: str, temperature: float) -> str:\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        temperature=temperature,   # 0 = deterministic/focused, ~1+ = creative/varied\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return response.choices[0].message.content\n\n# Low temperature (0-0.3): factual Q&A, code, extraction — repeatable and safe.\n# Higher temperature (0.7-1.0): brainstorming, story writing, varied ideas.\n# Temperature rescales the next-token probability distribution before sampling.\n# factual = generate(\"List the planets in order.\", 0)\n# creative = generate(\"Invent a name for a coffee shop.\", 0.9)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# temperature — scales the softmax: low = focused/deterministic, high = diverse/random\nimport math\nlogits = {\"cat\": 2.0, \"dog\": 1.0, \"bird\": 0.5, \"fish\": 0.2}\n\ndef softmax_with_temp(logits, T):\n    scaled = {k: v / T for k, v in logits.items()}\n    m = max(scaled.values())\n    exps = {k: math.exp(v - m) for k, v in scaled.items()}\n    z = sum(exps.values())\n    return {k: v / z for k, v in exps.items()}\n\nfor T in (0.2, 1.0, 2.0):\n    p = softmax_with_temp(logits, T)\n    top = max(p, key=p.get)\n    print(f\"T={T}: \" + \", \".join(f\"{k}={v:.2f}\" for k, v in p.items()) + f\"  (top={top} {p[top]:.2f})\")\n\nlow = softmax_with_temp(logits, 0.2)\nhigh = softmax_with_temp(logits, 2.0)\n# Lower temperature concentrates probability on the top token:\nassert low[\"cat\"] > high[\"cat\"], \"low temperature is more peaked/deterministic\"\nprint(\"\\nLow temperature -> safe, repeatable output. High temperature -> creative, varied output.\")\nprint(\"Use low temp for facts/code, higher temp for brainstorming/creative writing.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "T=0.2: cat=0.99, dog=0.01, bird=0.00, fish=0.00  (top=cat 0.99)\nT=1.0: cat=0.57, dog=0.21, bird=0.13, fish=0.09  (top=cat 0.57)\nT=2.0: cat=0.40, dog=0.24, bird=0.19, fish=0.16  (top=cat 0.40)\n\nLow temperature -> safe, repeatable output. High temperature -> creative, varied output.\nUse low temp for facts/code, higher temp for brainstorming/creative writing.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

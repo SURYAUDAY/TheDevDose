@@ -1,0 +1,69 @@
+{
+  "id": "p4-048",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 48,
+  "orderInPhase": 48,
+  "slug": "langchain-basics",
+  "title": "LangChain basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "langchain",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "queue",
+    "seedText": "Instead of hand-coding prompt formatting, API calls, retries, and parsing, a developer wires prompt | model | parser with LangChain and swaps the model or ad…"
+  },
+  "sections": {
+    "simple_en": "LangChain is a framework for building LLM applications from standardized, composable components: prompt templates, chat models, output parsers, retrievers, memory, tools, and agents — plus integrations with many model providers and vector stores. It saves you from re-implementing the plumbing every LLM app needs.\n\nIts core composition mechanism is LCEL (LangChain Expression Language), which uses the pipe operator to wire components into a runnable chain: prompt | model | parser. The same chain supports invoke, batch, stream, and async out of the box. LangChain's value is consistency and speed — a common vocabulary and ready-made building blocks for RAG, agents, and complex workflows.",
+    "hinglish": "LangChain LLM applications banane ke liye ek framework hai jo standardized, composable components se bani hai: prompt templates, chat models, output parsers, retrievers, memory, tools, aur agents — plus kai model providers aur vector stores ke saath integrations. Ye aapko har LLM app ki zaroori plumbing dobara implement karne se bachata hai.\n\nIska core composition mechanism LCEL (LangChain Expression Language) hai, jo pipe operator use karke components ko ek runnable chain mein wire karta hai: prompt | model | parser. Wahi chain invoke, batch, stream, aur async out of the box support karti hai. LangChain ki value consistency aur speed hai — ek common vocabulary aur ready-made building blocks RAG, agents, aur complex workflows ke liye.",
+    "keyPoints": [
+      "Framework of standardized, composable LLM building blocks.",
+      "Components: prompts, models, parsers, retrievers, memory, tools, agents.",
+      "Integrates with many providers and vector stores.",
+      "LCEL pipe (|) composes components into runnable chains.",
+      "Chains support invoke/batch/stream/async — consistency and speed."
+    ],
+    "real_world": "Instead of hand-coding prompt formatting, API calls, retries, and parsing, a developer wires prompt | model | parser with LangChain and swaps the model or adds a retriever by changing one line — building a RAG app far faster than from scratch.",
+    "followups": [
+      {
+        "q": "What is LangChain and why use it?",
+        "a": "A framework providing standardized, composable components (prompts, models, parsers, retrievers, memory, tools, agents) and integrations, so you build LLM apps faster with a common structure instead of reinventing the plumbing."
+      },
+      {
+        "q": "What is LCEL?",
+        "a": "LangChain Expression Language — the pipe-based syntax (prompt | model | parser) for composing components into a single runnable chain that supports invoke, batch, stream, and async."
+      },
+      {
+        "q": "Is LangChain required to build LLM apps?",
+        "a": "No — you can call provider SDKs directly. LangChain adds convenience, standard abstractions, and integrations; some teams prefer lighter or no frameworks for simplicity and control."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain (LCEL) code. The Python-runnable demo below composes prompt | model | parser with a pipe operator so the chaining mechanism is verifiable here.",
+      "source": "# LangChain basics — compose prompts, models, and parsers with LCEL (the | operator).\nfrom langchain_openai import ChatOpenAI\nfrom langchain_core.prompts import ChatPromptTemplate\nfrom langchain_core.output_parsers import StrOutputParser\n\nprompt = ChatPromptTemplate.from_template(\"Explain {topic} to a beginner in 2 sentences.\")\nmodel = ChatOpenAI(model=\"gpt-4o-mini\", temperature=0)\nparser = StrOutputParser()\n\n# LCEL pipes components into a single runnable chain: prompt -> model -> parser.\nchain = prompt | model | parser\n\n# answer = chain.invoke({\"topic\": \"RAG\"})\n# chain.stream(...) and chain.batch([...]) also work out of the box.\n\n# LangChain provides standardized, swappable building blocks \\u2014 prompts, chat models,\n# output parsers, retrievers, memory, tools, agents \\u2014 so you can assemble LLM apps fast.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# LangChain basics — compose LLM apps from reusable components (here: the LCEL pipe idea)\n# Core building blocks: prompts, models, parsers \\u2014 wired together into a runnable chain.\nclass PromptTemplate:\n    def __init__(self, template): self.template = template\n    def format(self, **kw): return self.template.format(**kw)\n\nclass FakeLLM:\n    def invoke(self, text): return f\"LLM answer to: {text}\"\n\nclass UpperParser:\n    def parse(self, text): return text.upper()\n\nclass Chain:                      # mimics prompt | llm | parser\n    def __init__(self, *steps): self.steps = steps\n    def invoke(self, inputs):\n        data = inputs\n        for step in self.steps:\n            if isinstance(step, PromptTemplate): data = step.format(**data)\n            elif isinstance(step, FakeLLM):      data = step.invoke(data)\n            elif isinstance(step, UpperParser):  data = step.parse(data)\n        return data\n\nchain = Chain(PromptTemplate(\"Explain {topic} simply.\"), FakeLLM(), UpperParser())\nresult = chain.invoke({\"topic\": \"RAG\"})\nprint(\"Chain output:\", result)\nassert result == \"LLM ANSWER TO: EXPLAIN RAG SIMPLY.\"\nprint(\"LangChain provides standard components (prompts, models, parsers, retrievers, memory, tools).\")\nprint(\"LCEL wires them with the | operator into composable, swappable pipelines.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Chain output: LLM ANSWER TO: EXPLAIN RAG SIMPLY.\nLangChain provides standard components (prompts, models, parsers, retrievers, memory, tools).\nLCEL wires them with the | operator into composable, swappable pipelines.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

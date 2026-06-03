@@ -1,0 +1,65 @@
+{
+  "id": "p1a-028",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 28,
+  "orderInPhase": 28,
+  "slug": "currying-basics",
+  "title": "Currying Basics",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "currying",
+    "basics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A logger: `const logError = log('ERROR')` pre-fixes the level once, then you call `logError('disk full')` everywhere."
+  },
+  "sections": {
+    "simple_en": "Currying transforms a function that takes multiple arguments into a sequence of functions that each take one argument. Instead of `add(a, b, c)` you call `add(a)(b)(c)`. Each call returns a new function waiting for the next argument until all are supplied.\n\nCurrying relies on closures (each returned function remembers the earlier arguments). It enables partial application — fixing some arguments now and supplying the rest later — which is handy for creating specialised functions and for function composition.",
+    "hinglish": "Currying ek multi-argument function ko aise functions ki series me badal deta hai jinme har ek sirf ek argument leta hai. `add(a, b, c)` ki jagah aap `add(a)(b)(c)` call karte ho. Har call ek naya function return karta hai jo agle argument ka intezaar karta hai jab tak sab na mil jaayein.\nCurrying closures par chalta hai (har returned function pichle arguments yaad rakhta hai). Ye partial application enable karta hai — kuch arguments abhi fix karo, baaki baad me do — jo specialised functions banane aur function composition ke liye useful hai.",
+    "keyPoints": [
+      "Converts `f(a, b, c)` into `f(a)(b)(c)` — one argument at a time.",
+      "Powered by closures: each stage remembers prior arguments.",
+      "Enables partial application (pre-fill some args, supply the rest later).",
+      "Useful for building specialised functions and for composition pipelines.",
+      "A generic `curry()` helper can curry any fixed-arity function."
+    ],
+    "real_world": "A logger: `const logError = log('ERROR')` pre-fixes the level once, then you call `logError('disk full')` everywhere. Currying lets you bake in the common argument and reuse the specialised function.",
+    "followups": [
+      {
+        "q": "How is currying different from partial application?",
+        "a": "Currying always breaks a function into a chain of single-argument functions. Partial application fixes some (possibly several) arguments and returns a function for the rest. Currying makes partial application trivial."
+      },
+      {
+        "q": "What language feature makes currying possible?",
+        "a": "Closures — each returned function retains access to the arguments captured in the previous calls until the full set is collected."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Manual currying + a generic curry helper.\n\n// Manual curry\nfunction addCurried(a) {\n  return (b) => (c) => a + b + c;\n}\n\n// Generic curry for any fixed-arity function\nfunction curry(fn) {\n  return function curried(...args) {\n    if (args.length >= fn.length) return fn.apply(this, args);\n    return (...more) => curried.apply(this, args.concat(more));\n  };\n}\n\nfunction volume(l, w, h) { return l * w * h; }\n\nmodule.exports = { addCurried, curry, volume };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { addCurried, curry, volume } = require(\"./solution\");\n\nconsole.log(addCurried(1)(2)(3)); // 6\n\nconst curriedVolume = curry(volume);\nconsole.log(curriedVolume(2)(3)(4));   // 24 (one at a time)\nconsole.log(curriedVolume(2, 3)(4));   // 24 (mixed)\nconsole.log(curriedVolume(2, 3, 4));   // 24 (all at once)\n\nconsole.assert(addCurried(1)(2)(3) === 6, \"manual curry\");\nconsole.assert(curriedVolume(2)(3)(4) === 24, \"generic curry one-by-one\");\nconsole.assert(curriedVolume(2, 3, 4) === 24, \"generic curry all at once\");\nconsole.log(\"currying assertions passed.\");",
+      "expectedOutput": "6\n24\n24\n24\ncurrying assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

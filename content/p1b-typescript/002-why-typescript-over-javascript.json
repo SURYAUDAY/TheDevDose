@@ -1,0 +1,67 @@
+{
+  "id": "p1b-002",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 2,
+  "orderInPhase": 2,
+  "slug": "why-typescript-over-javascript",
+  "title": "Why TypeScript over JavaScript",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "why",
+    "typescript",
+    "over",
+    "javascript"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Renaming a property `userName` → `username` across a 200-file project: TypeScript flags every stale reference instantly, whereas in plain JavaScript you'd di…"
+  },
+  "sections": {
+    "simple_en": "TypeScript's main advantage is catching a whole class of bugs at compile time that JavaScript would only reveal at runtime — wrong argument types, typos in property names, missing return values, and null/undefined misuse. This makes large codebases safer to change.\n\nBeyond safety, types power excellent tooling: precise autocomplete, reliable refactoring, inline documentation, and self-describing function signatures. The cost is a build step and some learning curve, but for medium-to-large projects the productivity and reliability gains are substantial.",
+    "hinglish": "TypeScript ka main faayda hai compile time par bugs ka ek poora class pakadna jo JavaScript sirf runtime par dikhata — galat argument types, property names me typos, missing return values, aur null/undefined ka galat use. Isse bade codebases me change karna safe ho jaata hai.\nSafety ke alawa, types behtareen tooling dete hain: precise autocomplete, reliable refactoring, inline documentation, aur self-describing function signatures. Cost hai ek build step aur thoda learning curve, par medium-to-large projects ke liye productivity aur reliability gains kaafi zyada hain.",
+    "keyPoints": [
+      "Catches type errors, typos, and null misuse at compile time.",
+      "Superior tooling: autocomplete, safe refactoring, go-to-definition.",
+      "Types act as living documentation of function/data shapes.",
+      "Scales well — large teams change code with more confidence.",
+      "Trade-off: a build step and a modest learning curve."
+    ],
+    "real_world": "Renaming a property `userName` → `username` across a 200-file project: TypeScript flags every stale reference instantly, whereas in plain JavaScript you'd discover the misses only when something breaks at runtime.",
+    "followups": [
+      {
+        "q": "Name two concrete benefits of TypeScript over JavaScript.",
+        "a": "It catches type/shape errors at compile time (before running), and it enables powerful editor tooling like accurate autocomplete and safe, project-wide refactoring."
+      },
+      {
+        "q": "What are the trade-offs of adopting TypeScript?",
+        "a": "You add a compilation/build step and there's a learning curve for the type system, but these are usually outweighed by fewer runtime bugs and better maintainability on larger projects."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — types prevent shape/typo bugs.\n\nexport interface User {\n  id: number;\n  name: string;\n}\n\nexport function formatUser(user: User): string {\n  // TS guarantees user.name exists and is a string.\n  return user.name + \" (#\" + user.id + \")\";\n  // user.nam  -> compile error (typo caught), not a silent runtime bug\n}\n\nexport function safeDivide(a: number, b: number): number {\n  if (b === 0) return 0;\n  return a / b;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { formatUser, safeDivide } from \"./solution\";\n\nconsole.log(formatUser({ id: 1, name: \"Asha\" })); // Asha (#1)\nconsole.log(safeDivide(10, 2));                    // 5\nconsole.log(safeDivide(10, 0));                    // 0\n\nconsole.assert(formatUser({ id: 1, name: \"Asha\" }) === \"Asha (#1)\", \"typed shape works\");\nconsole.assert(safeDivide(10, 2) === 5, \"division\");\nconsole.assert(safeDivide(10, 0) === 0, \"guarded divide by zero\");\nconsole.log(\"Why-TypeScript assertions passed.\");",
+      "expectedOutput": "Asha (#1)\n5\n0\nWhy-TypeScript assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

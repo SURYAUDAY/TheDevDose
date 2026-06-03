@@ -1,0 +1,70 @@
+{
+  "id": "p3-012",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 12,
+  "orderInPhase": 12,
+  "slug": "repository-pattern-basics",
+  "title": "Repository pattern basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "repository",
+    "pattern",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A UserService calls userRepository.save() without knowing it runs a Postgres INSERT."
+  },
+  "sections": {
+    "simple_en": "The Repository pattern abstracts data access behind a consistent interface (findById, findAll, save, delete), so the rest of the app doesn't know or care whether data comes from Postgres, MongoDB, an API, or memory. Business logic depends on the repository interface, not on raw SQL or ORM calls.\n\nThis decoupling makes code easier to test (swap in an in-memory repository for unit tests), easier to change (switch databases without touching services), and cleaner (data-access details stay in one place). It pairs naturally with services in a layered architecture.",
+    "hinglish": "Repository pattern data access ko ek consistent interface (findById, findAll, save, delete) ke peeche abstract karta hai, taaki baaki app ko pata na ho ki data Postgres, MongoDB, API ya memory se aa raha hai. Business logic repository interface par depend karti hai, raw SQL/ORM par nahi.\n\nYe decoupling code ko test karna aasaan (unit tests mein in-memory repository), badalna aasaan (DB switch karo bina services chhuye), aur cleaner banata hai (data-access details ek jagah). Layered architecture mein services ke saath natural lagta hai.",
+    "keyPoints": [
+      "Abstracts data access behind a uniform interface (findById, save, delete...).",
+      "Business logic depends on the interface, not on SQL/ORM specifics.",
+      "Swap the data source (DB, API, in-memory) without changing callers.",
+      "Improves testability: inject a fake/in-memory repo in unit tests.",
+      "Centralizes query logic; pairs well with a service layer."
+    ],
+    "real_world": "A UserService calls userRepository.save() without knowing it runs a Postgres INSERT. In tests, the team injects an in-memory repository so the service logic is tested without a real database — fast and isolated. Later, migrating to a new DB only changes the repository implementation.",
+    "followups": [
+      {
+        "q": "How does the repository pattern help testing?",
+        "a": "You can inject a fake/in-memory repository implementing the same interface, so services are unit-tested without a real database — faster and more reliable tests."
+      },
+      {
+        "q": "Repository vs calling the ORM directly?",
+        "a": "Calling the ORM directly couples business logic to a specific data layer. A repository hides those details behind an interface, making swaps and tests easier."
+      },
+      {
+        "q": "Isn't an ORM already an abstraction?",
+        "a": "Yes, but a repository abstracts the ORM itself, so your services don't depend on ORM-specific APIs and you can change or mock the data layer freely."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Node code (repository + service). The Node-runnable demo below verifies the pattern with an in-memory source.",
+      "source": "// Repository pattern — isolate data access so services don't know the storage.\n// repositories/userRepository.js\nclass UserRepository {\n  constructor(db) { this.db = db; } // db could be Postgres, Mongo, etc.\n  async findById(id) { return this.db.query(\"SELECT * FROM users WHERE id = $1\", [id]); }\n  async findAll() { return this.db.query(\"SELECT * FROM users\"); }\n  async save(user) { return this.db.query(\"INSERT INTO users(name) VALUES($1) RETURNING *\", [user.name]); }\n}\n\n// services/userService.js — depends on the repository abstraction, not SQL.\nclass UserService {\n  constructor(userRepo) { this.userRepo = userRepo; }\n  async register(name) {\n    const existing = await this.userRepo.findAll();\n    if (existing.some((u) => u.name === name)) throw new Error(\"name taken\");\n    return this.userRepo.save({ name });\n  }\n}\n\n// Swapping the DB (or using an in-memory repo for tests) doesn't touch the service.\nmodule.exports = { UserRepository, UserService };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Repository pattern — abstract data access behind an interface\nfunction createUserRepository(dataSource){\n  return {\n    findById: (id) => dataSource.get(id),\n    findAll:  () => [...dataSource.values()],\n    save:     (user) => { dataSource.set(user.id, user); return user; },\n  };\n}\n// Swap the underlying source without changing business logic:\nconst inMemory = new Map();\nconst repo = createUserRepository(inMemory);\n\n// Service depends only on the repository interface, not the storage details\nfunction registerUser(repo, name){ const id = repo.findAll().length + 1; return repo.save({ id, name }); }\n\nregisterUser(repo, \"Asha\");\nregisterUser(repo, \"Ravi\");\nconsole.log(\"All users:\", JSON.stringify(repo.findAll()));\nconsole.log(\"Find #1:\", JSON.stringify(repo.findById(1)));\nconsole.assert(repo.findAll().length === 2, \"repo persisted two users\");\nconsole.log(\"Storage is swappable: same repo API could wrap Postgres/Mongo.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "All users: [{\"id\":1,\"name\":\"Asha\"},{\"id\":2,\"name\":\"Ravi\"}]\nFind #1: {\"id\":1,\"name\":\"Asha\"}\nStorage is swappable: same repo API could wrap Postgres/Mongo.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

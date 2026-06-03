@@ -1,0 +1,69 @@
+{
+  "id": "p4-012",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 12,
+  "orderInPhase": 12,
+  "slug": "react-pattern",
+  "title": "ReAct pattern",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "react",
+    "pattern"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Asked 'what's double the population of France?', a ReAct agent reasons it needs the population, calls a search tool (observes ~68 million), then calls a calc…"
+  },
+  "sections": {
+    "simple_en": "ReAct (Reason + Act) is a pattern where the LLM interleaves reasoning with actions: it produces a Thought, takes an Action (calling a tool like search or a calculator), receives an Observation (the tool's result), and repeats until it can give a final Answer. This grounds its reasoning in real, external information.\n\nReAct is the foundation of tool-using agents: instead of relying only on what's in its weights, the model can look things up, do calculations, or call APIs, then incorporate the results. It combines chain-of-thought reasoning with the ability to act, making LLMs far more capable on tasks that require fresh data or precise computation.",
+    "hinglish": "ReAct (Reason + Act) ek pattern hai jahan LLM reasoning ko actions ke saath interleave karta hai: ye ek Thought produce karta hai, ek Action leta hai (search ya calculator jaisa tool call karke), ek Observation receive karta hai (tool ka result), aur repeat karta hai jab tak final Answer na de sake. Ye uski reasoning ko real, external information mein ground karta hai.\n\nReAct tool-using agents ka aadhaar hai: sirf apne weights mein jo hai uspar depend karne ke bajaye, model cheezein look up kar sakta hai, calculations kar sakta hai, ya APIs call kar sakta hai, phir results incorporate kar sakta hai. Ye chain-of-thought reasoning ko act karne ki ability ke saath combine karta hai, LLMs ko un tasks par zyada capable banakar jinhe fresh data ya precise computation chahiye.",
+    "keyPoints": [
+      "Reason + Act: interleaves Thought -> Action (tool) -> Observation, looping to an Answer.",
+      "Grounds reasoning in real external results (search, calculators, APIs).",
+      "Overcomes the limits of relying only on the model's weights.",
+      "The foundation of tool-using AI agents.",
+      "Combines chain-of-thought with the ability to take actions."
+    ],
+    "real_world": "Asked 'what's double the population of France?', a ReAct agent reasons it needs the population, calls a search tool (observes ~68 million), then calls a calculator tool (observes 136 million), and answers — grounding each step in tool results instead of guessing.",
+    "followups": [
+      {
+        "q": "What does ReAct stand for and do?",
+        "a": "Reason + Act. The model alternates between reasoning (Thought) and acting (calling tools), using each tool's Observation to inform the next step until it can produce a final answer."
+      },
+      {
+        "q": "Why is ReAct powerful for agents?",
+        "a": "It lets the LLM use external tools — search, calculators, APIs, databases — to get fresh, accurate information and perform actions, rather than being limited to its frozen training knowledge."
+      },
+      {
+        "q": "How does ReAct relate to chain-of-thought?",
+        "a": "ReAct builds on chain-of-thought by adding actions and observations to the reasoning loop, grounding the step-by-step thinking in real-world tool results instead of pure internal reasoning."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real LangChain ReAct-agent code (needs an API key). The Python-runnable demo below simulates the Thought → Action → Observation loop so the pattern is verifiable here.",
+      "source": "# ReAct pattern — reason + act with tools, looping until an answer (LangChain).\nfrom langchain_openai import ChatOpenAI\nfrom langchain.agents import create_react_agent, AgentExecutor\nfrom langchain_core.tools import tool\nfrom langchain import hub\n\n@tool\ndef calculator(expression: str) -> str:\n    \"\"\"Evaluate a basic arithmetic expression.\"\"\"\n    return str(eval(expression, {\"__builtins__\": {}}))\n\n@tool\ndef search(query: str) -> str:\n    \"\"\"Look up a fact from the web (stub).\"\"\"\n    return \"France population: ~68 million\"\n\nllm = ChatOpenAI(model=\"gpt-4o-mini\", temperature=0)\nprompt = hub.pull(\"hwchase17/react\")          # the ReAct prompt template\nagent = create_react_agent(llm, [calculator, search], prompt)\nexecutor = AgentExecutor(agent=agent, tools=[calculator, search], verbose=True)\n\n# The agent emits Thought -> Action -> Observation steps, using tools until it can\n# answer. ReAct grounds the LLM's reasoning in real tool results.\n# executor.invoke({\"input\": \"What is double the population of France?\"})",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# ReAct pattern — interleave Reasoning (Thought) with Acting (tool use) and Observation\ndef calculator(expr): return eval(expr, {\"__builtins__\": {}})\ndef search(q): return {\"population of france\": \"68 million\"}.get(q.lower(), \"no result\")\ntools = {\"calculator\": calculator, \"search\": search}\n\ndef react_agent(question):\n    trace = []\n    # The agent reasons, picks a tool, acts, observes, then answers.\n    if \"population\" in question and \"double\" in question:\n        trace.append((\"Thought\", \"I need France's population, then double it.\"))\n        trace.append((\"Action\", \"search[population of france]\"))\n        obs = search(\"population of france\"); trace.append((\"Observation\", obs))\n        trace.append((\"Thought\", \"Population is 68 million; double it with the calculator.\"))\n        trace.append((\"Action\", \"calculator[68 * 2]\"))\n        obs2 = calculator(\"68 * 2\"); trace.append((\"Observation\", f\"{obs2} million\"))\n        trace.append((\"Answer\", f\"{obs2} million\"))\n    return trace\n\nfor step, val in react_agent(\"What is double the population of France?\"):\n    print(f\"{step:12}: {val}\")\ntrace = react_agent(\"What is double the population of France?\")\nassert trace[-1] == (\"Answer\", \"136 million\")\nprint(\"\\nReAct = Reason + Act: Thought -> Action (tool) -> Observation, looped until an Answer.\")\nprint(\"It lets LLMs use tools (search, calculators, APIs) and ground their reasoning in real results.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Thought     : I need France's population, then double it.\nAction      : search[population of france]\nObservation : 68 million\nThought     : Population is 68 million; double it with the calculator.\nAction      : calculator[68 * 2]\nObservation : 136 million\nAnswer      : 136 million\n\nReAct = Reason + Act: Thought -> Action (tool) -> Observation, looped until an Answer.\nIt lets LLMs use tools (search, calculators, APIs) and ground their reasoning in real results.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

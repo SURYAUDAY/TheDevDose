@@ -1,0 +1,64 @@
+{
+  "id": "p1a-017",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 17,
+  "orderInPhase": 17,
+  "slug": "closures",
+  "title": "Closures",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "closures"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A bank account: the balance variable is hidden inside a function, and only the returned `deposit`/`withdraw` methods can touch it."
+  },
+  "sections": {
+    "simple_en": "A closure is a function bundled together with references to the variables from its surrounding (lexical) scope. Even after the outer function has finished and its execution context is gone, the inner function still 'remembers' and can use those variables.\n\nClosures are created every time a function is defined inside another function and that inner function is exposed (returned or passed out). They power data privacy, function factories, memoisation, currying, and event handlers — they are one of the most-asked interview topics.",
+    "hinglish": "Closure ek function hota hai jo apne surrounding (lexical) scope ke variables ke references ke saath bundle hota hai. Outer function khatam hone aur uska context chale jaane ke baad bhi, inner function un variables ko 'yaad' rakhta hai aur use kar sakta hai.\nClosure tab banta hai jab ek function dusre function ke andar define hota hai aur woh inner function bahar expose hota hai (return ya pass). Closures data privacy, function factories, memoisation, currying, aur event handlers ko power dete hain — interview ka favourite topic hai.",
+    "keyPoints": [
+      "A closure = function + its retained lexical environment.",
+      "Inner function keeps access to outer variables even after the outer function returns.",
+      "Created whenever a nested function is exposed outward.",
+      "Enables private state, factories, memoisation, currying, and stable callbacks.",
+      "Each call to the outer function creates a fresh, independent closure."
+    ],
+    "real_world": "A bank account: the balance variable is hidden inside a function, and only the returned `deposit`/`withdraw` methods can touch it. Outside code can change the balance only through those methods — true private state via a closure.",
+    "followups": [
+      {
+        "q": "What exactly is captured by a closure — the value or the variable?",
+        "a": "The variable (the binding), not a snapshot of its value. That's why a closure sees later changes to the captured variable, and why the `var`-in-loop bug happens."
+      },
+      {
+        "q": "Name two practical uses of closures.",
+        "a": "Data privacy (private state via returned methods) and function factories/memoisation (a returned function that remembers configuration or cached results)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Closure used for private state (a counter and a mini bank account).\n\nfunction createCounter(start = 0) {\n  let count = start; // private; only the returned fns can access it\n  return {\n    inc: () => ++count,\n    dec: () => --count,\n    value: () => count,\n  };\n}\n\nfunction createAccount(initial) {\n  let balance = initial; // truly private\n  return {\n    deposit(amt) { balance += amt; return balance; },\n    withdraw(amt) {\n      if (amt > balance) throw new Error(\"Insufficient funds\");\n      balance -= amt; return balance;\n    },\n    getBalance: () => balance,\n  };\n}\n\nmodule.exports = { createCounter, createAccount };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { createCounter, createAccount } = require(\"./solution\");\n\nconst c = createCounter(10);\nconsole.log(c.inc(), c.inc(), c.dec(), c.value()); // 11 12 11 11\n\nconst acc = createAccount(100);\nconsole.log(acc.deposit(50)); // 150\nconsole.log(acc.withdraw(70)); // 80\n\nconsole.assert(c.value() === 11, \"counter keeps private state\");\nconsole.assert(acc.getBalance() === 80, \"account balance correct\");\nconsole.assert(typeof acc.balance === \"undefined\", \"balance is private (not exposed)\");\nlet threw = false; try { acc.withdraw(9999); } catch { threw = true; }\nconsole.assert(threw, \"overdraw should throw\");\nconsole.log(\"closure assertions passed.\");",
+      "expectedOutput": "11 12 11 11\n150\n80\nclosure assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

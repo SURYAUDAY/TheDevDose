@@ -1,0 +1,69 @@
+{
+  "id": "p3-039",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 39,
+  "orderInPhase": 39,
+  "slug": "embedding-vs-referencing",
+  "title": "Embedding vs referencing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "embedding",
+    "referencing"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A post embeds its handful of comments for fast single-read display, but references its author by id — because the same user authors many posts and you don't…"
+  },
+  "sections": {
+    "simple_en": "MongoDB models relationships two ways. Embedding stores related data inside the parent document — best when the data is read together, bounded in size, and owned by the parent (e.g., a few comments inside a post). One read returns everything, with no join.\n\nReferencing stores an ObjectId pointing to a document in another collection — best when data is shared across parents, large, or grows unboundedly (e.g., users referenced by many posts). You resolve references with a second lookup (populate in Mongoose). The choice trades read simplicity (embedding) against flexibility and avoiding duplication (referencing).",
+    "hinglish": "MongoDB relationships do tarah se model karta hai. Embedding related data ko parent document ke andar store karta hai — best jab data saath read ho, bounded ho, aur parent ka ho (jaise post ke andar kuch comments). Ek read sab return karta hai, koi join nahi.\n\nReferencing ek ObjectId store karta hai jo doosri collection ke document ko point karta hai — best jab data kai parents mein shared ho, bada ho, ya unbounded badhe (jaise kai posts dwara referenced users). References ko second lookup se resolve karte ho (Mongoose mein populate). Choice read simplicity (embedding) aur flexibility/no-duplication (referencing) ke beech trade-off hai.",
+    "keyPoints": [
+      "Embed: related data inside the parent — read together in one query.",
+      "Embed when data is bounded, owned by the parent, and read together.",
+      "Reference: store an ObjectId to another collection's document.",
+      "Reference when data is shared, large, or grows unbounded.",
+      "Resolve references with populate (a second lookup, like a join)."
+    ],
+    "real_world": "A post embeds its handful of comments for fast single-read display, but references its author by id — because the same user authors many posts and you don't want to duplicate (or have to update) their profile in every post.",
+    "followups": [
+      {
+        "q": "When should you embed vs reference?",
+        "a": "Embed data that's bounded, owned by the parent, and read together; reference data that's shared, large, or grows unbounded — to avoid duplication and document bloat."
+      },
+      {
+        "q": "What does populate do?",
+        "a": "It replaces stored ObjectId references with the actual referenced documents in a query — effectively an application-side join performed by Mongoose."
+      },
+      {
+        "q": "What's the risk of over-embedding?",
+        "a": "Documents can grow toward the 16MB limit and duplicate shared data, making updates costly and inconsistent. Unbounded growth (e.g., infinite comments) should be referenced instead."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Mongoose modeling code (Node + mongoose). The Node-runnable demo below contrasts embedding with referencing/populate so the trade-off is verifiable here.",
+      "source": "// Embedding vs referencing — two ways to model relationships in MongoDB.\nconst mongoose = require(\"mongoose\");\n\n// EMBEDDING: store related data inside the parent document.\n// Best when data is read together, bounded in size, and owned by the parent.\nconst orderSchema = new mongoose.Schema({\n  customerName: String,\n  items: [                                  // embedded array of sub-documents\n    { product: String, qty: Number, price: Number },\n  ],\n});\n\n// REFERENCING: store an ObjectId pointing to another collection.\n// Best when data is shared, large, or grows unbounded.\nconst postSchema = new mongoose.Schema({\n  title: String,\n  author: { type: mongoose.Schema.Types.ObjectId, ref: \"User\" }, // reference\n  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: \"Comment\" }],\n});\n\nconst Post = mongoose.model(\"Post\", postSchema);\n\n// Resolve references with populate() (like a join performed by the app):\nasync function getPost(id) {\n  return Post.findById(id).populate(\"author\").populate(\"comments\");\n}\nmodule.exports = { getPost };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Embedding vs referencing — store sub-docs inline vs link by id + \"populate\"\n// EMBEDDED: comments live inside the post (one read gets everything)\nconst embeddedPost = {\n  _id: 1, title: \"Embedding\", author: \"Asha\",\n  comments: [{ text: \"great\" }, { text: \"thanks\" }],\n};\nconsole.log(\"Embedded read (1 query):\", embeddedPost.comments.length, \"comments inline\");\n\n// REFERENCED: post stores author _id; resolve via a second lookup (\"populate\")\nconst users = { 10: { _id: 10, name: \"Asha\" } };\nconst referencedPost = { _id: 2, title: \"Referencing\", authorId: 10 };\nfunction populate(post){ return { ...post, author: users[post.authorId] }; }\nconst full = populate(referencedPost);\nconsole.log(\"Referenced read (needs populate):\", full.author.name);\n\nconsole.log(\"Embed when: data is read together, bounded, owned by the parent.\");\nconsole.log(\"Reference when: data is shared, large, or grows unbounded.\");\nconsole.assert(embeddedPost.comments.length === 2, \"embedded sub-docs present\");\nconsole.assert(full.author.name === \"Asha\", \"referenced doc populated\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Embedded read (1 query): 2 comments inline\nReferenced read (needs populate): Asha\nEmbed when: data is read together, bounded, owned by the parent.\nReference when: data is shared, large, or grows unbounded.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p3-049",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 49,
+  "orderInPhase": 49,
+  "slug": "environment-variables",
+  "title": "Environment variables",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "environment",
+    "variables"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "The same Docker image runs in every environment, configured only by env vars: DATABASE_URL and JWT_SECRET differ between staging and production."
+  },
+  "sections": {
+    "simple_en": "Environment variables hold configuration and secrets outside your code — database URLs, API keys, JWT secrets, ports, and the current environment. This follows the twelve-factor principle of separating config from code, so the same build runs in development, staging, and production with different settings, and secrets never get committed to version control.\n\nIn Node you read them from process.env, often loading a local .env file in development with dotenv. Good practice: validate that required variables are present at startup (fail fast if a secret is missing), provide sensible defaults for optional ones, commit a .env.example documenting the keys, and add .env to .gitignore. In production, set values via the host's secret manager.",
+    "hinglish": "Environment variables configuration aur secrets ko code ke bahar rakhte hain — database URLs, API keys, JWT secrets, ports, aur current environment. Ye twelve-factor principle follow karta hai (config ko code se alag karna), taaki same build development, staging, production mein alag settings ke saath chale aur secrets kabhi version control mein commit na hon.\n\nNode mein inhe process.env se padhte ho, development mein aksar dotenv se local .env file load karke. Achhi practice: startup par check karo required variables maujood hain (secret missing ho to fail fast), optional ke liye sensible defaults do, keys document karne ko .env.example commit karo, aur .env ko .gitignore mein daalo. Production mein values host ke secret manager se set karo.",
+    "keyPoints": [
+      "Keep config and secrets outside code (separate config from code).",
+      "Read from process.env; load .env in dev with dotenv (never in prod files).",
+      "Validate required vars at startup — fail fast if a secret is missing.",
+      "Provide defaults for optional vars; commit a .env.example (no values).",
+      "Add .env to .gitignore; use the host's secret manager in production."
+    ],
+    "real_world": "The same Docker image runs in every environment, configured only by env vars: DATABASE_URL and JWT_SECRET differ between staging and production. If JWT_SECRET is missing, the app refuses to boot — surfacing the misconfiguration immediately instead of failing mysteriously later.",
+    "followups": [
+      {
+        "q": "Why keep secrets in environment variables instead of code?",
+        "a": "So the same codebase/build runs across environments with different config, and secrets aren't committed to version control where they could leak. It's the twelve-factor 'config' principle."
+      },
+      {
+        "q": "Why validate env vars at startup?",
+        "a": "To fail fast — a missing database URL or secret should crash the app immediately with a clear message, rather than causing confusing errors deep in request handling."
+      },
+      {
+        "q": "Is dotenv used in production?",
+        "a": "Typically not — .env files are a development convenience. In production you set real values through the platform/secret manager, keeping secrets out of files entirely."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Node config code (dotenv). The Node-runnable demo below verifies env loading with defaults and required checks so the behavior is verifiable here.",
+      "source": "// Environment variables — load config and secrets from the environment.\nrequire(\"dotenv\").config(); // loads variables from a .env file (dev only)\n\nfunction requireEnv(key) {\n  const value = process.env[key];\n  if (!value) throw new Error(`Missing required environment variable: ${key}`);\n  return value;\n}\n\nconst config = {\n  port: Number(process.env.PORT) || 3000,\n  nodeEnv: process.env.NODE_ENV || \"development\",\n  databaseUrl: requireEnv(\"DATABASE_URL\"),\n  jwtSecret: requireEnv(\"JWT_SECRET\"),\n};\n\n// .env (NEVER commit this file — add it to .gitignore):\n//   PORT=4000\n//   DATABASE_URL=postgres://user:pass@localhost:5432/app\n//   JWT_SECRET=change-me\n//\n// Provide a committed .env.example documenting required keys (without values).\n// In production, set real values via the host's secret manager, not a file.\nmodule.exports = config;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Environment variables — read config from env with defaults + required checks\nfunction loadConfig(env){\n  function required(key){ if (!env[key]) throw new Error(`Missing required env var: ${key}`); return env[key]; }\n  function optional(key, def){ return env[key] ?? def; }\n  return {\n    port: Number(optional(\"PORT\", \"3000\")),\n    nodeEnv: optional(\"NODE_ENV\", \"development\"),\n    dbUrl: required(\"DATABASE_URL\"),       // app must not boot without this\n    jwtSecret: required(\"JWT_SECRET\"),\n  };\n}\nconst goodEnv = { DATABASE_URL: \"postgres://...\", JWT_SECRET: \"s3cr3t\" };\nconst config = loadConfig(goodEnv);\nconsole.log(\"Loaded config:\", JSON.stringify({ ...config, jwtSecret: \"***\", dbUrl: \"***\" }));\nconsole.log(\"Defaults applied: port =\", config.port, \", env =\", config.nodeEnv);\ntry { loadConfig({ DATABASE_URL: \"x\" }); } catch (e) { console.log(\"Boot check:\", e.message); }\nconsole.assert(config.port === 3000, \"default port applied\");\nconsole.log(\"Keep secrets in env (e.g. .env, never committed), not in code.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Loaded config: {\"port\":3000,\"nodeEnv\":\"development\",\"dbUrl\":\"***\",\"jwtSecret\":\"***\"}\nDefaults applied: port = 3000 , env = development\nBoot check: Missing required env var: JWT_SECRET\nKeep secrets in env (e.g. .env, never committed), not in code.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

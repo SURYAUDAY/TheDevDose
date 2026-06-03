@@ -1,0 +1,69 @@
+{
+  "id": "p4-029",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 29,
+  "orderInPhase": 29,
+  "slug": "similarity-search",
+  "title": "Similarity search",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "similarity",
+    "search"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A product-recommendation feature embeds the item a user is viewing and runs a similarity search over millions of product vectors via an HNSW index — returnin…"
+  },
+  "sections": {
+    "simple_en": "Similarity search (nearest-neighbor search) finds the stored vectors closest to a query vector — typically the top-k by cosine similarity. It's the core operation of a vector database: given an embedded query, return the most semantically similar items.\n\nExact search scans every vector and is fine for small collections, but it scales linearly and becomes slow with millions of vectors. Production systems use Approximate Nearest Neighbor (ANN) indexes such as HNSW or IVF, which trade a tiny amount of accuracy for dramatically faster, sub-linear search.",
+    "hinglish": "Similarity search (nearest-neighbor search) un stored vectors ko dhoondhti hai jo ek query vector ke sabse paas hon — aksar cosine similarity se top-k. Ye ek vector database ka core operation hai: ek embedded query do, sabse semantically similar items wapas do.\n\nExact search har vector scan karti hai aur chhoti collections ke liye theek hai, par ye linearly scale karti hai aur millions vectors ke saath slow ho jaati hai. Production systems Approximate Nearest Neighbor (ANN) indexes use karte hain jaise HNSW ya IVF, jo thodi si accuracy ke badle bahut zyada fast, sub-linear search dete hain.",
+    "keyPoints": [
+      "Finds the top-k stored vectors closest to a query (by cosine).",
+      "The core operation of a vector database.",
+      "Exact search scans all vectors — simple but linear (slow at scale).",
+      "Production uses ANN indexes (HNSW, IVF) for sub-linear speed.",
+      "ANN trades a little accuracy for big speed gains."
+    ],
+    "real_world": "A product-recommendation feature embeds the item a user is viewing and runs a similarity search over millions of product vectors via an HNSW index — returning the most similar products in milliseconds, which exact search couldn't do at that scale.",
+    "followups": [
+      {
+        "q": "What is k in similarity search?",
+        "a": "The number of nearest neighbors to return — the top-k most similar vectors to the query. In RAG, k controls how many chunks you retrieve for context."
+      },
+      {
+        "q": "Why use approximate (ANN) search?",
+        "a": "Exact nearest-neighbor search is linear in the number of vectors, which is too slow at scale. ANN indexes (HNSW, IVF) give sub-linear search with only a small accuracy trade-off."
+      },
+      {
+        "q": "How does similarity search relate to embeddings?",
+        "a": "Embeddings place meaning in a vector space; similarity search finds the nearest vectors in that space, returning the most semantically related items to a query."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real NumPy vector-store code. The Python-runnable demo below ranks stored vectors by cosine and returns the top-k, so k-NN retrieval is verifiable here.",
+      "source": "# Similarity search — find the top-k nearest vectors (here with FAISS for speed).\nimport numpy as np\nimport faiss\n\ndim = 1536\nindex = faiss.IndexFlatIP(dim)              # inner-product index (cosine if normalized)\n\n# Suppose you've embedded your documents into `doc_vectors` (n x dim, float32, normalized).\n# faiss.normalize_L2(doc_vectors)\n# index.add(doc_vectors)\n\ndef search(query_vector, k=5):\n    q = np.array([query_vector], dtype=\"float32\")\n    faiss.normalize_L2(q)\n    scores, ids = index.search(q, k)        # returns top-k scores and their row ids\n    return list(zip(ids[0].tolist(), scores[0].tolist()))\n\n# Exact search (IndexFlat) is O(n). For millions of vectors use ANN indexes\n# (IndexIVFFlat, IndexHNSWFlat) that trade a little recall for huge speedups.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Similarity search — find the k nearest vectors to a query (brute-force k-NN)\nimport math\ndef cosine(a, b):\n    dot = sum(x*y for x, y in zip(a, b))\n    na = math.sqrt(sum(x*x for x in a)); nb = math.sqrt(sum(y*y for y in b))\n    return dot / (na * nb) if na and nb else 0.0\n\n# A tiny \"index\": id -> vector\nindex = {\n    \"doc1\": [0.9, 0.1, 0.0],\n    \"doc2\": [0.8, 0.2, 0.1],\n    \"doc3\": [0.1, 0.9, 0.0],\n    \"doc4\": [0.0, 0.1, 0.9],\n}\ndef search(query, k=2):\n    scored = [(doc_id, cosine(query, vec)) for doc_id, vec in index.items()]\n    scored.sort(key=lambda x: x[1], reverse=True)\n    return scored[:k]\n\nquery = [0.85, 0.15, 0.0]\nresults = search(query, k=2)\nfor doc_id, score in results:\n    print(f\"{doc_id}: {score:.3f}\")\nassert results[0][0] in (\"doc1\", \"doc2\"), \"nearest neighbors are the similar docs\"\nassert results[0][1] >= results[1][1], \"results sorted by similarity descending\"\nprint(\"Similarity search returns the top-k vectors closest to the query vector.\")\nprint(\"Brute force is O(n); real vector DBs use ANN indexes (HNSW, IVF) to scale to millions.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "doc1: 0.998\ndoc2: 0.990\nSimilarity search returns the top-k vectors closest to the query vector.\nBrute force is O(n); real vector DBs use ANN indexes (HNSW, IVF) to scale to millions.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

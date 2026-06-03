@@ -1,0 +1,70 @@
+{
+  "id": "p4-045",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 45,
+  "orderInPhase": 45,
+  "slug": "hybrid-search-basics",
+  "title": "Hybrid search basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "hybrid",
+    "search",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An e-commerce search handles 'waterproof Model X-200 jacket' best with hybrid search: keyword matching nails the exact code 'X-200', while semantic matching…"
+  },
+  "sections": {
+    "simple_en": "Hybrid search combines keyword search (lexical, like BM25) with semantic search (vector-based). Keyword search excels at exact terms — names, codes, rare tokens — while semantic search captures meaning, synonyms, and paraphrases. Fusing both typically beats either alone, especially for queries that mix exact terms and concepts.\n\nThe two result lists are merged, often with Reciprocal Rank Fusion (RRF) or a weighted blend (an alpha balancing lexical vs semantic). This covers each method's blind spot: semantic search won't miss an exact product code, and keyword search won't miss a paraphrase. Many vector databases and frameworks offer hybrid search out of the box.",
+    "hinglish": "Hybrid search keyword search (lexical, jaise BM25) ko semantic search (vector-based) ke saath combine karti hai. Keyword search exact terms par excel karti hai — names, codes, rare tokens — jabki semantic search meaning, synonyms, aur paraphrases capture karti hai. Dono ko fuse karna aksar akele kisi se behtar hota hai, khaaskar un queries ke liye jo exact terms aur concepts mix karti hain.\n\nDo result lists ko merge kiya jaata hai, aksar Reciprocal Rank Fusion (RRF) ya weighted blend se (ek alpha jo lexical vs semantic balance kare). Ye har method ka blind spot cover karta hai: semantic search ek exact product code miss nahi karegi, aur keyword search ek paraphrase miss nahi karegi. Kai vector databases aur frameworks hybrid search out of the box dete hain.",
+    "keyPoints": [
+      "Combines keyword (BM25) and semantic (vector) search.",
+      "Keyword: exact terms/codes/names; semantic: meaning/synonyms.",
+      "Fusing both beats either alone for mixed queries.",
+      "Merge via Reciprocal Rank Fusion (RRF) or a weighted alpha blend.",
+      "Covers each method's blind spot; available in many DBs/frameworks."
+    ],
+    "real_world": "An e-commerce search handles 'waterproof Model X-200 jacket' best with hybrid search: keyword matching nails the exact code 'X-200', while semantic matching understands 'waterproof jacket' — together returning the right product, which neither method alone reliably finds.",
+    "followups": [
+      {
+        "q": "Why combine keyword and semantic search?",
+        "a": "Each covers the other's weakness: keyword search nails exact terms/codes; semantic search captures meaning and paraphrases. Hybrid search gets both, improving recall and precision for mixed queries."
+      },
+      {
+        "q": "How are the two result sets combined?",
+        "a": "Commonly with Reciprocal Rank Fusion (RRF), which merges by rank, or a weighted score blend (an alpha balancing lexical vs semantic contributions)."
+      },
+      {
+        "q": "When is hybrid search especially valuable?",
+        "a": "For queries mixing exact identifiers with conceptual terms (product codes plus descriptions), or domains with lots of names/codes where pure semantic search can miss literal matches."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain EnsembleRetriever (BM25 + vector) code. The Python-runnable demo below fuses keyword and semantic scores so the combined benefit is verifiable here.",
+      "source": "# Hybrid search — fuse keyword (BM25) and semantic retrieval for robustness.\nfrom langchain_community.retrievers import BM25Retriever\nfrom langchain_community.vectorstores import FAISS\nfrom langchain_openai import OpenAIEmbeddings\nfrom langchain.retrievers import EnsembleRetriever\n\n# Keyword retriever: great for exact terms, codes, names, rare jargon.\n# bm25 = BM25Retriever.from_documents(chunks); bm25.k = 5\n\n# Semantic retriever: great for meaning/paraphrase.\n# vector = FAISS.from_documents(chunks, OpenAIEmbeddings()).as_retriever(search_kwargs={\"k\": 5})\n\n# Combine them with weights (the ensemble fuses and re-ranks both result sets).\n# hybrid = EnsembleRetriever(retrievers=[bm25, vector], weights=[0.5, 0.5])\n# results = hybrid.invoke(\"IndexError in my Python script\")\n\n# Hybrid search captures exact-term matches AND semantic matches, so it handles both\n# \"error code XJ-42\" (keyword) and \"app keeps crashing\" (semantic) well.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Hybrid search — combine keyword (BM25-like) and semantic scores for the best of both\nimport math\ndocs = {\n    \"d1\": \"Python error: IndexError list out of range\",\n    \"d2\": \"How to handle exceptions gracefully in code\",\n    \"d3\": \"Cooking pasta with the perfect sauce\",\n}\nsem_vectors = {\"d1\":[1,0], \"d2\":[0.8,0.2], \"d3\":[0,1]}   # toy semantic vectors\ndef keyword_score(query, text):\n    q = query.lower().split()\n    return round(sum(text.lower().count(w) for w in q) / (len(q) or 1), 3)\ndef semantic_score(qv, dv):\n    d=sum(x*y for x,y in zip(qv,dv)); na=math.sqrt(sum(x*x for x in qv)); nb=math.sqrt(sum(y*y for y in dv))\n    return round(d/(na*nb),3) if na and nb else 0.0\n\nquery = \"IndexError\"; qv = [1, 0]\nalpha = 0.5   # weight between keyword and semantic\nscores = {}\nfor did, text in docs.items():\n    ks = keyword_score(query, text)\n    ss = semantic_score(qv, sem_vectors[did])\n    scores[did] = round(alpha*ks + (1-alpha)*ss, 3)\n    print(f\"{did}: keyword={ks} semantic={ss} hybrid={scores[did]}\")\nbest = max(scores, key=scores.get)\nprint(\"Best hybrid match:\", best)\nassert best == \"d1\", \"hybrid catches the exact term AND meaning\"\nprint(\"Hybrid search fuses exact-term matching (keyword/BM25) with meaning (semantic) for robustness.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "d1: keyword=1.0 semantic=1.0 hybrid=1.0\nd2: keyword=0.0 semantic=0.97 hybrid=0.485\nd3: keyword=0.0 semantic=0.0 hybrid=0.0\nBest hybrid match: d1\nHybrid search fuses exact-term matching (keyword/BM25) with meaning (semantic) for robustness.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

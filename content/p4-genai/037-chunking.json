@@ -1,0 +1,68 @@
+{
+  "id": "p4-037",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 37,
+  "orderInPhase": 37,
+  "slug": "chunking",
+  "title": "Chunking",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "chunking"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Indexing a 50-page manual, a team splits it into ~1000-character chunks with 200-character overlap."
+  },
+  "sections": {
+    "simple_en": "Chunking splits documents into smaller pieces before embedding, because embeddings and retrieval work best on focused passages, and chunks must fit the embedding model and leave room in the context window. Each chunk is embedded and stored separately so retrieval can return just the relevant parts of a long document.\n\nTwo key parameters are chunk size and overlap. Overlap repeats a bit of text between consecutive chunks so context isn't lost at boundaries (a sentence split across two chunks). Tuning these is one of the biggest levers on RAG quality: too-large chunks bring noise and cost, too-small chunks lose context.",
+    "hinglish": "Chunking documents ko embedding se pehle chhote pieces mein split karti hai, kyunki embeddings aur retrieval focused passages par best kaam karte hain, aur chunks ko embedding model mein fit hona chahiye aur context window mein room chhodna chahiye. Har chunk alag se embed aur store hota hai taaki retrieval ek lambe document ke sirf relevant parts wapas kar sake.\n\nDo key parameters hain chunk size aur overlap. Overlap consecutive chunks ke beech thoda text repeat karta hai taaki boundaries par context na khoye (ek sentence do chunks mein split). Inhe tune karna RAG quality par sabse bade levers mein se ek hai: bahut-bade chunks noise aur cost laate hain, bahut-chhote chunks context khote hain.",
+    "keyPoints": [
+      "Split documents into smaller pieces before embedding.",
+      "Each chunk is embedded and stored separately for focused retrieval.",
+      "Chunk size: too big = noise/cost; too small = lost context.",
+      "Overlap repeats text across boundaries to preserve continuity.",
+      "Tuning size/overlap is a major lever on RAG quality."
+    ],
+    "real_world": "Indexing a 50-page manual, a team splits it into ~1000-character chunks with 200-character overlap. A question about one procedure then retrieves just the relevant chunk(s) — not the whole manual — and the overlap ensures a step that straddles a boundary isn't cut off.",
+    "followups": [
+      {
+        "q": "Why chunk documents at all?",
+        "a": "Retrieval and embeddings are most effective on focused passages, chunks must fit the embedding model, and retrieving small relevant pieces (not whole documents) keeps the context precise and within the window."
+      },
+      {
+        "q": "What does overlap do?",
+        "a": "It repeats a portion of text between adjacent chunks so information spanning a boundary isn't lost — preserving context for sentences or ideas split across chunks."
+      },
+      {
+        "q": "How do you choose chunk size?",
+        "a": "Balance context vs precision: large chunks add noise and cost; small chunks lose context. Tune to your content and evaluate retrieval quality (e.g., with RAGAS) to find the sweet spot."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain RecursiveCharacterTextSplitter code. The Python-runnable demo below splits text into overlapping chunks so the boundaries and overlap are verifiable here.",
+      "source": "# Chunking — split documents into retrievable pieces with overlap (LangChain).\nfrom langchain_text_splitters import RecursiveCharacterTextSplitter\n\nsplitter = RecursiveCharacterTextSplitter(\n    chunk_size=1000,      # target characters per chunk\n    chunk_overlap=200,    # overlap keeps context across boundaries\n    separators=[\"\\n\\n\", \"\\n\", \". \", \" \", \"\"],  # try paragraph -> line -> sentence -> word\n)\n\n# chunks = splitter.split_documents(docs)   # -> list of smaller Documents\n# Or split raw text directly:\n# pieces = splitter.split_text(long_text)\n\n# Why chunk: embeddings and context windows have size limits, and smaller, focused\n# chunks retrieve more precisely. Overlap prevents splitting an idea across two chunks.\n# Tune chunk_size/overlap to your content (prose vs code vs tables) and embedding model.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Chunking — split long text into smaller pieces (with overlap) so it fits and retrieves well\ndef chunk_text(text, chunk_size, overlap):\n    words = text.split()\n    chunks, start = [], 0\n    while start < len(words):\n        end = start + chunk_size\n        chunks.append(\" \".join(words[start:end]))\n        if end >= len(words): break\n        start = end - overlap          # step back by 'overlap' to keep continuity\n    return chunks\n\ntext = \" \".join(f\"w{i}\" for i in range(1, 13))   # 12 words: w1..w12\nchunks = chunk_text(text, chunk_size=5, overlap=2)\nfor i, c in enumerate(chunks):\n    print(f\"chunk {i}: {c}\")\nassert chunks[0] == \"w1 w2 w3 w4 w5\"\nassert chunks[1].startswith(\"w4 w5\"), \"overlap preserves context across chunks\"\nassert len(chunks) == 4\nprint(\"Chunking breaks documents into retrievable units; overlap avoids cutting ideas at boundaries.\")\nprint(\"Chunk size trades off: too big = noisy/expensive context, too small = lost context.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "chunk 0: w1 w2 w3 w4 w5\nchunk 1: w4 w5 w6 w7 w8\nchunk 2: w7 w8 w9 w10 w11\nchunk 3: w10 w11 w12\nChunking breaks documents into retrievable units; overlap avoids cutting ideas at boundaries.\nChunk size trades off: too big = noisy/expensive context, too small = lost context.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

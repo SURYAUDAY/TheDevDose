@@ -1,0 +1,69 @@
+{
+  "id": "p4-046",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 46,
+  "orderInPhase": 46,
+  "slug": "agentic-rag",
+  "title": "Agentic RAG",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "agentic",
+    "rag"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Asked 'compare our refund and shipping policies', an agentic RAG issues two retrievals (one per policy), combines the results, and answers — whereas one-shot…"
+  },
+  "sections": {
+    "simple_en": "Agentic RAG adds decision-making to retrieval. Instead of always retrieving once and answering (classic one-shot RAG), an agent reasons about retrieval: whether it's needed at all, how to reformulate a weak query, whether to retrieve multiple times, and which tools or sources to use — looping and self-correcting as needed.\n\nThis handles harder, multi-step questions: the agent can break a question into sub-queries, retrieve for each, combine results, or skip retrieval entirely for chit-chat. It treats retrieval as a tool the LLM calls, making RAG more flexible and robust at the cost of more LLM calls, latency, and complexity.",
+    "hinglish": "Agentic RAG retrieval mein decision-making add karta hai. Hamesha ek baar retrieve karke answer dene ke bajaye (classic one-shot RAG), ek agent retrieval ke baare mein reason karta hai: kya ye zaroori hai bhi, ek weak query kaise reformulate kare, kya kai baar retrieve kare, aur kaun se tools ya sources use kare — zaroorat par loop aur self-correct karke.\n\nYe harder, multi-step questions handle karta hai: agent ek question ko sub-queries mein todh sakta hai, har ek ke liye retrieve kar sakta hai, results combine kar sakta hai, ya chit-chat ke liye retrieval poora skip kar sakta hai. Ye retrieval ko ek tool ki tarah treat karta hai jise LLM call karta hai, RAG ko zyada flexible aur robust banakar, zyada LLM calls, latency, aur complexity ke trade-off par.",
+    "keyPoints": [
+      "Adds decision-making: whether, what, and how to retrieve.",
+      "Can reformulate weak queries and retrieve multiple times.",
+      "Breaks complex questions into sub-queries; can skip retrieval for chit-chat.",
+      "Treats retrieval as a tool the LLM calls (and can combine tools).",
+      "More flexible/robust, but costs more calls, latency, and complexity."
+    ],
+    "real_world": "Asked 'compare our refund and shipping policies', an agentic RAG issues two retrievals (one per policy), combines the results, and answers — whereas one-shot RAG with a single retrieval might pull only one policy and give an incomplete comparison.",
+    "followups": [
+      {
+        "q": "How is agentic RAG different from classic RAG?",
+        "a": "Classic RAG always retrieves once then answers. Agentic RAG reasons about retrieval — deciding whether to retrieve, reformulating queries, retrieving multiple times, and using tools — looping to handle complex, multi-step questions."
+      },
+      {
+        "q": "What problems does agentic RAG solve?",
+        "a": "Questions needing multiple lookups, query reformulation, or no retrieval at all. The agent can decompose, retry, and combine sources, improving robustness on hard queries."
+      },
+      {
+        "q": "What are the trade-offs?",
+        "a": "More LLM calls and tool steps mean higher latency, cost, and complexity, and more potential failure points — so it's used when the added flexibility is worth it over simpler one-shot RAG."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real LangChain tool-calling agent code (needs an API key). The Python-runnable demo below simulates an agent deciding to retrieve, reformulating, and retrying so the loop is verifiable here.",
+      "source": "# Agentic RAG — an agent decides when/what to retrieve, can reformulate and use tools.\nfrom langchain_openai import ChatOpenAI\nfrom langchain.agents import create_tool_calling_agent, AgentExecutor\nfrom langchain_core.tools import tool\nfrom langchain_core.prompts import ChatPromptTemplate\n\n# Wrap retrieval as a TOOL the agent can choose to call (maybe multiple times).\n@tool\ndef search_kb(query: str) -> str:\n    \"\"\"Search the knowledge base for relevant context.\"\"\"\n    docs = retriever.invoke(query)            # your vector retriever\n    return \"\\n\\n\".join(d.page_content for d in docs)\n\nllm = ChatOpenAI(model=\"gpt-4o-mini\", temperature=0)\nprompt = ChatPromptTemplate.from_messages([\n    (\"system\", \"Use search_kb when you need facts. Reformulate and search again if results are weak.\"),\n    (\"human\", \"{input}\"), (\"placeholder\", \"{agent_scratchpad}\"),\n])\nagent = create_tool_calling_agent(llm, [search_kb], prompt)\nexecutor = AgentExecutor(agent=agent, tools=[search_kb])\n\n# Unlike basic RAG (retrieve once, then answer), agentic RAG can decide NOT to retrieve,\n# retrieve several times with refined queries, combine sources, and self-correct.\n# executor.invoke({\"input\": \"How do I send an item back?\"})",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Agentic RAG — an agent decides whether to retrieve, can reformulate and retry\nimport math\nkb = {\n    \"shipping\": \"Free shipping on orders over $50.\",\n    \"returns\":  \"Returns accepted within 30 days.\",\n}\ndef retrieve(query):\n    q = query.lower()\n    for key, text in kb.items():\n        if key in q: return text\n    return None     # nothing relevant found\n\ndef agentic_rag(question, max_steps=3):\n    trace = []\n    query = question\n    for step in range(max_steps):\n        trace.append((\"Retrieve\", query))\n        ctx = retrieve(query)\n        if ctx:\n            trace.append((\"Found\", ctx))\n            trace.append((\"Answer\", ctx))\n            return trace\n        # Reformulate: map intent to a better query term and retry (agentic decision).\n        if \"send back\" in query.lower():\n            trace.append((\"Reformulate\", \"send back -> returns\"))\n            query = \"returns policy\"\n        else:\n            break\n    trace.append((\"Answer\", \"I don't have that information.\"))\n    return trace\n\nfor step, val in agentic_rag(\"How do I send back an item?\"):\n    print(f\"{step:12}: {val}\")\ntrace = agentic_rag(\"How do I send back an item?\")\nassert trace[-1][0] == \"Answer\" and \"30 days\" in trace[-1][1]\nprint(\"\\nAgentic RAG adds decisions: when to retrieve, how to reformulate, retry, or use tools.\")\nprint(\"Unlike basic RAG (always retrieve once), the agent loops and adapts until it can answer.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Retrieve    : How do I send back an item?\nReformulate : send back -> returns\nRetrieve    : returns policy\nFound       : Returns accepted within 30 days.\nAnswer      : Returns accepted within 30 days.\n\nAgentic RAG adds decisions: when to retrieve, how to reformulate, retry, or use tools.\nUnlike basic RAG (always retrieve once), the agent loops and adapts until it can answer.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

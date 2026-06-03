@@ -1,0 +1,65 @@
+{
+  "id": "p1a-045",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 45,
+  "orderInPhase": 45,
+  "slug": "array-find-findindex",
+  "title": "Array.find() / findIndex()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "array.find",
+    "findindex"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Looking up a user by id in an array from an API: `users.find(u => u.id === targetId)` returns the user object, or `findIndex` to locate the slot you need to…"
+  },
+  "sections": {
+    "simple_en": "`find` returns the first element for which the callback returns truthy, or `undefined` if none match. `findIndex` returns the index of that first match, or `-1` if none match. Both stop iterating as soon as a match is found (short-circuit).\n\nUse `find` when you want the matching item itself, and `findIndex` when you need its position (e.g. to update or remove it). They differ from `filter` (which returns all matches as an array) and from `indexOf` (which matches by value, not a predicate).",
+    "hinglish": "`find` pehla element return karta hai jiske liye callback truthy ho, ya koi na mile to `undefined`. `findIndex` us pehle match ka index return karta hai, ya na mile to `-1`. Dono match milte hi iterate karna rok dete hain (short-circuit).\n`find` tab use karo jab matching item chahiye, aur `findIndex` jab uski position chahiye (jaise update ya remove karne ke liye). Ye `filter` (jo saare matches array me deta hai) aur `indexOf` (jo value se match karta hai, predicate se nahi) se alag hain.",
+    "keyPoints": [
+      "`find` → first matching element, or `undefined`.",
+      "`findIndex` → index of first match, or `-1`.",
+      "Both short-circuit on the first match.",
+      "Predicate signature: `(element, index, array)`.",
+      "Use find/findIndex for predicate matching; indexOf for value matching."
+    ],
+    "real_world": "Looking up a user by id in an array from an API: `users.find(u => u.id === targetId)` returns the user object, or `findIndex` to locate the slot you need to splice/update.",
+    "followups": [
+      {
+        "q": "What does find return when nothing matches?",
+        "a": "`undefined`. (`findIndex` returns `-1` in the same situation.) Always handle the not-found case to avoid reading properties of undefined."
+      },
+      {
+        "q": "Difference between find and filter?",
+        "a": "`find` returns only the first matching element (or undefined) and short-circuits; `filter` returns a new array of all matching elements and always scans the whole array."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// find vs findIndex.\n\nfunction findUser(users, id) {\n  return users.find((u) => u.id === id);    // object or undefined\n}\n\nfunction indexOfUser(users, id) {\n  return users.findIndex((u) => u.id === id); // index or -1\n}\n\nfunction updateName(users, id, name) {\n  const i = users.findIndex((u) => u.id === id);\n  if (i === -1) return users;\n  const copy = users.slice();\n  copy[i] = { ...copy[i], name };\n  return copy;\n}\n\nmodule.exports = { findUser, indexOfUser, updateName };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { findUser, indexOfUser, updateName } = require(\"./solution\");\n\nconst users = [{ id: 1, name: \"Asha\" }, { id: 2, name: \"Ravi\" }];\nconsole.log(findUser(users, 2));     // { id: 2, name: 'Ravi' }\nconsole.log(findUser(users, 9));     // undefined\nconsole.log(indexOfUser(users, 2));  // 1\nconsole.log(indexOfUser(users, 9));  // -1\nconsole.log(updateName(users, 1, \"Asha K\"));\n\nconsole.assert(findUser(users, 2).name === \"Ravi\", \"find by id\");\nconsole.assert(findUser(users, 9) === undefined, \"no match -> undefined\");\nconsole.assert(indexOfUser(users, 2) === 1, \"findIndex match\");\nconsole.assert(indexOfUser(users, 9) === -1, \"findIndex no match -> -1\");\nconsole.assert(updateName(users, 1, \"Asha K\")[0].name === \"Asha K\", \"immutable update\");\nconsole.assert(users[0].name === \"Asha\", \"original unchanged\");\nconsole.log(\"find/findIndex assertions passed.\");",
+      "expectedOutput": "{ id: 2, name: 'Ravi' }\nundefined\n1\n-1\n[ { id: 1, name: 'Asha K' }, { id: 2, name: 'Ravi' } ]\nfind/findIndex assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

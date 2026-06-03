@@ -1,0 +1,65 @@
+{
+  "id": "p1b-059",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 59,
+  "orderInPhase": 59,
+  "slug": "mapped-types",
+  "title": "Mapped Types",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "mapped",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Building a `Nullable<T>` that makes every property `T[K] | null`, or a `Stringify<T>` that turns all values into strings — one mapped type generates the vari…"
+  },
+  "sections": {
+    "simple_en": "A mapped type creates a new type by transforming each property of an existing type, using the syntax `{ [K in keyof T]: ... }`. It iterates over a union of keys and produces a member for each — the mechanism behind utility types like `Partial` and `Readonly`.\n\nYou can add or remove modifiers while mapping: `?` for optional, `readonly`, or strip them with `-?` / `-readonly`. You can also remap keys with `as`. Mapped types let you derive whole families of types from one source automatically.",
+    "hinglish": "Mapped type ek existing type ki har property ko transform karke ek naya type banata hai, syntax `{ [K in keyof T]: ... }` se. Ye keys ke union par iterate karta hai aur har ke liye ek member banata hai — `Partial` aur `Readonly` jaise utility types ka mechanism.\nMap karte samay aap modifiers add/remove kar sakte ho: optional ke liye `?`, `readonly`, ya `-?` / `-readonly` se strip. Keys ko `as` se remap bhi kar sakte ho. Mapped types aapko ek source se types ke poore parivaar automatically derive karne dete hain.",
+    "keyPoints": [
+      "Syntax: `{ [K in keyof T]: NewType }` — transform each property.",
+      "Powers utility types like Partial, Required, Readonly, Pick.",
+      "Add/remove modifiers: `?`, `readonly`, `-?`, `-readonly`.",
+      "Remap keys with `as` (key remapping).",
+      "Derive whole type families from one source type."
+    ],
+    "real_world": "Building a `Nullable<T>` that makes every property `T[K] | null`, or a `Stringify<T>` that turns all values into strings — one mapped type generates the variant for any input type.",
+    "followups": [
+      {
+        "q": "What is the syntax of a mapped type?",
+        "a": "`{ [K in keyof T]: NewType }` — it iterates over the keys of T and defines a property for each, optionally transforming the value type and modifiers."
+      },
+      {
+        "q": "How do you remove `optional` or `readonly` in a mapped type?",
+        "a": "Use the subtractive modifiers `-?` and `-readonly`, e.g. `{ [K in keyof T]-?: T[K] }` makes all properties required (this is how `Required<T>` works)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — custom mapped types.\n\n// Make all properties optional (like Partial)\ntype MyPartial<T> = { [K in keyof T]?: T[K] };\n\n// Make all properties nullable\ntype Nullable<T> = { [K in keyof T]: T[K] | null };\n\ninterface User { id: number; name: string; }\n\nexport function merge(base: User, patch: MyPartial<User>): User {\n  return { ...base, ...patch };\n}\n\nexport function nullify(user: User): Nullable<User> {\n  return { id: null, name: null };\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { merge, nullify } from \"./solution\";\n\nconsole.log(merge({ id: 1, name: \"Asha\" }, { name: \"Asha K\" })); // partial patch\nconsole.log(nullify({ id: 1, name: \"Asha\" }));                   // { id:null, name:null }\n\nconsole.assert(merge({ id: 1, name: \"Asha\" }, { name: \"X\" }).name === \"X\", \"MyPartial mapped type\");\nconsole.assert(nullify({ id: 1, name: \"Asha\" }).id === null, \"Nullable mapped type\");\nconsole.log(\"mapped-types assertions passed.\");",
+      "expectedOutput": "{ id: 1, name: 'Asha K' }\n{ id: null, name: null }\nmapped-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

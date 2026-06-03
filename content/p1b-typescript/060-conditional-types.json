@@ -1,0 +1,65 @@
+{
+  "id": "p1b-060",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 60,
+  "orderInPhase": 60,
+  "slug": "conditional-types",
+  "title": "Conditional Types",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "conditional",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `Flatten<T>` that yields the element type if `T` is an array and `T` otherwise (`T extends (infer E)[] ?"
+  },
+  "sections": {
+    "simple_en": "A conditional type chooses one type or another based on a condition, using the ternary-like syntax `T extends U ? X : Y`. It reads as: 'if T is assignable to U, the result is X, otherwise Y.' This brings if/else logic to the type level.\n\nConditional types are how utilities like `Exclude`, `Extract`, `NonNullable`, and `ReturnType` are built. They also distribute over union types by default (applying the condition to each member), enabling powerful type transformations.",
+    "hinglish": "Conditional type ek condition ke aadhaar par ek ya doosra type chunta hai, ternary-jaisi syntax `T extends U ? X : Y` se. Ye padha jaata hai: 'agar T, U ko assignable hai to result X, warna Y.' Ye if/else logic ko type level par laata hai.\nConditional types se hi `Exclude`, `Extract`, `NonNullable`, aur `ReturnType` jaise utilities bante hain. Ye default me union types par distribute bhi hote hain (har member par condition apply karke), jisse powerful type transformations possible hote hain.",
+    "keyPoints": [
+      "Syntax: `T extends U ? X : Y` — type-level if/else.",
+      "Underlies Exclude, Extract, NonNullable, ReturnType.",
+      "Distributes over unions by default (per-member).",
+      "Combine with `infer` to capture and reuse types.",
+      "Wrap in `[T] extends [U]` to disable distribution when needed."
+    ],
+    "real_world": "A `Flatten<T>` that yields the element type if `T` is an array and `T` otherwise (`T extends (infer E)[] ? E : T`) — a single conditional type adapts based on whether the input is an array.",
+    "followups": [
+      {
+        "q": "What is the syntax of a conditional type?",
+        "a": "`T extends U ? X : Y` — if T is assignable to U, the type resolves to X, otherwise Y. It's type-level if/else."
+      },
+      {
+        "q": "What does it mean that conditional types distribute over unions?",
+        "a": "When the checked type is a naked type parameter and a union is passed, the condition is applied to each union member separately, then the results are unioned — enabling per-member transformations."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — conditional types.\n\ntype IsString<T> = T extends string ? \"yes\" : \"no\";\ntype Flatten<T> = T extends (infer E)[] ? E : T;\n\nexport function classify<T>(value: T): IsString<T> {\n  return (typeof value === \"string\" ? \"yes\" : \"no\") as IsString<T>;\n}\n\nexport function flattenFirst<T>(value: T[] | T): Flatten<T[] | T> {\n  return (Array.isArray(value) ? value[0] : value) as Flatten<T[] | T>;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { classify, flattenFirst } from \"./solution\";\n\nconsole.log(classify(\"hi\"));        // yes\nconsole.log(classify(123));         // no\nconsole.log(flattenFirst([1, 2, 3])); // 1\nconsole.log(flattenFirst(99));        // 99\n\nconsole.assert(classify(\"hi\") === \"yes\", \"conditional: string -> yes\");\nconsole.assert(classify(123) === \"no\", \"conditional: number -> no\");\nconsole.assert(flattenFirst([1, 2, 3]) === 1, \"Flatten array\");\nconsole.assert(flattenFirst(99) === 99, \"Flatten non-array\");\nconsole.log(\"conditional-types assertions passed.\");",
+      "expectedOutput": "yes\nno\n1\n99\nconditional-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

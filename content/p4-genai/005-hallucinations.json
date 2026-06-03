@@ -1,0 +1,68 @@
+{
+  "id": "p4-005",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 5,
+  "orderInPhase": 5,
+  "slug": "hallucinations",
+  "title": "Hallucinations",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "hallucinations"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Asked for case law it doesn't know, an ungrounded model can invent realistic-looking but fake court citations."
+  },
+  "sections": {
+    "simple_en": "A hallucination is when an LLM produces output that is fluent and confident but factually wrong or entirely made up — invented citations, nonexistent APIs, incorrect dates. It happens because the model generates statistically plausible text rather than retrieving verified facts, and it has no built-in sense of truth.\n\nHallucinations are more likely on niche topics, recent events beyond training, or when pushed to answer something it doesn't know. Mitigations include grounding the model with retrieved context (RAG), asking it to cite sources, lowering temperature, and explicitly allowing it to say 'I don't know' instead of guessing.",
+    "hinglish": "Hallucination tab hota hai jab ek LLM aisa output deta hai jo fluent aur confident hota hai par factually galat ya poori tarah banaya hua — invented citations, nonexistent APIs, galat dates. Ye isliye hota hai kyunki model verified facts retrieve karne ke bajaye statistically plausible text generate karta hai, aur uska koi built-in sense of truth nahi hota.\n\nHallucinations niche topics, training ke baad ke recent events, ya jab kuch na jaanne par bhi answer karne ko push kiya jaaye, tab zyada likely hote hain. Mitigations: model ko retrieved context se ground karna (RAG), sources cite karne ko kehna, temperature kam karna, aur explicitly use 'I don't know' kehne dena guess karne ke bajaye.",
+    "keyPoints": [
+      "Fluent, confident output that is factually wrong or fabricated.",
+      "Caused by generating plausible text, not retrieving verified facts.",
+      "More likely on niche/recent topics or when forced to answer.",
+      "Mitigate with grounding (RAG), source citations, and low temperature.",
+      "Let the model abstain ('I don't know') instead of guessing."
+    ],
+    "real_world": "Asked for case law it doesn't know, an ungrounded model can invent realistic-looking but fake court citations. Grounding it with a real legal database (RAG) and instructing it to answer only from retrieved documents — or say it doesn't know — prevents the fabrication.",
+    "followups": [
+      {
+        "q": "Why do LLMs hallucinate?",
+        "a": "They generate the most statistically plausible continuation, not verified truth. With no grounding and no built-in fact-checking, gaps get filled with confident-sounding but fabricated content."
+      },
+      {
+        "q": "How do you reduce hallucinations?",
+        "a": "Ground responses in retrieved sources (RAG), require citations, lower the temperature, constrain the task, and explicitly permit 'I don't know'. Verification/guardrails on outputs help too."
+      },
+      {
+        "q": "Can hallucinations be eliminated completely?",
+        "a": "Not entirely with current models, but they can be greatly reduced. Grounding, careful prompting, and output validation make hallucinations rare enough for many production uses."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI grounding code (needs an API key). The Python-runnable demo below contrasts ungrounded fabrication with grounded retrieval so the effect is verifiable here.",
+      "source": "# Hallucinations — reduce them with grounding, low temperature, and an \"I don't know\" out.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef grounded_answer(question: str, context: str) -> str:\n    # Force the model to answer ONLY from provided context (RAG-style grounding).\n    system = (\n        \"Answer using ONLY the provided context. \"\n        \"If the answer is not in the context, say 'I don't know.' Do not make anything up.\"\n    )\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        temperature=0,   # lower temperature -> less creative fabrication\n        messages=[\n            {\"role\": \"system\", \"content\": system},\n            {\"role\": \"user\", \"content\": f\"Context:\\n{context}\\n\\nQuestion: {question}\"},\n        ],\n    )\n    return response.choices[0].message.content\n\n# Hallucination = confident but false output. Mitigations: ground with retrieved\n# context, cite sources, lower temperature, and allow the model to abstain.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Hallucinations — models can answer confidently even when they don't know\nknowledge = {\"capital of france\": \"Paris\", \"author of hamlet\": \"Shakespeare\"}\n\ndef ungrounded_answer(q):\n    # Without grounding, a model may \"fill in\" a plausible-but-wrong answer.\n    return knowledge.get(q.lower(), \"Atlantis (confidently fabricated!)\")\n\ndef grounded_answer(q, retrieved):\n    # With retrieval, answer only from provided context; otherwise admit ignorance.\n    return retrieved.get(q.lower(), \"I don't have information on that.\")\n\nprint(\"Ungrounded, known:  \", ungrounded_answer(\"Capital of France\"))\nprint(\"Ungrounded, unknown:\", ungrounded_answer(\"Capital of Wakanda\"))   # hallucinates\nprint(\"Grounded, unknown:  \", grounded_answer(\"Capital of Wakanda\", knowledge))  # safe\nassert ungrounded_answer(\"Capital of Wakanda\") != \"I don't have information on that.\"\nassert grounded_answer(\"Capital of Wakanda\", knowledge) == \"I don't have information on that.\"\nprint(\"Hallucination = fluent, confident output that is factually wrong or made up.\")\nprint(\"Mitigations: grounding via RAG, citing sources, lower temperature, and asking the model to say 'I don't know'.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Ungrounded, known:   Paris\nUngrounded, unknown: Atlantis (confidently fabricated!)\nGrounded, unknown:   I don't have information on that.\nHallucination = fluent, confident output that is factually wrong or made up.\nMitigations: grounding via RAG, citing sources, lower temperature, and asking the model to say 'I don't know'.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

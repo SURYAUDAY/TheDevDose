@@ -1,0 +1,68 @@
+{
+  "id": "p3-023",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 23,
+  "orderInPhase": 23,
+  "slug": "relationships",
+  "title": "Relationships",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "relationships"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A library schema: each book has one author (one-to-many: author -> books), and students enroll in many courses while each course has many students (many-to-m…"
+  },
+  "sections": {
+    "simple_en": "Relational databases model how entities relate. One-to-one links two tables where each row matches at most one row in the other. One-to-many is the most common: one parent row (an author) has many children (books), with the foreign key on the 'many' side. Many-to-many (students and courses) requires a join table holding pairs of foreign keys.\n\nModeling relationships correctly — with foreign keys and, for many-to-many, a join table — keeps data consistent and enables expressive queries via JOINs. The relationship type determines where the foreign key lives and how you query across tables.",
+    "hinglish": "Relational databases batate hain entities kaise related hain. One-to-one do tables ko jodta hai jahan har row doosre mein zyada se zyada ek row se match kare. One-to-many sabse common: ek parent row (author) ke kai children (books), foreign key 'many' side par. Many-to-many (students aur courses) ke liye join table chahiye jo foreign keys ke pairs rakhe.\n\nRelationships sahi model karna — foreign keys se, aur many-to-many ke liye join table — data consistent rakhta hai aur JOINs se expressive queries deta hai. Relationship type decide karta hai foreign key kahan rahe aur tables ke across kaise query karein.",
+    "keyPoints": [
+      "One-to-one: each row matches at most one row in the other table.",
+      "One-to-many: FK on the 'many' side points to the parent (author -> books).",
+      "Many-to-many: a join table stores pairs of foreign keys (enrollments).",
+      "Foreign keys enforce that references point to existing rows.",
+      "Relationship type dictates FK placement and how you JOIN."
+    ],
+    "real_world": "A library schema: each book has one author (one-to-many: author -> books), and students enroll in many courses while each course has many students (many-to-many via an enrollments join table). Queries JOIN across these to answer 'which courses is this student taking?'.",
+    "followups": [
+      {
+        "q": "Where does the foreign key go in a one-to-many relationship?",
+        "a": "On the 'many' side. For author -> books, the books table has an author_id referencing authors(id)."
+      },
+      {
+        "q": "How do you model many-to-many?",
+        "a": "With a join (junction) table containing foreign keys to both entities — e.g., enrollments(student_id, course_id) — often with a composite primary key to prevent duplicate pairs."
+      },
+      {
+        "q": "Why use foreign keys instead of just storing ids?",
+        "a": "Foreign keys enforce referential integrity: the database rejects references to non-existent rows and can cascade updates/deletes, preventing orphaned data."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real SQL schema (PostgreSQL). The Node-runnable demo below resolves the relationships in JS so the output is verifiable here.",
+      "source": "// Relationships — model one-to-many and many-to-many with foreign keys.\nconst schema = `\n  -- ONE-TO-MANY: one author has many books\n  CREATE TABLE authors (\n    id   SERIAL PRIMARY KEY,\n    name TEXT NOT NULL\n  );\n  CREATE TABLE books (\n    id        SERIAL PRIMARY KEY,\n    title     TEXT NOT NULL,\n    author_id INT NOT NULL REFERENCES authors(id)   -- the \"many\" side holds the FK\n  );\n\n  -- MANY-TO-MANY: students <-> courses, via a join table\n  CREATE TABLE students (id SERIAL PRIMARY KEY, name TEXT);\n  CREATE TABLE courses  (id SERIAL PRIMARY KEY, title TEXT);\n  CREATE TABLE enrollments (\n    student_id INT REFERENCES students(id),\n    course_id  INT REFERENCES courses(id),\n    PRIMARY KEY (student_id, course_id)             -- composite PK prevents dupes\n  );\n`;\n\n// Query a student's courses through the join table:\nconst studentCourses = `\n  SELECT c.title FROM courses c\n  JOIN enrollments e ON e.course_id = c.id\n  WHERE e.student_id = $1;\n`;\nmodule.exports = { schema, studentCourses };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Relationships — one-to-many and many-to-many resolution\nconst authors = [{ id: 1, name: \"Asha\" }, { id: 2, name: \"Ravi\" }];\nconst books   = [{ id: 10, title: \"Node\", authorId: 1 }, { id: 11, title: \"SQL\", authorId: 1 }, { id: 12, title: \"React\", authorId: 2 }];\n// One-to-many: author -> books\nfunction booksByAuthor(authorId){ return books.filter(b => b.authorId === authorId); }\n\n// Many-to-many via a join table: students <-> courses\nconst enrollments = [{ studentId: 1, courseId: 100 }, { studentId: 1, courseId: 101 }, { studentId: 2, courseId: 100 }];\nfunction coursesForStudent(id){ return enrollments.filter(e => e.studentId === id).map(e => e.courseId); }\n\nconsole.log(\"Asha's books:\", booksByAuthor(1).map(b => b.title).join(\", \"));\nconsole.log(\"Student 1 courses:\", coursesForStudent(1).join(\", \"));\nconsole.log(\"Course 100 students:\", enrollments.filter(e => e.courseId === 100).map(e => e.studentId).join(\", \"));\nconsole.assert(booksByAuthor(1).length === 2, \"one-to-many resolved\");\nconsole.assert(coursesForStudent(1).length === 2, \"many-to-many resolved\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Asha's books: Node, SQL\nStudent 1 courses: 100, 101\nCourse 100 students: 1, 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

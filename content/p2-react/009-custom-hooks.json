@@ -1,0 +1,69 @@
+{
+  "id": "p2-009",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 9,
+  "orderInPhase": 9,
+  "slug": "custom-hooks",
+  "title": "Custom Hooks",
+  "difficulty": "beginner",
+  "tags": [
+    "p2",
+    "custom",
+    "hooks"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A useLocalStorage(key, initial) hook returns a [value, setValue] pair that reads from and writes to localStorage automatically."
+  },
+  "sections": {
+    "simple_en": "A custom hook is a JavaScript function whose name starts with 'use' and that calls other hooks. It lets you extract and reuse stateful logic across components without changing component hierarchy — the logic is shared, but each component that uses the hook gets its own isolated state.\n\nCustom hooks are the idiomatic way to share behavior in modern React (replacing older patterns like HOCs and render props for many cases). Common examples include useToggle, useLocalStorage, useFetch, and useDebounce.",
+    "hinglish": "Custom hook ek function hai jiska naam 'use' se start hota hai aur jo doosre hooks call karta hai. Isse aap stateful logic ko alag karke kai components mein reuse kar sakte ho — logic share hota hai par har component ki apni alag state hoti hai.\n\nModern React mein logic share karne ka yahi tarika hai (HOC aur render props ki jagah). Common examples: useToggle, useLocalStorage, useFetch, useDebounce.",
+    "keyPoints": [
+      "Name must start with 'use' so lint rules can enforce the Rules of Hooks.",
+      "Custom hooks share logic, not state — each caller gets its own independent state.",
+      "They compose built-in hooks (useState, useEffect, useRef, etc.) into reusable behavior.",
+      "Preferred over HOCs/render props for cross-cutting logic in modern React.",
+      "Keep them focused: one clear responsibility per hook makes them testable and reusable."
+    ],
+    "real_world": "A useLocalStorage(key, initial) hook returns a [value, setValue] pair that reads from and writes to localStorage automatically. Drop it into a settings page, a theme toggle, or a draft editor — each use gets its own key and state, but the persistence logic lives in one place.",
+    "followups": [
+      {
+        "q": "Do two components using the same custom hook share state?",
+        "a": "No. Each call creates its own state. Custom hooks share logic, not data. To share data, use context or a store."
+      },
+      {
+        "q": "Why must a custom hook's name start with 'use'?",
+        "a": "It signals to React's lint tooling that the function follows the Rules of Hooks, so violations (conditional calls, etc.) can be caught."
+      },
+      {
+        "q": "When pick a custom hook over an HOC?",
+        "a": "Almost always in modern React — hooks avoid wrapper nesting ('wrapper hell'), are easier to compose, and keep types/props clearer."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Custom hook: useToggle extracts reusable on/off logic.\nimport React, { useState, useCallback } from \"react\";\n\nfunction useToggle(initial = false) {\n  const [on, setOn] = useState(initial);\n  const toggle = useCallback(() => setOn((v) => !v), []);\n  return [on, toggle];\n}\n\nexport default function Settings() {\n  const [darkMode, toggleDark] = useToggle(false);\n  const [notifications, toggleNotif] = useToggle(true);\n\n  return (\n    <div>\n      <button onClick={toggleDark}>Dark mode: {darkMode ? \"ON\" : \"OFF\"}</button>\n      <button onClick={toggleNotif}>\n        Notifications: {notifications ? \"ON\" : \"OFF\"}\n      </button>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Custom Hook — useToggle built on a mini useState\nlet _s = [], _c = 0;\nfunction useState(init){ const i=_c; if(_s[i]===undefined)_s[i]=init; const set=v=>{_s[i]=typeof v===\"function\"?v(_s[i]):v;}; _c++; return [_s[i], set]; }\n\nfunction useToggle(initial = false) {\n  const [on, setOn] = useState(initial);\n  const toggle = () => setOn(v => !v);\n  return [on, toggle];\n}\nfunction render(){ _c = 0; return useToggle(false); }\n\nlet [on, toggle] = render();\nconsole.log(\"initial:\", on);\ntoggle();\n[on, toggle] = render();\nconsole.log(\"after toggle:\", on);\ntoggle();\n[on, toggle] = render();\nconsole.log(\"after toggle again:\", on);\nconsole.assert(on === false, \"two toggles return to start\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "initial: false\nafter toggle: true\nafter toggle again: false\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

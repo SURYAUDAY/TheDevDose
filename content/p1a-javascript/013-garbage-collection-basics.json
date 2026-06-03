@@ -1,0 +1,66 @@
+{
+  "id": "p1a-013",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 13,
+  "orderInPhase": 13,
+  "slug": "garbage-collection-basics",
+  "title": "Garbage Collection Basics",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "garbage",
+    "collection",
+    "basics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "GC is like an office cleaning crew that throws out only the papers nobody can reach anymore."
+  },
+  "sections": {
+    "simple_en": "Garbage Collection (GC) is the automatic process by which the JS engine frees memory that is no longer reachable. You don't manually free memory in JavaScript — the engine periodically reclaims objects that can no longer be accessed from the 'roots' (global object, the current call stack, etc.).\n\nModern engines (like V8) primarily use a mark-and-sweep algorithm: starting from the roots, they mark everything reachable, then sweep away everything unmarked. The practical takeaway is that 'memory leaks' in JS usually mean you accidentally kept references alive, preventing collection.",
+    "hinglish": "Garbage Collection (GC) woh automatic process hai jisse engine un memory ko free karta hai jo ab reachable nahi hai. JavaScript me aap manually memory free nahi karte — engine time-time par un objects ko reclaim karta hai jinhe 'roots' (global object, current call stack, etc.) se access nahi kiya ja sakta.\nModern engines (jaise V8) mainly mark-and-sweep algorithm use karte hain: roots se shuru karke reachable sab kuch mark karte hain, phir unmarked sab sweep kar dete hain. Practical baat: JS me 'memory leak' aksar matlab aapne galti se koi reference zinda rakha jo collection rok raha hai.",
+    "keyPoints": [
+      "Memory is freed automatically — no manual free/delete in JavaScript.",
+      "Core idea: reachability. Anything reachable from the roots is kept; the rest is collected.",
+      "V8 uses mark-and-sweep (with generational, incremental optimisations).",
+      "Setting a reference to `null` can make an object unreachable and collectible.",
+      "Leaks come from unintended retained references (globals, closures, timers, detached DOM, caches)."
+    ],
+    "real_world": "GC is like an office cleaning crew that throws out only the papers nobody can reach anymore. If you leave a sticky note ('keep this!') on a pile, the crew won't bin it — that's how accidental references cause leaks.",
+    "followups": [
+      {
+        "q": "What algorithm do modern JS engines use for GC?",
+        "a": "Primarily mark-and-sweep: mark everything reachable from the roots, then sweep (free) everything not marked. V8 layers on generational and incremental optimisations."
+      },
+      {
+        "q": "Does setting a variable to null guarantee immediate freeing?",
+        "a": "No. It removes one reference, making the object eligible for collection if nothing else references it, but the engine decides when to actually run GC."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// We can't directly observe GC, but we can show reachability and weak refs.\n\nfunction reachability() {\n  let big = { data: new Array(1000).fill(\"x\") };\n  const weak = new WeakRef(big);\n  const beforeNull = weak.deref() !== undefined; // reachable -> defined\n  big = null; // now only the WeakRef points to it -> eligible for GC\n  return { beforeNull };\n}\n\n// FinalizationRegistry lets us learn when something was collected (best-effort).\nfunction makeRegistry(onClean) {\n  return new FinalizationRegistry(onClean);\n}\n\nmodule.exports = { reachability, makeRegistry };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { reachability } = require(\"./solution\");\n\nconst r = reachability();\nconsole.log(r);\n\nconsole.assert(r.beforeNull === true, \"object reachable before nulling\");\nconsole.log(\"garbage collection assertions passed.\");\nconsole.log(\"Note: actual reclamation timing is non-deterministic; GC runs when the engine decides.\");",
+      "expectedOutput": "{ beforeNull: true }\ngarbage collection assertions passed.\nNote: actual reclamation timing is non-deterministic; GC runs when the engine decides.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p5-038",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 38,
+  "orderInPhase": 38,
+  "slug": "explain-top-k-top-p-temperature",
+  "title": "Explain top_k / top_p / temperature",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "explain",
+    "top",
+    "temperature"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A code-generation feature uses temperature 0 for deterministic, correct output; a brainstorming feature uses a higher temperature with top_p so suggestions a…"
+  },
+  "sections": {
+    "simple_en": "These three parameters control the randomness of an LLM's output. Temperature scales the probability distribution before sampling: low temperature sharpens it (the top token dominates, giving focused, near-deterministic output), while high temperature flattens it (more diverse, creative, riskier output).\n\ntop_k restricts sampling to the k highest-probability tokens, cutting off the long tail of unlikely words. top_p (nucleus sampling) instead keeps the smallest set of tokens whose probabilities sum to p, adapting how many candidates are considered to the model's confidence. In practice you tune temperature plus one of top_k/top_p: low for factual tasks, higher for creative ones.",
+    "hinglish": "Ye teen parameters ek LLM ke output ki randomness control karte hain. Temperature sampling se pehle probability distribution ko scale karta hai: low temperature use sharpen karta hai (top token dominate karta hai, focused, near-deterministic output dekar), jabki high temperature use flatten karta hai (zyada diverse, creative, riskier output).\n\ntop_k sampling ko k highest-probability tokens tak restrict karta hai, unlikely words ki long tail kaatkar. top_p (nucleus sampling) iske bajaye tokens ka smallest set rakhta hai jinki probabilities p tak sum karein, kitne candidates consider hon ye model ki confidence ke hisaab se adapt karke. Practice mein aap temperature plus top_k/top_p mein se ek tune karte ho: factual tasks ke liye low, creative ke liye higher.",
+    "keyPoints": [
+      "Temperature scales randomness: low = focused/deterministic, high = creative.",
+      "top_k: sample only from the k highest-probability tokens.",
+      "top_p (nucleus): keep the smallest token set summing to probability p.",
+      "top_p adapts the candidate count to the model's confidence.",
+      "Tune temperature + one of top_k/top_p: low for factual, higher for creative."
+    ],
+    "real_world": "A code-generation feature uses temperature 0 for deterministic, correct output; a brainstorming feature uses a higher temperature with top_p so suggestions are varied. Same model, different knobs — chosen to match how much creativity vs precision the task needs.",
+    "followups": [
+      {
+        "q": "What does temperature do?",
+        "a": "It scales the probability distribution before sampling. Low temperature concentrates probability on the most likely tokens (focused, repeatable); high temperature flattens it (more diverse and creative, but riskier)."
+      },
+      {
+        "q": "top_k vs top_p?",
+        "a": "top_k keeps a fixed number (k) of the most probable tokens. top_p (nucleus) keeps the smallest set of tokens whose cumulative probability reaches p, so the candidate count adapts to the model's confidence at each step."
+      },
+      {
+        "q": "What settings for factual vs creative tasks?",
+        "a": "Low temperature (near 0) for factual, deterministic tasks like extraction or code. Higher temperature with top_p for creative tasks like brainstorming or copywriting, where variety is desirable."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo computing a real softmax at different temperatures and a top_k selection, so the effect of each knob is verifiable here.",
+      "source": "# Explain top_k / top_p / temperature — sampling controls on the OpenAI API.\nfrom openai import OpenAI\nclient = OpenAI()\n\n# These parameters shape how the next token is sampled from the model's probability distribution.\nresp = client.chat.completions.create(\n    model=\"gpt-4o-mini\",\n    messages=[{\"role\": \"user\", \"content\": \"Write a tagline.\"}],\n    temperature=0.7,   # randomness: 0 = deterministic/focused, higher = more creative/varied\n    top_p=0.9,         # nucleus sampling: consider the smallest token set summing to 0.9 probability\n    # top_k is exposed by some providers/models: keep only the k most likely tokens\n)\n\n# Interview definitions:\n#   temperature  - scales the logits; low concentrates probability on the top tokens (focused),\n#                  high flattens it (more diverse/creative).\n#   top_k        - restrict sampling to the k highest-probability tokens.\n#   top_p        - (nucleus) restrict to the smallest set of tokens whose probabilities sum to p.\n# Use low temperature for factual/deterministic tasks, higher for creative ones. Typically tune\n# temperature OR top_p, not both at once.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Explain top_k / top_p / temperature — the knobs that control LLM output randomness\nimport math\ndef softmax(logits, temperature):\n    scaled = [l / temperature for l in logits]\n    m = max(scaled); exps = [math.exp(s - m) for s in scaled]; total = sum(exps)\n    return [e / total for e in exps]\nlogits = [2.0, 1.0, 0.1]\nlow = softmax(logits, 0.5)    # low temp -> sharper (more deterministic)\nhigh = softmax(logits, 2.0)   # high temp -> flatter (more random)\nprint(\"temp=0.5 probs:\", [round(p, 3) for p in low])\nprint(\"temp=2.0 probs:\", [round(p, 3) for p in high])\n# top_k: keep only the k highest-probability tokens. top_p: keep the smallest set summing to p.\ndef top_k(probs, k):\n    idx = sorted(range(len(probs)), key=lambda i: probs[i], reverse=True)[:k]\n    return sorted(idx)\nprint(\"top_k=2 keeps token indices:\", top_k(high, 2))\nassert low[0] > high[0], \"lower temperature concentrates probability on the top token\"\nassert len(top_k(high, 2)) == 2, \"top_k keeps exactly k candidate tokens\"\nprint(\"\\nInterview answer: temperature scales randomness (low = focused/deterministic, high = creative);\")\nprint(\"top_k samples from the k most likely tokens; top_p (nucleus) samples from the smallest set covering probability p.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "temp=0.5 probs: [0.864, 0.117, 0.019]\ntemp=2.0 probs: [0.502, 0.304, 0.194]\ntop_k=2 keeps token indices: [0, 1]\n\nInterview answer: temperature scales randomness (low = focused/deterministic, high = creative);\ntop_k samples from the k most likely tokens; top_p (nucleus) samples from the smallest set covering probability p.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

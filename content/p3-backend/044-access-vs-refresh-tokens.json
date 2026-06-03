@@ -1,0 +1,70 @@
+{
+  "id": "p3-044",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 44,
+  "orderInPhase": 44,
+  "slug": "access-vs-refresh-tokens",
+  "title": "Access vs Refresh tokens",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "access",
+    "refresh",
+    "tokens"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A mobile app holds a 15-minute access token and a 7-day refresh token."
+  },
+  "sections": {
+    "simple_en": "To balance security and convenience, JWT auth often uses two tokens. The access token is short-lived (minutes) and sent with every request; if it leaks, the exposure window is small. The refresh token is long-lived (days/weeks), stored securely (typically an HttpOnly cookie), and used only to obtain new access tokens.\n\nWhen the access token expires, the client calls a refresh endpoint with the refresh token to get a fresh access token — no re-login needed. This keeps access tokens disposable while avoiding frequent logins. Refresh tokens can be rotated and revoked server-side to limit damage if stolen.",
+    "hinglish": "Security aur convenience balance karne ke liye JWT auth aksar do tokens use karta hai. Access token short-lived (minutes) hota hai aur har request ke saath jaata hai; leak ho to exposure window chhota. Refresh token long-lived (din/hafte) hota hai, securely store hota hai (aksar HttpOnly cookie), aur sirf naye access tokens lene ke liye use hota hai.\n\nJab access token expire ho, client refresh endpoint ko refresh token ke saath call karke naya access token leta hai — dobara login nahi. Isse access tokens disposable rehte hain aur baar-baar login nahi karna padta. Refresh tokens rotate aur server-side revoke kiye ja sakte hain taaki chori hone par nuksan kam ho.",
+    "keyPoints": [
+      "Access token: short-lived, sent on every request — small leak window.",
+      "Refresh token: long-lived, stored securely (HttpOnly cookie), rarely sent.",
+      "On expiry, exchange the refresh token for a new access token — no re-login.",
+      "Refresh tokens can be rotated and revoked server-side.",
+      "Limits damage from a leaked access token while keeping sessions smooth."
+    ],
+    "real_world": "A mobile app holds a 15-minute access token and a 7-day refresh token. Throughout the day, when the access token expires, the app silently calls /refresh to get a new one; the user stays logged in for a week without re-entering credentials, and a stolen access token is useless within minutes.",
+    "followups": [
+      {
+        "q": "Why use two tokens instead of one long-lived JWT?",
+        "a": "A long-lived access token sent everywhere is dangerous if leaked and hard to revoke. Short access + long refresh limits exposure while avoiding constant re-login."
+      },
+      {
+        "q": "Where should the refresh token be stored?",
+        "a": "Somewhere not accessible to JavaScript when possible — typically an HttpOnly, Secure, SameSite cookie — to reduce XSS theft risk. It should rarely travel (only to the refresh endpoint)."
+      },
+      {
+        "q": "What is refresh token rotation?",
+        "a": "Issuing a new refresh token each time one is used and invalidating the old one. If a stolen token is reused, the mismatch reveals the theft and the session can be killed."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + jsonwebtoken code. The Node-runnable demo below simulates the access/refresh flow (expiry + refresh) so the behavior is verifiable here.",
+      "source": "// Access vs Refresh tokens — short access token + long refresh token rotation.\nconst express = require(\"express\");\nconst jwt = require(\"jsonwebtoken\");\nconst app = express();\napp.use(express.json());\n\nconst ACCESS_SECRET = process.env.ACCESS_SECRET;\nconst REFRESH_SECRET = process.env.REFRESH_SECRET;\n\nfunction issueTokens(userId) {\n  const accessToken = jwt.sign({ sub: userId }, ACCESS_SECRET, { expiresIn: \"15m\" });\n  const refreshToken = jwt.sign({ sub: userId }, REFRESH_SECRET, { expiresIn: \"7d\" });\n  return { accessToken, refreshToken };\n}\n\napp.post(\"/login\", (req, res) => {\n  // ...verify credentials...\n  const { accessToken, refreshToken } = issueTokens(1);\n  // Store refresh token in an HttpOnly cookie (not readable by JS).\n  res.cookie(\"refresh\", refreshToken, { httpOnly: true, secure: true, sameSite: \"strict\" });\n  res.json({ accessToken });\n});\n\n// Exchange a valid refresh token for a new access token.\napp.post(\"/refresh\", (req, res) => {\n  const token = req.cookies?.refresh;\n  if (!token) return res.status(401).json({ error: \"No refresh token\" });\n  try {\n    const { sub } = jwt.verify(token, REFRESH_SECRET);\n    res.json({ accessToken: jwt.sign({ sub }, ACCESS_SECRET, { expiresIn: \"15m\" }) });\n  } catch {\n    res.status(401).json({ error: \"Invalid refresh token\" });\n  }\n});\n// Short access tokens limit damage if leaked; refresh tokens avoid re-login.\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Access vs Refresh tokens — short-lived access + long-lived refresh flow\nfunction createAuth(){\n  let clock = 1000;\n  const refreshStore = new Set();\n  const tick = (n) => { clock += n; };\n  return {\n    login(){\n      const access = { token: \"acc-1\", exp: clock + 15 };     // ~15 min (here, units)\n      const refresh = { token: \"ref-1\", exp: clock + 1000 };  // long-lived\n      refreshStore.add(refresh.token);\n      return { access, refresh };\n    },\n    isValid: (t) => clock < t.exp,\n    refresh(refreshToken){\n      if (!refreshStore.has(refreshToken.token) || clock >= refreshToken.exp) return null;\n      return { token: \"acc-2\", exp: clock + 15 };             // issue a fresh access token\n    },\n    tick,\n  };\n}\nconst auth = createAuth();\nconst { access, refresh } = auth.login();\nconsole.log(\"Access valid now:\", auth.isValid(access));\nauth.tick(20);                              // time passes; access expires\nconsole.log(\"Access valid later:\", auth.isValid(access));\nconst newAccess = auth.refresh(refresh);   // use refresh to get a new access token\nconsole.log(\"Refreshed access:\", JSON.stringify(newAccess));\nconsole.assert(!auth.isValid(access) && newAccess.token === \"acc-2\", \"refresh issued new access\");\nconsole.log(\"Short access limits exposure; refresh avoids frequent re-login.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Access valid now: true\nAccess valid later: false\nRefreshed access: {\"token\":\"acc-2\",\"exp\":1035}\nShort access limits exposure; refresh avoids frequent re-login.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

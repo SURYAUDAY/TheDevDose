@@ -1,0 +1,68 @@
+{
+  "id": "p2-002",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 2,
+  "orderInPhase": 2,
+  "slug": "reconciliation",
+  "title": "Reconciliation",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "reconciliation"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "Imagine a teacher with a seating chart."
+  },
+  "sections": {
+    "simple_en": "Reconciliation is the algorithm React uses to compare the previous VDOM tree with the new one and decide what to change in the real DOM. To stay fast, React makes pragmatic assumptions: elements of different types produce different trees, and a stable 'key' tells React which list items correspond across renders.\n\nWhen list items have stable keys, React can reuse existing DOM nodes and only move or update what changed. Without keys (or with index keys on a reordering list), React may recreate nodes unnecessarily, losing component state and hurting performance.",
+    "hinglish": "Reconciliation wo process hai jisme React purane aur naye tree ko compare karta hai aur decide karta hai ki real DOM mein kya badalna hai. Speed ke liye React kuch assumptions leta hai — jaise different type ke elements ka tree alag hota hai.\n\nList mein agar stable key ho to React purane node reuse kar leta hai, sirf jo change hua wahi update karta hai. Bina key ke ya index key ke saath reorder karne par React faltu mein node dobara bana deta hai aur state kho jaati hai.",
+    "keyPoints": [
+      "Reconciliation = diffing old vs new VDOM to compute the minimal DOM update.",
+      "Two heuristics keep it near O(n): different element types => replace subtree; keys => match list children.",
+      "Stable, unique keys let React reuse and reorder nodes instead of destroying and recreating them.",
+      "Using array index as key breaks on insert/remove/reorder — it can attach the wrong state to the wrong item.",
+      "Fiber is React's reconciler architecture that makes this work interruptible and prioritizable."
+    ],
+    "real_world": "Imagine a teacher with a seating chart. If every student wears a name badge (a key), the teacher can rearrange chairs and still know who sits where. If badges show only seat numbers (index), shuffling chairs makes the teacher think a different student arrived — exactly the bug index keys cause.",
+    "followups": [
+      {
+        "q": "Why is index as a key risky?",
+        "a": "Because the index changes when items are inserted, removed, or reordered. React then matches items incorrectly, which can carry over stale state (e.g., a typed input value sticking to the wrong row)."
+      },
+      {
+        "q": "What happens when an element's type changes between renders?",
+        "a": "React tears down the old subtree and builds a new one from scratch — it does not try to diff a <div> into a <span>. Component state in that subtree is lost."
+      },
+      {
+        "q": "What is Fiber's role here?",
+        "a": "Fiber lets reconciliation be split into units of work that can be paused, resumed, and prioritized, enabling features like concurrent rendering and useTransition."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Reconciliation: stable keys let React reuse list nodes when items reorder.\nimport React, { useState } from \"react\";\n\nexport default function FruitList() {\n  const [fruits, setFruits] = useState([\n    { id: \"a\", name: \"Apple\" },\n    { id: \"b\", name: \"Banana\" },\n  ]);\n\n  const prepend = () =>\n    setFruits((list) => [{ id: \"c\", name: \"Cherry\" }, ...list]);\n\n  return (\n    <div>\n      <button onClick={prepend}>Add Cherry to front</button>\n      <ul>\n        {/* key={f.id} is stable, so React reuses Apple/Banana nodes\n            instead of recreating them when Cherry is prepended. */}\n        {fruits.map((f) => (\n          <li key={f.id}>{f.name}</li>\n        ))}\n      </ul>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Reconciliation — keyed list diff (why keys matter)\nfunction reconcile(oldList, newList) {\n  const ops = [];\n  const oldKeys = new Map(oldList.map((n, i) => [n.key, i]));\n  newList.forEach((n) => {\n    if (oldKeys.has(n.key)) ops.push(`REUSE ${n.key} (${n.text})`);\n    else ops.push(`CREATE ${n.key} (${n.text})`);\n  });\n  oldList.forEach((n) => { if (!newList.find(x => x.key === n.key)) ops.push(`REMOVE ${n.key}`); });\n  return ops;\n}\n\nconst oldL = [{ key: \"a\", text: \"Apple\" }, { key: \"b\", text: \"Banana\" }];\nconst newL = [{ key: \"c\", text: \"Cherry\" }, { key: \"a\", text: \"Apple\" }, { key: \"b\", text: \"Banana\" }];\n\nconst ops = reconcile(oldL, newL);\nops.forEach(o => console.log(o));\nconst reused = ops.filter(o => o.startsWith(\"REUSE\")).length;\nconsole.log(\"Reused nodes:\", reused);\nconsole.assert(reused === 2, \"a and b should be reused via keys\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "CREATE c (Cherry)\nREUSE a (Apple)\nREUSE b (Banana)\nReused nodes: 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

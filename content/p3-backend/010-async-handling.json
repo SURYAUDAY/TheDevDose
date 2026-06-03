@@ -1,0 +1,69 @@
+{
+  "id": "p3-010",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 10,
+  "orderInPhase": 10,
+  "slug": "async-handling",
+  "title": "Async handling",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "async",
+    "handling"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A dashboard endpoint needs the user and their orders — two independent queries."
+  },
+  "sections": {
+    "simple_en": "Backend code is full of asynchronous I/O — database queries, API calls, file access. Modern Node uses Promises and async/await to write this clearly and sequentially, replacing nested callbacks ('callback hell'). Errors propagate naturally with try/catch around awaits.\n\nKey techniques: await for sequential dependencies, Promise.all to run independent operations in parallel (much faster than awaiting one by one), Promise.allSettled when some may fail, and util.promisify to convert old callback-style APIs into promises.",
+    "hinglish": "Backend code asynchronous I/O se bhara hota hai — database queries, API calls, file access. Modern Node Promises aur async/await use karta hai ise clearly aur sequentially likhne ke liye, nested callbacks ('callback hell') ki jagah. Errors try/catch se naturally propagate hote hain.\n\nKey techniques: sequential dependencies ke liye await, independent operations parallel chalane ke liye Promise.all (ek-ek await karne se kahin fast), kuch fail ho sakte hon to Promise.allSettled, aur purane callback APIs ko promise banane ke liye util.promisify.",
+    "keyPoints": [
+      "Use async/await for readable, sequential-looking async code (no callback hell).",
+      "Wrap awaits in try/catch (or forward errors with next) to handle rejections.",
+      "Promise.all runs independent async work in parallel for big speedups.",
+      "Promise.allSettled tolerates partial failures; util.promisify converts callbacks.",
+      "Don't await independent operations one-by-one — parallelize them."
+    ],
+    "real_world": "A dashboard endpoint needs the user and their orders — two independent queries. Using Promise.all([getUser(id), getOrders(id)]) fetches both at once instead of waiting for one then the other, roughly halving the response time.",
+    "followups": [
+      {
+        "q": "When use Promise.all vs sequential await?",
+        "a": "Promise.all when operations are independent (run them in parallel). Sequential await when one depends on the result of a previous one."
+      },
+      {
+        "q": "Promise.all vs Promise.allSettled?",
+        "a": "Promise.all rejects as soon as any promise rejects (all-or-nothing). Promise.allSettled always resolves with each result's status, useful when partial failures are acceptable."
+      },
+      {
+        "q": "How do you use a callback-based API with async/await?",
+        "a": "Convert it to a promise — e.g., with util.promisify — then await it, or wrap it in a new Promise that resolves/rejects in the callback."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Node/Express async code. The Node-runnable demo below verifies the async patterns by running them in Node.",
+      "source": "// Async handling — async/await with proper error propagation and parallelism.\nconst express = require(\"express\");\nconst app = express();\n\n// Pretend these hit a database / external API.\nconst getUser = (id) => Promise.resolve({ id, name: \"User\" + id });\nconst getOrders = (id) => Promise.resolve([{ id: 1, userId: id }]);\n\napp.get(\"/dashboard/:id\", async (req, res, next) => {\n  try {\n    const id = req.params.id;\n    // Run independent requests in parallel instead of awaiting one by one.\n    const [user, orders] = await Promise.all([getUser(id), getOrders(id)]);\n    res.json({ user, orderCount: orders.length });\n  } catch (err) {\n    next(err); // forward to the error-handling middleware\n  }\n});\n\napp.listen(3000);\n// Tip: prefer async/await over nested callbacks; use Promise.all for parallel I/O.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Async handling — callback -> promise, async/await, parallel with Promise.all\nconst { promisify } = require(\"util\");\nfunction fetchUserCb(id, cb){ setTimeout(() => cb(null, { id, name: \"User\" + id }), 5); }\nconst fetchUser = promisify(fetchUserCb);   // convert callback API to promise\n\n(async () => {\n  const one = await fetchUser(1);             // sequential await\n  console.log(\"Awaited:\", JSON.stringify(one));\n\n  const many = await Promise.all([fetchUser(2), fetchUser(3), fetchUser(4)]); // parallel\n  console.log(\"Parallel:\", JSON.stringify(many.map(u => u.name)));\n\n  const results = await Promise.allSettled([fetchUser(5), Promise.reject(new Error(\"boom\"))]);\n  console.log(\"Settled statuses:\", results.map(r => r.status).join(\", \"));\n  console.assert(many.length === 3, \"three fetched in parallel\");\n  console.assert(results[1].status === \"rejected\", \"allSettled captures rejection\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Awaited: {\"id\":1,\"name\":\"User1\"}\nParallel: [\"User2\",\"User3\",\"User4\"]\nSettled statuses: fulfilled, rejected\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

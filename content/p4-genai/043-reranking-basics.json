@@ -1,0 +1,69 @@
+{
+  "id": "p4-043",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 43,
+  "orderInPhase": 43,
+  "slug": "reranking-basics",
+  "title": "Reranking basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "reranking",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A RAG search for 'python programming' first retrieves 20 chunks — including ones about python snakes."
+  },
+  "sections": {
+    "simple_en": "Reranking is a second stage that reorders retrieved candidates by true relevance. First-stage vector retrieval is fast and recall-oriented — it casts a wide net (a high k) but can include loosely related or ambiguous results. A reranker then scores each candidate against the query more precisely and keeps the best few.\n\nThis retrieve-then-rerank pattern improves the quality of the context the LLM sees: you retrieve many cheaply, then promote the genuinely relevant chunks to the top before injection. It's one of the most effective and common ways to boost RAG accuracy, especially for ambiguous queries where pure vector similarity is imperfect.",
+    "hinglish": "Reranking ek second stage hai jo retrieved candidates ko true relevance se reorder karti hai. First-stage vector retrieval fast aur recall-oriented hai — ye ek wide net daalta hai (high k) par loosely related ya ambiguous results include kar sakta hai. Ek reranker phir har candidate ko query ke against zyada precisely score karke best few rakhta hai.\n\nYe retrieve-then-rerank pattern us context ki quality improve karta hai jo LLM dekhta hai: aap bahut saare cheaply retrieve karte ho, phir genuinely relevant chunks ko injection se pehle top par promote karte ho. Ye RAG accuracy boost karne ke sabse effective aur common tareekon mein se ek hai, khaaskar ambiguous queries ke liye jahan pure vector similarity imperfect hai.",
+    "keyPoints": [
+      "A second stage that reorders candidates by true relevance.",
+      "First-stage retrieval: fast, high recall, but possibly noisy.",
+      "Reranker scores each candidate vs the query more precisely.",
+      "Retrieve many cheaply -> rerank -> keep the best few.",
+      "One of the most effective ways to boost RAG accuracy."
+    ],
+    "real_world": "A RAG search for 'python programming' first retrieves 20 chunks — including ones about python snakes. A reranker scores them against the query's intent and pushes the programming chunks to the top, so only genuinely relevant context reaches the LLM.",
+    "followups": [
+      {
+        "q": "Why add a reranking stage?",
+        "a": "First-stage vector retrieval optimizes for recall and can return loosely relevant results. A reranker reorders candidates by precise relevance, ensuring the best chunks are injected — markedly improving answer quality."
+      },
+      {
+        "q": "What is the retrieve-then-rerank pattern?",
+        "a": "Retrieve a large set of candidates cheaply with vector search (high k), then apply a more expensive, accurate reranker to select the top few for the prompt."
+      },
+      {
+        "q": "Does reranking add cost/latency?",
+        "a": "Yes — it's an extra scoring step, so it's applied only to the top candidates, not the whole corpus. The accuracy gain usually justifies the modest added latency."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain + reranking-API code. The Python-runnable demo below reorders noisy first-stage results by relevance so the two-stage idea is verifiable here.",
+      "source": "# Reranking basics — retrieve many cheaply, then reorder the top-k for precision.\nfrom langchain_openai import OpenAIEmbeddings\nfrom langchain_community.vectorstores import FAISS\n\n# Stage 1: fast vector retrieval with HIGH recall (fetch more than you need).\n# store = FAISS.from_documents(chunks, OpenAIEmbeddings())\n# candidates = store.similarity_search(query, k=20)\n\n# Stage 2: a precise reranker reorders those 20 and keeps the best few.\nfrom sentence_transformers import CrossEncoder\nreranker = CrossEncoder(\"cross-encoder/ms-marco-MiniLM-L-6-v2\")\n\ndef rerank(query, candidates, top_n=4):\n    pairs = [(query, doc.page_content) for doc in candidates]\n    scores = reranker.predict(pairs)                       # joint query-doc relevance\n    ranked = sorted(zip(candidates, scores), key=lambda x: x[1], reverse=True)\n    return [doc for doc, _ in ranked[:top_n]]\n\n# Two-stage retrieval (recall then precision) noticeably improves answer quality,\n# because the first stage alone often ranks \"close but not best\" chunks too high.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Reranking basics — cheap first-stage recall, then a precise reorder of the top candidates\n# Stage 1: fast retriever returns many candidates by a rough score.\ncandidates = [\n    {\"id\": \"a\", \"text\": \"Python list comprehensions\", \"first_stage\": 0.71},\n    {\"id\": \"b\", \"text\": \"How to sort a Python list\", \"first_stage\": 0.69},\n    {\"id\": \"c\", \"text\": \"Python web scraping guide\",  \"first_stage\": 0.68},\n]\n# Stage 2: a slower, smarter reranker scores query-document relevance directly.\ndef reranker_score(query, text):\n    q = set(query.lower().split()); t = set(text.lower().split())\n    overlap = len(q & t) / (len(q) or 1)            # precise relevance signal\n    return round(overlap, 3)\n\nquery = \"sort a list in python\"\nfor c in candidates:\n    c[\"rerank\"] = reranker_score(query, c[\"text\"])\nreranked = sorted(candidates, key=lambda c: c[\"rerank\"], reverse=True)\nprint(\"First-stage order:\", [c[\"id\"] for c in candidates])\nprint(\"Reranked order:   \", [c[\"id\"] for c in reranked])\nprint(\"Top after rerank: \", reranked[0][\"text\"])\nassert reranked[0][\"id\"] == \"b\", \"reranking surfaces the truly most relevant doc\"\nprint(\"Reranking: retrieve many cheaply (high recall), then reorder the top-k for precision.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "First-stage order: ['a', 'b', 'c']\nReranked order:    ['b', 'a', 'c']\nTop after rerank:  How to sort a Python list\nReranking: retrieve many cheaply (high recall), then reorder the top-k for precision.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

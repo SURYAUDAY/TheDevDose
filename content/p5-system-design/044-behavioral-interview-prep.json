@@ -1,0 +1,70 @@
+{
+  "id": "p5-044",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 44,
+  "orderInPhase": 44,
+  "slug": "behavioral-interview-prep",
+  "title": "Behavioral interview prep",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "behavioral",
+    "interview",
+    "prep"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Before interviews, a candidate writes down six stories — a code-review conflict, a missed estimate, a migration they led, a tight launch, and two wins."
+  },
+  "sections": {
+    "simple_en": "Behavioral interviews assess how you work — collaboration, ownership, handling failure and conflict, leadership, and dealing with pressure. The insight that makes prep tractable is that most questions map to a handful of recurring themes: conflict, failure, leadership, pressure/deadlines, and success/impact.\n\nSo prepare 4-6 strong, specific stories from your experience in advance, each tied to a theme, and map incoming questions to the right story. Deliver each one with the STAR structure (Situation, Task, Action, Result) and quantify the outcome. This turns an open-ended, stressful format into a matching exercise you've rehearsed.",
+    "hinglish": "Behavioral interviews assess karte hain ki aap kaise kaam karte ho — collaboration, ownership, failure aur conflict handle karna, leadership, aur pressure se nipatना. Wo insight jo prep ko tractable banata hai ye hai ki zyaadatar questions kuch recurring themes par map hote hain: conflict, failure, leadership, pressure/deadlines, aur success/impact.\n\nTo pehle se apne experience se 4-6 strong, specific stories prepare karo, har ek ek theme se tied, aur incoming questions ko sahi story par map karo. Har ek ko STAR structure (Situation, Task, Action, Result) ke saath deliver karo aur outcome quantify karo. Ye ek open-ended, stressful format ko ek matching exercise mein badal deta hai jise aapne rehearse kiya hai.",
+    "keyPoints": [
+      "Assesses how you work: collaboration, ownership, conflict, leadership, pressure.",
+      "Most questions map to a few themes (conflict, failure, leadership, pressure, success).",
+      "Prepare 4-6 strong, specific stories in advance, one per theme.",
+      "Map each incoming question to the right prepared story.",
+      "Deliver with STAR and quantify the outcome."
+    ],
+    "real_world": "Before interviews, a candidate writes down six stories — a code-review conflict, a missed estimate, a migration they led, a tight launch, and two wins. When asked 'tell me about a disagreement with a teammate', they immediately reach for the prepared conflict story instead of improvising under pressure.",
+    "followups": [
+      {
+        "q": "How do you prepare for behavioral interviews efficiently?",
+        "a": "Identify the recurring themes (conflict, failure, leadership, pressure, success), prepare 4-6 specific stories covering them, and practice delivering each in STAR format. Most questions then map to a story you've already rehearsed."
+      },
+      {
+        "q": "What are interviewers assessing?",
+        "a": "How you actually work — collaboration, ownership, communication, handling conflict and failure, leadership, and resilience under pressure — using past behavior as a predictor of future behavior."
+      },
+      {
+        "q": "How specific should your stories be?",
+        "a": "Very — concrete situations with real details and quantified results are far more convincing than vague generalities. Specificity signals authenticity and lets you highlight exactly what you did and the impact."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo that maps behavioral questions to a few themes and prepared stories, verifying the mapping logic.",
+      "source": "# Behavioral interview prep — a reusable preparation framework.\n\n# Most behavioral questions map to a handful of THEMES. Prepare 4-6 strong stories in advance,\n# tag each by theme, and route any question to the best-fitting story.\nTHEMES = [\"conflict\", \"failure\", \"leadership\", \"pressure\", \"success\", \"ambiguity\"]\n\nPREPARED_STORIES = {\n    \"conflict\":   \"Disagreed with a teammate on architecture; aligned via a spike + data.\",\n    \"failure\":    \"Underestimated a migration; recovered by re-scoping and communicating early.\",\n    \"leadership\": \"Led a small team through a tight launch, delegating and unblocking.\",\n    \"pressure\":   \"Production incident during launch week; triaged calmly and shipped a fix.\",\n}\n\ndef map_question_to_theme(question: str) -> str:\n    q = question.lower()\n    if \"conflict\" in q or \"disagree\" in q: return \"conflict\"\n    if \"fail\" in q or \"mistake\" in q:       return \"failure\"\n    if \"led\" in q or \"lead\" in q:           return \"leadership\"\n    if \"deadline\" in q or \"pressure\" in q:  return \"pressure\"\n    return \"success\"\n\n# Process: brainstorm real stories -> tag by theme -> rehearse each in STAR form (concise, with\n# a quantified result) -> practice mapping unfamiliar questions to your closest story. Always\n# focus on YOUR actions and what you learned. Keep answers ~90 seconds.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Behavioral interview prep — categorize questions and map them to prepared stories\nQUESTION_BANK = {\n    \"Tell me about a conflict with a teammate.\": \"conflict\",\n    \"Describe a time you failed.\": \"failure\",\n    \"Tell me about a project you led.\": \"leadership\",\n    \"When did you handle a tight deadline?\": \"pressure\",\n}\n# Prepare 1-2 strong stories per theme; map each question to the right story.\nSTORIES = {\"conflict\": \"Code-review disagreement story\",\n           \"failure\": \"Missed-estimate story\",\n           \"leadership\": \"Led the migration story\",\n           \"pressure\": \"Launch-week story\"}\ndef prep(question):\n    theme = QUESTION_BANK.get(question, \"general\")\n    return {\"theme\": theme, \"use_story\": STORIES.get(theme, \"adapt a general story\")}\nfor q in QUESTION_BANK:\n    p = prep(q)\n    print(f\"{q!r}\\n   theme={p['theme']} -> {p['use_story']}\")\nassert prep(\"Describe a time you failed.\")[\"theme\"] == \"failure\"\nassert prep(\"Tell me about a project you led.\")[\"use_story\"] == \"Led the migration story\"\nprint(\"\\nBehavioral prep: most questions map to a few themes (conflict, failure, leadership, pressure, success).\")\nprint(\"Prepare 4-6 strong stories in advance, map questions to them, and deliver each with the STAR structure.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "'Tell me about a conflict with a teammate.'\n   theme=conflict -> Code-review disagreement story\n'Describe a time you failed.'\n   theme=failure -> Missed-estimate story\n'Tell me about a project you led.'\n   theme=leadership -> Led the migration story\n'When did you handle a tight deadline?'\n   theme=pressure -> Launch-week story\n\nBehavioral prep: most questions map to a few themes (conflict, failure, leadership, pressure, success).\nPrepare 4-6 strong stories in advance, map questions to them, and deliver each with the STAR structure.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "id": "p4-034",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 34,
+  "orderInPhase": 34,
+  "slug": "vector-db-alternatives-pgvector-qdrant-weaviate",
+  "title": "Vector DB alternatives (pgvector / Qdrant / Weaviate)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "vector",
+    "db",
+    "alternatives",
+    "pgvector",
+    "qdrant"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A team already running PostgreSQL adds pgvector to store embeddings next to their existing tables — querying with familiar SQL and joining vector results to…"
+  },
+  "sections": {
+    "simple_en": "Beyond Pinecone, several vector databases suit different needs. pgvector is a PostgreSQL extension — ideal if you already run Postgres, letting you keep vectors alongside relational data and filter with SQL. Qdrant is a high-performance, open-source vector DB with rich payload filtering and strong scaling, available self-hosted or cloud.\n\nWeaviate is an open-source vector DB notable for built-in vectorization modules and first-class hybrid (keyword + vector) search. All of them store vectors and perform ANN search; the choice comes down to your existing stack, hosting preference (self-hosted vs managed), filtering needs, hybrid-search support, and operational appetite.",
+    "hinglish": "Pinecone ke alawa, kai vector databases alag needs ke liye suit karte hain. pgvector ek PostgreSQL extension hai — ideal agar aap pehle se Postgres chalate ho, vectors ko relational data ke saath rakhne aur SQL se filter karne dekar. Qdrant ek high-performance, open-source vector DB hai jisme rich payload filtering aur strong scaling hai, self-hosted ya cloud available.\n\nWeaviate ek open-source vector DB hai jo built-in vectorization modules aur first-class hybrid (keyword + vector) search ke liye notable hai. Ye sab vectors store karte hain aur ANN search karte hain; choice aapke existing stack, hosting preference (self-hosted vs managed), filtering needs, hybrid-search support, aur operational appetite par depend karti hai.",
+    "keyPoints": [
+      "pgvector: a Postgres extension — reuse your DB; filter with SQL.",
+      "Qdrant: high-performance, open-source; rich payload filtering.",
+      "Weaviate: built-in vectorization + first-class hybrid search.",
+      "All store vectors and do ANN search; differ in hosting/filtering/ops.",
+      "Choose by existing stack, hosting, filtering, hybrid needs, and ops appetite."
+    ],
+    "real_world": "A team already running PostgreSQL adds pgvector to store embeddings next to their existing tables — querying with familiar SQL and joining vector results to relational data — avoiding the operational overhead of standing up a separate vector database.",
+    "followups": [
+      {
+        "q": "When is pgvector the right choice?",
+        "a": "When you already use PostgreSQL and want vectors alongside relational data with SQL filtering, avoiding a separate system. It's great for small-to-medium scale and simpler stacks."
+      },
+      {
+        "q": "What distinguishes Qdrant and Weaviate?",
+        "a": "Qdrant emphasizes performance and rich payload filtering. Weaviate offers built-in vectorization modules and strong hybrid (keyword+vector) search. Both are open-source and self-host or cloud."
+      },
+      {
+        "q": "How do you choose among vector databases?",
+        "a": "Weigh your existing stack, hosting preference (managed vs self-hosted), filtering/hybrid needs, scale, and how much ops you want to own. They share the same core (store vectors, ANN search)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real pgvector SQL, Qdrant, and Weaviate code. The Python-runnable demo below picks a database from requirements so the selection trade-offs are verifiable here.",
+      "source": "# Vector DB alternatives — pgvector, Qdrant, Weaviate (same role, different trade-offs).\n\n# 1) pgvector \\u2014 add vectors to Postgres you already run (SQL + vectors together):\n#    CREATE EXTENSION vector;\n#    CREATE TABLE docs (id serial PRIMARY KEY, content text, embedding vector(1536));\n#    SELECT content FROM docs ORDER BY embedding <=> '[...]' LIMIT 5;   -- <=> = cosine distance\n\n# 2) Qdrant \\u2014 dedicated vector DB with rich payload filtering:\nfrom qdrant_client import QdrantClient\nfrom qdrant_client.models import VectorParams, Distance, PointStruct\nqc = QdrantClient(\":memory:\")\nqc.create_collection(\"docs\", vectors_config=VectorParams(size=1536, distance=Distance.COSINE))\n# qc.upsert(\"docs\", points=[PointStruct(id=1, vector=vec, payload={\"topic\": \"returns\"})])\n# qc.search(\"docs\", query_vector=qv, limit=5, query_filter=...)\n\n# 3) Weaviate \\u2014 dedicated DB with built-in vectorizer modules and hybrid search:\n# import weaviate\n# client = weaviate.connect_to_local()\n# collection.query.hybrid(query=\"return policy\", alpha=0.5, limit=5)  # keyword + vector\n\n# Choose by: ops model (managed vs self-host), existing stack (Postgres -> pgvector),\n# filtering needs, hybrid-search support, scale, and cost.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Vector DB alternatives — pgvector, Qdrant, Weaviate: same idea, different trade-offs\noptions = {\n    \"pgvector\":  {\"type\": \"Postgres extension\", \"best_for\": \"already on Postgres; SQL + vectors together\"},\n    \"Qdrant\":    {\"type\": \"dedicated vector DB\", \"best_for\": \"rich filtering, Rust performance, self-host/cloud\"},\n    \"Weaviate\":  {\"type\": \"dedicated vector DB\", \"best_for\": \"built-in vectorization modules + hybrid search\"},\n    \"Pinecone\":  {\"type\": \"managed service\",     \"best_for\": \"fully managed, serverless scaling, no ops\"},\n}\ndef recommend(requirement):\n    table = {\n        \"already using postgres\": \"pgvector\",\n        \"no ops / fully managed\": \"Pinecone\",\n        \"advanced filtering self-hosted\": \"Qdrant\",\n        \"built-in hybrid search\": \"Weaviate\",\n    }\n    return table[requirement]\n\nfor k, v in options.items():\n    print(f\"{k:9} | {v['type']:20} | {v['best_for']}\")\nassert recommend(\"already using postgres\") == \"pgvector\"\nassert recommend(\"no ops / fully managed\") == \"Pinecone\"\nprint(\"\\nAll store vectors + metadata and do ANN search; pick by ops model, scale, filtering, and cost.\")\nprint(\"pgvector reuses Postgres; Qdrant/Weaviate are dedicated; Pinecone is fully managed.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "pgvector  | Postgres extension   | already on Postgres; SQL + vectors together\nQdrant    | dedicated vector DB  | rich filtering, Rust performance, self-host/cloud\nWeaviate  | dedicated vector DB  | built-in vectorization modules + hybrid search\nPinecone  | managed service      | fully managed, serverless scaling, no ops\n\nAll store vectors + metadata and do ANN search; pick by ops model, scale, filtering, and cost.\npgvector reuses Postgres; Qdrant/Weaviate are dedicated; Pinecone is fully managed.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

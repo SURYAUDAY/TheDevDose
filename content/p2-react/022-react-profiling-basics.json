@@ -1,0 +1,70 @@
+{
+  "id": "p2-022",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 22,
+  "orderInPhase": 22,
+  "slug": "react-profiling-basics",
+  "title": "React profiling basics",
+  "difficulty": "beginner",
+  "tags": [
+    "p2",
+    "react",
+    "profiling",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Before a release, a team wraps a slow page in <Profiler> and logs commits."
+  },
+  "sections": {
+    "simple_en": "Profiling means measuring how your components render so you can find performance problems with data instead of guesses. React provides the Profiler tab in React DevTools and a <Profiler> component with an onRender callback that reports timings for each commit.\n\nThe onRender callback gives you the component id, the phase (mount or update), and durations like actualDuration (time to render this commit) and baseDuration (estimated time without memoization). Reading these helps you spot components that render too often or too slowly.",
+    "hinglish": "Profiling matlab measure karna ki components kaise render ho rahe hain taaki performance problems guess ke bajaye data se mile. React DevTools ka Profiler tab aur <Profiler> component (onRender callback ke saath) iske liye hain.\n\nonRender callback component id, phase (mount ya update), aur durations jaise actualDuration deta hai. Inhe padh kar pata chalta hai kaun sa component zyada baar ya zyada slow render ho raha hai.",
+    "keyPoints": [
+      "Use React DevTools Profiler or the <Profiler> component to measure renders objectively.",
+      "<Profiler id onRender={cb}> calls cb on each commit with timing data.",
+      "onRender args include id, phase ('mount'|'update'), actualDuration, baseDuration, start/commit times.",
+      "Flame charts and ranked charts show which components dominate render time.",
+      "Profile in a production-like build; development mode adds overhead that skews numbers."
+    ],
+    "real_world": "Before a release, a team wraps a slow page in <Profiler> and logs commits. They discover one chart component re-rendering on every parent state change. The data points straight to the fix — memoize the chart — instead of guessing across the whole page.",
+    "followups": [
+      {
+        "q": "What does actualDuration tell you?",
+        "a": "How long React spent rendering this component and its descendants for the current commit. High or frequent values flag optimization candidates."
+      },
+      {
+        "q": "Why profile a production build?",
+        "a": "Development mode includes warnings and checks that add overhead, so timings can be misleading. A production-like build reflects real performance."
+      },
+      {
+        "q": "What's the difference between mount and update phases?",
+        "a": "Mount is the first render that adds the component to the DOM; update is any subsequent re-render. Frequent updates are usually where optimization pays off."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Profiling: wrap a subtree in <Profiler> and log each commit's timings.\nimport React, { Profiler } from \"react\";\n\nfunction onRenderCallback(id, phase, actualDuration, baseDuration, startTime, commitTime) {\n  console.log(`${id} [${phase}] actual=${actualDuration.toFixed(2)}ms`);\n}\n\nfunction HeavyChart({ data }) {\n  return <div>{/* imagine an expensive chart here */}Chart of {data.length} points</div>;\n}\n\nexport default function Dashboard({ data }) {\n  return (\n    <Profiler id=\"HeavyChart\" onRender={onRenderCallback}>\n      <HeavyChart data={data} />\n    </Profiler>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React profiling basics — Profiler onRender callback aggregation\nconst records = [];\nfunction onRender(id, phase, actualDuration){ records.push({ id, phase, actualDuration }); }\n\n// simulate commits the Profiler would report\nonRender(\"List\", \"mount\", 12.4);\nonRender(\"List\", \"update\", 3.1);\nonRender(\"List\", \"update\", 2.7);\n\nconst total = records.reduce((s, r) => s + r.actualDuration, 0);\nconst updates = records.filter(r => r.phase === \"update\").length;\nrecords.forEach(r => console.log(`${r.id} [${r.phase}] ${r.actualDuration}ms`));\nconsole.log(\"Update commits:\", updates, \"| Total time:\", total.toFixed(1) + \"ms\");\nconsole.assert(updates === 2, \"two update commits\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "List [mount] 12.4ms\nList [update] 3.1ms\nList [update] 2.7ms\nUpdate commits: 2 | Total time: 18.2ms\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

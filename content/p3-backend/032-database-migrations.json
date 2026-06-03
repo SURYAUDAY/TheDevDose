@@ -1,0 +1,69 @@
+{
+  "id": "p3-032",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 32,
+  "orderInPhase": 32,
+  "slug": "database-migrations",
+  "title": "Database migrations",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "database",
+    "migrations"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A feature needs a new 'phone' column on users."
+  },
+  "sections": {
+    "simple_en": "Migrations are version-controlled scripts that change the database schema over time — creating tables, adding columns, indexes, or constraints. Each migration has an up (apply) and ideally a down (revert), and a migrations tool records which have run, applying only the pending ones in order.\n\nThis keeps every environment (local, staging, production) and every teammate's database in sync with the code. Instead of manually altering schemas, you commit migrations alongside features, run them on deploy, and can roll back changes safely if needed.",
+    "hinglish": "Migrations version-controlled scripts hain jo database schema ko samay ke saath badalte hain — tables banana, columns, indexes ya constraints add karna. Har migration ka ek up (apply) aur ideally down (revert) hota hai, aur migrations tool record karta hai kaun se chal chuke, sirf pending wale order mein apply karke.\n\nIsse har environment (local, staging, production) aur har teammate ka database code ke saath sync rehta hai. Schemas manually badalne ke bajaye aap features ke saath migrations commit karte ho, deploy par chalate ho, aur zaroorat pade to changes safely roll back kar sakte ho.",
+    "keyPoints": [
+      "Versioned scripts that evolve the schema (tables, columns, indexes).",
+      "Each has up (apply) and ideally down (revert).",
+      "A tracking table records which migrations have run — each runs once.",
+      "Keeps all environments and teammates' DBs in sync with code.",
+      "Committed to git and run automatically on deploy."
+    ],
+    "real_world": "A feature needs a new 'phone' column on users. The developer writes a migration adding the column, commits it with the code, and CI runs it on deploy — so production, staging, and every developer's database all gain the column consistently, with a down script to revert if the feature is pulled.",
+    "followups": [
+      {
+        "q": "Why use migrations instead of editing the schema manually?",
+        "a": "Migrations are versioned, repeatable, and tracked, so every environment applies the same changes in the same order — avoiding drift and undocumented manual edits."
+      },
+      {
+        "q": "What does a 'down' migration do?",
+        "a": "It reverts the change the 'up' made (e.g., drop the column it added), enabling safe rollbacks if a deploy must be undone."
+      },
+      {
+        "q": "How does the tool know which migrations to run?",
+        "a": "It keeps a migrations table recording applied versions, then runs only the pending ones in order — so re-running is idempotent."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real migration code (node-pg-migrate style with up/down). The Node-runnable demo below applies versioned migrations in order so the behavior is verifiable here.",
+      "source": "// Database migrations — versioned schema changes (node-pg-migrate style).\n// migrations/1700000000_create_users.js\nexports.up = (pgm) => {\n  pgm.createTable(\"users\", {\n    id: \"id\",                                   // serial primary key\n    email: { type: \"varchar(255)\", notNull: true, unique: true },\n    name: { type: \"varchar(100)\", notNull: true },\n    created_at: { type: \"timestamptz\", notNull: true, default: pgm.func(\"now()\") },\n  });\n  pgm.createIndex(\"users\", \"email\");\n};\n\n// down() lets you roll the change back cleanly.\nexports.down = (pgm) => {\n  pgm.dropTable(\"users\");\n};\n\n// Migrations are committed to git, run in order in every environment, and\n// recorded in a migrations table so each runs exactly once.\n// Run with: npx node-pg-migrate up   (or  down  to revert)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Database migrations — apply versioned up() steps in order, track schema_version\nconst migrations = [\n  { v: 1, name: \"create_users\", up: (s) => { s.tables.users = [\"id\", \"email\"]; } },\n  { v: 2, name: \"add_users_name\", up: (s) => { s.tables.users.push(\"name\"); } },\n  { v: 3, name: \"create_orders\", up: (s) => { s.tables.orders = [\"id\", \"user_id\", \"total\"]; } },\n];\nfunction migrate(schema, applied){\n  for (const m of migrations.sort((a, b) => a.v - b.v)){\n    if (m.v > applied){ m.up(schema); console.log(`Applied migration v${m.v}: ${m.name}`); applied = m.v; }\n  }\n  return applied; // new schema_version\n}\nconst schema = { tables: {} };\nlet version = migrate(schema, 0);            // fresh DB\nconsole.log(\"Schema:\", JSON.stringify(schema.tables));\nconsole.log(\"schema_version:\", version);\nconst again = migrate(schema, version);      // re-run: nothing pending\nconsole.assert(version === 3, \"advanced to latest version\");\nconsole.assert(again === 3, \"no migrations re-applied\");\nconsole.log(\"Migrations are ordered, idempotent, and tracked in a version table.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Applied migration v1: create_users\nApplied migration v2: add_users_name\nApplied migration v3: create_orders\nSchema: {\"users\":[\"id\",\"email\",\"name\"],\"orders\":[\"id\",\"user_id\",\"total\"]}\nschema_version: 3\nMigrations are ordered, idempotent, and tracked in a version table.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

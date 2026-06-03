@@ -1,0 +1,68 @@
+{
+  "id": "p2-013",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 13,
+  "orderInPhase": 13,
+  "slug": "portals",
+  "title": "Portals",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "portals"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "A modal opened from deep inside a card with overflow:hidden would get clipped."
+  },
+  "sections": {
+    "simple_en": "A portal renders a child component into a DOM node that lives outside the parent component's DOM hierarchy, using ReactDOM.createPortal(child, container). The component still behaves as part of the React tree (context, events, state all work normally), but its DOM output appears elsewhere.\n\nPortals solve layout and stacking problems: modals, tooltips, and dropdowns often need to escape parents with overflow:hidden or constraining z-index. Rendering them into a top-level container avoids clipping while keeping React semantics intact.",
+    "hinglish": "Portal ek child ko parent ke DOM hierarchy ke bahar kisi node mein render karta hai — ReactDOM.createPortal(child, container) se. Component React tree ka hissa hi rehta hai (context, events, state sab normal chalte hain) par DOM output kahin aur dikhta hai.\n\nPortals modal, tooltip aur dropdown ki layout problems solve karte hain jab unhe overflow:hidden ya z-index waale parent se bahar nikalna ho. Top-level container mein render karne se clipping nahi hoti.",
+    "keyPoints": [
+      "ReactDOM.createPortal(child, domNode) renders into a different DOM container.",
+      "The component stays in the React tree: context, state, and event bubbling still work.",
+      "Events bubble through the React tree (parent), not the DOM portal location — a key subtlety.",
+      "Ideal for modals, tooltips, dropdowns, and toasts that must escape overflow/z-index traps.",
+      "The target container usually lives at the document body or a dedicated #modal-root."
+    ],
+    "real_world": "A modal opened from deep inside a card with overflow:hidden would get clipped. Rendering it via a portal into #modal-root at the end of <body> lets it cover the whole screen, while clicks inside still bubble to the React parent that opened it.",
+    "followups": [
+      {
+        "q": "Do events from a portal bubble to the React parent or the DOM parent?",
+        "a": "To the React parent. React event bubbling follows the component tree, not the physical DOM location of the portal."
+      },
+      {
+        "q": "Why use a portal for modals?",
+        "a": "To escape ancestor styles like overflow:hidden and z-index stacking contexts that would clip or hide the modal, while keeping React context and state available."
+      },
+      {
+        "q": "Does a portaled component still have access to context?",
+        "a": "Yes. Context follows the React tree, so providers above the portal component still apply."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Portal: render a modal into #modal-root (outside the parent DOM tree).\nimport React, { useState } from \"react\";\nimport ReactDOM from \"react-dom\";\n\nfunction Modal({ onClose, children }) {\n  // Renders into document.getElementById(\"modal-root\"), escaping overflow/z-index.\n  return ReactDOM.createPortal(\n    <div className=\"overlay\" onClick={onClose}>\n      <div className=\"modal\" onClick={(e) => e.stopPropagation()}>\n        {children}\n        <button onClick={onClose}>Close</button>\n      </div>\n    </div>,\n    document.getElementById(\"modal-root\")\n  );\n}\n\nexport default function App() {\n  const [open, setOpen] = useState(false);\n  return (\n    <div style={{ overflow: \"hidden\" }}>\n      <button onClick={() => setOpen(true)}>Open Modal</button>\n      {open && <Modal onClose={() => setOpen(false)}>Hello from a portal!</Modal>}\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Portals — render a child into a DIFFERENT container in the (fake) DOM\nconst dom = { appRoot: { children: [] }, modalRoot: { children: [] } };\nfunction render(node, container){ container.children.push(node); }\nfunction createPortal(node, container){ render(node, container); return \"(rendered elsewhere)\"; }\n\n// normal child goes to appRoot\nrender({ tag: \"h1\", text: \"App\" }, dom.appRoot);\n// modal is portaled to modalRoot even though it's \"inside\" the App tree logically\ncreatePortal({ tag: \"div\", text: \"Modal\" }, dom.modalRoot);\n\nconsole.log(\"appRoot children:\", dom.appRoot.children.map(c => c.text).join(\", \"));\nconsole.log(\"modalRoot children:\", dom.modalRoot.children.map(c => c.text).join(\", \"));\nconsole.assert(dom.modalRoot.children[0].text === \"Modal\", \"modal lives in modalRoot\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "appRoot children: App\nmodalRoot children: Modal\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

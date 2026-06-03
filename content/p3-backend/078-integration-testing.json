@@ -1,0 +1,69 @@
+{
+  "id": "p3-078",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 78,
+  "orderInPhase": 78,
+  "slug": "integration-testing",
+  "title": "Integration testing",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "integration",
+    "testing"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A unit test with a mocked repo says registration works, but an integration test against a real test database reveals the unique-email constraint wasn't appli…"
+  },
+  "sections": {
+    "simple_en": "Integration testing checks that multiple components work correctly together — a route calling a service calling a repository calling a real (test) database — rather than each in isolation. It catches bugs that unit tests miss: wiring mistakes, incorrect queries, schema/constraint issues, and serialization problems at the boundaries.\n\nBecause they touch real dependencies, integration tests are slower and need setup (a test database, migrations, cleanup between tests). The payoff is higher confidence that the system actually works as assembled. A common approach: run them against a disposable test DB (often in Docker), seeding and cleaning data per test.",
+    "hinglish": "Integration testing check karta hai ki kai components saath sahi kaam karte hain — ek route jo service ko, jo repository ko, jo ek real (test) database ko call karta hai — har ek ko isolation mein nahi. Ye wo bugs pakadta hai jo unit tests miss karte hain: wiring mistakes, galat queries, schema/constraint issues, aur boundaries par serialization problems.\n\nKyunki ye real dependencies ko touch karte hain, integration tests slower hote hain aur setup chahiye (test database, migrations, tests ke beech cleanup). Faayda ye hai ki system assembled roop mein kaam karta hai iska zyada confidence milta hai. Common approach: inhe ek disposable test DB (aksar Docker mein) ke against chalao, har test par data seed aur clean karke.",
+    "keyPoints": [
+      "Tests multiple real components working together (route -> service -> repo -> DB).",
+      "Catches wiring bugs, bad queries, constraint/schema issues unit tests miss.",
+      "Slower; needs setup (test DB, migrations, per-test cleanup).",
+      "Run against a disposable test database (often in Docker).",
+      "Higher confidence the assembled system actually works."
+    ],
+    "real_world": "A unit test with a mocked repo says registration works, but an integration test against a real test database reveals the unique-email constraint wasn't applied in a migration — so duplicate signups slip through. Only exercising the real layers together surfaces that wiring/constraint bug.",
+    "followups": [
+      {
+        "q": "How do integration tests differ from unit tests?",
+        "a": "Unit tests isolate one piece with mocks; integration tests run several real components together (including the database) to verify they interoperate correctly — catching bugs at the seams."
+      },
+      {
+        "q": "Why use a real (test) database instead of mocks?",
+        "a": "Mocks can't catch SQL/query errors, schema mismatches, or constraint violations. A real test database verifies the queries and data flow actually work as written."
+      },
+      {
+        "q": "How do you keep integration tests reliable?",
+        "a": "Use a disposable/isolated test database, run migrations, and reset data between tests (truncate or transactions) so tests are deterministic and don't interfere with each other."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Jest + Supertest integration test code (against a test database). The Node-runnable demo below exercises real layers together so the behavior is verifiable here.",
+      "source": "// Integration testing — multiple real layers together, often with a test database.\nconst request = require(\"supertest\");\nconst app = require(\"../app\");\nconst db = require(\"../db\");\n\ndescribe(\"User registration (integration)\", () => {\n  beforeAll(async () => { await db.migrate(); });      // real (test) database\n  afterEach(async () => { await db.query(\"DELETE FROM users\"); });\n  afterAll(async () => { await db.close(); });\n\n  it(\"persists a new user through the full stack\", async () => {\n    const res = await request(app).post(\"/users\").send({ email: \"asha@x.com\" });\n    expect(res.status).toBe(201);\n\n    // Verify it actually hit the database (route -> service -> repo -> DB):\n    const { rows } = await db.query(\"SELECT * FROM users WHERE email = $1\", [\"asha@x.com\"]);\n    expect(rows).toHaveLength(1);\n  });\n\n  it(\"enforces unique email across the real stack\", async () => {\n    await request(app).post(\"/users\").send({ email: \"dup@x.com\" });\n    const res = await request(app).post(\"/users\").send({ email: \"dup@x.com\" });\n    expect(res.status).toBe(409); // a mocked unit test could miss this wiring/constraint\n  });\n});\n// Integration tests catch bugs in how components and the DB work together.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Integration testing — components working together catch wiring bugs units miss\n// A repository, a service that uses it, and a handler that uses the service.\nfunction createRepo(){ const rows = []; return {\n  insert: (u) => { const r = { id: rows.length + 1, ...u }; rows.push(r); return r; },\n  findByEmail: (e) => rows.find(r => r.email === e) || null,\n}; }\nfunction createService(repo){ return {\n  register(email){\n    if (repo.findByEmail(email)) throw new Error(\"email taken\");   // business rule\n    return repo.insert({ email });\n  },\n}; }\n// Unit test (repo mocked) would pass even if wiring were wrong.\n// Integration test uses the REAL repo + service together:\nconst repo = createRepo();\nconst service = createService(repo);\nconst created = service.register(\"asha@x.com\");\nconsole.log(\"Registered:\", JSON.stringify(created));\nlet duplicateRejected = false;\ntry { service.register(\"asha@x.com\"); } catch (e) { duplicateRejected = true; console.log(\"Duplicate rejected:\", e.message); }\nconsole.assert(created.id === 1, \"service+repo stored the user\");\nconsole.assert(duplicateRejected, \"uniqueness rule enforced across the real stack\");\nconsole.assert(repo.findByEmail(\"asha@x.com\"), \"data actually persisted in the repo\");\nconsole.log(\"Integration tests exercise multiple real components together (often with a test DB).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Registered: {\"id\":1,\"email\":\"asha@x.com\"}\nDuplicate rejected: email taken\nIntegration tests exercise multiple real components together (often with a test DB).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p5-035",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 35,
+  "orderInPhase": 35,
+  "slug": "explain-semantic-search",
+  "title": "Explain semantic search",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "explain",
+    "semantic",
+    "search"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An e-commerce search returns 'noise-cancelling headphones' when a shopper types 'quiet earphones for flights' — there's little keyword overlap, but the meani…"
+  },
+  "sections": {
+    "simple_en": "Semantic search finds results by meaning rather than exact keyword matching. Both the query and the documents are embedded into the same vector space, and results are ranked by similarity — so a query can match a relevant document even when they share no words, like 'I can't sign in' matching an article on 'authentication errors'.\n\nIt's a major upgrade over keyword (lexical) search, which misses synonyms and paraphrases. Semantic search powers smart site search, FAQ matching, and the retrieval step of RAG. For queries needing exact terms (codes, names) it's often combined with keyword search as hybrid search — a strong point to mention in an interview.",
+    "hinglish": "Semantic search results ko meaning se dhoondhti hai, exact keyword matching ke bajaye. Query aur documents dono ko same vector space mein embed kiya jaata hai, aur results similarity se rank hote hain — to ek query ek relevant document se match kar sakti hai chahe unmein koi word common na ho, jaise 'I can't sign in' ek 'authentication errors' article se match karna.\n\nYe keyword (lexical) search se ek bada upgrade hai, jo synonyms aur paraphrases miss karti hai. Semantic search smart site search, FAQ matching, aur RAG ke retrieval step ko power deti hai. Exact terms (codes, names) waali queries ke liye ise aksar keyword search ke saath hybrid search ke roop mein combine kiya jaata hai — interview mein mention karne ke liye ek strong point.",
+    "keyPoints": [
+      "Matches by meaning, not exact keywords.",
+      "Embeds query and documents into one space; ranks by similarity.",
+      "Finds relevant results even with no shared words (synonyms/paraphrases).",
+      "Powers site search, FAQ matching, and RAG retrieval.",
+      "Combined with keyword search (hybrid) for exact terms."
+    ],
+    "real_world": "An e-commerce search returns 'noise-cancelling headphones' when a shopper types 'quiet earphones for flights' — there's little keyword overlap, but the meanings are close, so semantic search surfaces the right products where a keyword search would return nothing useful.",
+    "followups": [
+      {
+        "q": "Semantic vs keyword search?",
+        "a": "Keyword search matches literal terms; semantic search matches meaning via embeddings, so it handles synonyms and paraphrases and finds relevant results even without shared words."
+      },
+      {
+        "q": "When is keyword search still useful?",
+        "a": "For exact identifiers — product codes, names, IDs, rare jargon — where literal matching is precise. That's why hybrid search (keyword + semantic) is popular: it covers both exact and meaning-based matches."
+      },
+      {
+        "q": "How does semantic search relate to RAG?",
+        "a": "It's the retrieval step: RAG uses semantic search to find the most meaning-relevant chunks for a question, then injects them as context for the LLM to answer from."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo where a query with no shared keywords still matches the right doc by meaning, verifying semantic (not lexical) matching.",
+      "source": "# Explain semantic search — meaning-based retrieval, end to end.\nfrom openai import OpenAI\nimport numpy as np\nclient = OpenAI()\n\nEMBED = \"text-embedding-3-small\"\ndef embed(texts): return [np.array(d.embedding) for d in\n                          client.embeddings.create(model=EMBED, input=texts).data]\n\nclass SemanticSearch:\n    def __init__(self, docs):\n        self.docs = docs\n        self.vecs = np.array(embed(docs))\n    def search(self, query, k=3):\n        qv = np.array(embed([query])[0])\n        sims = self.vecs @ qv / (np.linalg.norm(self.vecs, axis=1) * np.linalg.norm(qv))\n        order = np.argsort(sims)[::-1][:k]\n        return [(self.docs[i], float(sims[i])) for i in order]\n\n# Interview definition: semantic search ranks results by meaning rather than keyword overlap.\n# Both query and documents are embedded into the same vector space and compared by similarity,\n# so \"can't sign in\" matches an \"authentication errors\" doc. Combine with keyword search\n# (hybrid) when exact terms (codes, names) also matter.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Explain semantic search — match by meaning, not keywords (embeddings + similarity)\nimport math\ndef cosine(a, b):\n    d = sum(x*y for x, y in zip(a, b)); na = math.sqrt(sum(x*x for x in a)); nb = math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\n# Concept vectors over [auth, billing]; query shares no keywords with the docs.\ndocs = {\"Reset your password\": [0.9, 0.0], \"Update your card\": [0.0, 0.9]}\ndef embed_query(q):\n    q = q.lower()\n    return [1.0 if any(w in q for w in (\"sign in\", \"log in\", \"access\")) else 0.0,\n            1.0 if any(w in q for w in (\"pay\", \"card\", \"billing\")) else 0.0]\nquery = \"I can't sign in\"\nqv = embed_query(query)\nbest = max(docs.items(), key=lambda kv: cosine(qv, kv[1]))\nprint(f\"Query {query!r} (no shared keywords) best-matches: {best[0]!r}\")\nassert best[0] == \"Reset your password\", \"matched by meaning, not exact words\"\nprint(\"\\nInterview answer: semantic search embeds query + docs into one vector space and ranks by\")\nprint(\"similarity, so it finds relevant results even when wording differs — unlike keyword search. Often combined as hybrid search.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Query \"I can't sign in\" (no shared keywords) best-matches: 'Reset your password'\n\nInterview answer: semantic search embeds query + docs into one vector space and ranks by\nsimilarity, so it finds relevant results even when wording differs — unlike keyword search. Often combined as hybrid search.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

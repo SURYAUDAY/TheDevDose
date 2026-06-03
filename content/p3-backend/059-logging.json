@@ -1,0 +1,68 @@
+{
+  "id": "p3-059",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 59,
+  "orderInPhase": 59,
+  "slug": "logging",
+  "title": "Logging",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "logging"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "When an API error spikes in production, structured logs let the team filter by level=error and a request id to trace the exact failing request — method, rout…"
+  },
+  "sections": {
+    "simple_en": "Logging records what your application does so you can debug issues, audit activity, and understand behavior in production. Good logs are structured (JSON rather than plain strings) so they're searchable and aggregatable, and they include context (request id, user id, latency) plus a severity level (error, warn, info, debug).\n\nLog levels let you keep verbose detail in development while emitting only important events in production. In Node, libraries like pino and winston produce fast structured logs that feed aggregation tools (ELK, Loki, Datadog). Avoid logging secrets/PII, and use a request logger to capture each HTTP call's method, status, and timing.",
+    "hinglish": "Logging record karta hai aapki application kya karti hai taaki aap issues debug kar sako, activity audit kar sako, aur production mein behavior samajh sako. Achhe logs structured hote hain (JSON, plain strings nahi) taaki searchable aur aggregatable hon, aur unmein context (request id, user id, latency) plus severity level (error, warn, info, debug) hota hai.\n\nLog levels aapko development mein verbose detail rakhne dete hain jabki production mein sirf important events emit hote hain. Node mein pino aur winston jaisi libraries fast structured logs banati hain jo aggregation tools (ELK, Loki, Datadog) ko feed karti hain. Secrets/PII log mat karo, aur request logger se har HTTP call ka method, status, timing capture karo.",
+    "keyPoints": [
+      "Records app behavior for debugging, auditing, and production insight.",
+      "Prefer structured (JSON) logs — searchable and aggregatable.",
+      "Include context (request/user id, latency) and a severity level.",
+      "Levels (error/warn/info/debug) tune verbosity per environment.",
+      "Use pino/winston; feed to ELK/Loki/Datadog; never log secrets/PII."
+    ],
+    "real_world": "When an API error spikes in production, structured logs let the team filter by level=error and a request id to trace the exact failing request — method, route, status, latency, and stack — across thousands of entries, something plain console.log lines could never make searchable.",
+    "followups": [
+      {
+        "q": "Why prefer structured (JSON) logs?",
+        "a": "They're machine-parseable, so log aggregators can index, filter, and alert on fields (level, route, userId, latency). Plain text strings are far harder to search and analyze at scale."
+      },
+      {
+        "q": "What are log levels for?",
+        "a": "They classify severity (error/warn/info/debug) so you can emit detailed debug logs in development but only important events in production, controlling noise and cost."
+      },
+      {
+        "q": "What should you avoid logging?",
+        "a": "Secrets, passwords, tokens, and PII. Logs are widely accessible and long-lived; sensitive data in them is a compliance and security risk."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + pino logging code. The Node-runnable demo below verifies level-based structured logging so the behavior is verifiable here.",
+      "source": "// Logging — structured logging with pino (fast JSON logger).\nconst express = require(\"express\");\nconst pino = require(\"pino\");\nconst pinoHttp = require(\"pino-http\");\nconst app = express();\n\nconst logger = pino({\n  level: process.env.LOG_LEVEL || \"info\",\n  // pretty-print in dev; raw JSON in production for log aggregators\n  transport: process.env.NODE_ENV !== \"production\"\n    ? { target: \"pino-pretty\" } : undefined,\n});\n\napp.use(pinoHttp({ logger })); // logs each request with method, status, latency\n\napp.get(\"/users/:id\", (req, res) => {\n  req.log.info({ userId: req.params.id }, \"fetching user\"); // structured context\n  res.json({ id: req.params.id });\n});\n\n// Levels: error > warn > info > debug. Structured JSON logs are searchable\n// and feed tools like the ELK stack, Loki, or Datadog.\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Logging — structured logger with levels and JSON output\nconst LEVELS = { error: 0, warn: 1, info: 2, debug: 3 };\nfunction createLogger(minLevel){\n  const min = LEVELS[minLevel];\n  const out = [];\n  function log(level, message, meta = {}){\n    if (LEVELS[level] > min) return;                 // filter below threshold\n    out.push(JSON.stringify({ level, message, ...meta, ts: \"2026-01-01T00:00:00Z\" }));\n  }\n  return { error: (m, x) => log(\"error\", m, x), warn: (m, x) => log(\"warn\", m, x),\n           info: (m, x) => log(\"info\", m, x), debug: (m, x) => log(\"debug\", m, x), out };\n}\nconst logger = createLogger(\"info\");   // debug suppressed in production\nlogger.info(\"request handled\", { method: \"GET\", path: \"/users\", ms: 12 });\nlogger.warn(\"slow query\", { ms: 850 });\nlogger.error(\"db connection failed\", { code: \"ECONNREFUSED\" });\nlogger.debug(\"cache hit\", { key: \"user:1\" });        // filtered out\nlogger.out.forEach(l => console.log(l));\nconsole.assert(logger.out.length === 3, \"debug filtered at info level\");\nconsole.log(\"Structured (JSON) logs are searchable and aggregatable; include context + levels.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "{\"level\":\"info\",\"message\":\"request handled\",\"method\":\"GET\",\"path\":\"/users\",\"ms\":12,\"ts\":\"2026-01-01T00:00:00Z\"}\n{\"level\":\"warn\",\"message\":\"slow query\",\"ms\":850,\"ts\":\"2026-01-01T00:00:00Z\"}\n{\"level\":\"error\",\"message\":\"db connection failed\",\"code\":\"ECONNREFUSED\",\"ts\":\"2026-01-01T00:00:00Z\"}\nStructured (JSON) logs are searchable and aggregatable; include context + levels.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

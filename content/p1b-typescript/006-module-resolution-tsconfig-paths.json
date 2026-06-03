@@ -1,0 +1,67 @@
+{
+  "id": "p1b-006",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 6,
+  "orderInPhase": 6,
+  "slug": "module-resolution-tsconfig-paths",
+  "title": "Module resolution & tsconfig paths",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "module",
+    "resolution",
+    "tsconfig",
+    "paths"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A Next.js project configures `\"@/*\": [\"./src/*\"]` so components import with `@/components/Button` instead of brittle `../../../components/Button`, making ref…"
+  },
+  "sections": {
+    "simple_en": "Module resolution is how TypeScript figures out what an `import` refers to. The two main strategies are `node` (mimics Node.js resolution — node_modules, index files, extensions) and the newer `bundler`/`nodenext` modes. It's set via `moduleResolution` in tsconfig.\n\n`paths` (with `baseUrl`) lets you create import aliases so you can write `import { x } from \"@/utils\"` instead of long relative paths like `../../../utils`. Note: `paths` only affects type resolution at compile time — your bundler/runtime needs matching aliases to actually resolve them.",
+    "hinglish": "Module resolution ka matlab hai TypeScript kaise pata lagata hai ki ek `import` kis cheez ko refer kar raha hai. Do main strategies hain `node` (Node.js resolution ki nakal — node_modules, index files, extensions) aur naye `bundler`/`nodenext` modes. Ye tsconfig me `moduleResolution` se set hota hai.\n`paths` (`baseUrl` ke saath) aapko import aliases banane deta hai taaki aap `import { x } from \"@/utils\"` likh sako lambe relative paths jaise `../../../utils` ke bajaye. Note: `paths` sirf compile-time type resolution affect karta hai — actually resolve karne ke liye aapke bundler/runtime me matching aliases chahiye.",
+    "keyPoints": [
+      "`moduleResolution` controls how imports are located (node/bundler/nodenext).",
+      "`baseUrl` + `paths` create import aliases (e.g. `@/...`).",
+      "Aliases replace long relative paths for cleaner imports.",
+      "`paths` affects TS type resolution only — runtime/bundler must match.",
+      "Common in React/Next.js setups for tidy module imports."
+    ],
+    "real_world": "A Next.js project configures `\"@/*\": [\"./src/*\"]` so components import with `@/components/Button` instead of brittle `../../../components/Button`, making refactors and moves painless.",
+    "followups": [
+      {
+        "q": "What do `paths` in tsconfig do?",
+        "a": "They define import aliases (with `baseUrl`) so you can use short names like `@/utils` instead of long relative paths. They only affect TypeScript's compile-time resolution."
+      },
+      {
+        "q": "Do tsconfig `paths` work at runtime automatically?",
+        "a": "No. They're for the type checker only. Your runtime/bundler (webpack, Vite, ts-node, etc.) must be configured with the same aliases to resolve them when the code actually runs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// tsconfig.json snippet enabling path aliases:\n//\n// {\n//   \"compilerOptions\": {\n//     \"baseUrl\": \".\",\n//     \"paths\": {\n//       \"@/utils/*\": [\"src/utils/*\"],\n//       \"@/components/*\": [\"src/components/*\"]\n//     },\n//     \"moduleResolution\": \"bundler\"\n//   }\n// }\n//\n// Then you write:\n//   import { formatMoney } from \"@/utils/money\";  // instead of ../../../utils/money\n//\n// solution.ts — a tiny resolvable utility (relative import used here so it runs).\n\nexport function formatMoney(amount: number): string {\n  return \"$\" + amount.toFixed(2);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\n// (Real projects would import via an alias like \"@/utils/money\".)\nimport { formatMoney } from \"./solution\";\n\nconsole.log(formatMoney(9.5)); // $9.50\nconsole.assert(formatMoney(9.5) === \"$9.50\", \"alias-style util works\");\nconsole.log(\"module-resolution assertions passed.\");",
+      "expectedOutput": "$9.50\nmodule-resolution assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

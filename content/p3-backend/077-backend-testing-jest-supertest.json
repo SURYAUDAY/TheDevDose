@@ -1,0 +1,71 @@
+{
+  "id": "p3-077",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 77,
+  "orderInPhase": 77,
+  "slug": "backend-testing-jest-supertest",
+  "title": "Backend testing (Jest + Supertest)",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "backend",
+    "testing",
+    "jest",
+    "supertest"
+  ],
+  "estMinutes": 8,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A checkout module has unit tests for its discount logic (covering member, threshold, and invalid cases) plus a Supertest test that POSTs to /checkout and ass…"
+  },
+  "sections": {
+    "simple_en": "Backend testing spans levels. Unit tests check small pieces of logic in isolation (a pricing function, a validator) — fast and precise. HTTP/endpoint tests use Supertest to drive the actual Express app and assert on responses. A healthy suite has many fast unit tests and fewer, broader integration tests (the 'testing pyramid').\n\nJest provides the runner, assertions (expect), mocking, and coverage. You isolate units by mocking dependencies, and test handlers end-to-end with Supertest. Aim to test behavior and edge cases rather than implementation details, and keep tests deterministic and independent so they can run in any order.",
+    "hinglish": "Backend testing kai levels mein hota hai. Unit tests chhote logic pieces ko isolation mein check karte hain (pricing function, validator) — fast aur precise. HTTP/endpoint tests Supertest se actual Express app drive karke responses par assert karte hain. Ek healthy suite mein bahut saare fast unit tests aur kam, broader integration tests hote hain ('testing pyramid').\n\nJest runner, assertions (expect), mocking aur coverage deta hai. Aap dependencies mock karke units isolate karte ho, aur handlers ko Supertest se end-to-end test karte ho. Implementation details ke bajaye behavior aur edge cases test karne ka lakshya rakho, aur tests ko deterministic aur independent rakho taaki kisi bhi order mein chalein.",
+    "keyPoints": [
+      "Unit tests: isolated logic — fast and precise (mock dependencies).",
+      "HTTP tests: drive the Express app with Supertest, assert on responses.",
+      "Testing pyramid: many unit tests, fewer integration/e2e tests.",
+      "Jest provides runner, expect assertions, mocking, and coverage.",
+      "Test behavior/edge cases; keep tests deterministic and independent."
+    ],
+    "real_world": "A checkout module has unit tests for its discount logic (covering member, threshold, and invalid cases) plus a Supertest test that POSTs to /checkout and asserts the final total. The fast unit tests pinpoint logic bugs; the HTTP test confirms the route wires everything together correctly.",
+    "followups": [
+      {
+        "q": "What's the testing pyramid?",
+        "a": "A guideline: have many fast, isolated unit tests at the base, fewer integration tests in the middle, and few slow end-to-end tests at the top — balancing speed, confidence, and maintenance cost."
+      },
+      {
+        "q": "Why mock dependencies in unit tests?",
+        "a": "To isolate the unit under test so failures point to that logic, and to keep tests fast and deterministic by avoiding real databases, network calls, or time."
+      },
+      {
+        "q": "Should you test implementation details?",
+        "a": "Generally no — test observable behavior and outputs. Tests tied to internals break on every refactor; behavior-focused tests survive refactoring and document the contract."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Jest + Supertest test code. The Node-runnable demo below runs unit and HTTP-style tests so the behavior is verifiable here.",
+      "source": "// Backend testing — unit tests (pure logic) + HTTP tests (Supertest).\nconst request = require(\"supertest\");\nconst express = require(\"express\");\n\n// --- unit-tested business logic ---\nfunction calculateDiscount(total, isMember) {\n  if (total < 0) throw new Error(\"invalid total\");\n  let pct = total > 100 ? 0.1 : 0;\n  if (isMember) pct += 0.05;\n  return Math.round(total * (1 - pct));\n}\n\n// --- app under test ---\nconst app = express();\napp.use(express.json());\napp.post(\"/checkout\", (req, res) =>\n  res.json({ final: calculateDiscount(req.body.total, req.body.isMember) })\n);\n\n// --- tests ---\ndescribe(\"calculateDiscount (unit)\", () => {\n  it(\"applies 10% over 100\", () => expect(calculateDiscount(200, false)).toBe(180));\n  it(\"stacks member discount\", () => expect(calculateDiscount(200, true)).toBe(170));\n  it(\"throws on negative\", () => expect(() => calculateDiscount(-1, false)).toThrow());\n});\n\ndescribe(\"POST /checkout (http)\", () => {\n  it(\"returns the discounted total\", async () => {\n    const res = await request(app).post(\"/checkout\").send({ total: 200, isMember: true });\n    expect(res.status).toBe(200);\n    expect(res.body.final).toBe(170);\n  });\n});\n// Jest = test runner + assertions; Supertest drives the Express app over HTTP.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Backend testing (Jest + Supertest style) — unit test + HTTP-level test\n// Unit: test pure business logic in isolation.\nfunction calculateDiscount(total, isMember){\n  if (total < 0) throw new Error(\"invalid total\");\n  let pct = total > 100 ? 0.1 : 0;\n  if (isMember) pct += 0.05;\n  return Math.round(total * (1 - pct));\n}\n// \"Integration\" via a simulated supertest request against a handler:\nfunction createApp(){\n  return {\n    async request(method, path, body){\n      if (method === \"POST\" && path === \"/checkout\")\n        return { status: 200, body: { final: calculateDiscount(body.total, body.isMember) } };\n      return { status: 404 };\n    },\n  };\n}\nconst expect = (a) => ({ toBe: (b) => { if (a !== b) throw new Error(`expected ${b}, got ${JSON.stringify(a)}`); } });\n(async () => {\n  // Unit tests:\n  expect(calculateDiscount(200, false)).toBe(180);   // 10% off\n  expect(calculateDiscount(200, true)).toBe(170);    // 10% + 5%\n  expect(calculateDiscount(50, false)).toBe(50);     // no discount\n  console.log(\"Unit tests passed: discount logic correct\");\n  // HTTP test (supertest-style):\n  const app = createApp();\n  const res = await app.request(\"POST\", \"/checkout\", { total: 200, isMember: true });\n  expect(res.status).toBe(200); expect(res.body.final).toBe(170);\n  console.log(\"HTTP test passed: POST /checkout ->\", JSON.stringify(res.body));\n  console.log(\"Jest runs the tests/assertions; Supertest drives the Express app over HTTP.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Unit tests passed: discount logic correct\nHTTP test passed: POST /checkout -> {\"final\":170}\nJest runs the tests/assertions; Supertest drives the Express app over HTTP.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

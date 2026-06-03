@@ -1,0 +1,66 @@
+{
+  "id": "p1a-022",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 22,
+  "orderInPhase": 22,
+  "slug": "nan-floating-point-precision",
+  "title": "NaN & Floating-Point Precision",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "nan",
+    "floating-point",
+    "precision"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An e-commerce cart that checks `if (total === 0.3)` after adding 0.1 + 0.2 worth of items would silently fail."
+  },
+  "sections": {
+    "simple_en": "`NaN` ('Not a Number') is a special numeric value representing an invalid or undefined numeric result, like `0/0` or `Number('abc')`. Its defining quirk: `NaN` is not equal to anything, including itself — so `NaN === NaN` is false. Use `Number.isNaN()` to test for it.\n\nSeparately, JavaScript numbers are 64-bit IEEE-754 floats, so some decimals can't be represented exactly. The classic example is `0.1 + 0.2 === 0.3` being false (it's 0.30000000000000004). For money and precise comparisons, round or use integer cents / a decimal library.",
+    "hinglish": "`NaN` ('Not a Number') ek special numeric value hai jo invalid ya undefined numeric result darshaata hai, jaise `0/0` ya `Number('abc')`. Iska sabse bada quirk: `NaN` kisi ke barabar nahi, khud ke bhi nahi — isliye `NaN === NaN` false hai. Test karne ke liye `Number.isNaN()` use karo.\nAlag se, JavaScript numbers 64-bit IEEE-754 floats hain, isliye kuch decimals exactly represent nahi ho paate. Classic example: `0.1 + 0.2 === 0.3` false hota hai (woh 0.30000000000000004 hai). Paise aur precise comparisons ke liye round karo ya integer cents / decimal library use karo.",
+    "keyPoints": [
+      "`NaN` represents an invalid numeric result (0/0, Number('abc')).",
+      "`NaN === NaN` is false — NaN is not equal to anything, even itself.",
+      "Test with `Number.isNaN(x)` (safer than the global `isNaN`, which coerces).",
+      "Numbers are IEEE-754 doubles → some decimals are inexact (0.1 + 0.2 !== 0.3).",
+      "For comparisons, use an epsilon (`Number.EPSILON`); for money, use integer cents or a decimal lib."
+    ],
+    "real_world": "An e-commerce cart that checks `if (total === 0.3)` after adding 0.1 + 0.2 worth of items would silently fail. Rounding to 2 decimals (or storing prices as integer paise/cents) prevents the customer seeing a wrong total.",
+    "followups": [
+      {
+        "q": "How do you reliably check if a value is NaN?",
+        "a": "Use `Number.isNaN(x)`. Avoid the global `isNaN()`, which coerces its argument (so `isNaN('abc')` is true). You can also exploit `x !== x`, which is true only for NaN."
+      },
+      {
+        "q": "Why is `0.1 + 0.2 !== 0.3`?",
+        "a": "Numbers use binary IEEE-754 floating point, and 0.1/0.2/0.3 have no exact binary representation, so rounding errors accumulate. Compare with an epsilon tolerance or use integer/decimal techniques."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// NaN detection and safe float comparison.\n\nfunction nanFacts(x) {\n  return {\n    isSelfEqual: x === x,            // false when x is NaN\n    builtin: Number.isNaN(x),        // true only for actual NaN\n  };\n}\n\nfunction floatProblem() {\n  return {\n    naive: (0.1 + 0.2) === 0.3,      // false\n    actual: 0.1 + 0.2,               // 0.30000000000000004\n  };\n}\n\nfunction nearlyEqual(a, b, eps = Number.EPSILON) {\n  return Math.abs(a - b) < eps * 10;\n}\n\nmodule.exports = { nanFacts, floatProblem, nearlyEqual };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { nanFacts, floatProblem, nearlyEqual } = require(\"./solution\");\n\nconsole.log(nanFacts(NaN));\nconsole.log(floatProblem());\nconsole.log(\"safe compare:\", nearlyEqual(0.1 + 0.2, 0.3));\n\nconsole.assert(nanFacts(NaN).isSelfEqual === false, \"NaN !== NaN\");\nconsole.assert(nanFacts(NaN).builtin === true, \"Number.isNaN detects NaN\");\nconsole.assert(nanFacts(123).builtin === false, \"123 is not NaN\");\nconsole.assert(floatProblem().naive === false, \"0.1+0.2 !== 0.3\");\nconsole.assert(nearlyEqual(0.1 + 0.2, 0.3) === true, \"epsilon compare works\");\nconsole.log(\"NaN & float assertions passed.\");",
+      "expectedOutput": "{ isSelfEqual: false, builtin: true }\n{ naive: false, actual: 0.30000000000000004 }\nsafe compare: true\nNaN & float assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

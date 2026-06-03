@@ -1,0 +1,69 @@
+{
+  "id": "p3-027",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 27,
+  "orderInPhase": 27,
+  "slug": "indexing-basics",
+  "title": "Indexing basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "indexing",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A users table with millions of rows answers 'find by email' instantly once an index exists on email — the database jumps straight to the row instead of scann…"
+  },
+  "sections": {
+    "simple_en": "An index is a separate data structure (usually a B-tree) that lets the database find rows by a column's value quickly, without scanning the whole table. Querying an indexed column is roughly logarithmic instead of linear, which is the difference between a fast lookup and a slow full scan on large tables.\n\nIndexes speed up reads on columns you filter, join, or sort by, but they cost extra storage and slow down writes (every insert/update must maintain them). The skill is indexing the right columns — use EXPLAIN to confirm queries use an index scan rather than a sequential scan.",
+    "hinglish": "Index ek alag data structure (aksar B-tree) hai jo database ko kisi column ke value se rows jaldi dhoondhne deta hai, poori table scan kiye bina. Indexed column query roughly logarithmic hoti hai, linear ki jagah — bade tables par yahi fast lookup aur slow full scan ka farak hai.\n\nIndexes un columns par reads tez karte hain jinpar aap filter, join ya sort karte ho, par extra storage lete hain aur writes slow karte hain (har insert/update unhe maintain karta hai). Skill hai sahi columns index karna — EXPLAIN se confirm karo query index scan use kar rahi hai, sequential scan nahi.",
+    "keyPoints": [
+      "An index (B-tree) finds rows by value fast — logarithmic, not a full scan.",
+      "Index columns used in WHERE, JOIN, and ORDER BY.",
+      "Trade-off: faster reads but more storage and slower writes.",
+      "Composite indexes follow a prefix rule — column order matters.",
+      "Use EXPLAIN/EXPLAIN ANALYZE to verify an index is actually used."
+    ],
+    "real_world": "A users table with millions of rows answers 'find by email' instantly once an index exists on email — the database jumps straight to the row instead of scanning every record. Without it, each lookup reads the whole table.",
+    "followups": [
+      {
+        "q": "Why not index every column?",
+        "a": "Each index consumes storage and must be updated on every write, slowing inserts/updates. Index only columns you frequently filter, join, or sort on."
+      },
+      {
+        "q": "What's the prefix rule for composite indexes?",
+        "a": "A composite index on (a, b) helps queries filtering on a, or on a and b, but not queries filtering on b alone — the leftmost columns must be used."
+      },
+      {
+        "q": "How do you know if a query uses an index?",
+        "a": "Run EXPLAIN (or EXPLAIN ANALYZE). Look for an 'Index Scan' rather than a 'Seq Scan' (sequential/full scan) on the relevant table."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real SQL index DDL (PostgreSQL). The Node-runnable demo below compares an index lookup to a full table scan so the difference is verifiable here.",
+      "source": "// Indexing basics — create indexes to speed up reads (SQL DDL).\nconst ddl = `\n  -- Single-column index for equality/range lookups on email.\n  CREATE INDEX idx_users_email ON users(email);\n\n  -- Composite index: supports queries filtering by status, then ordering by created_at.\n  CREATE INDEX idx_orders_status_created ON orders(status, created_at DESC);\n\n  -- Partial index: only index the rows you actually query (active users).\n  CREATE INDEX idx_users_active ON users(email) WHERE active = true;\n\n  -- Unique index doubles as a constraint.\n  CREATE UNIQUE INDEX idx_users_email_unique ON users(email);\n`;\n\n// Use EXPLAIN ANALYZE to confirm a query uses an index:\n//   EXPLAIN ANALYZE SELECT * FROM users WHERE email = $1;\n// Look for \"Index Scan\" instead of \"Seq Scan\".\n// Trade-off: indexes speed reads but slow writes and use storage — index\n// the columns you filter, join, or sort on, not every column.\nmodule.exports = ddl;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Indexing basics — an index (hash map) vs a full table scan\nconst users = Array.from({ length: 1000 }, (_, i) => ({ id: i + 1, email: `user${i + 1}@x.com` }));\n\nlet scanComparisons = 0;\nfunction fullScan(email){ for (const u of users){ scanComparisons++; if (u.email === email) return u; } return null; }\n\n// Build an index: email -> row (like CREATE INDEX idx_email ON users(email))\nconst emailIndex = new Map(users.map(u => [u.email, u]));\nlet indexLookups = 0;\nfunction indexedFind(email){ indexLookups++; return emailIndex.get(email) || null; }\n\nconst target = \"user999@x.com\";\nconsole.log(\"Full scan found:\", fullScan(target).id, \"after\", scanComparisons, \"comparisons\");\nconsole.log(\"Indexed found: \", indexedFind(target).id, \"after\", indexLookups, \"lookup (O(1))\");\nconsole.assert(scanComparisons === 999, \"scan checked many rows\");\nconsole.assert(indexLookups === 1, \"index found it in one step\");\nconsole.log(\"Index trades extra write/storage cost for fast reads.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Full scan found: 999 after 999 comparisons\nIndexed found:  999 after 1 lookup (O(1))\nIndex trades extra write/storage cost for fast reads.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

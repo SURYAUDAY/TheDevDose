@@ -1,0 +1,69 @@
+{
+  "id": "p4-001",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 1,
+  "orderInPhase": 1,
+  "slug": "what-is-generative-ai",
+  "title": "What is Generative AI",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "generative",
+    "ai"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A marketing team uses generative AI to draft ad copy, generate product images, and write code snippets — producing brand-new material from short prompts."
+  },
+  "sections": {
+    "simple_en": "Generative AI is a class of models that create new content — text, images, audio, code, video — rather than just analyzing or labeling existing data. Given a prompt, the model produces novel output that resembles its training data but isn't copied from it.\n\nThis contrasts with traditional (discriminative) machine learning, which classifies or scores existing inputs (spam vs not-spam, cat vs dog). Generative models learn the underlying patterns of data well enough to synthesize plausible new examples. Modern generative AI is powered by large neural networks like LLMs (for text) and diffusion models (for images).",
+    "hinglish": "Generative AI models ki ek class hai jo naya content banati hai — text, images, audio, code, video — sirf existing data analyze ya label karne ke bajaye. Ek prompt par, model novel output produce karta hai jo training data jaisa hota hai par usse copy nahi hota.\n\nYe traditional (discriminative) machine learning ke ulta hai, jo existing inputs ko classify ya score karta hai (spam vs not-spam, cat vs dog). Generative models data ke underlying patterns itne achhe se seekhte hain ki plausible naye examples bana sakein. Modern generative AI bade neural networks se chalti hai jaise LLMs (text ke liye) aur diffusion models (images ke liye).",
+    "keyPoints": [
+      "Creates new content (text/image/audio/code), not just labels existing data.",
+      "Contrasts with discriminative ML, which classifies or scores inputs.",
+      "Learns data patterns well enough to synthesize plausible new examples.",
+      "Powered by large neural nets: LLMs (text), diffusion models (images).",
+      "Output is novel and probabilistic — the same prompt can yield different results."
+    ],
+    "real_world": "A marketing team uses generative AI to draft ad copy, generate product images, and write code snippets — producing brand-new material from short prompts. A spam filter, by contrast, is discriminative: it only labels existing emails, it doesn't write new ones.",
+    "followups": [
+      {
+        "q": "How is generative AI different from traditional ML?",
+        "a": "Traditional (discriminative) ML predicts a label or value for existing input (classification/regression). Generative AI produces new content that resembles its training distribution — it synthesizes rather than just categorizes."
+      },
+      {
+        "q": "What are the main types of generative models?",
+        "a": "For text, large language models (transformers); for images, diffusion models (and earlier GANs/VAEs); plus multimodal models that handle several modalities. They all learn to generate data similar to what they were trained on."
+      },
+      {
+        "q": "Why is generative AI output non-deterministic?",
+        "a": "Generation samples from a probability distribution over possible outputs, so the same prompt can produce different results — especially at higher temperature/top_p settings."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI Python SDK code (needs an API key). The Python-runnable demo below contrasts a generative model with a discriminative one so the core idea is verifiable here.",
+      "source": "# What is Generative AI — calling a generative model with the OpenAI Python SDK.\nfrom openai import OpenAI\n\nclient = OpenAI()  # reads OPENAI_API_KEY from the environment\n\n# A generative model CREATES new content from a prompt (text here; could be image/audio/code).\nresponse = client.chat.completions.create(\n    model=\"gpt-4o-mini\",\n    messages=[{\"role\": \"user\", \"content\": \"Write a two-line poem about the ocean.\"}],\n)\nprint(response.choices[0].message.content)\n\n# Generative AI (LLMs, diffusion models, etc.) generates novel output rather than just\n# classifying or scoring existing data the way traditional (discriminative) ML does.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# What is Generative AI — generative (creates new data) vs discriminative (labels data)\nimport random\nrandom.seed(7)\n\n# A tiny generative model: a Markov chain that GENERATES new text it never saw verbatim.\ncorpus = \"the cat sat on the mat the cat ate the fish the dog sat on the rug\".split()\nchain = {}\nfor a, b in zip(corpus, corpus[1:]):\n    chain.setdefault(a, []).append(b)\n\ndef generate(start, n):\n    word, out = start, [start]\n    for _ in range(n):\n        nxt = chain.get(word)\n        if not nxt: break\n        word = random.choice(nxt); out.append(word)\n    return \" \".join(out)\n\n# A discriminative model: classifies existing input (does NOT create new data).\ndef classify(sentence):\n    return \"about pets\" if any(w in sentence for w in (\"cat\", \"dog\", \"fish\")) else \"other\"\n\ngenerated = generate(\"the\", 6)\nprint(\"Generative output:\", generated)\nprint(\"Discriminative label:\", classify(generated))\nassert len(generated.split()) > 1, \"model generated a new sequence\"\nassert classify(\"the cat sat\") == \"about pets\"\nprint(\"Generative AI creates new content (text/image/audio); discriminative AI labels existing content.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Generative output: the cat sat on the cat sat\nDiscriminative label: about pets\nGenerative AI creates new content (text/image/audio); discriminative AI labels existing content.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p4-018",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 18,
+  "orderInPhase": 18,
+  "slug": "presence-penalty",
+  "title": "presence penalty",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "presence",
+    "penalty"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A brainstorming tool that kept circling the same few feature ideas got a presence-penalty bump."
+  },
+  "sections": {
+    "simple_en": "The presence penalty lowers the probability of any token that has already appeared in the output — but as a flat, one-time penalty regardless of how many times it occurred. Its effect is to nudge the model toward introducing new words and topics rather than dwelling on ones already mentioned.\n\nLike the frequency penalty, it ranges roughly from -2.0 to 2.0 (positive encourages novelty). The distinction: frequency penalty grows with repetition count, while presence penalty is binary (appeared or not). Use presence penalty when you want the model to explore broader topics or generate more diverse ideas.",
+    "hinglish": "Presence penalty kisi bhi token ki probability kam karti hai jo output mein pehle aa chuka ho — par ek flat, one-time penalty ke roop mein, chahe wo kitni baar aaya ho. Iska effect model ko naye words aur topics introduce karne ki taraf nudge karna hai, pehle se mentioned cheezon par atke rehne ke bajaye.\n\nFrequency penalty ki tarah, ye lagbhag -2.0 se 2.0 tak hoti hai (positive novelty encourage karta hai). Farak: frequency penalty repetition count ke saath badhti hai, jabki presence penalty binary hai (aaya ya nahi). Presence penalty tab use karo jab aap chahte ho ki model broader topics explore kare ya zyada diverse ideas generate kare.",
+    "keyPoints": [
+      "Penalizes any token that has appeared — a flat, one-time hit.",
+      "Encourages introducing new words and topics.",
+      "Range roughly -2.0 to 2.0 (positive encourages novelty).",
+      "Binary (appeared or not), unlike count-based frequency penalty.",
+      "Use to broaden topics or get more diverse ideas."
+    ],
+    "real_world": "A brainstorming tool that kept circling the same few feature ideas got a presence-penalty bump. The model then branched into fresh areas — once an idea appeared, it was nudged to move on — yielding a broader, more varied list of suggestions.",
+    "followups": [
+      {
+        "q": "How is presence penalty different from frequency penalty?",
+        "a": "Presence penalty applies a one-time, flat penalty to any token already used (regardless of count); frequency penalty scales with how many times the token has appeared. Presence pushes toward novelty; frequency curbs repetition intensity."
+      },
+      {
+        "q": "What's the effect of a higher presence penalty?",
+        "a": "The model is nudged to introduce new tokens/topics it hasn't used yet, broadening the range of content — useful for brainstorming and diverse output."
+      },
+      {
+        "q": "Can these penalties hurt output quality?",
+        "a": "Yes if set too high — the model may avoid words it genuinely needs (including key terms), making text awkward. They're best applied moderately for the specific goal of reducing repetition or increasing variety."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI presence_penalty code (needs an API key). The Python-runnable demo below applies a one-time presence penalty so the novelty effect is verifiable here.",
+      "source": "# presence_penalty — encourage introducing new tokens/topics (one-time penalty).\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef generate(prompt: str, presence_penalty: float) -> str:\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        presence_penalty=presence_penalty,  # range -2.0..2.0; higher -> more novelty\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return response.choices[0].message.content\n\n# presence_penalty applies a flat penalty to any token that has appeared AT ALL\n# (regardless of count), nudging the model toward new words and fresh topics.\n# Contrast: frequency_penalty grows with repetition count; presence_penalty is\n# a one-time, binary push toward novelty.\n# diverse = generate(\"Brainstorm features for a fitness app.\", presence_penalty=0.6)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# presence penalty — penalize tokens that have appeared AT ALL (once), encouraging new topics\nbase_logits = {\"the\": 2.0, \"cat\": 1.5, \"dog\": 1.4, \"bird\": 1.3}\n\ndef apply_presence_penalty(logits, seen, penalty):\n    # new_logit = logit - penalty * (1 if token already used else 0)\n    return {t: l - (penalty if t in seen else 0.0) for t, l in logits.items()}\n\nseen = {\"the\", \"cat\"}                 # these already appeared (regardless of count)\nadjusted = apply_presence_penalty(base_logits, seen, penalty=0.7)\nprint(\"Seen tokens:\", seen)\nprint(\"Base:    \", {k: round(v, 2) for k, v in base_logits.items()})\nprint(\"Adjusted:\", {k: round(v, 2) for k, v in adjusted.items()})\nprint(\"Top token now:\", max(adjusted, key=adjusted.get))\nassert adjusted[\"the\"] < base_logits[\"the\"] and adjusted[\"dog\"] == base_logits[\"dog\"]\nprint(\"\\nPresence penalty is a flat, one-time hit for any token already used (not count-based).\")\nprint(\"Frequency penalty grows with repetition; presence penalty just pushes toward NEW tokens/topics.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Seen tokens: {'the', 'cat'}\nBase:     {'the': 2.0, 'cat': 1.5, 'dog': 1.4, 'bird': 1.3}\nAdjusted: {'the': 1.3, 'cat': 0.8, 'dog': 1.4, 'bird': 1.3}\nTop token now: dog\n\nPresence penalty is a flat, one-time hit for any token already used (not count-based).\nFrequency penalty grows with repetition; presence penalty just pushes toward NEW tokens/topics.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "id": "p1b-076",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 76,
+  "orderInPhase": 76,
+  "slug": "typing-react-query",
+  "title": "Typing React Query",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "typing",
+    "react",
+    "query"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Typing `queryFn: (): Promise<User[]>` makes `const { data } = useQuery(...)` give `data: User[] | undefined`, so the component must handle the loading/undefi…"
+  },
+  "sections": {
+    "simple_en": "React Query (TanStack Query) is generic, so `useQuery` is parameterized by the data and error types. With a well-typed fetcher, the data type is usually inferred: `useQuery({ queryKey, queryFn })` infers `data` from `queryFn`'s return type.\n\nTyping the query function (e.g. `(): Promise<User[]>`) flows the type through to `data`, which is `User[] | undefined` until the query resolves. Mutations are typed similarly via `useMutation`. The key idea is to type the async functions, and the hooks infer the rest.",
+    "hinglish": "React Query (TanStack Query) generic hai, isliye `useQuery` data aur error types se parameterized hota hai. Achhe se typed fetcher ke saath, data type aam taur par infer ho jaata hai: `useQuery({ queryKey, queryFn })` `queryFn` ke return type se `data` infer karta hai.\nQuery function ko type karna (jaise `(): Promise<User[]>`) type ko `data` tak flow karta hai, jo query resolve hone tak `User[] | undefined` hota hai. Mutations `useMutation` se similarly type hote hain. Key idea: async functions ko type karo, hooks baaki infer kar lenge.",
+    "keyPoints": [
+      "`useQuery` infers `data` from the typed `queryFn`'s return.",
+      "`data` is `T | undefined` until the query succeeds.",
+      "Type the async functions; the hooks infer the rest.",
+      "`useMutation` types variables and result similarly.",
+      "Errors can be typed via the hook's generics."
+    ],
+    "real_world": "Typing `queryFn: (): Promise<User[]>` makes `const { data } = useQuery(...)` give `data: User[] | undefined`, so the component must handle the loading/undefined state before mapping users.",
+    "followups": [
+      {
+        "q": "How does useQuery know the type of `data`?",
+        "a": "It infers it from the `queryFn`'s return type. If `queryFn` returns `Promise<User[]>`, then `data` is typed `User[] | undefined` (undefined until the query resolves)."
+      },
+      {
+        "q": "Why is `data` possibly undefined?",
+        "a": "Because the query may not have resolved yet (loading/error states). You must handle the `undefined` case before using the data, which the type enforces."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// React Query usage:\n//\n//   const { data, isLoading } = useQuery({\n//     queryKey: [\"users\"],\n//     queryFn: (): Promise<User[]> => getJSON(\"/api/users\"),\n//   });\n//   // data: User[] | undefined\n//\n// Runnable stand-in: a typed query result + a runner mirroring the inference.\n\nexport interface User { id: number; name: string; }\n\nexport interface QueryResult<T> {\n  data: T | undefined;\n  isLoading: boolean;\n  error: Error | null;\n}\n\nexport async function runQuery<T>(queryFn: () => Promise<T>): Promise<QueryResult<T>> {\n  try {\n    const data = await queryFn();\n    return { data, isLoading: false, error: null };\n  } catch (e) {\n    return { data: undefined, isLoading: false, error: e as Error };\n  }\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { runQuery, User } from \"./solution\";\n\n(async () => {\n  const result = await runQuery<User[]>(async () => [{ id: 1, name: \"Asha\" }]);\n  console.log(result.data?.map((u) => u.name)); // ['Asha']\n  console.log(result.isLoading, result.error);  // false null\n\n  console.assert(result.data?.[0].name === \"Asha\", \"typed query data inferred\");\n  console.assert(result.isLoading === false && result.error === null, \"success state\");\n  console.log(\"typing-react-query assertions passed.\");\n})();",
+      "expectedOutput": "[ 'Asha' ]\nfalse null\ntyping-react-query assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

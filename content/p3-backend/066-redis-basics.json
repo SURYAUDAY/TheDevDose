@@ -1,0 +1,69 @@
+{
+  "id": "p3-066",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 66,
+  "orderInPhase": 66,
+  "slug": "redis-basics",
+  "title": "Redis basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "redis",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "An app caches expensive query results in Redis with a 5-minute TTL, stores sessions there for fast lookups, counts API calls per key for rate limiting with a…"
+  },
+  "sections": {
+    "simple_en": "Redis is an in-memory data store, extremely fast because it keeps data in RAM (with optional persistence to disk). It's far more than a key-value cache: it offers rich data types — strings, hashes, lists, sets, sorted sets — plus pub/sub, TTL-based expiry, and atomic operations.\n\nCommon uses are caching, session storage, rate-limit counters, lightweight queues, pub/sub messaging, and leaderboards (via sorted sets). Keys can be given a time-to-live so they expire automatically. Its speed and versatility make it a near-default companion to a primary database in modern backends.",
+    "hinglish": "Redis ek in-memory data store hai, bahut fast kyunki data RAM mein rakhta hai (optional disk persistence ke saath). Ye sirf key-value cache se kahin zyada hai: rich data types deta hai — strings, hashes, lists, sets, sorted sets — plus pub/sub, TTL-based expiry, aur atomic operations.\n\nCommon uses: caching, session storage, rate-limit counters, lightweight queues, pub/sub messaging, aur leaderboards (sorted sets se). Keys ko time-to-live de sakte ho taaki automatically expire hon. Iski speed aur versatility ise modern backends mein primary database ka near-default companion banati hain.",
+    "keyPoints": [
+      "In-memory store — extremely fast, with optional disk persistence.",
+      "Rich types: strings, hashes, lists, sets, sorted sets.",
+      "TTL-based expiry; atomic operations (e.g., INCR).",
+      "Pub/sub messaging built in.",
+      "Uses: cache, sessions, rate limits, queues, leaderboards."
+    ],
+    "real_world": "An app caches expensive query results in Redis with a 5-minute TTL, stores sessions there for fast lookups, counts API calls per key for rate limiting with atomic INCR, and powers a real-time game leaderboard with a sorted set — all from one fast store alongside its PostgreSQL database.",
+    "followups": [
+      {
+        "q": "Why is Redis so fast?",
+        "a": "It keeps data in memory (RAM) and uses efficient data structures, avoiding disk I/O on reads. Persistence to disk is optional and happens in the background."
+      },
+      {
+        "q": "Is Redis only a cache?",
+        "a": "No — caching is one popular use, but its data types and features make it suitable for sessions, rate limiting, queues, pub/sub, and leaderboards too."
+      },
+      {
+        "q": "How does Redis expire data?",
+        "a": "You set a TTL (time-to-live) on a key; Redis removes it automatically when it expires — ideal for caches and sessions that should not live forever."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real node-redis code (runs against Redis). The Node-runnable demo below simulates key-value storage, TTL expiry, and atomic counters so the behavior is verifiable here.",
+      "source": "// Redis basics — caching, counters, and TTLs with the node redis client.\nconst { createClient } = require(\"redis\");\nconst redis = createClient({ url: process.env.REDIS_URL });\nredis.on(\"error\", (e) => console.error(e));\n\nasync function demo() {\n  await redis.connect();\n\n  // Strings with expiry (great for caching/sessions):\n  await redis.set(\"session:1\", JSON.stringify({ userId: 1 }), { EX: 3600 }); // expires in 1h\n  const session = JSON.parse(await redis.get(\"session:1\"));\n\n  // Atomic counter (rate limits, page views):\n  const views = await redis.incr(\"page:home:views\");\n\n  // Lists (lightweight queues), Hashes, Sets, Sorted Sets (leaderboards):\n  await redis.lPush(\"queue:jobs\", \"job1\");\n  await redis.zAdd(\"leaderboard\", [{ score: 100, value: \"asha\" }]);\n  const top = await redis.zRange(\"leaderboard\", 0, 9, { REV: true });\n\n  return { session, views, top };\n}\n// Redis is an in-memory store: extremely fast, with optional persistence.\n// Common uses: cache, sessions, rate limiting, queues, pub/sub, leaderboards.\nmodule.exports = { demo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Redis basics — in-memory key-value store with TTL and data types\nfunction createRedis(){\n  const store = new Map(); const expiry = new Map();\n  const alive = (k, now) => !expiry.has(k) || expiry.get(k) > now;\n  return {\n    set(k, v, ttl, now = 0){ store.set(k, v); if (ttl) expiry.set(k, now + ttl); },\n    get(k, now = 0){ if (store.has(k) && alive(k, now)) return store.get(k); store.delete(k); return null; },\n    incr(k){ const v = (Number(store.get(k)) || 0) + 1; store.set(k, v); return v; },   // atomic counter\n    lpush(k, v){ const list = store.get(k) || []; list.unshift(v); store.set(k, list); return list.length; },\n  };\n}\nconst redis = createRedis();\nredis.set(\"session:1\", \"user-data\", 100, 0);     // expires in 100 units\nconsole.log(\"get before expiry:\", redis.get(\"session:1\", 50));\nconsole.log(\"get after expiry: \", redis.get(\"session:1\", 150));\nconsole.log(\"page views (incr):\", redis.incr(\"views\"), redis.incr(\"views\"));\nconsole.log(\"queue (lpush):\", redis.lpush(\"tasks\", \"job1\"), redis.lpush(\"tasks\", \"job2\"));\nconsole.assert(redis.get(\"session:1\", 150) === null, \"TTL expired the key\");\nconsole.log(\"Redis use cases: caching, sessions, rate-limit counters, queues, leaderboards.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "get before expiry: user-data\nget after expiry:  null\npage views (incr): 1 2\nqueue (lpush): 1 2\nRedis use cases: caching, sessions, rate-limit counters, queues, leaderboards.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

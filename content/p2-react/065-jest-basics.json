@@ -1,0 +1,69 @@
+{
+  "id": "p2-065",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 65,
+  "orderInPhase": 65,
+  "slug": "jest-basics",
+  "title": "Jest basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "jest",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A pricing utility that applies discounts and taxes is covered by Jest tests for normal cases, edge cases (zero, negative), and rounding."
+  },
+  "sections": {
+    "simple_en": "Jest is a popular JavaScript testing framework. You group tests with describe, define individual cases with test/it, and make assertions with expect and matchers like toBe, toEqual, and toThrow. Jest runs tests in isolation, reports pass/fail clearly, and supports mocking and code coverage.\n\nIt's the standard choice for unit-testing pure functions, modules, and (with React Testing Library) components. Features like beforeEach/afterEach for setup/teardown and jest.fn()/jest.mock() for mocking make it suitable for everything from tiny utilities to complex integrations.",
+    "hinglish": "Jest ek popular JavaScript testing framework hai. Aap tests ko describe se group karte ho, individual cases test/it se define karte ho, aur assertions expect aur matchers (toBe, toEqual, toThrow) se karte ho. Jest tests isolation mein chalata hai, pass/fail clearly batata hai, aur mocking/coverage support karta hai.\n\nPure functions, modules aur (React Testing Library ke saath) components unit-test karne ke liye standard choice hai. beforeEach/afterEach (setup/teardown) aur jest.fn()/jest.mock() (mocking) ise chhoti utilities se lekar complex integrations tak suitable banate hain.",
+    "keyPoints": [
+      "Structure: describe (group), test/it (case), expect + matchers (assert).",
+      "Common matchers: toBe, toEqual, toThrow, toContain, toHaveBeenCalled.",
+      "Runs tests in isolation with clear pass/fail output and coverage reports.",
+      "Setup/teardown via beforeEach/afterEach; mocking via jest.fn()/jest.mock().",
+      "The default unit/integration test runner for most React projects."
+    ],
+    "real_world": "A pricing utility that applies discounts and taxes is covered by Jest tests for normal cases, edge cases (zero, negative), and rounding. When a teammate refactors it later, the tests catch a regression instantly — before it reaches production.",
+    "followups": [
+      {
+        "q": "What's the difference between toBe and toEqual?",
+        "a": "toBe checks strict identity (===), good for primitives. toEqual does a deep structural comparison, used for objects and arrays."
+      },
+      {
+        "q": "How do you mock a function or module in Jest?",
+        "a": "Use jest.fn() to create a mock function and jest.mock('module') to replace a module, then assert calls with matchers like toHaveBeenCalledWith."
+      },
+      {
+        "q": "How do you share setup across tests?",
+        "a": "Use beforeEach/afterEach (and beforeAll/afterAll) to run setup and cleanup code, keeping each test isolated and DRY."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Jest test code (run with the Jest test runner). The Node-runnable demo below is a tiny stand-in runner so the output is verifiable here.",
+      "source": "// Jest basics — unit-test pure functions and modules.\n// sum.js\nexport const sum = (a, b) => a + b;\nexport const formatPrice = (n) => `$${n.toFixed(2)}`;\n\n// sum.test.js\nimport { sum, formatPrice } from \"./sum\";\n\ndescribe(\"sum\", () => {\n  test(\"adds two numbers\", () => {\n    expect(sum(2, 3)).toBe(5);\n  });\n\n  test(\"handles negatives\", () => {\n    expect(sum(-1, -2)).toBe(-3);\n  });\n});\n\ndescribe(\"formatPrice\", () => {\n  test(\"formats with two decimals\", () => {\n    expect(formatPrice(9.5)).toBe(\"$9.50\");\n  });\n});\n\n// Run with: npx jest  (or \"test\": \"jest\" in package.json)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Jest basics — a minimal describe/it/expect runner (mirrors Jest's API)\nlet passed = 0, failed = 0;\nfunction describe(name, fn){ console.log(\"describe:\", name); fn(); }\nfunction it(name, fn){ try { fn(); passed++; console.log(\"  \\u2713\", name); }\n                       catch (e){ failed++; console.log(\"  \\u2717\", name, \"-\", e.message); } }\nfunction expect(actual){\n  return {\n    toBe(exp){ if (actual !== exp) throw new Error(`expected ${exp}, got ${actual}`); },\n    toEqual(exp){ if (JSON.stringify(actual) !== JSON.stringify(exp)) throw new Error(\"not equal\"); },\n  };\n}\nconst sum = (a, b) => a + b;\ndescribe(\"sum()\", () => {\n  it(\"adds two numbers\", () => expect(sum(2, 3)).toBe(5));\n  it(\"handles negatives\", () => expect(sum(-1, -2)).toBe(-3));\n  it(\"works with arrays via map\", () => expect([1, 2].map(n => sum(n, 10))).toEqual([11, 12]));\n});\nconsole.log(`Results: ${passed} passed, ${failed} failed`);\nconsole.assert(failed === 0, \"all tests should pass\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "describe: sum()\n  ✓ adds two numbers\n  ✓ handles negatives\n  ✓ works with arrays via map\nResults: 3 passed, 0 failed\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

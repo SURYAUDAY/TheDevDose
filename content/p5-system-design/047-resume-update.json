@@ -1,0 +1,69 @@
+{
+  "id": "p5-047",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 47,
+  "orderInPhase": 47,
+  "slug": "resume-update",
+  "title": "Resume update",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "resume",
+    "update"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A candidate rewrites 'Responsible for the checkout page' as 'Rebuilt the checkout flow, cutting drop-off 25% and adding $30k/mo in completed orders'."
+  },
+  "sections": {
+    "simple_en": "A strong resume is built on impact-driven bullet points, not duty lists. The formula: start each bullet with a strong action verb (built, led, designed, shipped, reduced, automated), say what you did, and quantify the impact with concrete numbers — percentages, time saved, scale, revenue.\n\nCut passive, duties-style phrasing like 'responsible for the frontend' and replace it with 'reduced page load time 40% by code-splitting and lazy loading'. Tailor the resume to each role, keep it scannable in one pass (a recruiter spends seconds), and lead with your most impressive, relevant achievements.",
+    "hinglish": "Ek strong resume impact-driven bullet points par bana hota hai, duty lists par nahi. Formula: har bullet ko ek strong action verb se shuru karo (built, led, designed, shipped, reduced, automated), batao ki aapne kya kiya, aur impact ko concrete numbers se quantify karo — percentages, time saved, scale, revenue.\n\nPassive, duties-style phrasing jaise 'responsible for the frontend' kaat do aur use 'code-splitting aur lazy loading se page load time 40% reduce ki' se replace karo. Resume ko har role ke liye tailor karo, ek pass mein scannable rakho (ek recruiter seconds spend karta hai), aur apni sabse impressive, relevant achievements se lead karo.",
+    "keyPoints": [
+      "Use impact bullets, not duty lists.",
+      "Formula: action verb + what you did + quantified impact.",
+      "Cut passive phrasing like 'responsible for'.",
+      "Quantify with numbers (%, time, scale, revenue).",
+      "Tailor to the role; keep it scannable; lead with the strongest items."
+    ],
+    "real_world": "A candidate rewrites 'Responsible for the checkout page' as 'Rebuilt the checkout flow, cutting drop-off 25% and adding $30k/mo in completed orders'. The same work, framed as quantified impact with an action verb, immediately reads as senior and results-oriented to a recruiter scanning in seconds.",
+    "followups": [
+      {
+        "q": "What makes a strong resume bullet?",
+        "a": "An action verb + what you did + a quantified result (numbers, %, scale). It frames your work as impact, not duties, and is concrete enough that a recruiter grasps the value instantly."
+      },
+      {
+        "q": "What should you cut from a resume?",
+        "a": "Passive, duties-style phrasing ('responsible for', 'worked on'), vague claims without metrics, irrelevant experience, and anything that doesn't support the role you're targeting. Keep it tight and scannable."
+      },
+      {
+        "q": "Why tailor the resume per role?",
+        "a": "Recruiters and ATS systems match against the specific role's keywords and requirements. Tailoring surfaces your most relevant experience and improves both human and automated screening."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo that scores resume bullets for an action verb and a quantified metric, verifying what makes a bullet strong vs weak.",
+      "source": "# Resume update — make every bullet an action verb + quantified impact.\n\nACTION_VERBS = {\"built\", \"led\", \"designed\", \"shipped\", \"reduced\", \"improved\",\n                \"automated\", \"launched\", \"optimized\", \"migrated\"}\n\ndef score_bullet(bullet: str) -> dict:\n    words = bullet.lower().split()\n    starts_with_verb = bool(words) and words[0] in ACTION_VERBS\n    quantified = any(ch.isdigit() or ch == \"%\" for ch in bullet)\n    tips = []\n    if not starts_with_verb: tips.append(\"start with a strong action verb\")\n    if not quantified:       tips.append(\"add a metric (%, count, time, scale)\")\n    return {\"score\": (50 if starts_with_verb else 0) + (50 if quantified else 0), \"tips\": tips}\n\n# Strong:  \"Reduced API p95 latency by 40% via caching and query batching\"\n# Weak:    \"Responsible for the backend\"  -> passive, vague, unquantified\n\n# Resume rules: action verb + what you did + quantified impact; tailor to the job description's\n# keywords; keep to one page (early career); make it scannable in a 10-second skim; lead each\n# role with your biggest wins; drop \"responsibilities included\"-style filler.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Resume update — score bullet points: strong bullets start with an action verb and quantify impact\nACTION_VERBS = {\"built\", \"led\", \"designed\", \"shipped\", \"reduced\", \"improved\", \"automated\", \"launched\"}\ndef score_bullet(bullet):\n    words = bullet.lower().split()\n    starts_with_verb = words[0] in ACTION_VERBS if words else False\n    quantified = any(ch.isdigit() or ch == \"%\" for ch in bullet)\n    score = (50 if starts_with_verb else 0) + (50 if quantified else 0)\n    tips = []\n    if not starts_with_verb: tips.append(\"start with an action verb\")\n    if not quantified: tips.append(\"add a metric/number\")\n    return {\"score\": score, \"tips\": tips}\n\nbullets = [\n    \"Reduced API latency by 40% via caching and query batching\",\n    \"Responsible for the frontend\",\n]\nfor b in bullets:\n    r = score_bullet(b)\n    print(f\"[{r['score']:3}] {b}\")\n    if r[\"tips\"]: print(\"       fix:\", \"; \".join(r[\"tips\"]))\nassert score_bullet(bullets[0])[\"score\"] == 100, \"action verb + metric = strong\"\nassert score_bullet(bullets[1])[\"score\"] == 0, \"vague, passive, unquantified = weak\"\nprint(\"\\nResume tip: each bullet = action verb + what you did + quantified impact (numbers, %, scale).\")\nprint(\"Cut duties-style phrasing ('responsible for'); tailor to the role and keep it scannable in one pass.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "[100] Reduced API latency by 40% via caching and query batching\n[  0] Responsible for the frontend\n       fix: start with an action verb; add a metric/number\n\nResume tip: each bullet = action verb + what you did + quantified impact (numbers, %, scale).\nCut duties-style phrasing ('responsible for'); tailor to the role and keep it scannable in one pass.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

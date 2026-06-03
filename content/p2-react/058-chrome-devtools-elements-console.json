@@ -1,0 +1,71 @@
+{
+  "id": "p2-058",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 58,
+  "orderInPhase": 58,
+  "slug": "chrome-devtools-elements-console",
+  "title": "Chrome DevTools — Elements & Console",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "chrome",
+    "devtools",
+    "elements",
+    "console"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A button looks misaligned only on one page."
+  },
+  "sections": {
+    "simple_en": "The Elements panel shows the live DOM and CSS. You can inspect and edit nodes, toggle classes and styles, read the computed box model, and see which CSS rules apply — invaluable for debugging layout and styling without changing source code.\n\nThe Console is for logging and running JavaScript against the page. Beyond console.log, useful tools include console.table, console.group, log levels (warn/error), and the special $0 reference to the currently selected element. Together these are the everyday debugging duo.",
+    "hinglish": "Elements panel live DOM aur CSS dikhata hai. Aap nodes inspect aur edit kar sakte ho, classes/styles toggle kar sakte ho, computed box model dekh sakte ho, aur kaun se CSS rules apply ho rahe hain — layout aur styling debug karne ke liye bahut useful, bina source badle.\n\nConsole logging aur page par JavaScript chalane ke liye hai. console.log ke alawa console.table, console.group, log levels (warn/error), aur $0 (currently selected element) useful hain. Ye dono rozana ki debugging jodi hain.",
+    "keyPoints": [
+      "Elements: inspect/edit live DOM and CSS, toggle classes, read computed styles.",
+      "See applied vs overridden CSS rules and the box model visually.",
+      "Console: log values and run JS against the live page.",
+      "Beyond log: console.table, console.group, warn/error levels, console.dir.",
+      "$0 references the selected element; $$('sel') is shorthand for querySelectorAll."
+    ],
+    "real_world": "A button looks misaligned only on one page. In the Elements panel a developer toggles styles live, spots an unexpected margin from an inherited rule, and confirms the fix instantly — then makes the change in source, all without a single rebuild.",
+    "followups": [
+      {
+        "q": "How do you debug why a CSS rule isn't applying?",
+        "a": "Select the element in the Elements panel and read the Styles pane — it shows applied rules, strikes through overridden ones, and reveals specificity conflicts and inherited values."
+      },
+      {
+        "q": "What's a quick way to inspect an object in the Console?",
+        "a": "console.table for arrays/objects of similar shape, console.dir to expand a DOM node's properties, and grouping with console.group for readable logs."
+      },
+      {
+        "q": "What does $0 do in the Console?",
+        "a": "It references the element currently selected in the Elements panel, so you can run JS against it (e.g., $0.classList.toggle('active'))."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "DevTools debugging techniques (used in the browser, not shipped app code). The Node-runnable demo below simulates element inspection and console filtering.",
+      "source": "// Chrome DevTools — Elements & Console (used in development, not app code).\n// Open with F12 (or Cmd+Option+I). These are debugging techniques:\n\nexport default function DebugExample() {\n  const user = { id: 1, name: \"Asha\" };\n\n  // Console techniques you'd use while inspecting in DevTools:\n  console.log(\"user:\", user);            // basic log\n  console.table([user]);                 // tabular view of arrays/objects\n  console.group(\"render\");               // collapsible group\n  console.log(\"props ready\");\n  console.groupEnd();\n  // console.dir(domNode)  -> inspect a DOM node's properties\n  // In the Elements panel you can edit the DOM live, toggle classes,\n  // and read computed styles; $0 in Console references the selected node.\n\n  return <div className=\"card\">Inspect me in the Elements panel</div>;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Chrome DevTools (Elements & Console) — inspect DOM + filter console by level\nconst dom = {\n  tag: \"div\", id: \"app\", children: [\n    { tag: \"h1\", id: \"title\", text: \"Hello\" },\n    { tag: \"button\", id: \"cta\", text: \"Click\" },\n  ],\n};\nfunction querySelector(node, id){\n  if (node.id === id) return node;\n  for (const c of node.children || []) { const f = querySelector(c, id); if (f) return f; }\n  return null;\n}\nconsole.log(\"Inspect #cta ->\", JSON.stringify(querySelector(dom, \"cta\")));\n\nconst consoleLog = [\n  { level: \"log\",   msg: \"render ok\" },\n  { level: \"warn\",  msg: \"deprecated API\" },\n  { level: \"error\", msg: \"fetch failed\" },\n];\nconst errorsOnly = consoleLog.filter(e => e.level === \"error\");\nconsole.log(\"Filter level=error ->\", JSON.stringify(errorsOnly));\nconsole.assert(querySelector(dom, \"cta\").text === \"Click\", \"element found by id\");\nconsole.assert(errorsOnly.length === 1, \"console filter works\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Inspect #cta -> {\"tag\":\"button\",\"id\":\"cta\",\"text\":\"Click\"}\nFilter level=error -> [{\"level\":\"error\",\"msg\":\"fetch failed\"}]\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

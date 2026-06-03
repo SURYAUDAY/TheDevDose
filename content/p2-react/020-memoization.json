@@ -1,0 +1,68 @@
+{
+  "id": "p2-020",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 20,
+  "orderInPhase": 20,
+  "slug": "memoization",
+  "title": "Memoization",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "memoization"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An autocomplete that calls an expensive scoring function on each candidate memoizes by query string."
+  },
+  "sections": {
+    "simple_en": "Memoization is a general optimization technique: cache the result of a function call keyed by its inputs, so repeated calls with the same inputs return the cached result instead of recomputing. It trades memory for speed and only works correctly for pure functions.\n\nIn React, this idea shows up as useMemo (values), useCallback (functions), and React.memo (components), but the concept predates React and applies to any expensive, deterministic computation — from Fibonacci to API response caching.",
+    "hinglish": "Memoization ek general optimization technique hai: function ka result uske inputs ke hisaab se cache kar lo, taaki same input par dobara compute na karke cached result mile. Ye memory de kar speed leta hai aur sirf pure functions ke liye sahi kaam karta hai.\n\nReact mein yahi idea useMemo, useCallback aur React.memo ke roop mein dikhta hai, par concept React se purana hai — kisi bhi mehngi deterministic computation par lagta hai.",
+    "keyPoints": [
+      "Cache results keyed by inputs; same inputs => return cached value, skip recomputation.",
+      "Trades memory for speed; correct only for pure (deterministic, side-effect-free) functions.",
+      "React forms: useMemo (values), useCallback (functions), React.memo (components).",
+      "Watch cache size — unbounded caches can leak memory; use limits or LRU when needed.",
+      "Not free: hashing inputs and storing results has its own cost for cheap functions."
+    ],
+    "real_world": "An autocomplete that calls an expensive scoring function on each candidate memoizes by query string. Typing 'rea' then deleting back to 're' returns instantly because 're' results are already cached — no rescoring needed.",
+    "followups": [
+      {
+        "q": "What kind of function can be safely memoized?",
+        "a": "A pure one — same inputs always yield the same output with no side effects. Memoizing an impure function returns stale or wrong results."
+      },
+      {
+        "q": "What's the main risk of memoization?",
+        "a": "Memory growth from an unbounded cache and stale results if inputs aren't captured correctly in the key. Bound the cache (e.g., LRU) for long-lived caches."
+      },
+      {
+        "q": "Is memoization always a win?",
+        "a": "No. For cheap computations, the overhead of key creation and lookup can exceed the savings, making it slower overall."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Memoization (generic): a memoize helper used inside a component.\nimport React, { useMemo } from \"react\";\n\nfunction memoize(fn) {\n  const cache = new Map();\n  return (n) => {\n    if (cache.has(n)) return cache.get(n);\n    const result = fn(n);\n    cache.set(n, result);\n    return result;\n  };\n}\n\n// Expensive pure function, memoized once.\nconst fib = memoize(function f(n) {\n  return n < 2 ? n : f(n - 1) + f(n - 2);\n});\n\nexport default function FibCalculator({ n }) {\n  const value = useMemo(() => fib(n), [n]); // also memoized at the React level\n  return <p>fib({n}) = {value}</p>;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Memoization — generic memoize with a cache (cache hits vs misses)\nfunction memoize(fn){\n  const cache = new Map();\n  let hits = 0, misses = 0;\n  const wrapped = (...args) => {\n    const key = JSON.stringify(args);\n    if (cache.has(key)){ hits++; return cache.get(key); }\n    misses++; const r = fn(...args); cache.set(key, r); return r;\n  };\n  wrapped.stats = () => ({ hits, misses });\n  return wrapped;\n}\nconst slowSquare = memoize((n) => n * n);\nconsole.log(slowSquare(4));\nconsole.log(slowSquare(4));   // hit\nconsole.log(slowSquare(5));   // miss\nconsole.log(slowSquare(4));   // hit\nconsole.log(\"Stats:\", JSON.stringify(slowSquare.stats()));\nconsole.assert(slowSquare.stats().hits === 2, \"two cache hits expected\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "16\n16\n25\n16\nStats: {\"hits\":2,\"misses\":2}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

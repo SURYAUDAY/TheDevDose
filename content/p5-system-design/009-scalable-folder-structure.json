@@ -1,0 +1,70 @@
+{
+  "id": "p5-009",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 9,
+  "orderInPhase": 9,
+  "slug": "scalable-folder-structure",
+  "title": "Scalable folder structure",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "scalable",
+    "folder",
+    "structure"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "On a large React app, the 'checkout' feature folder holds its components, hooks, API calls, and tests together."
+  },
+  "sections": {
+    "simple_en": "As an app grows, organizing files by feature/domain rather than by file type keeps it maintainable. In a by-type structure (all components in one folder, all hooks in another, all services in another), the code for a single feature is scattered, so a change means hunting across many folders.\n\nIn a by-feature structure, everything for a feature — its components, hooks, and API calls — lives together in one folder, with only truly cross-cutting code in a shared folder. This localizes changes, makes features easy to add or delete wholesale, and scales far better than grouping by file type.",
+    "hinglish": "Jaise app badhta hai, files ko file type ke bajaye feature/domain ke hisaab se organize karna use maintainable rakhta hai. Ek by-type structure mein (saare components ek folder mein, saare hooks doosre mein, saare services teesre mein), ek single feature ka code scattered hota hai, to ek change ka matlab kai folders mein dhoondhna.\n\nEk by-feature structure mein, ek feature ke liye sab kuch — uske components, hooks, aur API calls — ek folder mein saath rehta hai, sirf sach mein cross-cutting code ek shared folder mein. Ye changes ko localize karta hai, features ko wholesale add ya delete karna aasaan banata hai, aur file type ke hisaab se group karne se kahin behtar scale karta hai.",
+    "keyPoints": [
+      "Organize by feature/domain, not by file type, as the app grows.",
+      "By-type scatters a feature's code across many folders.",
+      "By-feature colocates a feature's components, hooks, and services.",
+      "Keep only truly cross-cutting code in a shared folder.",
+      "Localizes changes; eases adding/deleting whole features."
+    ],
+    "real_world": "On a large React app, the 'checkout' feature folder holds its components, hooks, API calls, and tests together. A new engineer changing checkout edits one folder — and if checkout is ever removed, deleting that one folder cleanly removes the feature.",
+    "followups": [
+      {
+        "q": "Why prefer feature-based over type-based folders?",
+        "a": "Feature-based colocation means a change to one feature touches one folder, not many scattered ones. It localizes changes, makes features easy to add or delete, and scales as the codebase and team grow."
+      },
+      {
+        "q": "What belongs in a 'shared' folder?",
+        "a": "Only genuinely cross-cutting code used by many features — generic UI components, utilities, and helpers. Resist dumping feature-specific code there; keep it within its feature folder."
+      },
+      {
+        "q": "Does this apply only to frontend?",
+        "a": "No — the same principle (organize by domain/feature, colocate related code) applies to backends and full-stack apps. It's a general modularity guideline, not framework-specific."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript comparing by-type vs by-feature organization. The Node demo below counts how many folders a change touches and verifies feature code is colocated.",
+      "source": "// Scalable folder structure — organize by FEATURE/domain, not by file type.\n\n// Anti-pattern (by type): related code spread across many folders, hard to scale.\n//   src/components/  src/hooks/  src/services/  src/utils/  ...\n\n// Preferred (by feature): each feature is self-contained and easy to find/delete/move.\n//\n// src/\n//   features/\n//     auth/\n//       LoginForm.jsx\n//       useAuth.js\n//       authApi.js\n//       auth.test.js\n//     cart/\n//       Cart.jsx\n//       useCart.js\n//       cartApi.js\n//   shared/            // ONLY truly cross-cutting code\n//     components/Button.jsx\n//     lib/formatDate.js\n//   app/               // routing, providers, global config\n//     routes.jsx\n//     store.js\n\n// Guidelines: colocate everything a feature needs; put only genuinely shared code in\n// `shared`; keep cross-feature imports minimal. This localizes change and scales cleanly.\nexport {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Scalable folder structure — organize by FEATURE, not by file type, as the app grows\nconst byType = {                  // hard to scale: related code scattered across folders\n  components: [\"LoginForm.jsx\", \"ProfileCard.jsx\", \"Cart.jsx\"],\n  hooks: [\"useAuth.js\", \"useProfile.js\", \"useCart.js\"],\n  services: [\"authApi.js\", \"profileApi.js\", \"cartApi.js\"],\n};\nconst byFeature = {               // scales: everything for a feature lives together\n  auth: [\"LoginForm.jsx\", \"useAuth.js\", \"authApi.js\"],\n  profile: [\"ProfileCard.jsx\", \"useProfile.js\", \"profileApi.js\"],\n  cart: [\"Cart.jsx\", \"useCart.js\", \"cartApi.js\"],\n  shared: [\"Button.jsx\", \"formatDate.js\"],   // truly cross-cutting code only\n};\nfunction filesTouchedForFeature(structure, feature) {\n  // Feature-based: one folder. Type-based: hunt across every folder.\n  return structure[feature] ? [feature] : Object.keys(structure);\n}\nconsole.log(\"By-type, to change 'auth' you touch folders:\", filesTouchedForFeature(byType, \"auth\"));\nconsole.log(\"By-feature, to change 'auth' you touch folders:\", filesTouchedForFeature(byFeature, \"auth\"));\nconsole.assert(filesTouchedForFeature(byFeature, \"auth\").length === 1, \"feature code colocated\");\nconsole.assert(filesTouchedForFeature(byType, \"auth\").length === 3, \"type code scattered\");\nconsole.log(\"Group by feature/domain so each feature is self-contained; keep only shared code in 'shared'.\");\nconsole.log(\"This localizes changes, eases deletion, and scales far better than grouping by file type.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "By-type, to change 'auth' you touch folders: [ 'components', 'hooks', 'services' ]\nBy-feature, to change 'auth' you touch folders: [ 'auth' ]\nGroup by feature/domain so each feature is self-contained; keep only shared code in 'shared'.\nThis localizes changes, eases deletion, and scales far better than grouping by file type.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

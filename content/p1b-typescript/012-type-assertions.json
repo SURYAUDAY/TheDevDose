@@ -1,0 +1,65 @@
+{
+  "id": "p1b-012",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 12,
+  "orderInPhase": 12,
+  "slug": "type-assertions",
+  "title": "Type Assertions",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "type",
+    "assertions"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Reading a DOM input: `const input = document.querySelector(\"#email\") as HTMLInputElement` lets you access `input.value`, which TypeScript wouldn't allow on t…"
+  },
+  "sections": {
+    "simple_en": "A type assertion tells the compiler 'trust me, I know the type of this value', overriding its inference. The syntax is `value as Type` (or the older `<Type>value`). It does NOT convert or check anything at runtime — it's purely a compile-time instruction.\n\nUse assertions sparingly and only when you genuinely know more than the compiler (e.g. you know a DOM element is an `HTMLInputElement`). Asserting the wrong type silences the checker and can lead to runtime errors, so it's an escape hatch, not a tool for everyday typing.",
+    "hinglish": "Type assertion compiler ko kehta hai 'mujhpe bharosa karo, mujhe is value ka type pata hai', uski inference ko override karke. Syntax hai `value as Type` (ya purana `<Type>value`). Ye runtime par kuch convert ya check NAHI karta — ye sirf ek compile-time instruction hai.\nAssertions ko kam aur sirf tab use karo jab aap sach me compiler se zyada jaante ho (jaise aapko pata hai ki ek DOM element `HTMLInputElement` hai). Galat type assert karne par checker chup ho jaata hai aur runtime errors aa sakte hain, isliye ye ek escape hatch hai, rozmarra typing ka tool nahi.",
+    "keyPoints": [
+      "Syntax: `value as Type` (or `<Type>value`).",
+      "Overrides the compiler's inferred type — a compile-time-only hint.",
+      "Does NOT convert or validate at runtime.",
+      "Use only when you genuinely know the type better than TS.",
+      "Wrong assertions hide bugs; prefer narrowing/type guards when possible."
+    ],
+    "real_world": "Reading a DOM input: `const input = document.querySelector(\"#email\") as HTMLInputElement` lets you access `input.value`, which TypeScript wouldn't allow on the generic `Element` type returned by querySelector.",
+    "followups": [
+      {
+        "q": "Do type assertions change the value at runtime?",
+        "a": "No. They're purely compile-time hints that override the inferred type. No conversion or validation happens at runtime — `value as number` doesn't actually convert anything."
+      },
+      {
+        "q": "When is a type assertion appropriate?",
+        "a": "Only when you genuinely know the type better than the compiler can infer — e.g. a specific DOM element type. Otherwise prefer narrowing/type guards, since a wrong assertion silently hides bugs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — assertions tell TS a more specific type.\n\ninterface ApiResponse { data: { id: number; name: string }; }\n\nexport function parseResponse(json: string): ApiResponse {\n  // JSON.parse returns 'any'; we assert the expected shape.\n  return JSON.parse(json) as ApiResponse;\n}\n\n// Narrowing 'unknown' to a known type via assertion (after a check is safer).\nexport function asNumber(value: unknown): number {\n  return value as number; // assertion: no runtime conversion\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { parseResponse, asNumber } from \"./solution\";\n\nconst res = parseResponse('{\"data\":{\"id\":1,\"name\":\"Asha\"}}');\nconsole.log(res.data.name); // Asha\nconsole.log(asNumber(42));  // 42\n\nconsole.assert(res.data.id === 1, \"asserted shape gives typed access\");\nconsole.assert(res.data.name === \"Asha\", \"name accessible\");\nconsole.assert(asNumber(42) === 42, \"assertion is compile-time only (value unchanged)\");\nconsole.log(\"type-assertions assertions passed.\");",
+      "expectedOutput": "Asha\n42\ntype-assertions assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

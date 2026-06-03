@@ -1,0 +1,69 @@
+{
+  "id": "p3-033",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 33,
+  "orderInPhase": 33,
+  "slug": "connection-pooling",
+  "title": "Connection pooling",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "connection",
+    "pooling"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An API handling thousands of requests per minute uses a pool of 20 connections."
+  },
+  "sections": {
+    "simple_en": "Opening a new database connection for every request is expensive — it involves a network handshake and authentication. A connection pool maintains a set of ready connections that requests borrow and return, dramatically improving throughput and avoiding the overhead of constant connect/disconnect.\n\nThe pool caps the number of connections (max) to protect the database, which has its own connection limit. Requests acquire a connection, use it, and release it back; if all are busy, new requests wait briefly. For transactions you check out one client explicitly and must release it in a finally block to avoid leaks.",
+    "hinglish": "Har request ke liye nayi database connection kholna mehenga hai — network handshake aur authentication lagta hai. Connection pool ready connections ka ek set rakhta hai jise requests borrow karke wapas karti hain, throughput bahut behtar hota hai aur baar-baar connect/disconnect ka overhead bachta hai.\n\nPool connections ki sankhya cap karta hai (max) database ko protect karne ke liye, jiski apni connection limit hoti hai. Requests connection acquire karti hain, use karti hain, release karti hain; sab busy hon to nayi requests thoda wait karti hain. Transactions ke liye ek client explicitly check out karke finally block mein release karna zaroori hai, leaks se bachne ke liye.",
+    "keyPoints": [
+      "Reuses a fixed set of connections instead of one per request.",
+      "Avoids the costly connect/auth handshake on every query.",
+      "max caps connections to respect the DB's own limit.",
+      "Requests acquire/use/release; if all busy, they wait briefly.",
+      "Release checked-out clients in finally to prevent connection leaks."
+    ],
+    "real_world": "An API handling thousands of requests per minute uses a pool of 20 connections. Requests share and reuse them instead of each opening its own — keeping latency low and never exhausting the database's max-connections limit.",
+    "followups": [
+      {
+        "q": "Why is a connection pool faster than connecting per request?",
+        "a": "It skips the repeated TCP handshake and authentication by reusing already-open connections, cutting per-query overhead and boosting throughput."
+      },
+      {
+        "q": "What happens if you set max too high?",
+        "a": "You can exceed the database's own connection limit, causing errors or resource exhaustion on the DB side. Size the pool to the DB's capacity and your concurrency needs."
+      },
+      {
+        "q": "Why must you release a checked-out client?",
+        "a": "If you don't, the connection stays 'in use' and the pool slowly drains — eventually new requests can't get a connection. Always release in a finally block."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real node-postgres pool code. The Node-runnable demo below simulates acquire/release/reuse with a max limit so the behavior is verifiable here.",
+      "source": "// Connection pooling — configure and reuse a pool of DB connections.\nconst { Pool } = require(\"pg\");\n\nconst pool = new Pool({\n  connectionString: process.env.DATABASE_URL,\n  max: 20,                      // max concurrent connections\n  idleTimeoutMillis: 30000,     // close idle clients after 30s\n  connectionTimeoutMillis: 2000 // fail fast if no connection is available\n});\n\n// For simple queries, pool.query() checks out and returns a client automatically.\nasync function getUser(id) {\n  const { rows } = await pool.query(\"SELECT * FROM users WHERE id = $1\", [id]);\n  return rows[0];\n}\n\n// For transactions, check out ONE client and release it when done.\nasync function withClient(fn) {\n  const client = await pool.connect();\n  try { return await fn(client); }\n  finally { client.release(); }   // return to the pool — don't leak connections\n}\n\nmodule.exports = { pool, getUser, withClient };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Connection pooling — reuse a fixed set of connections instead of new each time\nfunction createPool(max){\n  const idle = []; let created = 0, inUse = 0, reused = 0;\n  return {\n    acquire(){\n      let conn;\n      if (idle.length){ conn = idle.pop(); reused++; }\n      else if (created < max){ conn = { id: ++created }; }\n      else throw new Error(\"pool exhausted\");\n      inUse++; return conn;\n    },\n    release(conn){ inUse--; idle.push(conn); },\n    stats: () => ({ created, reused, inUse, idle: idle.length }),\n  };\n}\nconst pool = createPool(2);\nconst c1 = pool.acquire();\nconst c2 = pool.acquire();\npool.release(c1);\nconst c3 = pool.acquire();   // reuses c1 instead of creating a 3rd connection\nconsole.log(\"Stats:\", JSON.stringify(pool.stats()));\nconsole.assert(pool.stats().created === 2, \"never exceeded max connections\");\nconsole.assert(pool.stats().reused === 1, \"a connection was reused\");\nconsole.log(\"Pooling avoids the cost of opening a connection per request.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Stats: {\"created\":2,\"reused\":1,\"inUse\":2,\"idle\":0}\nPooling avoids the cost of opening a connection per request.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

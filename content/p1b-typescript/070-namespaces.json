@@ -1,0 +1,64 @@
+{
+  "id": "p1b-070",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 70,
+  "orderInPhase": 70,
+  "slug": "namespaces",
+  "title": "Namespaces",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "namespaces"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Older codebases or large library type bundles group helpers like `Validation.isEmail` and `Validation.isPhone` under a `Validation` namespace; new code would…"
+  },
+  "sections": {
+    "simple_en": "A namespace groups related code (types, functions, variables) under a single named container, accessed with dot notation (`MyNamespace.thing`). It was TypeScript's original way to organize code and avoid polluting the global scope before ES modules became standard.\n\nNamespaces emit a real object at runtime and can use `export` internally to expose members. In modern code, ES modules (`import`/`export`) are preferred for organizing files; namespaces are now mainly seen in legacy code, global type augmentation, and bundled library type definitions.",
+    "hinglish": "Namespace related code (types, functions, variables) ko ek named container ke andar group karta hai, dot notation se access hota hai (`MyNamespace.thing`). Ye ES modules standard banne se pehle TypeScript ka code organize karne aur global scope ganda hone se bachne ka original tarika tha.\nNamespaces runtime par ek real object emit karte hain aur internally `export` se members expose kar sakte hain. Modern code me, files organize karne ke liye ES modules (`import`/`export`) preferred hain; namespaces ab mainly legacy code, global type augmentation, aur bundled library type definitions me dikhte hain.",
+    "keyPoints": [
+      "Groups related code under a named container (`NS.member`).",
+      "Original pre-modules way to organize code and avoid globals.",
+      "Use `export` inside to expose members; emits a runtime object.",
+      "Modern code prefers ES modules over namespaces.",
+      "Still seen in legacy code and library .d.ts bundles."
+    ],
+    "real_world": "Older codebases or large library type bundles group helpers like `Validation.isEmail` and `Validation.isPhone` under a `Validation` namespace; new code would instead use a module file with named exports.",
+    "followups": [
+      {
+        "q": "What is a namespace used for?",
+        "a": "Grouping related types/functions/values under one named container to organize code and avoid polluting the global scope — TypeScript's pre-ES-modules organization mechanism."
+      },
+      {
+        "q": "Should you use namespaces in new code?",
+        "a": "Generally no — ES modules (`import`/`export`) are the modern standard for organizing code. Namespaces remain useful mainly for legacy code and bundled library type declarations."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — a namespace grouping related helpers.\n\nexport namespace Geometry {\n  export const PI = 3.14159;\n  export function circleArea(r: number): number {\n    return PI * r * r;\n  }\n  export function rectArea(w: number, h: number): number {\n    return w * h;\n  }\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { Geometry } from \"./solution\";\n\nconsole.log(Math.round(Geometry.circleArea(2))); // 13\nconsole.log(Geometry.rectArea(3, 4));            // 12\nconsole.log(Geometry.PI);                        // 3.14159\n\nconsole.assert(Math.round(Geometry.circleArea(2)) === 13, \"namespace function\");\nconsole.assert(Geometry.rectArea(3, 4) === 12, \"another namespace function\");\nconsole.log(\"namespaces assertions passed.\");",
+      "expectedOutput": "13\n12\n3.14159\nnamespaces assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

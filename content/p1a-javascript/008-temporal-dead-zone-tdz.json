@@ -1,0 +1,67 @@
+{
+  "id": "p1a-008",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 8,
+  "orderInPhase": 8,
+  "slug": "temporal-dead-zone-tdz",
+  "title": "Temporal Dead Zone (TDZ)",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "temporal",
+    "dead",
+    "zone",
+    "tdz"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "It's like a hotel room you've booked (reserved) but check-in time hasn't arrived."
+  },
+  "sections": {
+    "simple_en": "The Temporal Dead Zone is the time between when a `let` or `const` variable is hoisted (start of its block) and when it is actually declared/initialised on its line. During this window the variable exists but cannot be accessed — doing so throws a ReferenceError.\n\nThe TDZ is a deliberate safety feature: it catches bugs where you use a variable before giving it a value. `var` has no TDZ (it's simply `undefined` early), which is exactly the silent-bug behaviour `let`/`const` were designed to prevent.",
+    "hinglish": "Temporal Dead Zone woh samay hai jab `let`/`const` variable hoist to ho chuka hai (block ke start se) par abhi tak apni line par declare/initialise nahi hua. Is window me variable exist karta hai par access nahi kar sakte — karoge to ReferenceError aayega.\nTDZ ek jaan-bujhkar banaya gaya safety feature hai: ye us bug ko pakadta hai jisme aap value dene se pehle variable use kar lete ho. `var` me TDZ nahi hota (jaldi access karo to bas `undefined`), aur yahi silent-bug behaviour rokne ke liye `let`/`const` banaye gaye.",
+    "keyPoints": [
+      "The window from the start of a block until the `let`/`const` declaration line.",
+      "Accessing the variable in this window throws ReferenceError (not `undefined`).",
+      "Applies to `let`, `const`, and `class`; `var` has no TDZ.",
+      "It's a feature: it turns 'use-before-declare' from a silent bug into a loud error.",
+      "`typeof` does NOT save you here — `typeof x` on a TDZ variable still throws."
+    ],
+    "real_world": "It's like a hotel room you've booked (reserved) but check-in time hasn't arrived. The room is assigned to you, but if you try to enter before check-in, security stops you — the room exists but is off-limits for now.",
+    "followups": [
+      {
+        "q": "Difference between TDZ ReferenceError and `var`'s undefined?",
+        "a": "`var` is silently `undefined` before assignment, hiding bugs. `let`/`const` throw a ReferenceError in the TDZ, surfacing the mistake immediately."
+      },
+      {
+        "q": "Does `typeof` avoid the TDZ error?",
+        "a": "No. `typeof undeclaredName` returns 'undefined', but `typeof aLetInTDZ` still throws a ReferenceError because the binding exists but is uninitialised."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Shows the TDZ: accessing 'price' before its line throws ReferenceError.\n\nfunction tdzDemo() {\n  const events = [];\n  try {\n    // 'price' is hoisted but in the TDZ here\n    events.push(\"read=\" + price);\n  } catch (e) {\n    events.push(\"error=\" + e.name); // ReferenceError\n  }\n  let price = 100; // TDZ ends here\n  events.push(\"afterDeclare=\" + price);\n  return events;\n}\n\n// var has NO TDZ for comparison\nfunction varNoTdz() {\n  const before = qty; // undefined, no error\n  var qty = 7;\n  return { before, after: qty };\n}\n\nmodule.exports = { tdzDemo, varNoTdz };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { tdzDemo, varNoTdz } = require(\"./solution\");\n\nconsole.log(tdzDemo());\nconsole.log(varNoTdz());\n\nconsole.assert(tdzDemo()[0] === \"error=ReferenceError\", \"let access in TDZ throws\");\nconsole.assert(tdzDemo()[1] === \"afterDeclare=100\", \"value available after line\");\nconsole.assert(varNoTdz().before === undefined, \"var has no TDZ\");\nconsole.log(\"TDZ assertions passed.\");",
+      "expectedOutput": "[ 'error=ReferenceError', 'afterDeclare=100' ]\n{ before: undefined, after: 7 }\nTDZ assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

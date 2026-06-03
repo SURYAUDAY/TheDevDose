@@ -1,0 +1,64 @@
+{
+  "id": "p1a-091",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 91,
+  "orderInPhase": 91,
+  "slug": "debouncing",
+  "title": "Debouncing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "debouncing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A search box that calls the API only after the user pauses typing for 300ms — instead of one request per keystroke, you send a single request for the final q…"
+  },
+  "sections": {
+    "simple_en": "Debouncing delays running a function until a certain amount of time has passed WITHOUT it being called again. Every new call resets the timer, so the function only runs once the activity 'settles'. It answers: 'wait until the user stops, then act.'\n\nIt's perfect for events that fire rapidly — typing in a search box, resizing a window, validating input — where you only care about the final state. Without debouncing you might fire dozens of expensive operations (like API calls) per second.",
+    "hinglish": "Debouncing ek function ko tab tak chalne se rokta hai jab tak ek certain time bina dobara call hue na guzar jaaye. Har naya call timer reset kar deta hai, isliye function tabhi chalta hai jab activity 'settle' ho jaaye. Ye kehta hai: 'user ke rukne tak wait karo, phir act karo.'\nYe un events ke liye perfect hai jo tezi se fire hote hain — search box me typing, window resize, input validation — jahan aapko sirf final state chahiye. Debouncing ke bina aap per second dozens mehnge operations (jaise API calls) fire kar sakte ho.",
+    "keyPoints": [
+      "Runs the function only after calls STOP for `wait` ms.",
+      "Each new call resets the timer (cancels the pending run).",
+      "Use for search-as-you-type, resize, autosave, validation.",
+      "Reduces expensive work (API calls, layout) dramatically.",
+      "Distinct from throttle, which runs at a steady max rate."
+    ],
+    "real_world": "A search box that calls the API only after the user pauses typing for 300ms — instead of one request per keystroke, you send a single request for the final query.",
+    "followups": [
+      {
+        "q": "What's the core idea of debouncing?",
+        "a": "Postpone execution until calls stop for a given period; every new call resets the timer, so only the final, settled call runs after the quiet interval."
+      },
+      {
+        "q": "Debounce vs throttle?",
+        "a": "Debounce waits for activity to stop and then runs once; throttle runs at most once per interval during continuous activity. Debounce for 'after the user stops', throttle for 'at a steady rate'."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// A clean debounce: only the last call within 'wait' actually runs.\n\nfunction debounce(fn, wait) {\n  let timer = null;\n  return function (...args) {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn.apply(this, args), wait);\n  };\n}\n\nmodule.exports = { debounce };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { debounce } = require(\"./solution\");\n\n(async () => {\n  let calls = 0;\n  let lastArg = null;\n  const search = debounce((q) => { calls++; lastArg = q; }, 30);\n\n  // rapid-fire calls; only the last should execute\n  search(\"a\"); search(\"ab\"); search(\"abc\");\n  console.log(\"immediately after rapid calls:\", calls); // 0 (still waiting)\n\n  await new Promise((r) => setTimeout(r, 50));\n  console.log(\"after wait:\", calls, \"lastArg:\", lastArg); // 1 'abc'\n\n  console.assert(calls === 1, \"debounced to a single call\");\n  console.assert(lastArg === \"abc\", \"uses the latest arguments\");\n  console.log(\"debouncing assertions passed.\");\n})();",
+      "expectedOutput": "immediately after rapid calls: 0\nafter wait: 1 lastArg: abc\ndebouncing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

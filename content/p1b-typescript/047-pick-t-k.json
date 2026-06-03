@@ -1,0 +1,64 @@
+{
+  "id": "p1b-047",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 47,
+  "orderInPhase": 47,
+  "slug": "pick-t-k",
+  "title": "Pick<T, K>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "pick"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A list view that only needs `Pick<User, \"id\" | \"name\" | \"avatar\">` keeps the component's props minimal and type-safe, automatically reflecting any change to…"
+  },
+  "sections": {
+    "simple_en": "`Pick<T, K>` constructs a new type by selecting only the properties named in `K` (a union of keys) from `T`. It's how you create a focused subset of a larger type — like a summary or a form's relevant fields.\n\n`K` must be keys of `T`, so the compiler rejects invalid names. Pick is the complement of `Omit` (which removes keys instead of selecting them) and keeps your subset types tied to the original so they update automatically.",
+    "hinglish": "`Pick<T, K>` ek naya type banata hai `T` se sirf `K` (keys ka union) me named properties select karke. Ye ek bade type ka focused subset banane ka tarika hai — jaise summary ya form ke relevant fields.\n`K` ko `T` ki keys honi chahiye, isliye compiler invalid names reject karta hai. Pick `Omit` ka complement hai (jo keys hatata hai select karne ke bajaye) aur aapke subset types ko original se juda rakhta hai taaki woh automatically update hon.",
+    "keyPoints": [
+      "Selects only the listed keys K from T.",
+      "K must be valid keys of T (invalid names error).",
+      "Creates focused subsets (summaries, partial views).",
+      "Complement of Omit (select vs remove).",
+      "Subset stays in sync with the source type."
+    ],
+    "real_world": "A list view that only needs `Pick<User, \"id\" | \"name\" | \"avatar\">` keeps the component's props minimal and type-safe, automatically reflecting any change to those fields in the base `User`.",
+    "followups": [
+      {
+        "q": "What does Pick<T, K> produce?",
+        "a": "A type containing only the properties of T named in the key union K — a focused subset. K must consist of valid keys of T."
+      },
+      {
+        "q": "How does Pick relate to Omit?",
+        "a": "They're complementary: `Pick` keeps the listed keys, `Omit` removes them. `Pick<T, K>` and `Omit<T, Exclude<keyof T, K>>` are equivalent."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Pick a subset of a type.\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n  password: string;\n}\n\nexport type UserCard = Pick<User, \"id\" | \"name\">;\n\nexport function toCard(user: User): UserCard {\n  return { id: user.id, name: user.name };\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { toCard } from \"./solution\";\n\nconst user = { id: 1, name: \"Asha\", email: \"a@x.com\", password: \"secret\" };\nconst card = toCard(user);\nconsole.log(card);                 // { id: 1, name: 'Asha' }\nconsole.log(\"email\" in card);      // false\n\nconsole.assert(card.id === 1 && card.name === \"Asha\", \"picked fields present\");\nconsole.assert(!(\"email\" in card), \"non-picked field absent\");\nconsole.log(\"Pick assertions passed.\");",
+      "expectedOutput": "{ id: 1, name: 'Asha' }\nfalse\nPick assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p3-031",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 31,
+  "orderInPhase": 31,
+  "slug": "cursor-vs-offset-pagination",
+  "title": "Cursor vs offset pagination",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "cursor",
+    "offset",
+    "pagination"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A social feed loads more posts as you scroll."
+  },
+  "sections": {
+    "simple_en": "Cursor (keyset) pagination fetches the next page by seeking past the last item seen, using a WHERE condition on an ordered, unique column (e.g., WHERE id > lastId ORDER BY id LIMIT n). Instead of skipping rows like OFFSET, it jumps directly to where the previous page ended.\n\nThis makes it efficient even for very deep pages and stable when data changes between requests — no duplicates or gaps. The trade-off is you can't jump to an arbitrary page number; you navigate forward (and back) via cursors. It's the standard for infinite-scroll feeds and large datasets.",
+    "hinglish": "Cursor (keyset) pagination agla page laata hai aakhri dekhe gaye item ke aage seek karke, ek ordered, unique column par WHERE condition se (jaise WHERE id > lastId ORDER BY id LIMIT n). OFFSET ki tarah rows skip karne ke bajaye ye seedha wahan jump karta hai jahan pichhla page khatam hua tha.\n\nIsse ye bahut deep pages par bhi efficient hai aur data badalne par stable — koi duplicates ya gaps nahi. Trade-off: aap kisi bhi page number par jump nahi kar sakte; cursors se aage (aur peechhe) navigate karte ho. Infinite-scroll feeds aur bade datasets ke liye standard hai.",
+    "keyPoints": [
+      "Seeks past the last seen key (WHERE id > cursor) instead of skipping rows.",
+      "Efficient for deep pages — no scan-and-discard like OFFSET.",
+      "Stable under inserts/deletes: no duplicates or gaps.",
+      "Trade-off: no arbitrary page jumps — forward/back via cursors.",
+      "Standard for infinite scroll and very large datasets."
+    ],
+    "real_world": "A social feed loads more posts as you scroll. Each request sends the last post's id as a cursor; the server returns the next batch with WHERE id < cursor. New posts at the top don't cause already-seen posts to repeat, unlike offset paging.",
+    "followups": [
+      {
+        "q": "When choose cursor over offset pagination?",
+        "a": "For large datasets, deep pages, infinite scroll, or frequently changing data — cursor paging stays fast and avoids duplicates/gaps. Offset is fine for small, page-numbered lists."
+      },
+      {
+        "q": "What column should the cursor be based on?",
+        "a": "An indexed, ordered, unique column (or a unique tuple like (created_at, id)). Uniqueness avoids skipping/repeating rows when values tie."
+      },
+      {
+        "q": "What's the main limitation of cursor pagination?",
+        "a": "You can't jump directly to an arbitrary page (e.g., page 50); navigation is relative to a cursor. UIs use 'load more'/next/previous rather than numbered pages."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + node-postgres code. The Node-runnable demo below compares offset scanning with cursor (keyset) seeking so the difference is verifiable here.",
+      "source": "// Cursor vs offset pagination — cursor (keyset) scales to deep pages.\nconst express = require(\"express\");\nconst { Pool } = require(\"pg\");\nconst app = express();\nconst pool = new Pool();\n\n// OFFSET: simple but slow for deep pages (DB scans & discards 'offset' rows)\n//   SELECT * FROM posts ORDER BY id LIMIT 20 OFFSET 10000;  -- scans 10020 rows\n\n// CURSOR (keyset): seek past the last id you saw — fast and stable under inserts.\napp.get(\"/posts\", async (req, res) => {\n  const limit = Math.min(100, Number(req.query.limit) || 20);\n  const cursor = req.query.cursor ? Number(req.query.cursor) : 0;\n\n  const { rows } = await pool.query(\n    \"SELECT * FROM posts WHERE id > $1 ORDER BY id ASC LIMIT $2\",\n    [cursor, limit]\n  );\n\n  const nextCursor = rows.length ? rows[rows.length - 1].id : null;\n  res.json({ data: rows, nextCursor });\n});\n\n// Client passes ?cursor=<nextCursor> to fetch the next page.\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Cursor vs offset pagination — offset re-scans; cursor seeks past last id\nconst rows = Array.from({ length: 20 }, (_, i) => ({ id: i + 1, name: \"row\" + (i + 1) }));\n\nlet offsetScanned = 0;\nfunction offsetPage(page, size){\n  const offset = (page - 1) * size;\n  offsetScanned += offset + size; // DB must scan & skip 'offset' rows each time\n  return rows.slice(offset, offset + size).map(r => r.id);\n}\nfunction cursorPage(afterId, size){\n  // WHERE id > afterId ORDER BY id LIMIT size  -> seeks directly, no skipping\n  const start = rows.findIndex(r => r.id > afterId);\n  const slice = rows.slice(start, start + size);\n  return { ids: slice.map(r => r.id), nextCursor: slice.length ? slice[slice.length - 1].id : null };\n}\nconsole.log(\"Offset page 1:\", offsetPage(1, 5));\nconsole.log(\"Offset page 4:\", offsetPage(4, 5), \"(rows scanned so far:\", offsetScanned + \")\");\nlet c = cursorPage(0, 5); console.log(\"Cursor page 1:\", c.ids, \"next>\", c.nextCursor);\nc = cursorPage(c.nextCursor, 5); console.log(\"Cursor page 2:\", c.ids, \"next>\", c.nextCursor);\nconsole.assert(c.ids[0] === 6, \"cursor seeks to id>5 without offset scanning\");\nconsole.log(\"Cursor is stable under inserts and efficient for deep pages.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Offset page 1: [ 1, 2, 3, 4, 5 ]\nOffset page 4: [ 16, 17, 18, 19, 20 ] (rows scanned so far: 25)\nCursor page 1: [ 1, 2, 3, 4, 5 ] next> 5\nCursor page 2: [ 6, 7, 8, 9, 10 ] next> 10\nCursor is stable under inserts and efficient for deep pages.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

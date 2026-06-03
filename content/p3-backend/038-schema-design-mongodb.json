@@ -1,0 +1,70 @@
+{
+  "id": "p3-038",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 38,
+  "orderInPhase": 38,
+  "slug": "schema-design-mongodb",
+  "title": "Schema design (MongoDB)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "schema",
+    "design",
+    "mongodb"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "A user schema marks name and email as required, lowercases email, restricts role to an enum of user/admin with a default, and embeds a small address object."
+  },
+  "sections": {
+    "simple_en": "Even though MongoDB doesn't enforce a schema, well-designed applications define one at the application layer (typically with Mongoose) for validation, defaults, and consistency. Good document design is driven by access patterns: shape documents around how the app reads data, not just how it's normalized.\n\nKey decisions include which fields are required, their types and constraints (enums, min/max), whether to embed or reference related data, and keeping documents within the 16MB limit. Indexes are added for the fields you query. The goal is documents that are read efficiently in the queries you actually run.",
+    "hinglish": "Halaanki MongoDB schema enforce nahi karta, achhe applications application layer par ek schema define karte hain (aksar Mongoose se) validation, defaults aur consistency ke liye. Achha document design access patterns se chalta hai: documents ko app kaise data padhti hai uske hisaab se shape do, sirf normalization se nahi.\n\nKey decisions: kaun se fields required hain, unke types aur constraints (enums, min/max), related data embed karein ya reference, aur documents ko 16MB limit ke andar rakhna. Jin fields par query karte ho unpar indexes add karo. Goal hai aise documents jo aapki actual queries mein efficiently read hon.",
+    "keyPoints": [
+      "Define an app-level schema (Mongoose) for validation, types, defaults.",
+      "Design around access patterns — how the app reads, not pure normalization.",
+      "Constraints: required, enum, min/max, lowercase/trim, defaults.",
+      "Decide embed vs reference per relationship; respect the 16MB doc limit.",
+      "Index the fields you query; add timestamps where useful."
+    ],
+    "real_world": "A user schema marks name and email as required, lowercases email, restricts role to an enum of user/admin with a default, and embeds a small address object. The app gets validated, predictable documents even though the database itself is schema-flexible.",
+    "followups": [
+      {
+        "q": "If MongoDB is schemaless, why use Mongoose schemas?",
+        "a": "To enforce structure, types, required fields, and defaults at the application layer — preventing inconsistent or invalid documents and making the data predictable for code."
+      },
+      {
+        "q": "What drives MongoDB schema design?",
+        "a": "Access patterns. You model documents to make the queries your app runs efficient — often embedding data that's read together — rather than normalizing as you would in SQL."
+      },
+      {
+        "q": "What's the document size limit?",
+        "a": "16MB per document. Designs that would grow a document unboundedly (e.g., an ever-growing array) should reference data in another collection instead of embedding it."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Mongoose schema code (Node + mongoose). The Node-runnable demo below verifies schema validation (required/type/enum/default) so the behavior is verifiable here.",
+      "source": "// Schema design (MongoDB) — model with Mongoose for structure + validation.\nconst mongoose = require(\"mongoose\");\n\nconst userSchema = new mongoose.Schema({\n  name: { type: String, required: true, trim: true },\n  email: { type: String, required: true, unique: true, lowercase: true },\n  age: { type: Number, min: 0, max: 120 },\n  role: { type: String, enum: [\"user\", \"admin\"], default: \"user\" },\n  // Embed small, bounded sub-documents that are read with the parent:\n  address: {\n    city: String,\n    country: { type: String, default: \"IN\" },\n  },\n}, { timestamps: true }); // adds createdAt / updatedAt automatically\n\n// Design choices: embed data read together; reference large/shared data;\n// add indexes for fields you query; keep documents under the 16MB limit.\nuserSchema.index({ email: 1 });\n\nmodule.exports = mongoose.model(\"User\", userSchema);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Schema design (Mongoose-style) — define a schema and validate documents\nfunction defineSchema(fields){\n  return {\n    validate(doc){\n      const errors = [];\n      for (const name in fields){\n        const def = fields[name], val = doc[name];\n        if (def.required && (val === undefined || val === null)) { errors.push(`${name} is required`); continue; }\n        if (val !== undefined && def.type && typeof val !== def.type) errors.push(`${name} must be ${def.type}`);\n        if (def.enum && val !== undefined && !def.enum.includes(val)) errors.push(`${name} must be one of ${def.enum}`);\n        if (val === undefined && \"default\" in def) doc[name] = def.default;\n      }\n      return { valid: errors.length === 0, errors, doc };\n    },\n  };\n}\nconst userSchema = defineSchema({\n  name:  { type: \"string\", required: true },\n  email: { type: \"string\", required: true },\n  role:  { type: \"string\", enum: [\"user\", \"admin\"], default: \"user\" },\n});\nconsole.log(\"Valid:  \", JSON.stringify(userSchema.validate({ name: \"Asha\", email: \"a@x.com\" })));\nconsole.log(\"Invalid:\", JSON.stringify(userSchema.validate({ name: \"Ravi\", role: \"ghost\" })));\nconst r = userSchema.validate({ name: \"Asha\", email: \"a@x.com\" });\nconsole.assert(r.valid && r.doc.role === \"user\", \"default applied; valid doc\");\nconsole.log(\"Even schemaless DBs benefit from app-level schemas (Mongoose).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Valid:   {\"valid\":true,\"errors\":[],\"doc\":{\"name\":\"Asha\",\"email\":\"a@x.com\",\"role\":\"user\"}}\nInvalid: {\"valid\":false,\"errors\":[\"email is required\",\"role must be one of user,admin\"],\"doc\":{\"name\":\"Ravi\",\"role\":\"ghost\"}}\nEven schemaless DBs benefit from app-level schemas (Mongoose).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1a-049",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 49,
+  "orderInPhase": 49,
+  "slug": "rest-operator",
+  "title": "Rest Operator",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "rest",
+    "operator"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `sum(...nums)` utility that accepts any number of arguments, or pulling the first row off a dataset: `const [header, ...rows] = csvLines` cleanly separates…"
+  },
+  "sections": {
+    "simple_en": "The rest operator `...` collects multiple elements into a single array or object. As a function parameter (`function f(...args)`), it gathers all remaining arguments into a real array. In destructuring, it captures the 'rest' of the items not explicitly named.\n\nIt's the modern replacement for the old `arguments` object — and unlike `arguments`, it produces a genuine array (so you can use map/filter directly) and works in arrow functions. Rest parameters must come last.",
+    "hinglish": "Rest operator `...` kai elements ko ek single array ya object me collect karta hai. Function parameter ki tarah (`function f(...args)`), ye baaki saare arguments ko ek real array me ikattha karta hai. Destructuring me ye un items ka 'rest' capture karta hai jinhe explicitly name nahi kiya.\nYe purane `arguments` object ka modern replacement hai — aur `arguments` ke विपरीत ye ek asli array deta hai (isliye map/filter seedhe use kar sakte ho) aur arrow functions me bhi chalta hai. Rest parameter hamesha last me hona chahiye.",
+    "keyPoints": [
+      "Collects remaining elements into a real array/object.",
+      "As a parameter: `function f(a, ...rest)` — `rest` is a true array.",
+      "In destructuring: `const [first, ...others] = arr` / `const {a, ...others} = obj`.",
+      "Modern, array-returning replacement for the `arguments` object (works in arrows).",
+      "Must be the LAST parameter / destructuring target."
+    ],
+    "real_world": "A `sum(...nums)` utility that accepts any number of arguments, or pulling the first row off a dataset: `const [header, ...rows] = csvLines` cleanly separates the header from the data.",
+    "followups": [
+      {
+        "q": "How is the rest parameter better than `arguments`?",
+        "a": "It's a real array (so array methods work directly), it only captures the parameters you intend, it works in arrow functions, and it reads more clearly."
+      },
+      {
+        "q": "Where must a rest element appear?",
+        "a": "Always last — `function f(a, ...rest)` and `const [x, ...rest] = arr`. You can't have parameters or destructuring targets after a rest element."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Rest in parameters and destructuring.\n\nfunction sum(...nums) {                 // gathers all args into an array\n  return nums.reduce((a, b) => a + b, 0);\n}\n\nfunction splitFirst(arr) {\n  const [first, ...rest] = arr;          // rest = everything after first\n  return { first, rest };\n}\n\nfunction omitId(obj) {\n  const { id, ...withoutId } = obj;      // collect remaining own props\n  return withoutId;\n}\n\nmodule.exports = { sum, splitFirst, omitId };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { sum, splitFirst, omitId } = require(\"./solution\");\n\nconsole.log(sum(1, 2, 3, 4));            // 10\nconsole.log(splitFirst([10, 20, 30]));   // { first: 10, rest: [20,30] }\nconsole.log(omitId({ id: 1, name: \"Asha\", age: 30 })); // { name:'Asha', age:30 }\n\nconsole.assert(sum(1, 2, 3, 4) === 10, \"rest params sum\");\nconst s = splitFirst([10, 20, 30]);\nconsole.assert(s.first === 10 && JSON.stringify(s.rest) === \"[20,30]\", \"rest in array destructuring\");\nconsole.assert(JSON.stringify(omitId({ id: 1, name: \"Asha\" })) === '{\"name\":\"Asha\"}', \"rest in object destructuring\");\nconsole.log(\"rest assertions passed.\");",
+      "expectedOutput": "10\n{ first: 10, rest: [ 20, 30 ] }\n{ name: 'Asha', age: 30 }\nrest assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "id": "p1b-077",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 77,
+  "orderInPhase": 77,
+  "slug": "reusable-typed-components",
+  "title": "Reusable Typed Components",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "reusable",
+    "typed",
+    "components"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A generic `<List items={users} renderItem={u => u.name} />` works for any array — users, orders, products — and the `renderItem` callback always receives the…"
+  },
+  "sections": {
+    "simple_en": "Reusable components often need to be generic so they work with any data type while staying type-safe. A generic component takes a type parameter (e.g. the item type of a list) and threads it through its props — like a `List<T>` whose `renderItem` receives a correctly-typed `T`.\n\nCombine generics with well-typed props, sensible defaults, and `children` typing to build a flexible, type-safe component library. The payoff is components that adapt to any data while giving consumers full autocomplete and compile-time checks.",
+    "hinglish": "Reusable components ko aksar generic hona padta hai taaki woh kisi bhi data type ke saath kaam karein jabki type-safe rahein. Ek generic component ek type parameter leta hai (jaise list ka item type) aur use apne props me thread karta hai — jaise ek `List<T>` jiska `renderItem` ek correctly-typed `T` receive kare.\nGenerics ko well-typed props, sensible defaults, aur `children` typing ke saath mila kar ek flexible, type-safe component library banao. Faayda: aise components jo kisi bhi data par adapt karein jabki consumers ko full autocomplete aur compile-time checks dein.",
+    "keyPoints": [
+      "Make components generic to work with any item/data type.",
+      "Thread the type parameter through props (e.g. `renderItem: (item: T) => ...`).",
+      "Consumers get correctly-typed callbacks and props.",
+      "Combine with default props and `children` typing.",
+      "Enables a flexible, type-safe component library."
+    ],
+    "real_world": "A generic `<List items={users} renderItem={u => u.name} />` works for any array — users, orders, products — and the `renderItem` callback always receives the correct element type, with full autocomplete.",
+    "followups": [
+      {
+        "q": "Why make a component generic?",
+        "a": "So one reusable component works with any data type while staying type-safe — the type parameter flows into props/callbacks (like `renderItem: (item: T) => ...`), giving consumers correctly-typed access."
+      },
+      {
+        "q": "How do consumers benefit from a generic component?",
+        "a": "They get full autocomplete and compile-time checks for the specific data they pass — e.g. `renderItem` receives the exact element type of the `items` array they provided."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// React usage (generic component in a .tsx file):\n//\n//   interface ListProps<T> {\n//     items: T[];\n//     renderItem: (item: T, index: number) => React.ReactNode;\n//   }\n//   function List<T>({ items, renderItem }: ListProps<T>) {\n//     return <ul>{items.map((it, i) => <li key={i}>{renderItem(it, i)}</li>)}</ul>;\n//   }\n//\n// Runnable stand-in: the same generic logic returning strings instead of JSX.\n\nexport interface ListProps<T> {\n  items: T[];\n  renderItem: (item: T, index: number) => string;\n}\n\nexport function renderList<T>({ items, renderItem }: ListProps<T>): string[] {\n  return items.map((item, i) => renderItem(item, i));\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { renderList } from \"./solution\";\n\nconst users = [{ name: \"Asha\" }, { name: \"Ravi\" }];\nconsole.log(renderList({ items: users, renderItem: (u) => u.name })); // ['Asha','Ravi']\nconsole.log(renderList({ items: [1, 2, 3], renderItem: (n, i) => i + \":\" + n })); // ['0:1','1:2','2:3']\n\nconsole.assert(JSON.stringify(renderList({ items: users, renderItem: (u) => u.name })) === '[\"Asha\",\"Ravi\"]', \"generic component over objects\");\nconsole.assert(JSON.stringify(renderList({ items: [1, 2], renderItem: (n) => String(n * 10) })) === '[\"10\",\"20\"]', \"generic component over numbers\");\nconsole.log(\"reusable-typed-components assertions passed.\");",
+      "expectedOutput": "[ 'Asha', 'Ravi' ]\n[ '0:1', '1:2', '2:3' ]\nreusable-typed-components assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

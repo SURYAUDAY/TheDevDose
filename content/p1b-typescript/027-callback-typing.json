@@ -1,0 +1,65 @@
+{
+  "id": "p1b-027",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 27,
+  "orderInPhase": 27,
+  "slug": "callback-typing",
+  "title": "Callback Typing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "callback",
+    "typing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Typing a custom `eachUser(users, callback)` so `callback` is `(user: User, index: number) => void` means the editor autocompletes `user.name` inside the call…"
+  },
+  "sections": {
+    "simple_en": "Typing callbacks means giving a precise function type to a parameter that is itself a function. This makes higher-order functions safe: the compiler checks that the callback you pass has the right parameters and return type, and it infers parameter types for inline arrow functions.\n\nA callback type is written like any function type — `(item: T, index: number) => boolean`. Generic callbacks (e.g. for a generic `map`) let the parameter and return types flow through, giving fully type-safe utilities.",
+    "hinglish": "Callbacks ko type karne ka matlab ek aise parameter ko precise function type dena jo khud ek function hai. Isse higher-order functions safe ho jaate hain: compiler check karta hai ki aapne jo callback pass kiya uske parameters aur return type sahi hain, aur inline arrow functions ke parameter types infer karta hai.\nCallback type kisi bhi function type ki tarah likha jaata hai — `(item: T, index: number) => boolean`. Generic callbacks (jaise generic `map` ke liye) parameter aur return types ko flow karne dete hain, jisse fully type-safe utilities milti hain.",
+    "keyPoints": [
+      "A callback parameter gets a function type: `(args) => ReturnType`.",
+      "The compiler validates the callback's signature at the call site.",
+      "Inline arrow callbacks get their parameter types inferred.",
+      "Generic callbacks let types flow through HOFs.",
+      "Prevents passing a callback with the wrong shape."
+    ],
+    "real_world": "Typing a custom `eachUser(users, callback)` so `callback` is `(user: User, index: number) => void` means the editor autocompletes `user.name` inside the callback and rejects a callback expecting the wrong argument type.",
+    "followups": [
+      {
+        "q": "How do you type a callback parameter?",
+        "a": "Give it a function type, e.g. `predicate: (n: number, i: number) => boolean`. The compiler then validates any callback passed and infers types for inline arrows."
+      },
+      {
+        "q": "Why use generics for callbacks?",
+        "a": "So the input and output types flow through the higher-order function, keeping it fully type-safe and reusable across element types (like a generic `map<T, U>`)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — typed callbacks, including a generic one.\n\nexport function filterNumbers(\n  nums: number[],\n  predicate: (n: number, index: number) => boolean\n): number[] {\n  return nums.filter(predicate);\n}\n\n// Generic callback: types flow through\nexport function mapItems<T, U>(items: T[], fn: (item: T) => U): U[] {\n  return items.map(fn);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { filterNumbers, mapItems } from \"./solution\";\n\nconsole.log(filterNumbers([1, 2, 3, 4], (n) => n % 2 === 0)); // [2,4]\nconsole.log(mapItems([\"a\", \"bb\"], (s) => s.length));          // [1,2]\n\nconsole.assert(JSON.stringify(filterNumbers([1,2,3,4], (n) => n > 2)) === \"[3,4]\", \"typed predicate\");\nconsole.assert(JSON.stringify(mapItems([\"a\",\"bb\"], (s) => s.length)) === \"[1,2]\", \"generic callback\");\nconsole.log(\"callback-typing assertions passed.\");",
+      "expectedOutput": "[ 2, 4 ]\n[ 1, 2 ]\ncallback-typing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

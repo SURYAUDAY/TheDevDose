@@ -1,0 +1,68 @@
+{
+  "id": "p3-018",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 18,
+  "orderInPhase": 18,
+  "slug": "what-is-sql",
+  "title": "What is SQL",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "sql"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "To list the ten newest active users in Pune, you write one SELECT ..."
+  },
+  "sections": {
+    "simple_en": "SQL (Structured Query Language) is the standard language for working with relational databases, which store data in tables of rows and columns with defined relationships. SQL is declarative — you describe what data you want, and the database engine figures out how to retrieve it efficiently.\n\nIt spans several sub-languages: DDL (CREATE/ALTER/DROP) defines structure, DML (SELECT/INSERT/UPDATE/DELETE) manipulates data, and DCL/TCL handle permissions and transactions. Relational databases enforce structure and integrity via schemas, types, and constraints.",
+    "hinglish": "SQL (Structured Query Language) relational databases ke saath kaam karne ki standard language hai, jo data ko rows aur columns ki tables mein defined relationships ke saath store karti hain. SQL declarative hai — aap batate ho kya data chahiye, aur database engine decide karta hai efficiently kaise laaye.\n\nIske kai sub-languages hain: DDL (CREATE/ALTER/DROP) structure define karta hai, DML (SELECT/INSERT/UPDATE/DELETE) data manipulate karta hai, aur DCL/TCL permissions aur transactions handle karte hain. Relational DBs schemas, types aur constraints se structure aur integrity enforce karti hain.",
+    "keyPoints": [
+      "Standard language for relational databases (tables of rows/columns).",
+      "Declarative: state WHAT you want; the engine plans HOW to get it.",
+      "DDL defines structure; DML reads/writes data; TCL manages transactions.",
+      "Schemas, types, and constraints enforce data integrity.",
+      "Core clauses: SELECT, FROM, WHERE, JOIN, GROUP BY, ORDER BY, LIMIT."
+    ],
+    "real_world": "To list the ten newest active users in Pune, you write one SELECT ... WHERE ... ORDER BY ... LIMIT statement. You don't tell the database how to scan or sort — it uses indexes and a query planner to do that efficiently.",
+    "followups": [
+      {
+        "q": "What does it mean that SQL is 'declarative'?",
+        "a": "You specify the desired result, not the algorithm. The database's query planner decides the execution strategy (indexes, join order) to fetch it efficiently."
+      },
+      {
+        "q": "What's the difference between DDL and DML?",
+        "a": "DDL (CREATE, ALTER, DROP) defines or changes database structure; DML (SELECT, INSERT, UPDATE, DELETE) reads and modifies the data within that structure."
+      },
+      {
+        "q": "What makes a database 'relational'?",
+        "a": "Data is organized into tables with rows and columns, related via keys, with a schema and constraints enforcing types and integrity — and queried with SQL."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real SQL via node-postgres (runs against PostgreSQL). The Node-runnable demo below simulates a SELECT/WHERE engine so the output is verifiable here.",
+      "source": "// What is SQL — declarative queries over relational tables (node-postgres).\nconst { Pool } = require(\"pg\");\nconst pool = new Pool();\n\nasync function demo() {\n  // DDL: define structure\n  await pool.query(`\n    CREATE TABLE IF NOT EXISTS users (\n      id    SERIAL PRIMARY KEY,\n      name  TEXT NOT NULL,\n      age   INT,\n      city  TEXT\n    )\n  `);\n\n  // DML: manipulate data\n  await pool.query(\"INSERT INTO users(name, age, city) VALUES($1, $2, $3)\", [\"Asha\", 25, \"Pune\"]);\n\n  // Query: declare WHAT you want; the DB engine decides HOW to get it.\n  const { rows } = await pool.query(\n    \"SELECT name, age FROM users WHERE city = $1 ORDER BY age DESC LIMIT 10\",\n    [\"Pune\"]\n  );\n  console.log(rows);\n}\n\ndemo();",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// What is SQL — a tiny SELECT ... WHERE engine over in-memory rows\nconst users = [\n  { id: 1, name: \"Asha\", age: 25, city: \"Pune\" },\n  { id: 2, name: \"Ravi\", age: 30, city: \"Delhi\" },\n  { id: 3, name: \"Mira\", age: 22, city: \"Pune\" },\n];\nfunction select(rows, { columns = [\"*\"], where = () => true, orderBy } = {}){\n  let result = rows.filter(where);\n  if (orderBy) result = [...result].sort((a, b) => a[orderBy] - b[orderBy]);\n  if (columns[0] !== \"*\") result = result.map(r => Object.fromEntries(columns.map(c => [c, r[c]])));\n  return result;\n}\n// SELECT name, age FROM users WHERE city='Pune' ORDER BY age\nconst q = select(users, { columns: [\"name\", \"age\"], where: (u) => u.city === \"Pune\", orderBy: \"age\" });\nconsole.log(\"Result:\", JSON.stringify(q));\nconsole.assert(q.length === 2 && q[0].name === \"Mira\", \"filtered + ordered correctly\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Result: [{\"name\":\"Mira\",\"age\":22},{\"name\":\"Asha\",\"age\":25}]\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

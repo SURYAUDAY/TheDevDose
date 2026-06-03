@@ -1,0 +1,69 @@
+{
+  "id": "p3-041",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 41,
+  "orderInPhase": 41,
+  "slug": "mongodb-indexing",
+  "title": "MongoDB indexing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "mongodb",
+    "indexing"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A users collection queried constantly by email gets a unique index on email."
+  },
+  "sections": {
+    "simple_en": "Like relational databases, MongoDB uses indexes to make queries fast. Without an index, a query does a collection scan (COLLSCAN), examining every document; with one, it uses an index scan (IXSCAN) to jump to matches. You create indexes on the fields you filter, sort, or join on.\n\nMongoDB supports single-field, compound, unique, text (for search), and geospatial (2dsphere) indexes. Compound indexes follow a prefix rule like SQL. Use explain('executionStats') to confirm a query uses an index. As always, indexes speed reads but add write and storage cost — index deliberately.",
+    "hinglish": "Relational databases ki tarah, MongoDB queries ko fast karne ke liye indexes use karta hai. Index ke bina query collection scan (COLLSCAN) karti hai, har document dekhti hai; index ke saath ye index scan (IXSCAN) se matches par jump karti hai. Aap un fields par indexes banate ho jinpar filter, sort ya join karte ho.\n\nMongoDB single-field, compound, unique, text (search ke liye), aur geospatial (2dsphere) indexes support karta hai. Compound indexes SQL jaisa prefix rule follow karte hain. explain('executionStats') se confirm karo query index use kar rahi hai. Hamesha ki tarah, indexes reads tez karte hain par write aur storage cost badhate hain — soch-samajh kar index karo.",
+    "keyPoints": [
+      "No index -> collection scan (COLLSCAN); index -> index scan (IXSCAN).",
+      "Index fields used in filters, sorts, and joins.",
+      "Types: single-field, compound, unique, text, geospatial (2dsphere).",
+      "Compound indexes follow the prefix rule (column order matters).",
+      "Verify with explain(); indexes cost writes and storage — index deliberately."
+    ],
+    "real_world": "A users collection queried constantly by email gets a unique index on email. Lookups become near-instant index scans instead of scanning the whole collection, and the unique flag also enforces no duplicate emails.",
+    "followups": [
+      {
+        "q": "How do you confirm a MongoDB query uses an index?",
+        "a": "Run the query with .explain('executionStats') and check the plan for IXSCAN (index scan) rather than COLLSCAN (collection scan)."
+      },
+      {
+        "q": "What is a compound index's prefix rule?",
+        "a": "A compound index on (a, b) supports queries on a, or a+b, but not on b alone — queries must use the leftmost field(s) for the index to apply."
+      },
+      {
+        "q": "What special index types does MongoDB offer?",
+        "a": "Beyond single-field and compound: unique (enforce uniqueness), text (full-text search), and geospatial (2dsphere) for location queries, among others."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real MongoDB index code (runs against MongoDB). The Node-runnable demo below compares an indexed lookup with a collection scan so the difference is verifiable here.",
+      "source": "// MongoDB indexing — create indexes to speed up queries.\nconst { MongoClient } = require(\"mongodb\");\nconst client = new MongoClient(process.env.MONGO_URL);\n\nasync function setupIndexes() {\n  await client.connect();\n  const users = client.db(\"app\").collection(\"users\");\n\n  await users.createIndex({ email: 1 }, { unique: true });  // unique single-field\n  await users.createIndex({ city: 1, age: -1 });            // compound index\n  await users.createIndex({ bio: \"text\" });                 // text search index\n  await users.createIndex({ location: \"2dsphere\" });        // geospatial index\n\n  // Confirm a query uses an index (look for IXSCAN, not COLLSCAN):\n  const plan = await users.find({ email: \"a@x.com\" }).explain(\"executionStats\");\n  return plan.queryPlanner.winningPlan;\n}\n// Index the fields you filter/sort on. Compound index order matters\n// (prefix rule). Too many indexes slow writes and use storage.\nmodule.exports = { setupIndexes };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// MongoDB indexing — index a field for fast equality lookups vs collection scan\nconst docs = Array.from({ length: 500 }, (_, i) => ({ _id: i + 1, email: `u${i + 1}@x.com`, age: (i % 60) + 1 }));\n\nlet scanned = 0;\nfunction collectionScan(email){ return docs.find(d => { scanned++; return d.email === email; }); }\n\n// createIndex({ email: 1 })  -> a lookup structure email -> doc\nconst index = new Map(docs.map(d => [d.email, d]));\nfunction indexedLookup(email){ return index.get(email); }\n\nconsole.log(\"Scan found:\", collectionScan(\"u500@x.com\")._id, \"after scanning\", scanned, \"docs\");\nconsole.log(\"Index found:\", indexedLookup(\"u500@x.com\")._id, \"in O(1)\");\nconsole.assert(scanned === 500, \"scan examined the whole collection\");\nconsole.log(\"Indexes speed reads but add write overhead and storage \\u2014 index what you query.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Scan found: 500 after scanning 500 docs\nIndex found: 500 in O(1)\nIndexes speed reads but add write overhead and storage — index what you query.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

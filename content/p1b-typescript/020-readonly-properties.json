@@ -1,0 +1,65 @@
+{
+  "id": "p1b-020",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 20,
+  "orderInPhase": 20,
+  "slug": "readonly-properties",
+  "title": "Readonly Properties",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "readonly",
+    "properties"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "An entity's `readonly id: number` guarantees no code accidentally reassigns the primary key after the object is created — the compiler rejects `obj.id = 5`,…"
+  },
+  "sections": {
+    "simple_en": "Marking a property `readonly` means it can be set once (at creation) but not reassigned afterward. The compiler flags any attempt to write to it. This enforces immutability of specific fields at compile time.\n\nIt's purely a compile-time guarantee (erased at runtime), useful for ids, configuration, and values that should never change after construction. There's also `ReadonlyArray<T>` (and `readonly T[]`) for arrays whose elements can't be mutated, plus the `Readonly<T>` utility type to make all properties readonly.",
+    "hinglish": "Property ko `readonly` mark karne ka matlab use ek baar (creation par) set kar sakte ho par baad me reassign nahi. Compiler usme likhne ki koi koshish flag karta hai. Ye specific fields ki immutability compile time par enforce karta hai.\nYe sirf compile-time guarantee hai (runtime par erase), ids, configuration, aur un values ke liye useful jo construction ke baad kabhi nahi badalni chahiye. `ReadonlyArray<T>` (aur `readonly T[]`) bhi hai un arrays ke liye jinke elements mutate na ho, aur `Readonly<T>` utility type sab properties ko readonly banane ke liye.",
+    "keyPoints": [
+      "`readonly prop` can be set at creation but not reassigned later.",
+      "Compile-time enforcement only (erased at runtime).",
+      "Great for ids, config, and construction-time values.",
+      "`readonly T[]` / `ReadonlyArray<T>` prevent array mutation.",
+      "`Readonly<T>` makes every property of T readonly."
+    ],
+    "real_world": "An entity's `readonly id: number` guarantees no code accidentally reassigns the primary key after the object is created — the compiler rejects `obj.id = 5`, catching a dangerous mutation at build time.",
+    "followups": [
+      {
+        "q": "Is readonly enforced at runtime?",
+        "a": "No. It's a compile-time check only; like all TypeScript types it's erased in the emitted JS. For runtime immutability you'd use `Object.freeze`."
+      },
+      {
+        "q": "How do you make an array's elements immutable in the type system?",
+        "a": "Use `readonly T[]` or `ReadonlyArray<T>`. Mutating methods like `push`/`splice` then become compile errors, and elements can't be reassigned."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — readonly properties and arrays.\n\ninterface Account {\n  readonly id: number;\n  balance: number;\n}\n\nexport function deposit(acc: Account, amount: number): Account {\n  // acc.id = 99; // compile error: id is readonly\n  return { ...acc, balance: acc.balance + amount };\n}\n\nexport function sumReadonly(nums: readonly number[]): number {\n  // nums.push(1); // compile error: cannot mutate a readonly array\n  return nums.reduce((a, b) => a + b, 0);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { deposit, sumReadonly } from \"./solution\";\n\nconst acc = { id: 1, balance: 100 };\nconst updated = deposit(acc, 50);\nconsole.log(updated);                 // { id:1, balance:150 }\nconsole.log(sumReadonly([1, 2, 3]));  // 6\n\nconsole.assert(updated.balance === 150, \"deposit updates balance immutably\");\nconsole.assert(updated.id === 1, \"id preserved\");\nconsole.assert(acc.balance === 100, \"original unchanged\");\nconsole.assert(sumReadonly([1, 2, 3]) === 6, \"readonly array summed\");\nconsole.log(\"readonly-properties assertions passed.\");",
+      "expectedOutput": "{ id: 1, balance: 150 }\n6\nreadonly-properties assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

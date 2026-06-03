@@ -1,0 +1,69 @@
+{
+  "id": "p3-090",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 90,
+  "orderInPhase": 90,
+  "slug": "nginx-basics",
+  "title": "Nginx basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "nginx",
+    "basics"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A production setup puts Nginx in front of three Node instances: it terminates HTTPS, serves /static/ assets directly with long cache headers, and round-robin…"
+  },
+  "sections": {
+    "simple_en": "Nginx is a high-performance web server commonly placed in front of application servers. Its core roles: reverse proxy (forward client requests to backend apps), load balancer (distribute traffic across multiple app instances, e.g., round-robin), static file server (serve assets directly and fast), and TLS terminator (handle HTTPS so the app doesn't have to).\n\nIt also handles gzip compression, caching, rate limiting, and redirects (like HTTP→HTTPS). By sitting at the edge, Nginx offloads work from your Node app, shields it from direct traffic, and lets you scale horizontally behind one stable endpoint. It's configured declaratively in nginx.conf with server and location blocks.",
+    "hinglish": "Nginx ek high-performance web server hai jo aksar application servers ke saamne rakha jaata hai. Iske core roles: reverse proxy (client requests ko backend apps tak forward karna), load balancer (traffic ko kai app instances ke across distribute karna, jaise round-robin), static file server (assets seedha aur fast serve karna), aur TLS terminator (HTTPS handle karna taaki app ko na karna pade).\n\nYe gzip compression, caching, rate limiting, aur redirects (jaise HTTP→HTTPS) bhi handle karta hai. Edge par baith kar, Nginx aapke Node app se kaam offload karta hai, use direct traffic se shield karta hai, aur aapko ek stable endpoint ke peechhe horizontally scale karne deta hai. Ye nginx.conf mein declaratively configure hota hai server aur location blocks ke saath.",
+    "keyPoints": [
+      "Reverse proxy: forwards client requests to backend app servers.",
+      "Load balancer: distributes traffic across instances (e.g., round-robin).",
+      "Static file server and TLS terminator (offloads HTTPS).",
+      "Also does gzip, caching, rate limiting, and redirects.",
+      "Sits at the edge: shields the app, enables horizontal scaling."
+    ],
+    "real_world": "A production setup puts Nginx in front of three Node instances: it terminates HTTPS, serves /static/ assets directly with long cache headers, and round-robins API requests across the app servers. Clients hit one domain; Nginx handles TLS, balancing, and protects the apps from direct exposure.",
+    "followups": [
+      {
+        "q": "What does 'reverse proxy' mean?",
+        "a": "Nginx receives client requests and forwards them to one of your backend servers, returning the response. Clients talk only to Nginx, which hides and protects the app servers behind it."
+      },
+      {
+        "q": "Why terminate TLS at Nginx?",
+        "a": "It centralizes certificate management and offloads the CPU cost of encryption from your app servers, which then receive plain HTTP internally — simplifying the app and improving performance."
+      },
+      {
+        "q": "How does Nginx load-balance?",
+        "a": "You define an upstream group of backend servers; Nginx distributes requests across them (round-robin by default, with options like least-connections or IP-hash) for horizontal scaling and resilience."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "A real nginx.conf (configuration, not Node application code). The Node-runnable demo below simulates reverse-proxying and round-robin load balancing so the behavior is verifiable here.",
+      "source": "// Nginx basics — reverse proxy, load balancer, static server, TLS terminator.\n// File: nginx.conf\nconst nginxConf = `\n# Load-balance across app instances.\nupstream app_servers {\n  server app1:3000;\n  server app2:3000;\n  server app3:3000;          # round-robin by default\n}\n\nserver {\n  listen 80;\n  server_name example.com;\n  return 301 https://$host$request_uri;   # redirect HTTP -> HTTPS\n}\n\nserver {\n  listen 443 ssl;\n  server_name example.com;\n  ssl_certificate     /etc/ssl/certs/example.crt;   # TLS termination\n  ssl_certificate_key /etc/ssl/private/example.key;\n\n  # Serve static assets directly (fast, cached).\n  location /static/ {\n    root /var/www;\n    expires 30d;\n  }\n\n  # Proxy everything else to the Node app.\n  location / {\n    proxy_pass http://app_servers;\n    proxy_set_header Host $host;\n    proxy_set_header X-Forwarded-For $remote_addr;\n  }\n}\n`;\n// Nginx sits in front of your app: it offloads TLS, balances load, serves\n// static files, compresses, caches, and shields the app from direct traffic.\nmodule.exports = nginxConf;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Nginx basics — reverse proxy + round-robin load balancing across upstreams\nfunction createNginx(upstreams){\n  let i = 0;\n  return {\n    proxy(req){\n      if (req.path.startsWith(\"/static/\")) return { servedBy: \"nginx\", type: \"static file\" };\n      const target = upstreams[i % upstreams.length];     // round-robin\n      i++;\n      return { servedBy: target, type: \"proxied to app\" };\n    },\n  };\n}\nconst nginx = createNginx([\"app-1:3000\", \"app-2:3000\", \"app-3:3000\"]);\nconsole.log(\"Static asset:\", JSON.stringify(nginx.proxy({ path: \"/static/logo.png\" })));\nfor (let n = 1; n <= 4; n++) console.log(`API req ${n} ->`, nginx.proxy({ path: \"/api/users\" }).servedBy);\nconst counts = {};\nfor (let n = 0; n < 6; n++){ const s = nginx.proxy({ path: \"/api/x\" }).servedBy; counts[s] = (counts[s] || 0) + 1; }\nconsole.log(\"Distribution over 6 reqs:\", JSON.stringify(counts));\nconsole.assert(Object.keys(counts).length === 3, \"load spread across all upstreams\");\nconsole.log(\"Nginx roles: reverse proxy, load balancer, static file server, TLS termination, gzip, caching.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Static asset: {\"servedBy\":\"nginx\",\"type\":\"static file\"}\nAPI req 1 -> app-1:3000\nAPI req 2 -> app-2:3000\nAPI req 3 -> app-3:3000\nAPI req 4 -> app-1:3000\nDistribution over 6 reqs: {\"app-2:3000\":2,\"app-3:3000\":2,\"app-1:3000\":2}\nNginx roles: reverse proxy, load balancer, static file server, TLS termination, gzip, caching.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

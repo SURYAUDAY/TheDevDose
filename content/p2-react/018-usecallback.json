@@ -1,0 +1,68 @@
+{
+  "id": "p2-018",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 18,
+  "orderInPhase": 18,
+  "slug": "usecallback",
+  "title": "useCallback",
+  "difficulty": "beginner",
+  "tags": [
+    "p2",
+    "usecallback"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A parent renders a list of memoized <Row onSelect={...}> items."
+  },
+  "sections": {
+    "simple_en": "useCallback returns a memoized version of a callback that only changes when its dependencies change. Because functions are recreated on every render, passing a fresh function to a memoized child would defeat React.memo — useCallback keeps the function reference stable.\n\nIt's most useful when a callback is passed to memoized children or listed in another hook's dependency array. Like useMemo, it's an optimization: applying it indiscriminately adds overhead without benefit.",
+    "hinglish": "useCallback ek callback ka memoized version deta hai jo sirf tab badalta hai jab dependencies change ho. Har render par function naya banta hai, isliye memoized child ko naya function dene se React.memo bekaar ho jaata.\n\nYe tab useful hai jab callback memoized child ko jaaye ya kisi hook ki dependency array mein ho. useMemo ki tarah ye optimization hai — har jagah lagana faltu overhead hai.",
+    "keyPoints": [
+      "Signature: const fn = useCallback(() => { ... }, [deps]); stable until deps change.",
+      "Functions are recreated each render — useCallback preserves the same reference.",
+      "Pair with React.memo children or dependency arrays so identity changes don't cause re-runs.",
+      "useCallback(fn, deps) === useMemo(() => fn, deps) conceptually.",
+      "Only helps when reference stability actually matters; otherwise it's needless overhead."
+    ],
+    "real_world": "A parent renders a list of memoized <Row onSelect={...}> items. Without useCallback, onSelect is a new function each render, so every Row re-renders even when nothing changed. Wrapping onSelect in useCallback keeps Rows from re-rendering unnecessarily.",
+    "followups": [
+      {
+        "q": "When does useCallback actually help?",
+        "a": "When the function is passed to a memoized child or used in a dependency array, so a stable identity prevents unnecessary re-renders or effect re-runs."
+      },
+      {
+        "q": "Does useCallback make code faster by default?",
+        "a": "No. If the consumer isn't memoized, a stable function reference changes nothing and you just pay extra overhead."
+      },
+      {
+        "q": "Relationship to useMemo?",
+        "a": "useCallback memoizes a function; useMemo memoizes a value. They're the same mechanism applied to different things."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// useCallback: keep onSelect stable so memoized Rows don't re-render.\nimport React, { useCallback, useState, memo } from \"react\";\n\nconst Row = memo(function Row({ item, onSelect }) {\n  console.log(\"Render row\", item.id);\n  return <li onClick={() => onSelect(item.id)}>{item.name}</li>;\n});\n\nexport default function List({ items }) {\n  const [selected, setSelected] = useState(null);\n\n  // Stable identity across renders (deps empty) => Rows skip re-rendering.\n  const onSelect = useCallback((id) => setSelected(id), []);\n\n  return (\n    <div>\n      <p>Selected: {selected ?? \"none\"}</p>\n      <ul>\n        {items.map((item) => (\n          <Row key={item.id} item={item} onSelect={onSelect} />\n        ))}\n      </ul>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// useCallback — stable function identity across renders by deps\nlet memo = { deps: null, fn: null };\nfunction useCallback(fn, deps){\n  const same = memo.deps && deps.every((d, i) => d === memo.deps[i]);\n  if (!same) memo = { deps, fn };\n  return memo.fn;\n}\nfunction render(multiplier){ return useCallback((x) => x * multiplier, [multiplier]); }\n\nconst a = render(2);\nconst b = render(2);    // same dep -> same function reference\nconst c = render(3);    // dep changed -> new reference\nconsole.log(\"a === b (stable):\", a === b);\nconsole.log(\"b === c (changed):\", b === c);\nconsole.log(\"a(5):\", a(5), \"| c(5):\", c(5));\nconsole.assert(a === b && b !== c, \"identity stable until deps change\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "a === b (stable): true\nb === c (changed): false\na(5): 10 | c(5): 15\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

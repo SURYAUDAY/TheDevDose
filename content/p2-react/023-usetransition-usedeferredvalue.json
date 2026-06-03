@@ -1,0 +1,69 @@
+{
+  "id": "p2-023",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 23,
+  "orderInPhase": 23,
+  "slug": "usetransition-usedeferredvalue",
+  "title": "useTransition & useDeferredValue",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "usetransition",
+    "usedeferredvalue"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A search page filters 10,000 items as you type."
+  },
+  "sections": {
+    "simple_en": "These concurrent features let you keep the UI responsive by marking some updates as non-urgent. useTransition gives you a startTransition function and an isPending flag; updates inside startTransition are interruptible, so urgent updates (like typing) aren't blocked by heavy ones (like filtering a big list).\n\nuseDeferredValue does something similar for a single value: it returns a 'lagging' copy that updates after more urgent work settles. You render the deferred value for the expensive part of the UI while the input stays instantly responsive.",
+    "hinglish": "Ye concurrent features UI ko responsive rakhte hain kuch updates ko non-urgent mark karke. useTransition ek startTransition aur isPending deta hai; startTransition ke andar wale updates interruptible hote hain, isliye typing jaise urgent updates block nahi hote.\n\nuseDeferredValue ek single value ke liye yahi karta hai: ek lagging copy deta hai jo urgent kaam settle hone ke baad update hoti hai. Expensive UI deferred value se render karo, input instant rehta hai.",
+    "keyPoints": [
+      "useTransition: const [isPending, startTransition] = useTransition(); wrap non-urgent updates.",
+      "Updates inside startTransition are interruptible — urgent input stays responsive.",
+      "isPending lets you show a subtle loading indicator during the transition.",
+      "useDeferredValue(value) returns a deferred copy that lags behind the latest value.",
+      "Both keep typing/clicks snappy while heavy re-renders happen at lower priority."
+    ],
+    "real_world": "A search page filters 10,000 items as you type. Without transitions, each keystroke janks. Wrapping the filtered-list state update in startTransition (or feeding the list a useDeferredValue of the query) keeps the input buttery while the list catches up a beat later.",
+    "followups": [
+      {
+        "q": "When use useTransition vs useDeferredValue?",
+        "a": "Use useTransition when you control the state update and want to mark it non-urgent; use useDeferredValue when you only have a value (e.g., a prop) and want a lagging copy for expensive rendering."
+      },
+      {
+        "q": "What does isPending do?",
+        "a": "It's true while a transition is in progress, letting you show a spinner or dim the stale content without blocking the urgent update."
+      },
+      {
+        "q": "Do these make rendering faster?",
+        "a": "No — they reprioritize work. The heavy render still happens, but it no longer blocks urgent updates, so the app feels faster."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// useTransition + useDeferredValue: keep typing snappy while filtering.\nimport React, { useState, useTransition, useDeferredValue, useMemo } from \"react\";\n\nexport default function Search({ allItems }) {\n  const [query, setQuery] = useState(\"\");\n  const [isPending, startTransition] = useTransition();\n\n  const onChange = (e) => {\n    const value = e.target.value;\n    setQuery(value); // urgent: keep input responsive\n    // (filtering happens against a deferred copy below)\n  };\n\n  const deferredQuery = useDeferredValue(query); // lags behind latest input\n  const results = useMemo(\n    () => allItems.filter((i) => i.includes(deferredQuery)),\n    [allItems, deferredQuery]\n  );\n\n  return (\n    <div>\n      <input value={query} onChange={onChange} placeholder=\"Type to search\" />\n      {isPending && <span>Updating…</span>}\n      <ul>{results.map((r) => <li key={r}>{r}</li>)}</ul>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// useTransition & useDeferredValue — urgent vs non-urgent updates\nconst order = [];\nfunction setUrgent(v){ order.push(`urgent: input = \"${v}\"`); }       // high priority\nfunction startTransition(fn){ order.push(\"transition: scheduled\"); fn(); } // low priority\nfunction renderList(query){ order.push(`transition: list filtered for \"${query}\"`); }\n\n// user types — urgent state updates immediately, list update is deferred\nsetUrgent(\"re\");\nstartTransition(() => renderList(\"re\"));\n\n// useDeferredValue: deferred copy lags behind the latest value\nlet latest = \"react\", deferred = \"re\";\nconsole.log(\"latest value:\", latest, \"| deferred (lagging):\", deferred);\norder.forEach(o => console.log(o));\nconsole.assert(order[0].startsWith(\"urgent\"), \"urgent update goes first\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "latest value: react | deferred (lagging): re\nurgent: input = \"re\"\ntransition: scheduled\ntransition: list filtered for \"re\"\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "p1a-073",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 73,
+  "orderInPhase": 73,
+  "slug": "promises",
+  "title": "Promises",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "promises"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "`fetch(url)` returns a promise that fulfils with the response or rejects on a network error."
+  },
+  "sections": {
+    "simple_en": "A Promise is an object representing the eventual result of an asynchronous operation. It is in one of three states: pending (in progress), fulfilled (succeeded, with a value), or rejected (failed, with a reason). Once settled (fulfilled or rejected) it never changes again.\n\nYou consume a promise with `.then(onFulfilled)`, `.catch(onRejected)`, and `.finally()`. You create one with `new Promise((resolve, reject) => ...)`. Promises solve callback hell by enabling flat chaining and centralised error handling, and underpin async/await.",
+    "hinglish": "Promise ek object hai jo kisi asynchronous operation ke eventual result ko represent karta hai. Ye teen states me se ek me hota hai: pending (chal raha hai), fulfilled (safal, value ke saath), ya rejected (fail, reason ke saath). Ek baar settle (fulfilled/rejected) hone ke baad ye kabhi nahi badalta.\nPromise ko aap `.then(onFulfilled)`, `.catch(onRejected)`, aur `.finally()` se consume karte ho. Banate ho `new Promise((resolve, reject) => ...)` se. Promises callback hell ko flat chaining aur centralised error handling se solve karte hain, aur async/await ki neev hain.",
+    "keyPoints": [
+      "Three states: pending → fulfilled (value) or rejected (reason); settles once.",
+      "Consume with `.then`, `.catch`, `.finally`.",
+      "Create with `new Promise((resolve, reject) => ...)`.",
+      "`.then` returns a new promise → enables chaining.",
+      "Foundation for async/await and combinators like Promise.all."
+    ],
+    "real_world": "`fetch(url)` returns a promise that fulfils with the response or rejects on a network error. You `.then` to read the data and `.catch` to show an error message — clean async data loading.",
+    "followups": [
+      {
+        "q": "What are the three states of a promise?",
+        "a": "Pending (not yet settled), fulfilled (resolved with a value), and rejected (failed with a reason). Once settled, the state and value are immutable."
+      },
+      {
+        "q": "What does `.then` return?",
+        "a": "A new promise, which is what makes chaining possible. The next `.then` receives whatever the previous handler returned (a value, or the resolution of a returned promise)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Creating and consuming a promise.\n\nfunction delayedValue(value, ms = 0, shouldFail = false) {\n  return new Promise((resolve, reject) => {\n    setTimeout(() => {\n      if (shouldFail) reject(new Error(\"operation failed\"));\n      else resolve(value);\n    }, ms);\n  });\n}\n\nmodule.exports = { delayedValue };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { delayedValue } = require(\"./solution\");\n\ndelayedValue(\"hello\", 0)\n  .then((v) => {\n    console.log(\"fulfilled:\", v); // hello\n    console.assert(v === \"hello\", \"promise fulfils with value\");\n    return delayedValue(\"x\", 0, true); // now trigger a rejection\n  })\n  .catch((err) => {\n    console.log(\"caught:\", err.message); // operation failed\n    console.assert(err instanceof Error, \"promise rejects with error\");\n  })\n  .finally(() => {\n    console.log(\"done\");\n    console.log(\"promises assertions passed.\");\n  });",
+      "expectedOutput": "fulfilled: hello\ncaught: operation failed\ndone\npromises assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

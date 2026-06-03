@@ -1,0 +1,64 @@
+{
+  "id": "p1b-057",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 57,
+  "orderInPhase": 57,
+  "slug": "keyof",
+  "title": "keyof",
+  "difficulty": "advanced",
+  "tags": [
+    "p1b",
+    "keyof"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A type-safe `pluck(objects, key)` constrained by `keyof T` extracts a column of values from a list of objects while guaranteeing the key exists and the resul…"
+  },
+  "sections": {
+    "simple_en": "The `keyof` operator produces a union of the property KEYS of a type. For `type Point = { x: number; y: number }`, `keyof Point` is `\"x\" | \"y\"`. It turns an object type's keys into a usable literal union.\n\n`keyof` is the backbone of type-safe property access and mapped types. Combined with generics (`K extends keyof T`), it lets you write helpers that only accept valid keys and return the correctly-typed value for each.",
+    "hinglish": "`keyof` operator ek type ki property KEYS ka union banata hai. `type Point = { x: number; y: number }` ke liye, `keyof Point` `\"x\" | \"y\"` hai. Ye ek object type ki keys ko usable literal union me badal deta hai.\n`keyof` type-safe property access aur mapped types ki reedh hai. Generics ke saath (`K extends keyof T`), ye aapko aise helpers likhne deta hai jo sirf valid keys accept karein aur har ke liye correctly-typed value return karein.",
+    "keyPoints": [
+      "`keyof T` is the union of T's property keys.",
+      "`keyof { x: 1; y: 2 }` → `'x' | 'y'`.",
+      "Foundation of type-safe key access and mapped types.",
+      "With `K extends keyof T`, helpers accept only valid keys.",
+      "Returns `string | number | symbol` for index-signature types."
+    ],
+    "real_world": "A type-safe `pluck(objects, key)` constrained by `keyof T` extracts a column of values from a list of objects while guaranteeing the key exists and the result is correctly typed.",
+    "followups": [
+      {
+        "q": "What does keyof produce?",
+        "a": "A union of a type's property keys. For `{ a: number; b: string }`, `keyof` yields `'a' | 'b'`."
+      },
+      {
+        "q": "Why is keyof important for generics?",
+        "a": "Constraining a parameter with `K extends keyof T` ensures only valid keys are accepted and lets you return `T[K]` — the correctly-typed value for that specific key."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — keyof for safe key access and plucking.\n\ninterface Point { x: number; y: number; }\nexport type PointKey = keyof Point; // \"x\" | \"y\"\n\nexport function getValue<T, K extends keyof T>(obj: T, key: K): T[K] {\n  return obj[key];\n}\n\nexport function pluck<T, K extends keyof T>(items: T[], key: K): T[K][] {\n  return items.map((item) => item[key]);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { getValue, pluck } from \"./solution\";\n\nconst point = { x: 3, y: 4 };\nconsole.log(getValue(point, \"x\")); // 3\n\nconst people = [{ name: \"Asha\", age: 30 }, { name: \"Ravi\", age: 25 }];\nconsole.log(pluck(people, \"name\")); // ['Asha','Ravi']\nconsole.log(pluck(people, \"age\"));  // [30,25]\n\nconsole.assert(getValue(point, \"y\") === 4, \"keyof-constrained access\");\nconsole.assert(JSON.stringify(pluck(people, \"name\")) === '[\"Asha\",\"Ravi\"]', \"pluck names\");\nconsole.assert(JSON.stringify(pluck(people, \"age\")) === \"[30,25]\", \"pluck ages\");\nconsole.log(\"keyof assertions passed.\");",
+      "expectedOutput": "3\n[ 'Asha', 'Ravi' ]\n[ 30, 25 ]\nkeyof assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

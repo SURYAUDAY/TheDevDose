@@ -1,0 +1,69 @@
+{
+  "id": "p3-043",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 43,
+  "orderInPhase": 43,
+  "slug": "jwt-authentication",
+  "title": "JWT Authentication",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "jwt",
+    "authentication"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "After a user logs in, the API returns a JWT containing their id and role, signed with a server secret."
+  },
+  "sections": {
+    "simple_en": "A JSON Web Token (JWT) is a compact, self-contained token with three parts — header, payload (claims like user id and role), and signature — each base64url-encoded and joined by dots. The server signs the token with a secret; on each request it verifies the signature, so a tampered token is rejected without any database lookup.\n\nJWTs enable stateless authentication: the token itself carries the user's identity, so any server can verify it without shared session storage. The flow is: log in, receive a signed token, send it as a Bearer header on subsequent requests, and the server verifies and trusts the claims. Keep tokens short-lived and never put secrets in the (readable) payload.",
+    "hinglish": "JSON Web Token (JWT) ek compact, self-contained token hai jiske teen parts hote hain — header, payload (claims jaise user id aur role), aur signature — har ek base64url-encoded aur dots se juda. Server token ko ek secret se sign karta hai; har request par signature verify karta hai, isliye tampered token bina kisi database lookup ke reject ho jaata hai.\n\nJWTs stateless authentication dete hain: token hi user ki identity carry karta hai, isliye koi bhi server use bina shared session storage ke verify kar sakta hai. Flow: login karo, signed token lo, agli requests par Bearer header mein bhejo, server verify karke claims par bharosa karta hai. Tokens short-lived rakho aur secrets kabhi (readable) payload mein mat daalo.",
+    "keyPoints": [
+      "Three parts: header.payload.signature (base64url, dot-separated).",
+      "Server signs with a secret; verifying the signature detects tampering.",
+      "Stateless: the token carries identity — no server-side session needed.",
+      "Flow: login -> receive token -> send as 'Authorization: Bearer ...'.",
+      "Payload is readable (not encrypted) — never store secrets in it; keep tokens short-lived."
+    ],
+    "real_world": "After a user logs in, the API returns a JWT containing their id and role, signed with a server secret. Each later request includes it as a Bearer token; the server verifies the signature and reads the role to authorize actions — no session store required, so it scales across many servers.",
+    "followups": [
+      {
+        "q": "Is the JWT payload encrypted?",
+        "a": "No — it's only base64url-encoded and readable by anyone. The signature guarantees integrity (no tampering), not confidentiality. Never put secrets in the payload."
+      },
+      {
+        "q": "Why are JWTs called stateless?",
+        "a": "The server stores no session; the signed token itself carries the user's identity, so any server with the secret can verify and trust it without a shared store."
+      },
+      {
+        "q": "What's the catch with JWTs?",
+        "a": "They're hard to revoke before expiry, since there's no central session to delete. Mitigations: short lifetimes plus refresh tokens, or a denylist of revoked tokens."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + jsonwebtoken code. The Node-runnable demo below builds and verifies a real HMAC-signed token using Node's crypto, so tampering is provably rejected.",
+      "source": "// JWT Authentication — issue a token on login, verify it on protected routes.\nconst express = require(\"express\");\nconst jwt = require(\"jsonwebtoken\");\nconst app = express();\napp.use(express.json());\n\nconst SECRET = process.env.JWT_SECRET;\n\napp.post(\"/login\", (req, res) => {\n  // (verify username/password first — omitted) then sign a token:\n  const token = jwt.sign(\n    { sub: 1, role: \"admin\" },          // payload (claims)\n    SECRET,\n    { expiresIn: \"15m\" }                // short-lived\n  );\n  res.json({ token });\n});\n\n// Middleware: verify the Bearer token and attach the user.\nfunction authenticate(req, res, next) {\n  const header = req.headers.authorization || \"\";\n  const token = header.startsWith(\"Bearer \") ? header.slice(7) : null;\n  if (!token) return res.status(401).json({ error: \"No token\" });\n  try {\n    req.user = jwt.verify(token, SECRET); // throws if invalid/expired\n    next();\n  } catch {\n    res.status(401).json({ error: \"Invalid or expired token\" });\n  }\n}\n\napp.get(\"/me\", authenticate, (req, res) => res.json({ user: req.user }));\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// JWT Authentication — build & verify a signed token using real HMAC (crypto)\nconst crypto = require(\"crypto\");\nconst SECRET = \"super-secret-key\";\nconst b64 = (obj) => Buffer.from(JSON.stringify(obj)).toString(\"base64url\");\nconst sign = (data) => crypto.createHmac(\"sha256\", SECRET).update(data).digest(\"base64url\");\n\nfunction createToken(payload){\n  const header = b64({ alg: \"HS256\", typ: \"JWT\" });\n  const body = b64({ ...payload, iat: 1700000000 });\n  const signature = sign(`${header}.${body}`);\n  return `${header}.${body}.${signature}`;\n}\nfunction verifyToken(token){\n  const [header, body, sig] = token.split(\".\");\n  const expected = sign(`${header}.${body}`);\n  if (sig !== expected) return { valid: false, reason: \"bad signature\" };  // tamper-proof\n  return { valid: true, payload: JSON.parse(Buffer.from(body, \"base64url\").toString()) };\n}\nconst token = createToken({ sub: 1, role: \"admin\" });\nconsole.log(\"Token:\", token.slice(0, 40) + \"...\");\nconsole.log(\"Verify valid:\", JSON.stringify(verifyToken(token)));\nconst tampered = token.slice(0, -2) + \"xx\";\nconsole.log(\"Verify tampered:\", JSON.stringify(verifyToken(tampered)));\nconsole.assert(verifyToken(token).payload.role === \"admin\", \"valid token decodes payload\");\nconsole.assert(!verifyToken(tampered).valid, \"tampered token rejected\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...\nVerify valid: {\"valid\":true,\"payload\":{\"sub\":1,\"role\":\"admin\",\"iat\":1700000000}}\nVerify tampered: {\"valid\":false,\"reason\":\"bad signature\"}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

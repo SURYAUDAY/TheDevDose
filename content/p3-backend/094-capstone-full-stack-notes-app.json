@@ -1,0 +1,71 @@
+{
+  "id": "p3-094",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 94,
+  "orderInPhase": 94,
+  "slug": "capstone-full-stack-notes-app",
+  "title": "Capstone: Full-Stack Notes App",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "capstone",
+    "full-stack",
+    "notes",
+    "app"
+  ],
+  "estMinutes": 9,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A notes/todo product gives each user a private workspace."
+  },
+  "sections": {
+    "simple_en": "This capstone builds a classic full-stack app: an authenticated CRUD API for personal notes, with a frontend (React/Next) that logs in and calls it. The backend exposes create/read/update/delete endpoints for notes, all behind auth middleware, and — critically — scopes every query to the logged-in user so people only see and modify their own data.\n\nIt brings together REST design, CRUD operations, a database (Mongoose/MongoDB or Postgres), JWT authentication, and the all-important ownership/isolation check (each note stores a userId; queries always filter by it). Getting data isolation right is a common interview focus: a missing userId filter is a real security bug that leaks one user's data to another.",
+    "hinglish": "Ye capstone ek classic full-stack app banata hai: personal notes ke liye ek authenticated CRUD API, ek frontend (React/Next) ke saath jo login karke use call karta hai. Backend notes ke liye create/read/update/delete endpoints expose karta hai, sab auth middleware ke peechhe, aur — critically — har query ko logged-in user tak scope karta hai taaki log sirf apna data dekhein aur modify karein.\n\nYe REST design, CRUD operations, ek database (Mongoose/MongoDB ya Postgres), JWT authentication, aur sabse important ownership/isolation check (har note ek userId store karta hai; queries hamesha usse filter karti hain) ko jodta hai. Data isolation sahi karna ek common interview focus hai: missing userId filter ek real security bug hai jo ek user ka data doosre ko leak karta hai.",
+    "keyPoints": [
+      "Authenticated CRUD API for notes + a React/Next frontend.",
+      "All note routes behind auth middleware (JWT).",
+      "Every query scoped to the logged-in user (data isolation).",
+      "Combines REST, CRUD, a database, and ownership checks.",
+      "A missing userId filter is a real data-leak vulnerability."
+    ],
+    "real_world": "A notes/todo product gives each user a private workspace. The API stores userId on every note and filters all reads/writes by it, so Asha can never see or edit Ravi's notes — even if she guesses an id, the ownership check returns 403/404. This per-user scoping is the backbone of any multi-tenant app.",
+    "followups": [
+      {
+        "q": "How do you ensure users only access their own data?",
+        "a": "Store an owner id (userId) on each record and scope every query by the authenticated user's id — e.g., find/update/delete by both the record id and userId. Never trust the id alone from the client."
+      },
+      {
+        "q": "What core concepts does this app combine?",
+        "a": "RESTful endpoints, CRUD operations, a database with a schema, JWT authentication via middleware, and per-user authorization/ownership checks — the standard stack for a real product feature."
+      },
+      {
+        "q": "What status code should an unauthorized access to another user's note return?",
+        "a": "Commonly 403 Forbidden (you're authenticated but not allowed) or 404 Not Found (to avoid revealing the resource exists). The key is that the ownership check blocks access — a missing check is a security bug."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + Mongoose authenticated CRUD code. The Node-runnable demo below runs the full notes CRUD with per-user data isolation so the behavior is provably correct here.",
+      "source": "// CAPSTONE: Full-Stack Notes App — authenticated CRUD API (Express + Mongoose).\nconst express = require(\"express\");\nconst mongoose = require(\"mongoose\");\nconst jwt = require(\"jsonwebtoken\");\nconst app = express();\napp.use(express.json());\n\n// Each note belongs to a user (ownership = isolation).\nconst Note = mongoose.model(\"Note\", new mongoose.Schema({\n  userId: { type: mongoose.Schema.Types.ObjectId, ref: \"User\", required: true, index: true },\n  title: { type: String, required: true },\n  body: String,\n}, { timestamps: true }));\n\n// Auth middleware sets req.userId from the JWT.\nfunction auth(req, res, next) {\n  try {\n    const token = (req.headers.authorization || \"\").replace(\"Bearer \", \"\");\n    req.userId = jwt.verify(token, process.env.JWT_SECRET).sub;\n    next();\n  } catch { res.status(401).json({ error: \"unauthorized\" }); }\n}\napp.use(\"/notes\", auth); // all note routes require login\n\n// CRUD — every query is scoped to the logged-in user.\napp.get(\"/notes\", async (req, res) =>\n  res.json(await Note.find({ userId: req.userId }).sort(\"-createdAt\")));\n\napp.post(\"/notes\", async (req, res) =>\n  res.status(201).json(await Note.create({ userId: req.userId, ...req.body })));\n\napp.get(\"/notes/:id\", async (req, res) => {\n  const note = await Note.findOne({ _id: req.params.id, userId: req.userId });\n  return note ? res.json(note) : res.status(404).json({ error: \"not found\" });\n});\n\napp.put(\"/notes/:id\", async (req, res) => {\n  const note = await Note.findOneAndUpdate(\n    { _id: req.params.id, userId: req.userId }, req.body, { new: true });\n  return note ? res.json(note) : res.status(404).json({ error: \"not found\" });\n});\n\napp.delete(\"/notes/:id\", async (req, res) => {\n  await Note.deleteOne({ _id: req.params.id, userId: req.userId });\n  res.status(204).end();\n});\n\napp.listen(3000);\n// Frontend (React/Next): login to get a token, then call these endpoints with\n// the Bearer header. Scoping every query by userId enforces data isolation.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CAPSTONE: Full-Stack Notes App — CRUD notes API with auth + per-user isolation\nlet noteSeq = 0;\nfunction createNotesApp(){\n  const notes = [];   // each note belongs to a userId\n  const owns = (note, userId) => note.userId === userId;\n  return {\n    create(userId, { title, body }){ const n = { id: ++noteSeq, userId, title, body, createdAt: \"2026-01-01\" };\n      notes.push(n); return { status: 201, body: n }; },\n    list(userId){ return { status: 200, body: notes.filter(n => n.userId === userId) }; }, // only your notes\n    get(userId, id){ const n = notes.find(n => n.id === id);\n      if (!n) return { status: 404, body: { error: \"not found\" } };\n      if (!owns(n, userId)) return { status: 403, body: { error: \"forbidden\" } };          // isolation\n      return { status: 200, body: n }; },\n    update(userId, id, patch){ const n = notes.find(n => n.id === id);\n      if (!n || !owns(n, userId)) return { status: n ? 403 : 404, body: {} };\n      Object.assign(n, patch); return { status: 200, body: n }; },\n    remove(userId, id){ const i = notes.findIndex(n => n.id === id);\n      if (i < 0 || !owns(notes[i], userId)) return { status: notes[i] ? 403 : 404, body: {} };\n      notes.splice(i, 1); return { status: 204, body: {} }; },\n  };\n}\nconst app = createNotesApp();\nconst asha = 1, ravi = 2;\nconsole.log(\"Asha creates:\", JSON.stringify(app.create(asha, { title: \"Groceries\", body: \"milk\" }).body));\napp.create(asha, { title: \"Ideas\", body: \"ship it\" });\napp.create(ravi, { title: \"Ravi note\", body: \"secret\" });\nconsole.log(\"Asha's notes:\", app.list(asha).body.map(n => n.title));\nconsole.log(\"Ravi's notes:\", app.list(ravi).body.map(n => n.title));\nconsole.log(\"Asha reads Ravi's note (id 3):\", JSON.stringify(app.get(asha, 3)));\nconsole.log(\"Asha updates her note:\", JSON.stringify(app.update(asha, 1, { body: \"milk, eggs\" }).body));\nconsole.log(\"Asha deletes her note:\", app.remove(asha, 1).status);\nconsole.assert(app.list(asha).body.length === 1, \"Asha sees only her remaining note\");\nconsole.assert(app.get(asha, 3).status === 403, \"users can't access others' notes\");\nconsole.log(\"Stack: React/Next frontend + Express API + DB (Mongo/Postgres) + JWT auth. CRUD + ownership checks.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Asha creates: {\"id\":1,\"userId\":1,\"title\":\"Groceries\",\"body\":\"milk\",\"createdAt\":\"2026-01-01\"}\nAsha's notes: [ 'Groceries', 'Ideas' ]\nRavi's notes: [ 'Ravi note' ]\nAsha reads Ravi's note (id 3): {\"status\":403,\"body\":{\"error\":\"forbidden\"}}\nAsha updates her note: {\"id\":1,\"userId\":1,\"title\":\"Groceries\",\"body\":\"milk, eggs\",\"createdAt\":\"2026-01-01\"}\nAsha deletes her note: 204\nStack: React/Next frontend + Express API + DB (Mongo/Postgres) + JWT auth. CRUD + ownership checks.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

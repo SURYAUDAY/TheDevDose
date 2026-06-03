@@ -1,0 +1,66 @@
+{
+  "id": "p1a-021",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 21,
+  "orderInPhase": 21,
+  "slug": "equality-vs-truthy-falsy",
+  "title": "Equality (== vs ===) & Truthy/Falsy",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "equality",
+    "truthy",
+    "falsy"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Validating user input: `if (input)` treats an empty string as falsy, so a blank field is caught."
+  },
+  "sections": {
+    "simple_en": "`==` is loose equality: it coerces the operands to a common type before comparing, which leads to surprising results (`0 == ''` is true). `===` is strict equality: it compares both type and value with no coercion, and is the recommended default.\n\nSeparately, every value is either truthy or falsy in a boolean context. The falsy values are exactly: `false`, `0`, `-0`, `0n`, `''`, `null`, `undefined`, and `NaN`. Everything else (including `'0'`, `[]`, and `{}`) is truthy.",
+    "hinglish": "`==` loose equality hai: compare karne se pehle operands ko ek common type me coerce karta hai, jisse ajeeb results aate hain (`0 == ''` true hota hai). `===` strict equality hai: type aur value dono ko bina coercion compare karta hai, aur yahi recommended default hai.\nAlag se, har value boolean context me ya truthy hoti hai ya falsy. Falsy values bilkul ye hain: `false`, `0`, `-0`, `0n`, `''`, `null`, `undefined`, aur `NaN`. Baaki sab (including `'0'`, `[]`, `{}`) truthy hain.",
+    "keyPoints": [
+      "`==` coerces types before comparing; `===` does not (compares type + value).",
+      "Always prefer `===` unless you specifically need loose comparison.",
+      "The 8 falsy values: false, 0, -0, 0n, '' , null, undefined, NaN.",
+      "Everything else is truthy — including '0', 'false', [], and {}.",
+      "`null == undefined` is true, but `null === undefined` is false."
+    ],
+    "real_world": "Validating user input: `if (input)` treats an empty string as falsy, so a blank field is caught. But beware `if (count)` where `count` could legitimately be `0` — that would wrongly treat zero as 'no value'.",
+    "followups": [
+      {
+        "q": "List the falsy values in JavaScript.",
+        "a": "false, 0, -0, 0n (BigInt zero), '' (empty string), null, undefined, and NaN. Everything else is truthy."
+      },
+      {
+        "q": "Is `[] == false` true? Why?",
+        "a": "Yes. `[]` coerces to '' then to 0, and `false` coerces to 0, so loosely they're equal. With `===` it would be false. This is why `==` is discouraged."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Equality comparisons and a falsy detector.\n\nfunction equalityChecks() {\n  return {\n    looseZeroEmpty: (0 == \"\"),        // true (coercion)\n    strictZeroEmpty: (0 === \"\"),      // false\n    looseNullUndef: (null == undefined),  // true\n    strictNullUndef: (null === undefined), // false\n  };\n}\n\nconst FALSY = [false, 0, -0, 0n, \"\", null, undefined, NaN];\nfunction isFalsy(v) {\n  // Boolean(v) is false exactly for the falsy values\n  return !v;\n}\n\nmodule.exports = { equalityChecks, isFalsy, FALSY };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { equalityChecks, isFalsy, FALSY } = require(\"./solution\");\n\nconsole.log(equalityChecks());\n\nconst e = equalityChecks();\nconsole.assert(e.looseZeroEmpty === true, \"0 == '' is true\");\nconsole.assert(e.strictZeroEmpty === false, \"0 === '' is false\");\nconsole.assert(e.looseNullUndef === true, \"null == undefined\");\nconsole.assert(e.strictNullUndef === false, \"null !== undefined strictly\");\n\n// every documented falsy value is falsy:\nconsole.assert(FALSY.every(isFalsy), \"all listed values are falsy\");\n// truthy counter-examples:\nconsole.assert([\"0\", [], {}, \"false\"].every(v => !isFalsy(v)), \"these are truthy\");\nconsole.log(\"equality & truthy/falsy assertions passed.\");",
+      "expectedOutput": "{\n  looseZeroEmpty: true,\n  strictZeroEmpty: false,\n  looseNullUndef: true,\n  strictNullUndef: false\n}\nequality & truthy/falsy assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p2-011",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 11,
+  "orderInPhase": 11,
+  "slug": "error-boundaries",
+  "title": "Error Boundaries",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "error",
+    "boundaries"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A dashboard with multiple independent widgets wraps each chart in its own error boundary."
+  },
+  "sections": {
+    "simple_en": "An Error Boundary is a component that catches JavaScript errors thrown during rendering, in lifecycle methods, and in constructors of its child tree, then displays a fallback UI instead of crashing the whole app. It uses the class methods getDerivedStateFromError (to render a fallback) and componentDidCatch (to log the error).\n\nError boundaries do not catch errors in event handlers, asynchronous code, or the boundary's own code — those you handle with regular try/catch. As of today there's no built-in hook version, so boundaries are still written as classes (or via a library wrapper).",
+    "hinglish": "Error Boundary ek component hai jo apne child tree mein render ke dauraan aaye errors ko pakad leta hai aur poori app crash hone ke bajaye ek fallback UI dikhata hai. Ye getDerivedStateFromError aur componentDidCatch use karta hai.\n\nYe event handlers, async code ya khud apne code ke errors nahi pakadta — unke liye normal try/catch lagao. Abhi tak iska hook version nahi hai, isliye boundaries class form mein hi likhi jaati hain.",
+    "keyPoints": [
+      "Catches render-phase errors in the child tree and shows a fallback UI.",
+      "Implemented with getDerivedStateFromError (set fallback state) + componentDidCatch (log/report).",
+      "Does NOT catch errors in event handlers, async code, SSR, or its own code — use try/catch there.",
+      "Place boundaries strategically (e.g., around a widget) so one failure doesn't blank the page.",
+      "No hook equivalent yet — still a class component (or a wrapper library)."
+    ],
+    "real_world": "A dashboard with multiple independent widgets wraps each chart in its own error boundary. If one chart's data is malformed and its render throws, only that card shows 'Couldn't load chart' while the rest of the dashboard keeps working.",
+    "followups": [
+      {
+        "q": "Why don't error boundaries catch event handler errors?",
+        "a": "Event handlers run outside React's render phase, so React can't intercept them. Wrap risky handler logic in try/catch and update state to show an error."
+      },
+      {
+        "q": "What's the difference between getDerivedStateFromError and componentDidCatch?",
+        "a": "getDerivedStateFromError runs during render to set fallback state; componentDidCatch runs after, for side effects like logging to an error service."
+      },
+      {
+        "q": "Where should you place error boundaries?",
+        "a": "Around logical sections (a widget, a route, a feature) so a failure is contained. A single top-level boundary is a last-resort catch-all."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Error Boundary: catch render errors in children and show a fallback.\nimport React from \"react\";\n\nclass ErrorBoundary extends React.Component {\n  state = { hasError: false, message: \"\" };\n\n  static getDerivedStateFromError(error) {\n    return { hasError: true, message: error.message }; // render fallback\n  }\n  componentDidCatch(error, info) {\n    console.error(\"Logged to service:\", error, info); // side effect / reporting\n  }\n  render() {\n    if (this.state.hasError) {\n      return <div className=\"fallback\">Something went wrong: {this.state.message}</div>;\n    }\n    return this.props.children;\n  }\n}\n\nfunction Buggy() {\n  throw new Error(\"render crash\");\n}\n\nexport default function App() {\n  return (\n    <ErrorBoundary>\n      <Buggy />\n    </ErrorBoundary>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Error Boundary — getDerivedStateFromError + fallback rendering\nclass ErrorBoundary {\n  constructor(){ this.state = { hasError: false, message: \"\" }; }\n  static getDerivedStateFromError(err){ return { hasError: true, message: err.message }; }\n  renderChild(child){\n    try { return child(); }\n    catch (err) {\n      this.state = ErrorBoundary.getDerivedStateFromError(err);\n      return `Fallback UI: Something went wrong (${this.state.message})`;\n    }\n  }\n}\nconst boundary = new ErrorBoundary();\nconst ok = boundary.renderChild(() => \"Child rendered fine\");\nconsole.log(ok);\nconst broken = boundary.renderChild(() => { throw new Error(\"render crash\"); });\nconsole.log(broken);\nconsole.assert(boundary.state.hasError === true, \"boundary should catch\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Child rendered fine\nFallback UI: Something went wrong (render crash)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

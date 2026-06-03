@@ -1,0 +1,69 @@
+{
+  "id": "p3-064",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 64,
+  "orderInPhase": 64,
+  "slug": "queues-basics",
+  "title": "Queues basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "queues",
+    "basics"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "queue",
+    "seedText": "During a flash sale, orders pour in faster than the payment service can process them."
+  },
+  "sections": {
+    "simple_en": "A queue is a buffer that decouples producers (who add work) from consumers (who process it). Producers enqueue messages and move on; one or more workers dequeue and handle them, typically in FIFO order. This smooths out load spikes, since work accumulates in the queue and is processed at a sustainable rate.\n\nReliable queues add acknowledgements (a message is removed only after successful processing), retries with backoff for transient failures, and a dead-letter queue for messages that keep failing. Queues are the backbone of asynchronous, scalable systems — you scale throughput by adding more workers.",
+    "hinglish": "Queue ek buffer hai jo producers (jo kaam add karte hain) ko consumers (jo process karte hain) se decouple karta hai. Producers messages enqueue karke aage badh jaate hain; ek ya zyada workers unhe dequeue karke handle karte hain, aksar FIFO order mein. Isse load spikes smooth hote hain, kaam queue mein jama hota hai aur sustainable rate par process hota hai.\n\nReliable queues acknowledgements add karti hain (message tabhi remove hota hai jab successfully process ho), transient failures ke liye retries with backoff, aur baar-baar fail hone wale messages ke liye dead-letter queue. Queues asynchronous, scalable systems ki reedh hain — throughput zyada workers add karke scale karte ho.",
+    "keyPoints": [
+      "Decouples producers from consumers; absorbs load spikes.",
+      "Producers enqueue; workers dequeue and process (usually FIFO).",
+      "Acknowledgements remove a message only after successful processing.",
+      "Retries with backoff handle transient failures; dead-letter for persistent ones.",
+      "Scale throughput by adding more workers."
+    ],
+    "real_world": "During a flash sale, orders pour in faster than the payment service can process them. An order queue absorbs the surge; workers process orders at a steady rate, retrying transient payment errors and dead-lettering ones that keep failing — so nothing is lost and the system never collapses under the spike.",
+    "followups": [
+      {
+        "q": "How does a queue help with traffic spikes?",
+        "a": "It buffers work: producers enqueue quickly during the spike, and workers process at a sustainable rate afterward, so the system isn't overwhelmed and no requests are dropped."
+      },
+      {
+        "q": "What is a dead-letter queue?",
+        "a": "A separate queue where messages that fail repeatedly (beyond the retry limit) are moved, so they don't block the main queue and can be inspected or reprocessed later."
+      },
+      {
+        "q": "How do you increase a queue's throughput?",
+        "a": "Add more worker processes/consumers (and/or increase concurrency). Because producers and consumers are decoupled, you scale processing independently of request handling."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real BullMQ queue code (Node + Redis). The Node-runnable demo below verifies FIFO consumption with retries and dead-lettering so the behavior is verifiable here.",
+      "source": "// Queues basics — a producer/consumer queue with BullMQ.\nconst { Queue, Worker, QueueEvents } = require(\"bullmq\");\nconst connection = { host: \"localhost\", port: 6379 };\n\n// PRODUCER: add jobs to the queue.\nconst queue = new Queue(\"tasks\", { connection });\nasync function addTask(data) {\n  await queue.add(\"process\", data, {\n    attempts: 5,                                  // retry on failure\n    backoff: { type: \"exponential\", delay: 2000 },\n    removeOnComplete: true,                        // keep the queue tidy\n  });\n}\n\n// CONSUMER: a worker pulls jobs and processes them (with concurrency).\nconst worker = new Worker(\"tasks\", async (job) => {\n  return await doWork(job.data); // throwing triggers a retry; exhausted -> failed\n}, { connection, concurrency: 5 });\n\n// Observe job lifecycle events.\nconst events = new QueueEvents(\"tasks\", { connection });\nevents.on(\"completed\", ({ jobId }) => console.log(`job ${jobId} done`));\nevents.on(\"failed\", ({ jobId, failedReason }) => console.error(jobId, failedReason));\n\nasync function doWork(data) { return \"ok\"; }\n// Queues decouple producers from consumers, absorb spikes, and add retries.\nmodule.exports = { addTask };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Queues basics — FIFO with ack and retry on failure\nfunction createQueue(maxRetries){\n  const items = []; const dead = [];\n  return {\n    enqueue(msg){ items.push({ msg, attempts: 0 }); },\n    size: () => items.length,\n    async consume(handler){\n      const processed = [];\n      while (items.length){\n        const item = items.shift();\n        try { await handler(item.msg); processed.push(item.msg); }   // ack on success\n        catch (e){\n          item.attempts++;\n          if (item.attempts < maxRetries) items.push(item);          // requeue (retry)\n          else dead.push(item.msg);                                  // dead-letter\n        }\n      }\n      return { processed, dead };\n    },\n  };\n}\n(async () => {\n  const q = createQueue(3);\n  [\"a\", \"b\", \"poison\", \"c\"].forEach(m => q.enqueue(m));\n  let seen = 0;\n  const result = await q.consume(async (msg) => { if (msg === \"poison\"){ seen++; throw new Error(\"bad\"); } });\n  console.log(\"Processed:\", JSON.stringify(result.processed));\n  console.log(\"Dead-letter:\", JSON.stringify(result.dead), \"after\", seen, \"attempts\");\n  console.assert(result.dead[0] === \"poison\" && seen === 3, \"failed msg retried then dead-lettered\");\n  console.log(\"Queues decouple producers/consumers and smooth out load spikes.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Processed: [\"a\",\"b\",\"c\"]\nDead-letter: [\"poison\"] after 3 attempts\nQueues decouple producers/consumers and smooth out load spikes.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

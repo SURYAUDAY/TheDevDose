@@ -1,0 +1,64 @@
+{
+  "id": "p1a-033",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 33,
+  "orderInPhase": 33,
+  "slug": "prototype",
+  "title": "Prototype",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "prototype"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "All arrays share methods like `push`, `map`, and `slice` because they live on `Array.prototype`."
+  },
+  "sections": {
+    "simple_en": "Every JavaScript object has an internal link to another object called its prototype. When you access a property that doesn't exist on the object itself, the engine looks it up on the prototype. This is how objects inherit shared behaviour.\n\nFunctions have a `.prototype` property — the object that becomes the prototype of instances created with `new`. An object's actual prototype is accessed via `Object.getPrototypeOf(obj)` (or the legacy `__proto__`). Don't confuse `Constructor.prototype` (a property on the function) with an instance's `[[Prototype]]` link.",
+    "hinglish": "Har JavaScript object ka ek internal link hota hai doosre object se jise uska prototype kehte hain. Jab aap koi property access karte ho jo object par khud nahi hai, engine use prototype par dhoondhta hai. Aise objects shared behaviour inherit karte hain.\nFunctions ke paas `.prototype` property hoti hai — woh object jo `new` se bane instances ka prototype banta hai. Object ka asli prototype `Object.getPrototypeOf(obj)` (ya purana `__proto__`) se milta hai. `Constructor.prototype` (function par property) aur instance ke `[[Prototype]]` link ko confuse mat karo.",
+    "keyPoints": [
+      "Every object has a hidden link to a prototype object.",
+      "Missing properties are looked up on the prototype (delegation).",
+      "`Constructor.prototype` is the object assigned as the prototype of `new` instances.",
+      "Access an instance's prototype via `Object.getPrototypeOf(obj)` (legacy: `__proto__`).",
+      "`hasOwnProperty` checks own vs inherited properties."
+    ],
+    "real_world": "All arrays share methods like `push`, `map`, and `slice` because they live on `Array.prototype`. Your array doesn't carry its own copy of `map` — it delegates up to the shared prototype.",
+    "followups": [
+      {
+        "q": "Difference between `Constructor.prototype` and an instance's `[[Prototype]]`?",
+        "a": "`Constructor.prototype` is a property on the function object — the object that will be used as the prototype. An instance's `[[Prototype]]` (read via `Object.getPrototypeOf`) is the actual link pointing to that prototype object."
+      },
+      {
+        "q": "How do you check if a property is own vs inherited?",
+        "a": "Use `obj.hasOwnProperty('key')` (or `Object.hasOwn(obj, 'key')`), which returns true only for properties defined directly on the object, not inherited ones."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrating prototype delegation and own vs inherited.\n\nfunction Animal(name) { this.name = name; }\nAnimal.prototype.speak = function () { return this.name + \" makes a sound\"; };\n\nfunction inspect() {\n  const dog = new Animal(\"Rex\");\n  return {\n    speak: dog.speak(),                                  // inherited method\n    ownName: dog.hasOwnProperty(\"name\"),                 // true (own)\n    ownSpeak: dog.hasOwnProperty(\"speak\"),               // false (inherited)\n    protoIsAnimal: Object.getPrototypeOf(dog) === Animal.prototype,\n  };\n}\n\nmodule.exports = { Animal, inspect };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { inspect } = require(\"./solution\");\n\nconsole.log(inspect());\n\nconst r = inspect();\nconsole.assert(r.speak === \"Rex makes a sound\", \"inherited method works\");\nconsole.assert(r.ownName === true, \"name is own property\");\nconsole.assert(r.ownSpeak === false, \"speak is inherited, not own\");\nconsole.assert(r.protoIsAnimal === true, \"prototype links to Animal.prototype\");\nconsole.log(\"prototype assertions passed.\");",
+      "expectedOutput": "{ speak: 'Rex makes a sound', ownName: true, ownSpeak: false, protoIsAnimal: true }\nprototype assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

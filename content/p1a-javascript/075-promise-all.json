@@ -1,0 +1,64 @@
+{
+  "id": "p1a-075",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 75,
+  "orderInPhase": 75,
+  "slug": "promise-all",
+  "title": "Promise.all",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "promise.all"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A dashboard that needs user info, recent orders, and notifications: fire all three requests with `Promise.all` so they load in parallel (much faster than seq…"
+  },
+  "sections": {
+    "simple_en": "`Promise.all([...])` runs multiple promises concurrently and returns a single promise that fulfils with an array of all their results — in input order — once every promise has fulfilled. It's the tool for 'do these independent async tasks in parallel and wait for all of them'.\n\nCrucially, it is fail-fast: if any promise rejects, the whole `Promise.all` rejects immediately with that error (the others keep running but their results are discarded). When you instead want every result regardless of failures, use `Promise.allSettled`.",
+    "hinglish": "`Promise.all([...])` kai promises ko concurrently chalata hai aur ek single promise return karta hai jo sabke results ke array ke saath fulfil hota hai — input order me — jab saare promises fulfil ho jaayein. Ye 'in independent async tasks ko parallel me karo aur sabka wait karo' ke liye tool hai.\nImportant: ye fail-fast hai: agar koi bhi promise reject ho, to poora `Promise.all` turant us error ke saath reject ho jaata hai (baaki chalte rehte hain par unke results discard). Jab aapko failures ke bawajood har result chahiye, to `Promise.allSettled` use karo.",
+    "keyPoints": [
+      "Runs promises concurrently; fulfils with results in input order.",
+      "Fulfils only when ALL fulfil; rejects as soon as ANY rejects (fail-fast).",
+      "Great for parallel independent requests you all need.",
+      "On rejection, other promises still run but their results are ignored.",
+      "Use `Promise.allSettled` when you want every outcome regardless of failures."
+    ],
+    "real_world": "A dashboard that needs user info, recent orders, and notifications: fire all three requests with `Promise.all` so they load in parallel (much faster than sequentially) and render once all arrive.",
+    "followups": [
+      {
+        "q": "In what order are Promise.all results returned?",
+        "a": "In the order of the input array, regardless of which promise finished first. The promises run concurrently, but results are positionally aligned to the inputs."
+      },
+      {
+        "q": "What happens if one promise in Promise.all rejects?",
+        "a": "Promise.all rejects immediately (fail-fast) with that first error and ignores the others' results. Use `Promise.allSettled` if you need every outcome even when some fail."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Promise.all for parallel work + fail-fast behaviour.\n\nconst resolveAfter = (value, ms) => new Promise((r) => setTimeout(() => r(value), ms));\nconst rejectAfter = (msg, ms) => new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms));\n\nfunction loadAll() {\n  return Promise.all([\n    resolveAfter(\"user\", 10),\n    resolveAfter(\"orders\", 5),\n    resolveAfter(\"notifs\", 8),\n  ]); // resolves to ['user','orders','notifs'] in INPUT order\n}\n\nfunction failFast() {\n  return Promise.all([\n    resolveAfter(\"ok\", 5),\n    rejectAfter(\"failed\", 1),\n  ]).catch((err) => \"rejected:\" + err.message);\n}\n\nmodule.exports = { loadAll, failFast };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { loadAll, failFast } = require(\"./solution\");\n\nloadAll().then((results) => {\n  console.log(results); // ['user','orders','notifs'] (input order)\n  console.assert(JSON.stringify(results) === '[\"user\",\"orders\",\"notifs\"]', \"results in input order\");\n\n  failFast().then((r) => {\n    console.log(r); // rejected:failed\n    console.assert(r === \"rejected:failed\", \"Promise.all is fail-fast\");\n    console.log(\"Promise.all assertions passed.\");\n  });\n});",
+      "expectedOutput": "[ 'user', 'orders', 'notifs' ]\nrejected:failed\nPromise.all assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

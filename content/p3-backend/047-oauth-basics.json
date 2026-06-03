@@ -1,0 +1,69 @@
+{
+  "id": "p3-047",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 47,
+  "orderInPhase": 47,
+  "slug": "oauth-basics",
+  "title": "OAuth basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "oauth",
+    "basics"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "'Sign in with Google' sends the user to Google, who approves sharing their email and profile."
+  },
+  "sections": {
+    "simple_en": "OAuth 2.0 is an authorization framework that lets users grant an app limited access to their data on another service without sharing their password — the basis of 'Log in with Google/GitHub'. The common Authorization Code flow: the app redirects the user to the provider, the user approves the requested scopes, the provider redirects back with a short-lived code, and the app exchanges that code (plus its client secret) for an access token over a back channel.\n\nThe app then uses the access token to call the provider's API for the user's profile or data. OAuth handles delegated authorization; for identity/login specifically, OpenID Connect layers an ID token on top of OAuth. Libraries like Passport implement the flow so you don't handle raw redirects and token exchange by hand.",
+    "hinglish": "OAuth 2.0 ek authorization framework hai jo users ko ek app ko doosri service par unke data tak limited access dene deta hai bina password share kiye — 'Log in with Google/GitHub' ka aadhaar. Common Authorization Code flow: app user ko provider par redirect karta hai, user requested scopes approve karta hai, provider ek short-lived code ke saath wapas redirect karta hai, aur app us code (aur apne client secret) ko back channel par access token ke liye exchange karta hai.\n\nPhir app access token se provider ki API call karke user ka profile/data leta hai. OAuth delegated authorization handle karta hai; identity/login ke liye OpenID Connect OAuth ke upar ek ID token add karta hai. Passport jaisi libraries flow implement karti hain taaki aapko raw redirects aur token exchange khud na karna pade.",
+    "keyPoints": [
+      "Lets users grant limited access without sharing their password.",
+      "Authorization Code flow: redirect -> approve -> code -> exchange for token.",
+      "The app uses the access token to call the provider's API.",
+      "Authorization codes are short-lived and single-use; secrets stay server-side.",
+      "OAuth = authorization; OpenID Connect adds identity (ID token) for login."
+    ],
+    "real_world": "'Sign in with Google' sends the user to Google, who approves sharing their email and profile. Google redirects back with a code; the server exchanges it for tokens and reads the profile to create or find the user — all without the app ever seeing the user's Google password.",
+    "followups": [
+      {
+        "q": "What problem does OAuth solve?",
+        "a": "Delegated access: letting an app act on a user's behalf on another service with limited, scoped permissions — without the user handing over their password."
+      },
+      {
+        "q": "Why exchange a code for a token instead of returning the token directly?",
+        "a": "The code is short-lived and exchanged server-to-server with the client secret, so the access token never travels through the browser/URL where it could be intercepted."
+      },
+      {
+        "q": "OAuth vs OpenID Connect?",
+        "a": "OAuth 2.0 is for authorization (access to resources). OpenID Connect builds on it to provide authentication/identity via an ID token, which is what 'social login' actually uses."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + Passport OAuth code (Google strategy). The Node-runnable demo below simulates the authorization-code flow (code -> token exchange) so the steps are verifiable here.",
+      "source": "// OAuth basics — Authorization Code flow with Passport (Google example).\nconst express = require(\"express\");\nconst passport = require(\"passport\");\nconst GoogleStrategy = require(\"passport-google-oauth20\").Strategy;\nconst app = express();\n\npassport.use(new GoogleStrategy(\n  {\n    clientID: process.env.GOOGLE_CLIENT_ID,\n    clientSecret: process.env.GOOGLE_CLIENT_SECRET,\n    callbackURL: \"/auth/google/callback\",\n  },\n  // Called after the user approves and Google redirects back with a code\n  // that Passport exchanges for tokens + the user's profile.\n  async (accessToken, refreshToken, profile, done) => {\n    const user = await findOrCreateUser(profile);\n    done(null, user);\n  }\n));\n\n// 1) Send the user to Google to approve the requested scopes.\napp.get(\"/auth/google\", passport.authenticate(\"google\", { scope: [\"profile\", \"email\"] }));\n\n// 2) Google redirects back here; Passport completes the token exchange.\napp.get(\"/auth/google/callback\",\n  passport.authenticate(\"google\", { failureRedirect: \"/login\" }),\n  (req, res) => res.redirect(\"/dashboard\")\n);\n\nasync function findOrCreateUser(profile) { return { id: profile.id, name: profile.displayName }; }\napp.listen(3000);\n// OAuth lets users grant limited access without sharing their password.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// OAuth basics — Authorization Code flow (simplified, no secrets shown)\nfunction createProvider(){\n  const codes = new Map(); const tokens = new Map();\n  return {\n    // 1) user approves -> provider returns a short-lived authorization code\n    authorize(clientId, userId){ const code = \"code_\" + userId; codes.set(code, { clientId, userId }); return code; },\n    // 2) app exchanges code (+ client secret) for an access token\n    token(code, clientSecret){\n      if (!codes.has(code) || clientSecret !== \"shhh\") return null;\n      const { userId } = codes.get(code); codes.delete(code);   // codes are one-time use\n      const access = \"at_\" + userId; tokens.set(access, userId); return access;\n    },\n    // 3) app calls the API with the access token to get user info\n    userInfo(access){ return tokens.has(access) ? { id: tokens.get(access), name: \"Asha\" } : null; },\n  };\n}\nconst google = createProvider();\nconst code = google.authorize(\"my-app\", 1);             // redirect back with ?code=...\nconsole.log(\"Authorization code:\", code);\nconst access = google.token(code, \"shhh\");              // back-channel exchange\nconsole.log(\"Access token:\", access);\nconsole.log(\"User info:\", JSON.stringify(google.userInfo(access)));\nconsole.assert(google.token(code, \"shhh\") === null, \"auth code is single-use\");\nconsole.log(\"OAuth lets users grant limited access without sharing passwords.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Authorization code: code_1\nAccess token: at_1\nUser info: {\"id\":1,\"name\":\"Asha\"}\nOAuth lets users grant limited access without sharing passwords.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p5-049",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 49,
+  "orderInPhase": 49,
+  "slug": "github-cleanup",
+  "title": "GitHub cleanup",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "github",
+    "cleanup"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Before a job hunt, a developer archives a dozen abandoned repos, writes proper READMEs for their three best projects, adds descriptions and licenses, and pin…"
+  },
+  "sections": {
+    "simple_en": "Your GitHub is a portfolio that hiring managers actually open, so it should be curated, not a graveyard of half-finished experiments. Every repo you want seen needs a clear README (what it is, why it exists, how to run it), a description, an appropriate license, and a meaningful name — not 'test' or 'project1'.\n\nPin your best 4-6 projects to the top of your profile, remove or archive dead and abandoned repos, and keep commit history reasonably tidy. The goal is that a recruiter landing on your profile immediately sees a few polished, understandable projects rather than having to dig through clutter to judge your work.",
+    "hinglish": "Aapka GitHub ek portfolio hai jise hiring managers actually kholte hain, to use curated hona chahiye, half-finished experiments ka graveyard nahi. Har repo jise aap dekhana chahte ho use chahiye ek clear README (ye kya hai, kyun hai, kaise run karein), ek description, ek appropriate license, aur ek meaningful name — 'test' ya 'project1' nahi.\n\nApne best 4-6 projects ko profile ke top par pin karo, dead aur abandoned repos ko remove ya archive karo, aur commit history reasonably tidy rakho. Goal ye hai ki ek recruiter aapke profile par aakar turant kuch polished, understandable projects dekhe, na ki aapke kaam ko judge karne ke liye clutter mein dig karna pade.",
+    "keyPoints": [
+      "GitHub is a portfolio hiring managers open — curate it.",
+      "Every showcased repo: clear README, description, license, meaningful name.",
+      "README should cover what/why/how to run.",
+      "Pin your best 4-6 projects; remove or archive dead repos.",
+      "Keep commit history tidy; make the profile easy to judge at a glance."
+    ],
+    "real_world": "Before a job hunt, a developer archives a dozen abandoned repos, writes proper READMEs for their three best projects, adds descriptions and licenses, and pins them. A hiring manager opening the profile now sees a clean, impressive showcase instead of clutter — and forms a strong first impression.",
+    "followups": [
+      {
+        "q": "What does a good showcased repo need?",
+        "a": "A clear README (what it is, why, how to run, ideally a demo link), a description, an appropriate license, and a meaningful name. The reader should understand the project in under a minute."
+      },
+      {
+        "q": "How do you curate a GitHub profile?",
+        "a": "Pin your best 4-6 projects, archive or remove dead/abandoned repos, ensure each showcased repo is documented, and keep commit history tidy — so the profile reads as a polished portfolio, not a dumping ground."
+      },
+      {
+        "q": "Does GitHub activity matter to recruiters?",
+        "a": "Quality matters more than the green-square grid. A few well-documented, working, ideally deployed projects make a far stronger impression than many abandoned or undocumented repos or a busy contribution graph alone."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo auditing repos for README, description, license, and meaningful names, verifying which repos are recruiter-ready.",
+      "source": "# GitHub cleanup — make your profile recruiter-ready.\n\ndef audit_repo(repo: dict) -> dict:\n    issues = []\n    if not repo.get(\"readme\"):       issues.append(\"add a clear README\")\n    if not repo.get(\"description\"):  issues.append(\"add a repo description\")\n    if not repo.get(\"license\"):      issues.append(\"add a license\")\n    if (repo.get(\"name\") or \"\").lower() in {\"test\", \"untitled\", \"project1\", \"demo\"}:\n        issues.append(\"rename meaningfully\")\n    return {\"name\": repo.get(\"name\"), \"ready\": not issues, \"issues\": issues}\n\n# Cleanup checklist:\n#   - Pin your best 4-6 projects on your profile.\n#   - Each showcased repo: README (what/why/how-to-run/screenshots), description, topics, license.\n#   - Meaningful names; remove abandoned/empty/test repos (or make them private).\n#   - A profile README (the username/username repo) introducing you and linking your best work.\n#   - Tidy, descriptive commit messages; green-ish contribution activity helps but isn't everything.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# GitHub cleanup — flag repos that aren't recruiter-ready (README, description, license, pinned)\ndef audit_repo(repo):\n    issues = []\n    if not repo.get(\"readme\"): issues.append(\"add a README\")\n    if not repo.get(\"description\"): issues.append(\"add a description\")\n    if not repo.get(\"license\"): issues.append(\"add a license\")\n    if repo.get(\"name\", \"\").lower() in (\"test\", \"untitled\", \"project1\"): issues.append(\"rename meaningfully\")\n    return {\"repo\": repo.get(\"name\"), \"ready\": not issues, \"issues\": issues}\n\nrepos = [\n    {\"name\": \"rag-pdf-chat\", \"readme\": True, \"description\": \"Chat with PDFs using RAG\", \"license\": \"MIT\"},\n    {\"name\": \"project1\", \"readme\": False, \"description\": \"\", \"license\": None},\n]\nfor r in repos:\n    a = audit_repo(r)\n    print(f\"{a['repo']}: {'READY' if a['ready'] else 'fix -> ' + '; '.join(a['issues'])}\")\nassert audit_repo(repos[0])[\"ready\"] is True\nassert \"add a README\" in audit_repo(repos[1])[\"issues\"]\nprint(\"\\nGitHub cleanup: every showcased repo needs a clear README (what/why/how to run), a description, a license,\")\nprint(\"and a meaningful name. Pin your best 4-6 projects, remove dead/abandoned repos, and keep commit history tidy.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "rag-pdf-chat: READY\nproject1: fix -> add a README; add a description; add a license; rename meaningfully\n\nGitHub cleanup: every showcased repo needs a clear README (what/why/how to run), a description, a license,\nand a meaningful name. Pin your best 4-6 projects, remove dead/abandoned repos, and keep commit history tidy.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

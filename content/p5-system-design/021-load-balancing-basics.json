@@ -1,0 +1,70 @@
+{
+  "id": "p5-021",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 21,
+  "orderInPhase": 21,
+  "slug": "load-balancing-basics",
+  "title": "Load balancing basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "load",
+    "balancing",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A popular API runs five identical servers behind a load balancer using least-connections."
+  },
+  "sections": {
+    "simple_en": "A load balancer sits in front of multiple servers and distributes incoming requests across them, improving throughput (more requests handled in parallel) and availability (it routes around failed servers). It's the front door to a horizontally scaled, stateless backend.\n\nCommon strategies include round-robin (rotate through servers in order), least-connections (send to the least busy server, good when request costs vary), IP-hash (same client to the same server for sticky sessions), and weighted (favor more powerful servers). A load balancer also enables health checks and zero-downtime deploys by draining and re-adding servers.",
+    "hinglish": "Ek load balancer multiple servers ke saamne baithta hai aur incoming requests ko unke across distribute karta hai, throughput improve karke (zyada requests parallel mein handle) aur availability (ye failed servers ke around route karta hai). Ye ek horizontally scaled, stateless backend ka front door hai.\n\nCommon strategies mein shamil hain round-robin (servers ke through order mein rotate), least-connections (least busy server ko bhejo, achha jab request costs vary karein), IP-hash (same client ko same server sticky sessions ke liye), aur weighted (zyada powerful servers ko favor). Ek load balancer health checks aur zero-downtime deploys bhi enable karta hai servers ko drain aur re-add karke.",
+    "keyPoints": [
+      "Distributes requests across servers — boosts throughput and availability.",
+      "The front door to a horizontally scaled, stateless backend.",
+      "Round-robin: rotate in order; least-connections: send to least busy.",
+      "IP-hash: sticky sessions; weighted: favor stronger servers.",
+      "Enables health checks and zero-downtime (drain/update/re-add) deploys."
+    ],
+    "real_world": "A popular API runs five identical servers behind a load balancer using least-connections. When one server is taken down for an update, the balancer simply stops routing to it and spreads traffic across the rest — users never notice the deploy.",
+    "followups": [
+      {
+        "q": "What does a load balancer do?",
+        "a": "It distributes incoming requests across multiple backend servers, increasing throughput and availability, and routes around unhealthy servers via health checks. It's essential for horizontal scaling."
+      },
+      {
+        "q": "Round-robin vs least-connections?",
+        "a": "Round-robin rotates through servers in order — simple and even for uniform requests. Least-connections sends each request to the server with the fewest active connections — better when request durations vary widely."
+      },
+      {
+        "q": "How does a load balancer enable zero-downtime deploys?",
+        "a": "It can drain a server (stop sending new requests while finishing in-flight ones), let you update it, then re-add it via health checks — rolling through servers so the service stays up throughout."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "The code file shows the real-world pattern (an nginx upstream). The runnable JavaScript demo below implements round-robin and least-connections balancing and verifies the distribution.",
+      "source": "// Load balancing basics — distribute traffic across servers for throughput + availability.\n\n// Conceptually (e.g., an nginx upstream): requests hit the LB, which forwards to a backend.\n//   upstream api {\n//     least_conn;                 # strategy: send to the server with fewest active conns\n//     server 10.0.0.1;\n//     server 10.0.0.2;\n//     server 10.0.0.3;\n//   }\n//   server { location /api/ { proxy_pass http://api; } }\n\n// Common strategies:\n//   - Round-robin: rotate through servers in order (simple, even for uniform requests).\n//   - Least-connections: send to the least busy server (good for varied request costs).\n//   - IP-hash: same client -> same server (sticky sessions when needed).\n//   - Weighted: bias toward more powerful servers.\n\n// A load balancer also provides: health checks (route around dead servers), SSL termination,\n// and zero-downtime deploys (drain a server, update, re-add). It's the front door to a\n// horizontally scaled, stateless backend.\nexport {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Load balancing basics — distribute requests across servers (round-robin, least-connections)\nclass LoadBalancer {\n  constructor(servers) { this.servers = servers; this.rr = 0; this.conns = new Map(servers.map((s) => [s, 0])); }\n  roundRobin() { const s = this.servers[this.rr % this.servers.length]; this.rr++; return s; }\n  leastConnections() {\n    let best = this.servers[0];\n    for (const s of this.servers) if (this.conns.get(s) < this.conns.get(best)) best = s;\n    this.conns.set(best, this.conns.get(best) + 1);   // track active connections\n    return best;\n  }\n}\nconst lb = new LoadBalancer([\"s1\", \"s2\", \"s3\"]);\nconst rr = [lb.roundRobin(), lb.roundRobin(), lb.roundRobin(), lb.roundRobin()];\nconsole.log(\"Round-robin order:\", rr);                 // cycles s1,s2,s3,s1\nconst lb2 = new LoadBalancer([\"s1\", \"s2\"]);\nlb2.leastConnections(); lb2.leastConnections();        // s1 then s2 (both at 0, ties to first)\nconsole.log(\"Least-connections picks the least busy server each time.\");\nconsole.assert(rr[0] === \"s1\" && rr[3] === \"s1\", \"round-robin cycles back\");\nconsole.assert(lb2.conns.get(\"s1\") === 1 && lb2.conns.get(\"s2\") === 1, \"spread evenly\");\nconsole.log(\"A load balancer spreads traffic across servers, improving throughput and availability.\");\nconsole.log(\"Strategies: round-robin, least-connections, IP-hash, weighted. It also enables health checks and zero-downtime deploys.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Round-robin order: [ 's1', 's2', 's3', 's1' ]\nLeast-connections picks the least busy server each time.\nA load balancer spreads traffic across servers, improving throughput and availability.\nStrategies: round-robin, least-connections, IP-hash, weighted. It also enables health checks and zero-downtime deploys.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

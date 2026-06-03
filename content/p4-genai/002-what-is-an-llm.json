@@ -1,0 +1,68 @@
+{
+  "id": "p4-002",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 2,
+  "orderInPhase": 2,
+  "slug": "what-is-an-llm",
+  "title": "What is an LLM",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "llm"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "When you ask ChatGPT a question, the LLM predicts the most likely next token over and over, building the answer word-piece by word-piece — the same mechanism…"
+  },
+  "sections": {
+    "simple_en": "A Large Language Model (LLM) is a very large neural network — typically a transformer with billions of parameters — trained on massive amounts of text to predict the next token given the preceding text. By repeatedly predicting and appending the next token, it generates fluent, coherent language.\n\nThrough training on web-scale data, LLMs absorb grammar, facts, reasoning patterns, and styles, letting them answer questions, write, summarize, translate, and code. They don't 'look up' answers; they generate them token by token from learned statistical patterns. Examples include GPT, Claude, Gemini, and Llama.",
+    "hinglish": "Large Language Model (LLM) ek bahut bada neural network hai — aksar billions parameters waala transformer — jo bahut saare text par train hota hai taaki preceding text ke aadhaar par next token predict kare. Baar-baar next token predict aur append karke, ye fluent, coherent language generate karta hai.\n\nWeb-scale data par training se, LLMs grammar, facts, reasoning patterns aur styles absorb karte hain, jisse wo questions answer kar sakte hain, likh sakte hain, summarize, translate aur code kar sakte hain. Wo answers 'look up' nahi karte; wo unhe token by token learned statistical patterns se generate karte hain. Examples: GPT, Claude, Gemini, Llama.",
+    "keyPoints": [
+      "A huge transformer neural net trained to predict the next token.",
+      "Generates text one token at a time, feeding output back as input.",
+      "Learns grammar, facts, reasoning, and style from web-scale training data.",
+      "Doesn't retrieve answers — it generates them from learned patterns.",
+      "Examples: GPT, Claude, Gemini, Llama (varying sizes and capabilities)."
+    ],
+    "real_world": "When you ask ChatGPT a question, the LLM predicts the most likely next token over and over, building the answer word-piece by word-piece — the same mechanism whether it's writing a poem, fixing code, or explaining a concept.",
+    "followups": [
+      {
+        "q": "What does 'large' mean in LLM?",
+        "a": "It refers to the model's scale — billions (sometimes trillions) of parameters — and the enormous training corpus. Scale is a key reason these models exhibit broad, flexible capabilities."
+      },
+      {
+        "q": "Do LLMs store and look up facts?",
+        "a": "Not like a database. Knowledge is encoded implicitly in the weights, and answers are generated token by token. That's why they can be wrong or outdated — and why retrieval (RAG) is used to ground them in real sources."
+      },
+      {
+        "q": "What architecture do modern LLMs use?",
+        "a": "The transformer, which uses self-attention to weigh relationships between tokens across the context. It's what made training such large, capable language models practical."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI SDK code (needs an API key). The Python-runnable demo below implements next-token prediction from learned probabilities so the core mechanism is verifiable here.",
+      "source": "# What is an LLM — a Large Language Model predicts the next token, repeatedly.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\n# Under the hood the model assigns probabilities to the next token and samples one,\n# then feeds it back in and repeats — that loop produces fluent text.\nresponse = client.chat.completions.create(\n    model=\"gpt-4o-mini\",\n    messages=[\n        {\"role\": \"system\", \"content\": \"You are a concise assistant.\"},\n        {\"role\": \"user\", \"content\": \"Explain what an LLM is in one sentence.\"},\n    ],\n)\nprint(response.choices[0].message.content)\nprint(\"Tokens used:\", response.usage.total_tokens)\n\n# LLMs (GPT, Claude, Llama, ...) are transformer neural networks with billions of\n# parameters trained on massive text corpora to predict the next token.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# What is an LLM — at its core, next-token prediction over learned probabilities\nfrom collections import defaultdict, Counter\ntext = \"i love ml i love ai i love coding i love data\".split()\n# Learn P(next | current) from data (a 1-gram language model)\nmodel = defaultdict(Counter)\nfor a, b in zip(text, text[1:]):\n    model[a][b] += 1\n\ndef predict_next(word):\n    counts = model[word]\n    total = sum(counts.values())\n    probs = {w: c / total for w, c in counts.items()}\n    best = max(probs, key=probs.get)\n    return best, probs\n\nbest, probs = predict_next(\"love\")\nprint(\"After 'love', distribution:\", {k: round(v, 2) for k, v in probs.items()})\nprint(\"Most likely next token:\", best)\nassert abs(sum(probs.values()) - 1.0) < 1e-9, \"probabilities sum to 1\"\nprint(\"An LLM is a huge neural network trained to predict the next token; text is generated one token at a time.\")\nprint(\"Real LLMs learn billions of parameters over web-scale text; this is the same idea at toy scale.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "After 'love', distribution: {'ml': 0.25, 'ai': 0.25, 'coding': 0.25, 'data': 0.25}\nMost likely next token: ml\nAn LLM is a huge neural network trained to predict the next token; text is generated one token at a time.\nReal LLMs learn billions of parameters over web-scale text; this is the same idea at toy scale.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

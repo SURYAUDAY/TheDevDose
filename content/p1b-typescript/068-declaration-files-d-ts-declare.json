@@ -1,0 +1,67 @@
+{
+  "id": "p1b-068",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 68,
+  "orderInPhase": 68,
+  "slug": "declaration-files-d-ts-declare",
+  "title": "Declaration Files (.d.ts) & declare",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "declaration",
+    "files",
+    "d.ts",
+    "declare"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Using an untyped JS library, you (or DefinitelyTyped) write a `.d.ts` so TypeScript knows its API; or `declare global` to type a value injected onto `window`…"
+  },
+  "sections": {
+    "simple_en": "A declaration file (`.d.ts`) contains only type declarations — no implementations. It describes the shapes of existing JavaScript code (libraries, globals, modules) so TypeScript can type-check usage without the original source. The `declare` keyword introduces 'ambient' declarations: types for things that exist at runtime but aren't defined in TypeScript.\n\nYou use `declare` for global variables, modules, or values provided by the environment (`declare const VERSION: string`), and `.d.ts` files to ship types for JS libraries (this is what `@types/...` packages are). They provide types without emitting any JavaScript.",
+    "hinglish": "Declaration file (`.d.ts`) me sirf type declarations hote hain — koi implementation nahi. Ye existing JavaScript code (libraries, globals, modules) ki shapes describe karta hai taaki TypeScript original source ke bina usage type-check kar sake. `declare` keyword 'ambient' declarations introduce karta hai: un cheezon ke types jo runtime par exist karti hain par TypeScript me defined nahi.\nAap `declare` global variables, modules, ya environment ke diye values ke liye use karte ho (`declare const VERSION: string`), aur `.d.ts` files JS libraries ke types ship karne ke liye (yahi `@types/...` packages hain). Ye koi JavaScript emit kiye bina types provide karte hain.",
+    "keyPoints": [
+      "`.d.ts` files contain types only — no implementation.",
+      "Describe existing JS (libraries, globals) for the type checker.",
+      "`declare` introduces ambient types for runtime-existing things.",
+      "`@types/...` packages are community-maintained .d.ts files.",
+      "They emit no JavaScript — purely compile-time information."
+    ],
+    "real_world": "Using an untyped JS library, you (or DefinitelyTyped) write a `.d.ts` so TypeScript knows its API; or `declare global` to type a value injected onto `window` by an external script.",
+    "followups": [
+      {
+        "q": "What is a `.d.ts` file?",
+        "a": "A TypeScript declaration file that contains only type information (no implementation). It describes the shapes of existing JS so the compiler can type-check usage; it emits no JavaScript."
+      },
+      {
+        "q": "What does the `declare` keyword do?",
+        "a": "It introduces an ambient declaration — a type for something that exists at runtime but isn't defined in your TypeScript (e.g. a global variable or an external module's API)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// A declaration file (math-lib.d.ts) describing an untyped JS module:\n//\n//   declare module \"math-lib\" {\n//     export function square(n: number): number;\n//   }\n//\n// Ambient global declaration (globals.d.ts):\n//\n//   declare const APP_VERSION: string; // exists at runtime, typed here\n//\n// .d.ts files emit NO JavaScript — they only provide types.\n// Below is a runnable stand-in showing the typed contract such a file describes.\n\nexport interface MathLib {\n  square(n: number): number;\n}\n\nexport const mathLib: MathLib = {\n  square: (n) => n * n,\n};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { mathLib } from \"./solution\";\n\nconsole.log(mathLib.square(5)); // 25\nconsole.assert(mathLib.square(5) === 25, \"typed contract (as a .d.ts would describe) works\");\nconsole.log(\"declaration-files assertions passed.\");\nconsole.log(\"Note: a real .d.ts provides these types with NO implementation/JS output.\");",
+      "expectedOutput": "25\ndeclaration-files assertions passed.\nNote: a real .d.ts provides these types with NO implementation/JS output.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

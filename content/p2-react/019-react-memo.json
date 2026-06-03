@@ -1,0 +1,68 @@
+{
+  "id": "p2-019",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 19,
+  "orderInPhase": 19,
+  "slug": "react-memo",
+  "title": "React.memo",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "react.memo"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "In a chat app, each <Message> in a long list is wrapped in React.memo."
+  },
+  "sections": {
+    "simple_en": "React.memo is a higher-order component that memoizes a function component: it skips re-rendering when the new props are shallow-equal to the previous props. It's the component-level counterpart to useMemo/useCallback, which stabilize values and functions.\n\nIt helps when a component renders often with the same props and its render is non-trivial. But it only does a shallow comparison, so passing new object/array/function props each render (without memoizing them) cancels the benefit. You can also supply a custom comparison function.",
+    "hinglish": "React.memo ek HOC hai jo function component ko memoize karta hai: agar naye props purane props ke shallow-equal ho to wo re-render skip kar deta hai. Ye component level ka optimization hai.\n\nYe tab kaam aata hai jab component bar-bar same props ke saath render hota ho aur uska render heavy ho. Par ye sirf shallow compare karta hai — har render par naya object/array/function prop denge to fayda khatam.",
+    "keyPoints": [
+      "React.memo(Component) skips re-render when props are shallow-equal to the previous ones.",
+      "Component-level memoization; complements useMemo (values) and useCallback (functions).",
+      "Only a shallow prop comparison — new object/array/function props each render defeat it.",
+      "Combine with useMemo/useCallback to keep passed props referentially stable.",
+      "Accepts an optional custom comparator: React.memo(Comp, (prev, next) => boolean)."
+    ],
+    "real_world": "In a chat app, each <Message> in a long list is wrapped in React.memo. When a new message arrives, only the new Message renders — the hundreds of existing ones skip re-rendering because their props are unchanged, keeping scrolling smooth.",
+    "followups": [
+      {
+        "q": "Why might React.memo not prevent re-renders?",
+        "a": "Because it does a shallow compare. If a parent passes a freshly created object, array, or inline function each render, the props look different and the component re-renders anyway."
+      },
+      {
+        "q": "How do you make React.memo effective?",
+        "a": "Stabilize the props: memoize objects/arrays with useMemo and functions with useCallback so their references stay the same between renders."
+      },
+      {
+        "q": "Can you customize the comparison?",
+        "a": "Yes — pass a second argument: a function (prevProps, nextProps) => true means 'equal, skip render'. Use it carefully to avoid stale UI."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// React.memo: skip re-rendering messages whose props didn't change.\nimport React, { memo, useState } from \"react\";\n\nconst Message = memo(function Message({ text }) {\n  console.log(\"Render:\", text); // only logs for NEW messages\n  return <li>{text}</li>;\n});\n\nexport default function Chat() {\n  const [messages, setMessages] = useState([\"Hi\", \"Hello\"]);\n\n  const add = () => setMessages((m) => [...m, `Msg ${m.length + 1}`]);\n\n  return (\n    <div>\n      <button onClick={add}>Add message</button>\n      <ul>\n        {messages.map((text, i) => (\n          <Message key={i} text={text} />\n        ))}\n      </ul>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React.memo — skip re-render when props are shallow-equal\nfunction shallowEqual(a, b){\n  const ka = Object.keys(a), kb = Object.keys(b);\n  if (ka.length !== kb.length) return false;\n  return ka.every(k => a[k] === b[k]);\n}\nlet renders = 0;\nfunction memo(Component){\n  let lastProps = null, lastResult = null;\n  return (props) => {\n    if (lastProps && shallowEqual(lastProps, props)) return lastResult; // skip\n    renders++; lastProps = props; lastResult = Component(props); return lastResult;\n  };\n}\nconst Greeting = memo((p) => `Hello ${p.name}`);\nconsole.log(Greeting({ name: \"Asha\" }));\nconsole.log(Greeting({ name: \"Asha\" }));   // same props -> skipped\nconsole.log(Greeting({ name: \"Ravi\" }));   // changed -> re-render\nconsole.log(\"Actual renders:\", renders);\nconsole.assert(renders === 2, \"memo should skip identical props\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Hello Asha\nHello Asha\nHello Ravi\nActual renders: 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

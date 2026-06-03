@@ -1,0 +1,69 @@
+{
+  "id": "p2-003",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 3,
+  "orderInPhase": 3,
+  "slug": "react-lifecycle",
+  "title": "React lifecycle",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "react",
+    "lifecycle"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A live chat widget mounts when the page loads (open the WebSocket in componentDidMount/useEffect), updates as new messages arrive, and must close the socket…"
+  },
+  "sections": {
+    "simple_en": "Every React component goes through three phases: mounting (added to the DOM), updating (re-rendering due to state/prop changes), and unmounting (removed from the DOM). In class components these map to methods like constructor, render, componentDidMount, componentDidUpdate, and componentWillUnmount.\n\nIn function components, the same phases are expressed with hooks. useEffect with an empty dependency array behaves like mount, with dependencies like update, and its returned cleanup function behaves like unmount. Understanding this ordering helps you fetch data, subscribe, and clean up correctly.",
+    "hinglish": "Har component teen phases se guzarta hai: mounting (DOM mein add hona), updating (state ya props change hone par dobara render), aur unmounting (DOM se hatna). Class mein ye constructor, render, componentDidMount jaise methods se hota hai.\n\nFunction components mein yahi cheez hooks se hoti hai. useEffect empty dependency ke saath mount jaisa, dependency ke saath update jaisa, aur uska return cleanup unmount jaisa kaam karta hai. Ye order samajhna data fetch aur cleanup ke liye zaroori hai.",
+    "keyPoints": [
+      "Three phases: mount, update, unmount — know which work belongs in each.",
+      "Class: constructor -> render -> componentDidMount; updates -> render -> componentDidUpdate; removal -> componentWillUnmount.",
+      "Hooks: useEffect(fn, []) = mount; useEffect(fn, [deps]) = update on deps; return cleanup = unmount.",
+      "Side effects (fetch, subscriptions, timers) belong in effects, never directly in render.",
+      "Always clean up subscriptions/timers in the cleanup function to avoid memory leaks."
+    ],
+    "real_world": "A live chat widget mounts when the page loads (open the WebSocket in componentDidMount/useEffect), updates as new messages arrive, and must close the socket when the user navigates away (componentWillUnmount / effect cleanup). Forgetting cleanup leaves dangling connections.",
+    "followups": [
+      {
+        "q": "How do you replicate componentDidMount with hooks?",
+        "a": "useEffect(() => { /* run once */ }, []) — the empty dependency array makes it run after the first render only."
+      },
+      {
+        "q": "When does the effect cleanup run?",
+        "a": "Before the effect runs again (on dependency change) and once more when the component unmounts."
+      },
+      {
+        "q": "Why avoid side effects during render?",
+        "a": "Render must be pure and may run multiple times (e.g., Strict Mode, concurrent features). Side effects there cause duplicated requests and unpredictable behavior."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Lifecycle with hooks: mount, update, and unmount via useEffect.\nimport React, { useState, useEffect } from \"react\";\n\nfunction Clock() {\n  const [time, setTime] = useState(new Date().toLocaleTimeString());\n\n  useEffect(() => {\n    console.log(\"MOUNT: start interval\"); // like componentDidMount\n    const id = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);\n    return () => {\n      console.log(\"UNMOUNT: clear interval\"); // like componentWillUnmount\n      clearInterval(id);\n    };\n  }, []); // empty deps => run once on mount\n\n  useEffect(() => {\n    console.log(\"UPDATE: time changed to\", time); // runs on every time change\n  }, [time]);\n\n  return <h2>{time}</h2>;\n}\n\nexport default function App() {\n  const [show, setShow] = useState(true);\n  return (\n    <div>\n      <button onClick={() => setShow((s) => !s)}>Toggle Clock</button>\n      {show && <Clock />}\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React lifecycle — simulate mount -> update -> unmount ordering\nconst log = [];\nclass Component {\n  constructor(p){ this.props = p; log.push(\"constructor\"); }\n  render(){ log.push(\"render\"); }\n  componentDidMount(){ log.push(\"componentDidMount\"); }\n  componentDidUpdate(){ log.push(\"componentDidUpdate\"); }\n  componentWillUnmount(){ log.push(\"componentWillUnmount\"); }\n}\nfunction mount(c){ c.render(); c.componentDidMount(); }\nfunction update(c, p){ c.props = p; c.render(); c.componentDidUpdate(); }\nfunction unmount(c){ c.componentWillUnmount(); }\n\nconst c = new Component({ count: 0 });\nmount(c);\nupdate(c, { count: 1 });\nunmount(c);\n\nlog.forEach((l, i) => console.log(`${i + 1}. ${l}`));\nconsole.assert(log[0] === \"constructor\" && log.at(-1) === \"componentWillUnmount\", \"order wrong\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "1. constructor\n2. render\n3. componentDidMount\n4. render\n5. componentDidUpdate\n6. componentWillUnmount\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

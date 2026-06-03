@@ -1,0 +1,68 @@
+{
+  "id": "p2-033",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 33,
+  "orderInPhase": 33,
+  "slug": "createslice",
+  "title": "createSlice",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "createslice"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A todosSlice defines add, remove, and toggle reducers."
+  },
+  "sections": {
+    "simple_en": "createSlice is the heart of Redux Toolkit. You give it a name, an initial state, and a set of reducer functions; it returns a reducer plus automatically generated action creators named after each reducer. This keeps all logic for one feature in a single, cohesive place.\n\nInside reducers you can write Immer-powered 'mutations' that RTK converts to immutable updates. For async or cross-slice cases, extraReducers handles actions defined elsewhere (like createAsyncThunk results).",
+    "hinglish": "createSlice Redux Toolkit ka dil hai. Aap use ek name, initial state aur reducer functions dete ho; ye ek reducer aur har reducer ke naam ke action creators automatically bana deta hai. Ek feature ki saari logic ek jagah rehti hai.\n\nReducers ke andar aap Immer ki madad se 'mutation' likh sakte ho jise RTK immutable update bana deta hai. Async ya doosre slice ke actions ke liye extraReducers use hota hai.",
+    "keyPoints": [
+      "createSlice({ name, initialState, reducers }) returns { reducer, actions }.",
+      "Action creators are generated automatically from the reducer keys.",
+      "Reducer logic uses Immer, so you can write direct 'mutations' on the draft.",
+      "extraReducers responds to actions defined elsewhere (e.g., async thunks).",
+      "Co-locates a feature's state, reducers, and actions in one file."
+    ],
+    "real_world": "A todosSlice defines add, remove, and toggle reducers. RTK auto-generates todosSlice.actions.add(...), etc. Components dispatch those creators, and all todo state transitions live in one readable file instead of spread across action and reducer files.",
+    "followups": [
+      {
+        "q": "Where do the action creators come from?",
+        "a": "createSlice generates them from your reducer names — a reducer key 'add' yields slice.actions.add, with the type 'sliceName/add'."
+      },
+      {
+        "q": "What is extraReducers for?",
+        "a": "Handling actions not defined in this slice's reducers — commonly the pending/fulfilled/rejected actions from createAsyncThunk, or actions shared across slices."
+      },
+      {
+        "q": "Can you really mutate state in createSlice reducers?",
+        "a": "You mutate an Immer draft, not the real state. RTK uses Immer to turn those mutations into a correct immutable update."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// createSlice: define state, reducers, and auto-generated actions in one place.\nimport { createSlice } from \"@reduxjs/toolkit\";\n\nconst todosSlice = createSlice({\n  name: \"todos\",\n  initialState: { items: [] },\n  reducers: {\n    // Immer lets us \"mutate\" the draft; RTK produces immutable updates.\n    add: (state, action) => { state.items.push(action.payload); },\n    remove: (state, action) => {\n      state.items = state.items.filter((t) => t.id !== action.payload);\n    },\n    clear: (state) => { state.items = []; },\n  },\n});\n\n// Action creators are generated automatically from the reducer keys:\nexport const { add, remove, clear } = todosSlice.actions;\nexport default todosSlice.reducer;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// createSlice — auto-generate action creators + a reducer from one config\nfunction createSlice({ name, initialState, reducers }){\n  const actions = {};\n  Object.keys(reducers).forEach(key => {\n    actions[key] = (payload) => ({ type: `${name}/${key}`, payload });\n  });\n  const reducer = (state = initialState, action) => {\n    const key = action.type.split(\"/\")[1];\n    if (action.type.startsWith(name + \"/\") && reducers[key]){\n      const draft = structuredClone(state);\n      reducers[key](draft, action);   // mutate the draft (Immer-style)\n      return draft;\n    }\n    return state;\n  };\n  return { actions, reducer };\n}\nconst todos = createSlice({\n  name: \"todos\",\n  initialState: { items: [] },\n  reducers: {\n    add(state, action){ state.items.push(action.payload); },\n    clear(state){ state.items = []; },\n  },\n});\nconsole.log(\"add action:\", JSON.stringify(todos.actions.add(\"Buy milk\")));\nlet s = todos.reducer(undefined, todos.actions.add(\"Buy milk\"));\ns = todos.reducer(s, todos.actions.add(\"Walk dog\"));\nconsole.log(\"State after 2 adds:\", JSON.stringify(s));\ns = todos.reducer(s, todos.actions.clear());\nconsole.log(\"State after clear:\", JSON.stringify(s));\nconsole.assert(s.items.length === 0, \"cleared\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "add action: {\"type\":\"todos/add\",\"payload\":\"Buy milk\"}\nState after 2 adds: {\"items\":[\"Buy milk\",\"Walk dog\"]}\nState after clear: {\"items\":[]}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

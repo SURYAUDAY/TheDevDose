@@ -1,0 +1,64 @@
+{
+  "id": "p1a-042",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 42,
+  "orderInPhase": 42,
+  "slug": "array-filter",
+  "title": "Array.filter()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "array.filter"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A product search showing only in-stock items under a price cap: `products.filter(p => p.inStock && p.price <= max)` produces exactly the list to display."
+  },
+  "sections": {
+    "simple_en": "`filter` creates a new array containing only the elements for which the callback returns a truthy value. It's used to keep a subset of items that match a condition, leaving the original array unchanged.\n\nThe callback is a predicate (returns true/false) and receives `(element, index, array)`. The result length is between 0 and the original length. Combine `filter` with `map` and `reduce` to build expressive data pipelines.",
+    "hinglish": "`filter` ek naya array banata hai jisme sirf woh elements hote hain jinke liye callback truthy value return karta hai. Ye condition se match karne wale items ka subset rakhne ke liye use hota hai, original array bina change kiye.\nCallback ek predicate hota hai (true/false return karta hai) aur use `(element, index, array)` milta hai. Result length 0 se original length ke beech hoti hai. `filter` ko `map` aur `reduce` ke saath mila kar expressive data pipelines banao.",
+    "keyPoints": [
+      "Returns a NEW array of items where the predicate returns truthy.",
+      "Non-mutating; result length ranges from 0 to original length.",
+      "Predicate signature: `(element, index, array)`.",
+      "Use to keep matching items; pairs naturally with map/reduce.",
+      "Returning a non-boolean works via truthiness, but a clear boolean is best."
+    ],
+    "real_world": "A product search showing only in-stock items under a price cap: `products.filter(p => p.inStock && p.price <= max)` produces exactly the list to display.",
+    "followups": [
+      {
+        "q": "What determines whether an element is kept by filter?",
+        "a": "Whether the callback returns a truthy value for it. Truthy → kept; falsy → discarded. The original array is not modified."
+      },
+      {
+        "q": "How would you get both matching and non-matching groups?",
+        "a": "Either call filter twice with opposite conditions, or use `reduce` to partition into two arrays in a single pass for efficiency."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// filter to subset data.\n\nfunction evens(nums) {\n  return nums.filter((n) => n % 2 === 0);\n}\n\nfunction inStockUnder(products, max) {\n  return products.filter((p) => p.inStock && p.price <= max);\n}\n\nfunction removeFalsy(arr) {\n  return arr.filter(Boolean); // drops 0, '', null, undefined, NaN, false\n}\n\nmodule.exports = { evens, inStockUnder, removeFalsy };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { evens, inStockUnder, removeFalsy } = require(\"./solution\");\n\nconsole.log(evens([1, 2, 3, 4, 5, 6])); // [2,4,6]\nconst products = [\n  { name: \"A\", price: 10, inStock: true },\n  { name: \"B\", price: 50, inStock: true },\n  { name: \"C\", price: 10, inStock: false },\n];\nconsole.log(inStockUnder(products, 20).map((p) => p.name)); // ['A']\nconsole.log(removeFalsy([0, \"x\", \"\", 3, null, NaN, \"y\"])); // ['x',3,'y']\n\nconsole.assert(JSON.stringify(evens([1,2,3,4])) === \"[2,4]\", \"evens\");\nconsole.assert(inStockUnder(products, 20).length === 1, \"one product matches\");\nconsole.assert(JSON.stringify(removeFalsy([0,\"x\",\"\",3])) === '[\"x\",3]', \"falsy removed\");\nconsole.log(\"filter assertions passed.\");",
+      "expectedOutput": "[ 2, 4, 6 ]\n[ 'A' ]\n[ 'x', 3, 'y' ]\nfilter assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

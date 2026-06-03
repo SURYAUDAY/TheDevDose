@@ -1,0 +1,71 @@
+{
+  "id": "p4-019",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 19,
+  "orderInPhase": 19,
+  "slug": "structured-outputs-json-mode",
+  "title": "Structured outputs / JSON mode",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "structured",
+    "outputs",
+    "json",
+    "mode"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An app extracts contact details from messy emails by asking the model for JSON matching a Pydantic schema (name, email, company)."
+  },
+  "sections": {
+    "simple_en": "Structured outputs make an LLM return data in a strict, machine-readable format — typically JSON conforming to a schema — instead of free-form prose. JSON mode guarantees valid JSON, and schema-based structured outputs go further by guaranteeing the response matches your defined fields and types.\n\nThis is essential when an LLM's output feeds the rest of a program: you can reliably parse it, validate it, and use it without brittle string handling. In Python you often pair this with Pydantic models (or JSON Schema) so the response is parsed straight into typed objects — turning the LLM into a dependable component in a data pipeline.",
+    "hinglish": "Structured outputs LLM ko data ek strict, machine-readable format mein return karwate hain — aksar schema ke anusaar JSON — free-form prose ke bajaye. JSON mode valid JSON guarantee karta hai, aur schema-based structured outputs aage badhte hain response ko aapke define kiye fields aur types se match karne ki guarantee de kar.\n\nYe essential hai jab LLM ka output baaki program ko feed karta hai: aap use reliably parse, validate aur use kar sakte ho bina brittle string handling ke. Python mein aap ise aksar Pydantic models (ya JSON Schema) ke saath pair karte ho taaki response seedhe typed objects mein parse ho — LLM ko ek data pipeline mein dependable component banakar.",
+    "keyPoints": [
+      "Make the LLM return strict, machine-readable data (usually JSON).",
+      "JSON mode guarantees valid JSON; schema mode guarantees fields/types.",
+      "Essential when output feeds downstream code (no brittle parsing).",
+      "Pair with Pydantic / JSON Schema to validate and get typed objects.",
+      "Turns the LLM into a reliable component in a data pipeline."
+    ],
+    "real_world": "An app extracts contact details from messy emails by asking the model for JSON matching a Pydantic schema (name, email, company). The response parses straight into a typed object the rest of the system uses — no fragile regex or guessing about format.",
+    "followups": [
+      {
+        "q": "What's the difference between JSON mode and structured outputs?",
+        "a": "JSON mode guarantees the output is valid JSON. Schema-based structured outputs additionally guarantee it matches a specific schema (defined fields and types), e.g., via a Pydantic model."
+      },
+      {
+        "q": "Why are structured outputs important?",
+        "a": "When an LLM's output is consumed by code, you need it in a predictable, parseable shape. Structured outputs eliminate fragile text parsing and make the model reliable inside pipelines and applications."
+      },
+      {
+        "q": "How do you validate the structure?",
+        "a": "Define a schema (Pydantic model or JSON Schema). The API can enforce/parse to it, and you can additionally validate fields/types in code, rejecting or retrying on mismatch."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI structured-output code with Pydantic (needs an API key). The Python-runnable demo below parses and validates JSON against a schema so the enforcement is verifiable here.",
+      "source": "# Structured outputs / JSON mode — get validated, typed JSON back (with Pydantic).\nfrom openai import OpenAI\nfrom pydantic import BaseModel\n\nclient = OpenAI()\n\nclass Person(BaseModel):\n    name: str\n    age: int\n    skills: list[str]\n\n# The Responses/Chat API can parse directly into a Pydantic schema, guaranteeing\n# the output matches your types (no brittle string parsing).\ndef extract_person(text: str) -> Person:\n    completion = client.beta.chat.completions.parse(\n        model=\"gpt-4o-mini\",\n        messages=[\n            {\"role\": \"system\", \"content\": \"Extract the person's details.\"},\n            {\"role\": \"user\", \"content\": text},\n        ],\n        response_format=Person,   # enforce the schema\n    )\n    return completion.choices[0].message.parsed\n\n# Alternatively, response_format={\"type\": \"json_object\"} returns valid JSON you\n# then load with json.loads(). Structured outputs make LLMs reliable in pipelines.\n# person = extract_person(\"Asha is 25 and knows Python and ML.\")",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Structured outputs / JSON mode — force the model to emit valid, schema-conforming JSON\nimport json\n\n# Suppose the model returns this string (JSON mode guarantees valid JSON):\nraw = '{\"name\": \"Asha\", \"age\": 25, \"skills\": [\"python\", \"ml\"]}'\n\nschema = {\"name\": str, \"age\": int, \"skills\": list}\ndef validate(obj, schema):\n    errors = []\n    for field, typ in schema.items():\n        if field not in obj: errors.append(f\"missing '{field}'\")\n        elif not isinstance(obj[field], typ): errors.append(f\"'{field}' must be {typ.__name__}\")\n    return errors\n\nparsed = json.loads(raw)                     # guaranteed to parse in JSON mode\nerrors = validate(parsed, schema)\nprint(\"Parsed object:\", parsed)\nprint(\"Schema errors:\", errors or \"none\")\nprint(\"Access fields directly: name =\", parsed[\"name\"], \"| first skill =\", parsed[\"skills\"][0])\nassert not errors, \"output conforms to the schema\"\nassert isinstance(parsed[\"age\"], int)\nprint(\"\\nJSON mode / structured outputs make the model return parseable, typed data your app can use.\")\nprint(\"Pair with a schema (e.g., Pydantic or JSON Schema) to validate and reduce parsing errors.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Parsed object: {'name': 'Asha', 'age': 25, 'skills': ['python', 'ml']}\nSchema errors: none\nAccess fields directly: name = Asha | first skill = python\n\nJSON mode / structured outputs make the model return parseable, typed data your app can use.\nPair with a schema (e.g., Pydantic or JSON Schema) to validate and reduce parsing errors.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

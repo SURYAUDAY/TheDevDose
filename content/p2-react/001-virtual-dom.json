@@ -1,0 +1,69 @@
+{
+  "id": "p2-001",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 1,
+  "orderInPhase": 1,
+  "slug": "virtual-dom",
+  "title": "Virtual DOM",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "virtual",
+    "dom"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Think of editing a document."
+  },
+  "sections": {
+    "simple_en": "The Virtual DOM (VDOM) is a lightweight JavaScript representation of the real DOM. When your component's state changes, React first builds a new VDOM tree in memory instead of touching the browser directly. Working with plain objects is far cheaper than reading and writing real DOM nodes.\n\nReact then compares the new VDOM tree against the previous one, figures out the minimal set of changes, and applies only those to the real DOM. This 'compute in memory, then commit the difference' approach is what makes React updates fast and predictable.",
+    "hinglish": "Virtual DOM matlab real DOM ka ek halka-phulka JavaScript copy. Jab state change hoti hai, React pehle memory mein naya tree banata hai, seedha browser ko touch nahi karta.\n\nPhir purane aur naye tree ko compare karke sirf jo change hua hai utna hi real DOM mein update karta hai. Isi wajah se React fast lagta hai — poora page dobara nahi banta, sirf difference apply hota hai.",
+    "keyPoints": [
+      "VDOM is an in-memory tree of plain JS objects; the real DOM is the browser's actual node tree.",
+      "Direct DOM manipulation is slow because it can trigger reflow/repaint; batching diffs minimizes that cost.",
+      "React computes the diff (reconciliation) and commits only the changed nodes — not the whole tree.",
+      "The VDOM is an implementation detail, not magic: it doesn't make a bad render cheap, it makes updates surgical.",
+      "Frameworks like Svelte skip a runtime VDOM entirely — so VDOM is a strategy, not a requirement."
+    ],
+    "real_world": "Think of editing a document. Instead of reprinting every page after each keystroke, you keep a draft in memory, mark exactly which lines changed, and only reprint those lines. The VDOM is that in-memory draft, and the diff is your list of changed lines.",
+    "followups": [
+      {
+        "q": "Is the Virtual DOM always faster than direct DOM updates?",
+        "a": "No. For a single, well-targeted DOM change, hand-written code can be faster. The VDOM wins on developer ergonomics and on larger, frequent updates where it batches and minimizes real DOM writes."
+      },
+      {
+        "q": "What does React store in a VDOM node?",
+        "a": "Roughly the element type (tag or component), its props, and its children. These are plain objects produced by React.createElement (what JSX compiles to)."
+      },
+      {
+        "q": "Does the VDOM eliminate the need for keys?",
+        "a": "No — keys help React match old and new children during diffing. Without stable keys, the diff can misalign list items and do extra work."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Virtual DOM in action: changing state updates only the changed text node.\n// React builds a new VDOM tree, diffs it, and patches just the <span>.\nimport React, { useState } from \"react\";\n\nexport default function Counter() {\n  const [count, setCount] = useState(0);\n\n  // On each click React re-renders, builds a new VDOM, diffs against the old\n  // one, and updates ONLY the number text node in the real DOM.\n  return (\n    <div className=\"counter\">\n      <h2>Virtual DOM Demo</h2>\n      <p>\n        Count: <span data-testid=\"value\">{count}</span>\n      </p>\n      <button onClick={() => setCount((c) => c + 1)}>Increment</button>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Virtual DOM — diff two lightweight vnode trees and produce patches\nconst h = (type, props, ...children) => ({ type, props: props || {}, children });\n\nfunction diff(oldNode, newNode, path = \"root\") {\n  const patches = [];\n  if (oldNode.type !== newNode.type) {\n    patches.push(`REPLACE ${path}: <${oldNode.type}> -> <${newNode.type}>`);\n    return patches;\n  }\n  const oldText = oldNode.children.filter(c => typeof c === \"string\").join(\"\");\n  const newText = newNode.children.filter(c => typeof c === \"string\").join(\"\");\n  if (oldText !== newText) patches.push(`TEXT ${path}: \"${oldText}\" -> \"${newText}\"`);\n  if (oldNode.props.className !== newNode.props.className)\n    patches.push(`PROP ${path}: className \"${oldNode.props.className}\" -> \"${newNode.props.className}\"`);\n  return patches;\n}\n\nconst before = h(\"div\", { className: \"box\" }, \"Hello\");\nconst after  = h(\"div\", { className: \"box active\" }, \"Hello World\");\n\nconst patches = diff(before, after);\nconsole.log(\"Patches computed:\", patches.length);\npatches.forEach(p => console.log(\" -\", p));\n\nconsole.assert(patches.length === 2, \"expected 2 patches\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Patches computed: 2\n - TEXT root: \"Hello\" -> \"Hello World\"\n - PROP root: className \"box\" -> \"box active\"\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

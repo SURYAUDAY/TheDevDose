@@ -1,0 +1,64 @@
+{
+  "id": "p1b-051",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 51,
+  "orderInPhase": 51,
+  "slug": "extract-t-u",
+  "title": "Extract<T, U>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "extract"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "From a union of mixed action types, `Extract<Action, { type: \"add\" }>` narrows to just the 'add' actions, giving precise types for a handler that only deals…"
+  },
+  "sections": {
+    "simple_en": "`Extract<T, U>` is the counterpart of `Exclude`: it keeps only the members of union `T` that ARE assignable to `U`, discarding the rest. For example `Extract<\"a\" | \"b\" | 1 | 2, string>` is `\"a\" | \"b\"`.\n\nIt's a conditional type used to filter a union down to a subset — e.g. selecting only the string members, or only the action types of a particular kind. Pair it with `Exclude` to split a union into matching and non-matching parts.",
+    "hinglish": "`Extract<T, U>` `Exclude` ka counterpart hai: ye union `T` ke sirf un members ko rakhta hai jo `U` ko assignable HAIN, baaki hata kar. Jaise `Extract<\"a\" | \"b\" | 1 | 2, string>` `\"a\" | \"b\"` hai.\nYe ek conditional type hai jo union ko ek subset tak filter karne ke liye use hota hai — jaise sirf string members select karna, ya ek particular kind ke action types. Ise `Exclude` ke saath mila kar union ko matching aur non-matching parts me baant sakte ho.",
+    "keyPoints": [
+      "Keeps union members of T assignable to U (opposite of Exclude).",
+      "`Extract<'a'|'b'|1, string>` → `'a'|'b'`.",
+      "Built on a conditional type.",
+      "Use to filter a union to a matching subset.",
+      "Exclude + Extract together partition a union."
+    ],
+    "real_world": "From a union of mixed action types, `Extract<Action, { type: \"add\" }>` narrows to just the 'add' actions, giving precise types for a handler that only deals with that subset.",
+    "followups": [
+      {
+        "q": "How is Extract different from Exclude?",
+        "a": "They're opposites: `Extract<T, U>` keeps union members assignable to U; `Exclude<T, U>` removes them. Together they partition a union into matching and non-matching parts."
+      },
+      {
+        "q": "Give a practical use of Extract.",
+        "a": "Narrowing a discriminated-union action type to one variant, e.g. `Extract<Action, { type: 'add' }>`, so a handler gets the precise shape for that action."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Extract keeps matching union members.\n\ntype Mixed = \"a\" | \"b\" | 1 | 2;\nexport type OnlyStrings = Extract<Mixed, string>; // \"a\" | \"b\"\n\ntype Action =\n  | { type: \"add\"; amount: number }\n  | { type: \"reset\" };\nexport type AddAction = Extract<Action, { type: \"add\" }>;\n\nexport function handleAdd(action: AddAction): number {\n  return action.amount; // typed: only the 'add' shape\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { handleAdd } from \"./solution\";\n\nconsole.log(handleAdd({ type: \"add\", amount: 5 })); // 5\nconsole.assert(handleAdd({ type: \"add\", amount: 5 }) === 5, \"Extract narrows to add action\");\nconsole.log(\"Extract assertions passed.\");",
+      "expectedOutput": "5\nExtract assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

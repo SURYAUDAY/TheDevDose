@@ -1,0 +1,65 @@
+{
+  "id": "p1a-088",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 88,
+  "orderInPhase": 88,
+  "slug": "event-bubbling",
+  "title": "Event Bubbling",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "event",
+    "bubbling"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Clicking a button inside a card: the click fires on the button, then bubbles to the card, then to the list, then to document."
+  },
+  "sections": {
+    "simple_en": "Event bubbling is the phase where an event, after firing on the target element, propagates upward through its ancestors (target → parent → ... → document). Handlers on ancestor elements run after the target's, in bottom-up order, unless propagation is stopped.\n\nBubbling is the default for most events and is what enables event delegation. You can stop it with `event.stopPropagation()`, and read which element actually triggered the event via `event.target` (versus `event.currentTarget`, the element whose handler is running).",
+    "hinglish": "Event bubbling woh phase hai jisme event, target element par fire hone ke baad, apne ancestors me upar ki taraf propagate karta hai (target → parent → ... → document). Ancestor elements ke handlers target ke baad chalte hain, neeche-se-upar order me, jab tak propagation rok na di jaaye.\nBubbling zyadatar events ke liye default hai aur yahi event delegation enable karta hai. Ise `event.stopPropagation()` se rok sakte ho, aur jo element actually event trigger kiya woh `event.target` se padho (jabki `event.currentTarget` woh element hai jiska handler chal raha hai).",
+    "keyPoints": [
+      "Event travels target → ancestors → document (bottom-up) after firing.",
+      "Ancestor handlers run after the target's, in bubbling order.",
+      "Default phase for most events; foundation of event delegation.",
+      "`event.target` = actual element; `event.currentTarget` = handler's element.",
+      "`stopPropagation()` halts further bubbling."
+    ],
+    "real_world": "Clicking a button inside a card: the click fires on the button, then bubbles to the card, then to the list, then to document. A single listener on the list can react to clicks on any button inside it (delegation).",
+    "followups": [
+      {
+        "q": "Difference between event.target and event.currentTarget?",
+        "a": "`event.target` is the element that actually triggered the event (where it originated); `event.currentTarget` is the element whose handler is currently running (where the listener is attached)."
+      },
+      {
+        "q": "How do you stop an event from bubbling?",
+        "a": "Call `event.stopPropagation()` in the handler. To also prevent other listeners on the same element, use `event.stopImmediatePropagation()`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Simulate bubbling order with a synthetic tree (no browser needed).\n\nfunction simulateBubble(targetPathTopToBottom, stopAt = null) {\n  // path is ancestors top->bottom; bubbling goes bottom->top\n  const order = [];\n  const bottomUp = [...targetPathTopToBottom].reverse();\n  for (const node of bottomUp) {\n    order.push(node);\n    if (node === stopAt) break; // stopPropagation()\n  }\n  return order;\n}\n\nmodule.exports = { simulateBubble };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (simulation; browser uses real addEventListener) ---\nconst { simulateBubble } = require(\"./solution\");\n\n// DOM nesting top->bottom: document > ul > li > button\nconst path = [\"document\", \"ul\", \"li\", \"button\"];\nconsole.log(simulateBubble(path));            // ['button','li','ul','document']\nconsole.log(simulateBubble(path, \"ul\"));      // ['button','li','ul'] (stopped)\n\nconsole.assert(JSON.stringify(simulateBubble(path)) === '[\"button\",\"li\",\"ul\",\"document\"]', \"bubbles bottom-up\");\nconsole.assert(JSON.stringify(simulateBubble(path, \"ul\")) === '[\"button\",\"li\",\"ul\"]', \"stopPropagation halts bubbling\");\nconsole.log(\"event bubbling assertions passed.\");",
+      "expectedOutput": "[ 'button', 'li', 'ul', 'document' ]\n[ 'button', 'li', 'ul' ]\nevent bubbling assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

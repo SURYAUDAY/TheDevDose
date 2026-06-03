@@ -1,0 +1,69 @@
+{
+  "id": "p3-028",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 28,
+  "orderInPhase": 28,
+  "slug": "transactions-basics",
+  "title": "Transactions basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "transactions",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Transferring money debits the sender and credits the receiver."
+  },
+  "sections": {
+    "simple_en": "A transaction groups multiple statements into a single all-or-nothing unit. You BEGIN, run the statements, and either COMMIT (make every change permanent) or ROLLBACK (undo all of them). If anything fails partway, the database reverts to its pre-transaction state — no partial updates.\n\nTransactions are essential whenever several writes must succeed together, like transferring money (debit one account, credit another). In Node you run them on a single connection/client, wrapping the work in try/catch so a failure triggers ROLLBACK and the connection is always released afterward.",
+    "hinglish": "Transaction kai statements ko ek single all-or-nothing unit mein group karta hai. Aap BEGIN karte ho, statements chalate ho, aur ya to COMMIT (har change permanent) ya ROLLBACK (sab undo). Beech mein kuch fail ho to database pre-transaction state par laut jaata hai — koi partial update nahi.\n\nTransactions tab zaroori hain jab kai writes saath succeed karni hon, jaise paise transfer karna (ek account debit, doosra credit). Node mein inhe ek single connection/client par chalate ho, kaam ko try/catch mein wrap karke taaki failure par ROLLBACK ho aur connection hamesha release ho.",
+    "keyPoints": [
+      "BEGIN ... COMMIT/ROLLBACK groups statements into one atomic unit.",
+      "A failure mid-transaction rolls everything back — no partial state.",
+      "Run a transaction on ONE client/connection, not pooled per-query.",
+      "Wrap in try/catch: error -> ROLLBACK; success -> COMMIT.",
+      "Always release the client (finally) to avoid leaking connections."
+    ],
+    "real_world": "Transferring money debits the sender and credits the receiver. Inside a transaction, if the credit fails, the debit is rolled back too — so money never vanishes. Without a transaction, a crash between the two updates could lose funds.",
+    "followups": [
+      {
+        "q": "Why must a transaction use a single client?",
+        "a": "BEGIN/COMMIT are connection-scoped. Pooled per-query calls might use different connections, so the statements wouldn't be part of the same transaction. Check out one client for the whole unit."
+      },
+      {
+        "q": "What happens if you forget to COMMIT or ROLLBACK?",
+        "a": "The transaction stays open, holding locks and a connection. This can block other queries and exhaust the pool — always end the transaction and release the client."
+      },
+      {
+        "q": "When do you actually need a transaction?",
+        "a": "Whenever multiple writes must all succeed or all fail together to keep data consistent — money transfers, multi-table inserts, order placement that decrements stock, etc."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real node-postgres transaction code (runs against PostgreSQL). The Node-runnable demo below simulates BEGIN / COMMIT / ROLLBACK so the behavior is verifiable here.",
+      "source": "// Transactions basics — wrap multiple statements in BEGIN/COMMIT/ROLLBACK.\nconst { Pool } = require(\"pg\");\nconst pool = new Pool();\n\nasync function transfer(fromId, toId, amount) {\n  const client = await pool.connect(); // use ONE client for the whole transaction\n  try {\n    await client.query(\"BEGIN\");\n    await client.query(\"UPDATE accounts SET balance = balance - $1 WHERE id = $2\", [amount, fromId]);\n    await client.query(\"UPDATE accounts SET balance = balance + $1 WHERE id = $2\", [amount, toId]);\n\n    const { rows } = await client.query(\"SELECT balance FROM accounts WHERE id = $1\", [fromId]);\n    if (rows[0].balance < 0) throw new Error(\"insufficient funds\");\n\n    await client.query(\"COMMIT\");   // both updates succeed together\n  } catch (err) {\n    await client.query(\"ROLLBACK\"); // ...or neither does\n    throw err;\n  } finally {\n    client.release();               // always return the client to the pool\n  }\n}\nmodule.exports = { transfer };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Transactions basics — all-or-nothing money transfer (BEGIN/COMMIT/ROLLBACK)\nfunction createDB(){ return { accounts: { A: 100, B: 50 } }; }\nfunction transfer(db, from, to, amount){\n  const snapshot = { ...db.accounts };   // BEGIN: remember state for rollback\n  try {\n    if (db.accounts[from] < amount) throw new Error(\"insufficient funds\");\n    db.accounts[from] -= amount;\n    db.accounts[to]   += amount;\n    // imagine a crash/validation here:\n    if (db.accounts[to] > 1000) throw new Error(\"limit exceeded\");\n    return { status: \"COMMIT\", accounts: db.accounts };  // COMMIT: keep changes\n  } catch (e) {\n    db.accounts = snapshot;                                // ROLLBACK: restore\n    return { status: \"ROLLBACK\", reason: e.message, accounts: db.accounts };\n  }\n}\nconst db = createDB();\nconsole.log(\"Transfer 30 A->B:\", JSON.stringify(transfer(db, \"A\", \"B\", 30)));\nconsole.log(\"Transfer 999 A->B:\", JSON.stringify(transfer(db, \"A\", \"B\", 999)));\nconsole.assert(db.accounts.A === 70 && db.accounts.B === 80, \"first committed, second rolled back\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Transfer 30 A->B: {\"status\":\"COMMIT\",\"accounts\":{\"A\":70,\"B\":80}}\nTransfer 999 A->B: {\"status\":\"ROLLBACK\",\"reason\":\"insufficient funds\",\"accounts\":{\"A\":70,\"B\":80}}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

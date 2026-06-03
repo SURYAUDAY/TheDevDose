@@ -1,0 +1,66 @@
+{
+  "id": "p1b-044",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 44,
+  "orderInPhase": 44,
+  "slug": "utility-types-overview",
+  "title": "Utility Types (overview)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "utility",
+    "types",
+    "overview"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "From one `User` interface you derive `Partial<User>` for PATCH updates, `Omit<User, \"password\">` for API responses, and `Pick<User, \"id\" | \"name\">` for a sum…"
+  },
+  "sections": {
+    "simple_en": "Utility types are built-in generic types that transform existing types into new ones, so you don't have to redefine variations by hand. They make types DRY and expressive. Common ones include `Partial`, `Required`, `Readonly`, `Pick`, `Omit`, `Record`, `Exclude`, `Extract`, `NonNullable`, `ReturnType`, and `Parameters`.\n\nMost are implemented with mapped and conditional types under the hood. Knowing them well lets you derive types from a single source of truth — e.g. an update DTO as `Partial<User>`, or a public view as `Omit<User, \"password\">` — keeping related types automatically in sync.",
+    "hinglish": "Utility types built-in generic types hain jo existing types ko naye types me transform karte hain, taaki aapko variations haath se dobara define na karni padein. Ye types ko DRY aur expressive banate hain. Common ones: `Partial`, `Required`, `Readonly`, `Pick`, `Omit`, `Record`, `Exclude`, `Extract`, `NonNullable`, `ReturnType`, `Parameters`.\nZyadatar andar se mapped aur conditional types se bane hain. Inhe achhe se jaanna aapko ek single source of truth se types derive karne deta hai — jaise update DTO ko `Partial<User>`, ya public view ko `Omit<User, \"password\">` — jisse related types automatically sync me rehte hain.",
+    "keyPoints": [
+      "Built-in generics that transform types into new types.",
+      "Keep types DRY — derive variations from one source.",
+      "Examples: Partial, Required, Readonly, Pick, Omit, Record, Exclude, Extract.",
+      "Also: NonNullable, ReturnType, Parameters, InstanceType, Awaited.",
+      "Built on mapped + conditional types internally."
+    ],
+    "real_world": "From one `User` interface you derive `Partial<User>` for PATCH updates, `Omit<User, \"password\">` for API responses, and `Pick<User, \"id\" | \"name\">` for a summary — all stay in sync if `User` changes.",
+    "followups": [
+      {
+        "q": "Why use utility types?",
+        "a": "To derive related types from a single source of truth instead of hand-maintaining variations, keeping them DRY and automatically in sync when the base type changes."
+      },
+      {
+        "q": "What are utility types built from internally?",
+        "a": "Mostly mapped types and conditional types — the same building blocks you can use to author your own custom utility types."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — a quick tour of several utility types.\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n  password: string;\n}\n\nexport type UserUpdate = Partial<User>;          // all optional\nexport type PublicUser = Omit<User, \"password\">; // drop a field\nexport type UserSummary = Pick<User, \"id\" | \"name\">; // keep some\n\nexport function applyUpdate(user: User, update: UserUpdate): User {\n  return { ...user, ...update };\n}\n\nexport function toPublic(user: User): PublicUser {\n  const { password, ...pub } = user;\n  return pub;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { applyUpdate, toPublic } from \"./solution\";\n\nconst user = { id: 1, name: \"Asha\", email: \"a@x.com\", password: \"secret\" };\nconsole.log(applyUpdate(user, { name: \"Asha K\" }).name); // Asha K\nconst pub = toPublic(user);\nconsole.log(pub);                  // no password field\nconsole.log(\"password\" in pub);    // false\n\nconsole.assert(applyUpdate(user, { name: \"Asha K\" }).name === \"Asha K\", \"Partial update\");\nconsole.assert(!(\"password\" in pub), \"Omit removes password\");\nconsole.assert(pub.email === \"a@x.com\", \"other fields preserved\");\nconsole.log(\"utility-types-overview assertions passed.\");",
+      "expectedOutput": "Asha K\n{ id: 1, name: 'Asha', email: 'a@x.com' }\nfalse\nutility-types-overview assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

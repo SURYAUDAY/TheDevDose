@@ -1,0 +1,70 @@
+{
+  "id": "p5-010",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 10,
+  "orderInPhase": 10,
+  "slug": "state-management-architecture",
+  "title": "State management architecture",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "state",
+    "management",
+    "architecture"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "A form's input text stays in local component state; a multi-step wizard lifts shared values to a parent; the logged-in user and shopping cart go in a global…"
+  },
+  "sections": {
+    "simple_en": "State management architecture is about deciding where each piece of state lives and how it's updated. The guiding principle is to keep state as local as possible: use component-local state for UI details, lift state to a common parent when siblings must share it, and reach for a global store only for truly app-wide state (current user, cart, theme).\n\nGlobal stores (Redux, Zustand, and similar) center on a single source of truth, immutable updates via actions/reducers, and subscriptions that notify the UI on change. Overusing global state makes apps hard to reason about; the skill is choosing the narrowest scope that works.",
+    "hinglish": "State management architecture ye decide karne ke baare mein hai ki state ka har piece kahan rehta hai aur kaise update hota hai. Guiding principle hai state ko jitna ho sake local rakhna: UI details ke liye component-local state use karo, jab siblings ko share karna ho to state ko ek common parent tak lift karo, aur ek global store sirf sach mein app-wide state ke liye uthao (current user, cart, theme).\n\nGlobal stores (Redux, Zustand, aur similar) ek single source of truth, actions/reducers ke through immutable updates, aur subscriptions par center karte hain jo change par UI ko notify karte hain. Global state ko overuse karna apps ko reason karna mushkil banata hai; skill hai sabse narrow scope choose karna jo kaam kare.",
+    "keyPoints": [
+      "Keep state as local as possible; lift it only when shared.",
+      "Use a global store only for truly app-wide state.",
+      "Global stores: single source of truth + immutable updates via actions.",
+      "Subscriptions notify the UI when state changes.",
+      "Overusing global state hurts clarity — choose the narrowest scope."
+    ],
+    "real_world": "A form's input text stays in local component state; a multi-step wizard lifts shared values to a parent; the logged-in user and shopping cart go in a global store so any screen can read them. Matching scope to need keeps the app predictable.",
+    "followups": [
+      {
+        "q": "When should state be global vs local?",
+        "a": "Local for UI details used by one component; lifted to a parent when a few related components share it; global only for state needed across many unrelated parts of the app (auth, cart, theme). Default to the narrowest scope."
+      },
+      {
+        "q": "Why are immutable updates important?",
+        "a": "They make state changes predictable and traceable, enable efficient change detection (compare references), and support features like time-travel debugging. Reducers return new state rather than mutating the old."
+      },
+      {
+        "q": "What problems come from overusing global state?",
+        "a": "Everything becomes coupled to the store, components are harder to reuse and test, and it's harder to reason about what changes what. Keeping state local where possible avoids this."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript implementing a tiny Redux/Zustand-style store (reducer + subscribe). The Node demo below dispatches actions and verifies immutable updates and subscriber notifications.",
+      "source": "// State management architecture — choose the narrowest scope; lift/centralize only as needed.\nimport { useState, createContext, useContext } from \"react\";\n\n// 1) Local state: keep it in the component when only it cares.\nfunction SearchBox() {\n  const [query, setQuery] = useState(\"\");\n  return <input value={query} onChange={(e) => setQuery(e.target.value)} />;\n}\n\n// 2) Lifted/shared state via Context for a subtree (e.g., theme, current user).\nconst UserContext = createContext(null);\nfunction useUser() { return useContext(UserContext); }\n\n// 3) Global state for truly app-wide data (cart, auth) with a store library (Zustand shown).\n// import { create } from \"zustand\";\n// const useCart = create((set) => ({\n//   items: [],\n//   addItem: (item) => set((s) => ({ items: [...s.items, item] })),\n//   clear: () => set({ items: [] }),\n// }));\n\n// Decision order: local -> lifted (props/Context) -> global store. Avoid putting everything\n// in a global store; over-centralizing causes needless re-renders and tight coupling.\nexport { SearchBox, UserContext, useUser };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// State management architecture — local vs lifted vs global; pick the narrowest scope\n// A tiny global store (reducer + subscribe), like Redux/Zustand in spirit.\nfunction createStore(reducer, initial) {\n  let state = initial; const listeners = [];\n  return {\n    getState: () => state,\n    dispatch: (action) => { state = reducer(state, action); listeners.forEach((l) => l(state)); },\n    subscribe: (l) => listeners.push(l),\n  };\n}\nfunction reducer(state, action) {\n  switch (action.type) {\n    case \"ADD_TO_CART\": return { ...state, cart: [...state.cart, action.item] };\n    case \"LOGOUT\": return { ...state, user: null };\n    default: return state;\n  }\n}\nconst store = createStore(reducer, { user: \"Asha\", cart: [] });\nlet notified = 0; store.subscribe(() => notified++);\nstore.dispatch({ type: \"ADD_TO_CART\", item: \"book\" });\nstore.dispatch({ type: \"ADD_TO_CART\", item: \"pen\" });\nconsole.log(\"State after 2 dispatches:\", store.getState());\nconsole.log(\"Subscribers notified:\", notified);\nconsole.assert(store.getState().cart.length === 2, \"cart updated immutably\");\nconsole.assert(notified === 2, \"subscribers notified on change\");\nconsole.log(\"Keep state as local as possible; lift it only when shared; use a global store for truly app-wide state.\");\nconsole.log(\"Core pattern: a single source of truth, immutable updates via actions, and subscriptions.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "State after 2 dispatches: { user: 'Asha', cart: [ 'book', 'pen' ] }\nSubscribers notified: 2\nKeep state as local as possible; lift it only when shared; use a global store for truly app-wide state.\nCore pattern: a single source of truth, immutable updates via actions, and subscriptions.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

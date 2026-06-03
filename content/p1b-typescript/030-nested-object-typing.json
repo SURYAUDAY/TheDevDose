@@ -1,0 +1,66 @@
+{
+  "id": "p1b-030",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 30,
+  "orderInPhase": 30,
+  "slug": "nested-object-typing",
+  "title": "Nested Object Typing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "nested",
+    "object",
+    "typing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Modeling an API response like `{ user: { profile: { name: string }; roles: string[] } }` with named `Profile` and `User` interfaces gives type-safe deep acce…"
+  },
+  "sections": {
+    "simple_en": "Nested object typing describes objects that contain other objects (or arrays of objects) to any depth. You nest type definitions accordingly, and it's good practice to extract inner shapes into their own named types/interfaces for readability and reuse.\n\nTypeScript checks the entire nested shape, so accessing `user.address.city` is type-safe only if each level is correctly typed (and you handle optional/nullable levels). Breaking deep shapes into named pieces makes errors clearer and types maintainable.",
+    "hinglish": "Nested object typing un objects ko describe karta hai jo doosre objects (ya objects ke arrays) rakhte hain kisi bhi depth tak. Aap type definitions accordingly nest karte ho, aur achhi practice hai inner shapes ko apne named types/interfaces me nikaalna readability aur reuse ke liye.\nTypeScript poori nested shape check karta hai, isliye `user.address.city` access tabhi type-safe hai jab har level sahi type ho (aur aap optional/nullable levels handle karo). Deep shapes ko named pieces me todna errors clearer aur types maintainable banata hai.",
+    "keyPoints": [
+      "Nest type/interface definitions to any depth.",
+      "Extract inner shapes into named types/interfaces for clarity and reuse.",
+      "Deep access is type-safe only if every level is typed.",
+      "Handle optional/nullable nested levels explicitly.",
+      "Named sub-types make errors and maintenance easier."
+    ],
+    "real_world": "Modeling an API response like `{ user: { profile: { name: string }; roles: string[] } }` with named `Profile` and `User` interfaces gives type-safe deep access and lets you reuse `Profile` elsewhere.",
+    "followups": [
+      {
+        "q": "Why extract nested shapes into named types?",
+        "a": "Readability, reuse, and clearer error messages. A named `Address`/`Profile` can be referenced in multiple places and makes deep structures easier to maintain than large inline definitions."
+      },
+      {
+        "q": "How do you safely access a possibly-missing nested property?",
+        "a": "Type the intermediate levels as optional/nullable where appropriate and narrow before access — e.g. optional chaining `user.address?.city` and a `??` fallback."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — nested shapes via named interfaces.\n\ninterface Address { city: string; zip: string; }\ninterface User {\n  name: string;\n  address: Address;\n  roles: string[];\n}\n\nexport function locationLabel(user: User): string {\n  return user.name + \" — \" + user.address.city + \" (\" + user.address.zip + \")\";\n}\n\nexport function hasRole(user: User, role: string): boolean {\n  return user.roles.includes(role);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { locationLabel, hasRole } from \"./solution\";\n\nconst user = { name: \"Asha\", address: { city: \"Pune\", zip: \"411001\" }, roles: [\"admin\", \"user\"] };\nconsole.log(locationLabel(user)); // Asha — Pune (411001)\nconsole.log(hasRole(user, \"admin\")); // true\nconsole.log(hasRole(user, \"owner\")); // false\n\nconsole.assert(locationLabel(user) === \"Asha — Pune (411001)\", \"nested access\");\nconsole.assert(hasRole(user, \"admin\") === true, \"role present\");\nconsole.assert(hasRole(user, \"owner\") === false, \"role absent\");\nconsole.log(\"nested-object-typing assertions passed.\");",
+      "expectedOutput": "Asha — Pune (411001)\ntrue\nfalse\nnested-object-typing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

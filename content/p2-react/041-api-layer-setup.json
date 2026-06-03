@@ -1,0 +1,70 @@
+{
+  "id": "p2-041",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 41,
+  "orderInPhase": 41,
+  "slug": "api-layer-setup",
+  "title": "API layer setup",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "api",
+    "layer",
+    "setup"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "Across a large app, every authenticated request needs a Bearer token and should redirect to login on 401."
+  },
+  "sections": {
+    "simple_en": "An API layer centralizes how your app talks to the backend: one configured HTTP client (often an axios instance) with a base URL, default headers, timeouts, and interceptors. Feature code calls small typed functions like getUsers() instead of scattering fetch calls and URLs everywhere.\n\nInterceptors are the key benefit: a request interceptor can attach the auth token to every call, and a response interceptor can unwrap data or handle 401s globally. This keeps cross-cutting concerns in one place and makes the app easier to maintain.",
+    "hinglish": "API layer centralize karta hai ki app backend se kaise baat kare: ek configured HTTP client (aksar axios instance) jisme base URL, default headers, timeouts aur interceptors hote hain. Feature code getUsers() jaise chhote functions call karta hai, har jagah fetch aur URLs nahi bikherta.\n\nInterceptors ka main fayda: request interceptor har call par auth token laga sakta hai, aur response interceptor data unwrap ya 401 globally handle kar sakta hai. Isse cross-cutting concerns ek jagah rehte hain.",
+    "keyPoints": [
+      "Centralize backend communication in one configured client (e.g., an axios instance).",
+      "Set base URL, default headers, and timeouts once, reused everywhere.",
+      "Request interceptors attach auth tokens; response interceptors unwrap/normalize and handle errors.",
+      "Expose small functions (getUsers, createOrder) so features don't touch raw URLs.",
+      "Easier to change base URLs, add logging, or handle 401s in a single place."
+    ],
+    "real_world": "Across a large app, every authenticated request needs a Bearer token and should redirect to login on 401. A single axios instance with interceptors handles both, so no component ever manually sets the auth header or checks for 401 again.",
+    "followups": [
+      {
+        "q": "Why centralize API calls instead of using fetch inline?",
+        "a": "To avoid duplicating base URLs, headers, and error handling. A central client makes auth, logging, and error policies consistent and easy to change."
+      },
+      {
+        "q": "What do interceptors do?",
+        "a": "Request interceptors modify outgoing requests (e.g., add tokens); response interceptors transform responses or handle errors (e.g., refresh tokens, redirect on 401) globally."
+      },
+      {
+        "q": "How does this fit with React Query?",
+        "a": "React Query handles caching/state; the API layer provides the queryFn functions it calls. They complement each other — transport layer vs. server-state layer."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// API layer setup: one configured axios instance + interceptors, reused app-wide.\nimport axios from \"axios\";\n\nexport const api = axios.create({\n  baseURL: import.meta.env.VITE_API_URL, // single source for the base URL\n  timeout: 10000,\n});\n\n// Request interceptor: attach the auth token to every request.\napi.interceptors.request.use((config) => {\n  const token = localStorage.getItem(\"token\");\n  if (token) config.headers.Authorization = `Bearer ${token}`;\n  return config;\n});\n\n// Response interceptor: unwrap data and handle 401 centrally.\napi.interceptors.response.use(\n  (res) => res.data,\n  (error) => {\n    if (error.response?.status === 401) window.location.href = \"/login\";\n    return Promise.reject(error);\n  }\n);\n\n// Feature code just imports `api` and calls endpoints:\nexport const getUsers = () => api.get(\"/users\");",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// API layer setup — a tiny client with baseURL + interceptors\nfunction createClient({ baseURL, headers = {} }){\n  const reqInterceptors = [], resInterceptors = [];\n  async function request(path, options = {}){\n    let cfg = { url: baseURL + path, headers: { ...headers, ...options.headers }, ...options };\n    for (const i of reqInterceptors) cfg = i(cfg);          // e.g. attach auth token\n    let res = { ok: true, data: { path: cfg.url, auth: cfg.headers.Authorization } };\n    for (const i of resInterceptors) res = i(res);          // e.g. unwrap/normalize\n    return res;\n  }\n  return {\n    request,\n    useRequestInterceptor: (fn) => reqInterceptors.push(fn),\n    useResponseInterceptor: (fn) => resInterceptors.push(fn),\n  };\n}\n(async () => {\n  const api = createClient({ baseURL: \"https://api.app.com\" });\n  api.useRequestInterceptor(cfg => { cfg.headers.Authorization = \"Bearer TOKEN\"; return cfg; });\n  api.useResponseInterceptor(res => ({ ...res, data: { ...res.data, normalized: true } }));\n  const res = await api.request(\"/users\");\n  console.log(\"URL:\", res.data.path);\n  console.log(\"Auth header injected:\", res.data.auth);\n  console.log(\"Response normalized:\", res.data.normalized);\n  console.assert(res.data.auth === \"Bearer TOKEN\", \"interceptor attached token\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "URL: https://api.app.com/users\nAuth header injected: Bearer TOKEN\nResponse normalized: true\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

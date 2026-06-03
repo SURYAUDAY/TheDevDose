@@ -1,0 +1,65 @@
+{
+  "id": "p1b-015",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 15,
+  "orderInPhase": 15,
+  "slug": "intersection-types",
+  "title": "Intersection Types",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "intersection",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Adding audit fields to entities: `type Entity<T> = T & { id: number; createdAt: string }` gives every entity its specific fields PLUS the shared id/timestamp…"
+  },
+  "sections": {
+    "simple_en": "An intersection type combines multiple types into one that has ALL of their members, written with `&`: `A & B` is a value that satisfies both `A` and `B` simultaneously. Where unions mean 'one OR the other', intersections mean 'both AND together'.\n\nIntersections are used to compose/merge types — for example, adding common fields (like timestamps or an id) to many entity types, or combining several capability/mixin interfaces into one object type.",
+    "hinglish": "Intersection type kai types ko ek me combine karta hai jisme un sabke SAARE members hote hain, `&` se likhte hain: `A & B` woh value hai jo `A` aur `B` dono ko ek saath satisfy kare. Jahan unions ka matlab 'ek YA doosra', wahan intersections ka matlab 'dono AUR saath me'.\nIntersections types ko compose/merge karne ke liye use hote hain — jaise kai entity types me common fields add karna (jaise timestamps ya id), ya kai capability/mixin interfaces ko ek object type me combine karna.",
+    "keyPoints": [
+      "`A & B` has ALL members of both A and B.",
+      "Union = OR; Intersection = AND (must satisfy all).",
+      "Used to compose/merge types and add shared fields.",
+      "Great for mixins and attaching common metadata.",
+      "Conflicting member types in an intersection become `never`."
+    ],
+    "real_world": "Adding audit fields to entities: `type Entity<T> = T & { id: number; createdAt: string }` gives every entity its specific fields PLUS the shared id/timestamp, without repeating those fields in each type.",
+    "followups": [
+      {
+        "q": "Difference between union and intersection types?",
+        "a": "A union (`A | B`) is one of the types (OR) and exposes only common members until narrowed. An intersection (`A & B`) must satisfy all types (AND) and has the combined members of all of them."
+      },
+      {
+        "q": "What happens if intersected types have a conflicting property?",
+        "a": "If the same property has incompatible types in each, the resulting property type becomes `never` (no value can satisfy both), effectively making it unusable."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — intersection composes types.\n\ninterface HasId { id: number; }\ninterface HasTimestamp { createdAt: string; }\n\ntype Entity<T> = T & HasId & HasTimestamp;\n\ninterface ProductFields { name: string; price: number; }\ntype Product = Entity<ProductFields>;\n\nexport function makeProduct(name: string, price: number): Product {\n  return { id: 1, createdAt: \"2025-01-01\", name, price };\n}\n\nexport function summary(p: Product): string {\n  return p.name + \" ($\" + p.price + \") #\" + p.id;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { makeProduct, summary } from \"./solution\";\n\nconst p = makeProduct(\"Lamp\", 20);\nconsole.log(p);          // has id, createdAt, name, price\nconsole.log(summary(p)); // Lamp ($20) #1\n\nconsole.assert(p.id === 1 && p.name === \"Lamp\", \"intersection merges all fields\");\nconsole.assert(typeof p.createdAt === \"string\", \"timestamp field present\");\nconsole.assert(summary(p) === \"Lamp ($20) #1\", \"summary uses combined fields\");\nconsole.log(\"intersection-types assertions passed.\");",
+      "expectedOutput": "{ id: 1, createdAt: '2025-01-01', name: 'Lamp', price: 20 }\nLamp ($20) #1\nintersection-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "id": "p1a-012",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 12,
+  "orderInPhase": 12,
+  "slug": "primitive-vs-reference-types",
+  "title": "Primitive vs Reference Types",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "primitive",
+    "reference",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Two people with the same name aren't the same person — that's reference equality."
+  },
+  "sections": {
+    "simple_en": "Primitive types (string, number, boolean, null, undefined, symbol, bigint) are immutable and compared by value. Reference types (objects, arrays, functions) are mutable and compared by reference (identity), not by their contents.\n\nThis means `1 === 1` is true and `'a' === 'a'` is true, but `{} === {}` is false because they are two different objects in memory even if they look identical. Function arguments follow the same rule: primitives are passed by value, objects effectively by a copied reference.",
+    "hinglish": "Primitive types (string, number, boolean, null, undefined, symbol, bigint) immutable hote hain aur value se compare hote hain. Reference types (objects, arrays, functions) mutable hote hain aur reference (identity) se compare hote hain, content se nahi.\nIska matlab `1 === 1` true hai aur `'a' === 'a'` true hai, par `{} === {}` false hai kyunki memory me woh do alag objects hain bhale dikhne me same ho. Function arguments bhi same rule follow karte hain: primitives value se pass, objects ek copied reference se.",
+    "keyPoints": [
+      "7 primitives: string, number, boolean, null, undefined, symbol, bigint.",
+      "Primitives are immutable and compared by value.",
+      "Objects/arrays/functions are reference types — compared by identity, not contents.",
+      "`{} === {}` is false; the same object reference compared to itself is true.",
+      "Passing to a function: primitives by value, objects by a copied reference (so mutations leak out)."
+    ],
+    "real_world": "Two people with the same name aren't the same person — that's reference equality. Comparing objects with `===` checks 'are these the exact same person?', not 'do they look alike?'. To compare contents you need a deep-equality check.",
+    "followups": [
+      {
+        "q": "Is JavaScript pass-by-value or pass-by-reference?",
+        "a": "Technically always pass-by-value — but for objects the value passed is a copy of the reference, so the callee can mutate the shared object (though it cannot reassign the caller's variable)."
+      },
+      {
+        "q": "How do you compare two objects by content?",
+        "a": "Use a deep-equality check — e.g. recursively compare keys/values, or `JSON.stringify` for simple JSON-safe objects (with caveats), or a utility like Lodash's `isEqual`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Value equality (primitives) vs reference equality (objects).\n\nfunction compareTypes() {\n  const primEqual = (1 === 1) && (\"a\" === \"a\");\n  const objEqual  = ({}) === ({});          // false: different objects\n  const obj = { x: 1 };\n  const sameRef = obj === obj;              // true: same reference\n  return { primEqual, objEqual, sameRef };\n}\n\n// Passing objects to functions lets mutations escape.\nfunction mutateArg(o) { o.touched = true; }\nfunction passByReference() {\n  const data = {};\n  mutateArg(data);\n  return data.touched; // true\n}\n\nmodule.exports = { compareTypes, passByReference };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { compareTypes, passByReference } = require(\"./solution\");\n\nconsole.log(compareTypes());\nconsole.log(\"mutated:\", passByReference());\n\nconsole.assert(compareTypes().primEqual === true, \"primitives equal by value\");\nconsole.assert(compareTypes().objEqual === false, \"different objects not equal\");\nconsole.assert(compareTypes().sameRef === true, \"same reference equal\");\nconsole.assert(passByReference() === true, \"object arg mutated by callee\");\nconsole.log(\"primitive/reference assertions passed.\");",
+      "expectedOutput": "{ primEqual: true, objEqual: false, sameRef: true }\nmutated: true\nprimitive/reference assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p3-024",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 24,
+  "orderInPhase": 24,
+  "slug": "primary-foreign-keys",
+  "title": "Primary & Foreign keys",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "primary",
+    "foreign",
+    "keys"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "An orders table has customer_id as a foreign key to customers(id) with ON DELETE CASCADE."
+  },
+  "sections": {
+    "simple_en": "A primary key uniquely identifies each row in a table; it must be unique and non-null. Most tables use a surrogate primary key (an auto-generated SERIAL or UUID) for stability. A foreign key is a column that references a primary key in another table, establishing a relationship and enforcing referential integrity.\n\nTogether they keep data consistent: the database rejects duplicate primary keys and rejects foreign keys that point to non-existent rows. Foreign keys can also define ON DELETE/UPDATE behavior (CASCADE, SET NULL, RESTRICT) to control what happens to related rows.",
+    "hinglish": "Primary key har row ko uniquely identify karti hai; unique aur non-null honi chahiye. Zyadatar tables surrogate primary key (auto-generated SERIAL ya UUID) use karte hain stability ke liye. Foreign key ek column hai jo doosri table ki primary key reference karta hai, relationship banata hai aur referential integrity enforce karta hai.\n\nDono milkar data consistent rakhte hain: DB duplicate primary keys reject karta hai aur aise foreign keys reject karta hai jo non-existent rows ko point karein. Foreign keys ON DELETE/UPDATE behavior (CASCADE, SET NULL, RESTRICT) bhi define kar sakte hain.",
+    "keyPoints": [
+      "Primary key: unique + non-null identifier for each row (often surrogate SERIAL/UUID).",
+      "Foreign key: references another table's primary key, forming a relationship.",
+      "DB enforces PK uniqueness and FK referential integrity automatically.",
+      "ON DELETE/UPDATE options: CASCADE, SET NULL, RESTRICT control related rows.",
+      "Composite keys combine multiple columns when needed (e.g., join tables)."
+    ],
+    "real_world": "An orders table has customer_id as a foreign key to customers(id) with ON DELETE CASCADE. Inserting an order for a non-existent customer fails immediately, and deleting a customer automatically removes their orders — no orphaned records.",
+    "followups": [
+      {
+        "q": "What guarantees does a primary key provide?",
+        "a": "Uniqueness and non-nullability — every row has a distinct, present identifier — plus an automatic index for fast lookups by that key."
+      },
+      {
+        "q": "What does ON DELETE CASCADE do?",
+        "a": "When a referenced row is deleted, rows that reference it via the foreign key are automatically deleted too, preventing orphaned records."
+      },
+      {
+        "q": "Surrogate vs natural key for the primary key?",
+        "a": "Surrogate (SERIAL/UUID) keys are stable and meaningless, avoiding issues when business data changes. Natural keys use real attributes but can change, complicating references."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real SQL DDL (PostgreSQL). The Node-runnable demo below enforces PK uniqueness and FK integrity in JS so the output is verifiable here.",
+      "source": "// Primary & Foreign keys — identity + referential integrity.\nconst schema = `\n  CREATE TABLE customers (\n    id    SERIAL PRIMARY KEY,        -- PRIMARY KEY: unique, not null, identifies a row\n    email TEXT NOT NULL UNIQUE       -- a natural unique key (alternate key)\n  );\n\n  CREATE TABLE orders (\n    id          SERIAL PRIMARY KEY,\n    customer_id INT NOT NULL\n      REFERENCES customers(id)       -- FOREIGN KEY: must match an existing customer\n      ON DELETE CASCADE              -- delete a customer -> their orders go too\n      ON UPDATE CASCADE\n  );\n`;\n\n// Effects:\n// - Inserting an order with a non-existent customer_id fails (FK violation).\n// - Duplicate primary keys are rejected automatically.\n// - ON DELETE options: CASCADE, SET NULL, or RESTRICT control referential behavior.\nmodule.exports = schema;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Primary & Foreign keys — enforce uniqueness (PK) + referential integrity (FK)\nfunction createTable(pk){\n  const rows = new Map();\n  return {\n    insert(row){\n      if (rows.has(row[pk])) throw new Error(`duplicate primary key: ${row[pk]}`);\n      rows.set(row[pk], row); return row;\n    },\n    has: (key) => rows.has(key),\n    all: () => [...rows.values()],\n  };\n}\nconst customers = createTable(\"id\");\ncustomers.insert({ id: 1, name: \"Asha\" });\ntry { customers.insert({ id: 1, name: \"Dup\" }); } catch (e) { console.log(\"PK rejected:\", e.message); }\n\nconst orders = createTable(\"id\");\nfunction insertOrder(order){\n  if (!customers.has(order.customerId)) throw new Error(`FK violation: customer ${order.customerId} does not exist`);\n  return orders.insert(order);\n}\nconsole.log(\"Valid order:\", JSON.stringify(insertOrder({ id: 100, customerId: 1 })));\ntry { insertOrder({ id: 101, customerId: 999 }); } catch (e) { console.log(\"FK rejected:\", e.message); }\nconsole.assert(orders.all().length === 1, \"only valid FK order inserted\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "PK rejected: duplicate primary key: 1\nValid order: {\"id\":100,\"customerId\":1}\nFK rejected: FK violation: customer 999 does not exist\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

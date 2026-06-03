@@ -1,0 +1,66 @@
+{
+  "id": "p1a-062",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 62,
+  "orderInPhase": 62,
+  "slug": "object-reference-behavior",
+  "title": "Object Reference Behavior",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "object",
+    "reference",
+    "behavior"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A subtle bug: copying a config with `const b = a` then editing `b` accidentally changes `a` everywhere it's used."
+  },
+  "sections": {
+    "simple_en": "Objects (including arrays and functions) are handled by reference. A variable holding an object stores a reference to it, not the object itself. Assigning that variable to another copies the reference, so both point to the same underlying object.\n\nThis is why mutating an object through one variable is visible through the other, why `===` on two distinct objects is false, and why passing an object to a function lets the function mutate the caller's data. Understanding this prevents a huge class of bugs.",
+    "hinglish": "Objects (arrays aur functions sahit) reference se handle hote hain. Object hold karne wala variable us object ka reference store karta hai, object khud nahi. Us variable ko doosre me assign karne par reference copy hota hai, isliye dono same underlying object ko point karte hain.\nIsiliye ek variable se object mutate karne par doosre me dikhta hai, do alag objects par `===` false hota hai, aur function ko object pass karne par function caller ka data mutate kar sakta hai. Ye samajhna bohot saare bugs rok deta hai.",
+    "keyPoints": [
+      "Object variables hold references, not the objects themselves.",
+      "Assignment copies the reference → both variables share one object.",
+      "Mutations via one reference are visible via the other.",
+      "`===` compares identity (same reference), not contents.",
+      "Passing objects to functions shares the reference (callee can mutate)."
+    ],
+    "real_world": "A subtle bug: copying a config with `const b = a` then editing `b` accidentally changes `a` everywhere it's used. Recognising reference behaviour tells you to copy (shallow/deep) instead of assign.",
+    "followups": [
+      {
+        "q": "What does `const b = a` do when `a` is an object?",
+        "a": "It copies the reference, not the object. Both `a` and `b` point to the same object, so mutating one is visible through the other."
+      },
+      {
+        "q": "Why is `{a:1} === {a:1}` false?",
+        "a": "Because `===` compares object identity (whether they're the same reference in memory), not their contents. These are two separate objects, so they're not equal."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Reference sharing vs intentional copying.\n\nfunction sharedReference() {\n  const a = { count: 0 };\n  const b = a;          // same reference\n  b.count = 5;          // mutates the shared object\n  return { aCount: a.count, sameRef: a === b };\n}\n\nfunction intentionalCopy() {\n  const a = { count: 0 };\n  const b = { ...a };   // new object (shallow copy)\n  b.count = 5;\n  return { aCount: a.count, sameRef: a === b };\n}\n\nmodule.exports = { sharedReference, intentionalCopy };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { sharedReference, intentionalCopy } = require(\"./solution\");\n\nconsole.log(sharedReference());   // { aCount: 5, sameRef: true }\nconsole.log(intentionalCopy());   // { aCount: 0, sameRef: false }\n\nconsole.assert(sharedReference().aCount === 5, \"shared ref mutation leaks\");\nconsole.assert(sharedReference().sameRef === true, \"same reference\");\nconsole.assert(intentionalCopy().aCount === 0, \"copy isolates\");\nconsole.assert(intentionalCopy().sameRef === false, \"copy is a new object\");\nconsole.log(\"object reference assertions passed.\");",
+      "expectedOutput": "{ aCount: 5, sameRef: true }\n{ aCount: 0, sameRef: false }\nobject reference assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

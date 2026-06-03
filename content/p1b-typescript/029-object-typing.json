@@ -1,0 +1,65 @@
+{
+  "id": "p1b-029",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 29,
+  "orderInPhase": 29,
+  "slug": "object-typing",
+  "title": "Object Typing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "object",
+    "typing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A function `(point: { x: number; y: number }) => number` accepts any object with x and y numbers — structural typing means you don't need a named class, just…"
+  },
+  "sections": {
+    "simple_en": "You type an object by describing its properties and their types, either inline (`{ name: string; age: number }`), via a type alias, or via an interface. The compiler then checks that objects have the right properties with the right types.\n\nTypeScript uses structural typing ('duck typing'): an object is compatible with a type if it has the required members, regardless of how it was declared. Object literals get extra-property checks (excess properties are flagged), which catches typos in keys.",
+    "hinglish": "Object ko aap uski properties aur unke types describe karke type karte ho, ya inline (`{ name: string; age: number }`), ya type alias se, ya interface se. Phir compiler check karta hai ki objects ke paas sahi properties sahi types ke saath hain.\nTypeScript structural typing ('duck typing') use karta hai: ek object kisi type se compatible hai agar uske paas required members hain, chahe woh kaise bhi declare hua ho. Object literals par extra-property checks lagte hain (excess properties flag hoti hain), jo keys me typos pakadta hai.",
+    "keyPoints": [
+      "Describe shape inline, via `type`, or via `interface`.",
+      "Structural typing: compatibility is by shape, not by name.",
+      "Object literals get excess-property checks (catches key typos).",
+      "Properties can be optional (`?`) or `readonly`.",
+      "Same shape from different declarations is interchangeable."
+    ],
+    "real_world": "A function `(point: { x: number; y: number }) => number` accepts any object with x and y numbers — structural typing means you don't need a named class, just the right shape.",
+    "followups": [
+      {
+        "q": "What is structural typing?",
+        "a": "Type compatibility based on shape rather than name — an object is assignable to a type if it has the required members, regardless of how or where it was declared ('if it has the right shape, it fits')."
+      },
+      {
+        "q": "What is an excess property check?",
+        "a": "When you pass an object literal directly, TypeScript flags properties not present in the target type, catching key typos. (Assigning via a variable can bypass this check.)"
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — inline object typing + structural typing.\n\nexport function distanceFromOrigin(point: { x: number; y: number }): number {\n  return Math.hypot(point.x, point.y);\n}\n\ntype Config = { host: string; port: number; secure?: boolean };\n\nexport function url(config: Config): string {\n  const scheme = config.secure ? \"https\" : \"http\";\n  return scheme + \"://\" + config.host + \":\" + config.port;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { distanceFromOrigin, url } from \"./solution\";\n\nconsole.log(distanceFromOrigin({ x: 3, y: 4 })); // 5\nconsole.log(url({ host: \"localhost\", port: 8080 }));               // http://localhost:8080\nconsole.log(url({ host: \"api.x.com\", port: 443, secure: true }));  // https://api.x.com:443\n\nconsole.assert(distanceFromOrigin({ x: 3, y: 4 }) === 5, \"inline object type\");\nconsole.assert(url({ host: \"localhost\", port: 8080 }) === \"http://localhost:8080\", \"config typing\");\nconsole.assert(url({ host: \"x\", port: 1, secure: true }).startsWith(\"https\"), \"optional secure\");\nconsole.log(\"object-typing assertions passed.\");",
+      "expectedOutput": "5\nhttp://localhost:8080\nhttps://api.x.com:443\nobject-typing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

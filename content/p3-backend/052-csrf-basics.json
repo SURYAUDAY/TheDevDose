@@ -1,0 +1,69 @@
+{
+  "id": "p3-052",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 52,
+  "orderInPhase": 52,
+  "slug": "csrf-basics",
+  "title": "CSRF basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "csrf",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A user logged into their bank visits a malicious page that auto-submits a hidden transfer form to the bank."
+  },
+  "sections": {
+    "simple_en": "CSRF (Cross-Site Request Forgery) tricks a logged-in user's browser into making an unwanted state-changing request to a site where they're authenticated — because the browser automatically attaches their cookies. A malicious page could, for example, submit a hidden form to transfer money using the victim's session.\n\nThe classic defense is a synchronizer token: the server issues a secret token tied to the session, embeds it in forms (or exposes it to the SPA), and requires it on state-changing requests. A forged cross-site request can't read or guess the token, so it's rejected. Modern SameSite cookies also block most cross-site requests automatically.",
+    "hinglish": "CSRF (Cross-Site Request Forgery) ek logged-in user ke browser ko dhoka deta hai ki wo kisi site par ek unwanted state-changing request kare jahan wo authenticated hai — kyunki browser automatically uske cookies attach karta hai. Ek malicious page jaise hidden form submit karke victim ke session se paise transfer kar sakta hai.\n\nClassic defense synchronizer token hai: server ek secret token banata hai jo session se juda hota hai, use forms mein embed karta hai (ya SPA ko deta hai), aur state-changing requests par maangta hai. Forged cross-site request token padh ya guess nahi kar sakti, isliye reject ho jaati hai. Modern SameSite cookies bhi zyadatar cross-site requests automatically block karti hain.",
+    "keyPoints": [
+      "Forces a victim's authenticated browser to make unwanted state-changing requests.",
+      "Works because cookies are auto-attached to requests to a site.",
+      "Defense: a per-session CSRF token required on writes (attacker can't read it).",
+      "SameSite cookies (Strict/Lax) block most cross-site requests automatically.",
+      "Mainly affects cookie-based auth; token-in-header auth is less exposed."
+    ],
+    "real_world": "A user logged into their bank visits a malicious page that auto-submits a hidden transfer form to the bank. Because the browser sends the bank's session cookie, the request looks legitimate — unless the bank requires a CSRF token the attacker's page can't obtain, which causes the forged request to fail.",
+    "followups": [
+      {
+        "q": "Why do CSRF attacks work?",
+        "a": "Browsers automatically include cookies for a site on every request to it, so a cross-site request from a malicious page carries the victim's session — the server can't tell it wasn't intended by the user."
+      },
+      {
+        "q": "How does a synchronizer token stop CSRF?",
+        "a": "The server requires a secret token (tied to the session) on state-changing requests. A cross-site attacker can't read the token due to the same-origin policy, so forged requests lack it and are rejected."
+      },
+      {
+        "q": "How do SameSite cookies help?",
+        "a": "SameSite=Strict/Lax tells the browser not to send the cookie on cross-site requests, so a forged request arrives without the session cookie — neutralizing most CSRF without a separate token."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + csurf code. The Node-runnable demo below verifies a synchronizer token using Node's crypto (real timing-safe compare) so the behavior is verifiable here.",
+      "source": "// CSRF — protect state-changing routes with the csurf middleware.\nconst express = require(\"express\");\nconst cookieParser = require(\"cookie-parser\");\nconst csrf = require(\"csurf\");\nconst app = express();\n\napp.use(cookieParser());\napp.use(express.urlencoded({ extended: false }));\nconst csrfProtection = csrf({ cookie: true });\n\n// Send the token to the client (embed in a form, or expose to your SPA).\napp.get(\"/form\", csrfProtection, (req, res) => {\n  res.json({ csrfToken: req.csrfToken() });\n});\n\n// The middleware rejects POSTs whose token doesn't match the session's.\napp.post(\"/transfer\", csrfProtection, (req, res) => {\n  res.json({ ok: true });   // only reached if the CSRF token is valid\n});\n\napp.listen(3000);\n// Modern alternative: SameSite=Strict/Lax cookies block most cross-site\n// requests automatically, reducing reliance on CSRF tokens for cookie auth.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CSRF — synchronizer token: server issues a token, validates it on writes\nconst crypto = require(\"crypto\");\nfunction issueCsrfToken(){ return crypto.randomBytes(16).toString(\"hex\"); }\nfunction validateCsrf(sessionToken, submittedToken){\n  if (!sessionToken || !submittedToken) return false;\n  const a = Buffer.from(sessionToken), b = Buffer.from(submittedToken);\n  return a.length === b.length && crypto.timingSafeEqual(a, b);\n}\n// Server stores the token in the session and embeds it in the form / sends to SPA\nconst session = { csrf: issueCsrfToken() };\nconsole.log(\"Issued CSRF token:\", session.csrf.slice(0, 12) + \"...\");\n// Legit request echoes the token back:\nconsole.log(\"Legit POST valid:\", validateCsrf(session.csrf, session.csrf));\n// Forged cross-site request can't know the token:\nconsole.log(\"Forged POST valid:\", validateCsrf(session.csrf, \"guessed-token\"));\nconsole.assert(validateCsrf(session.csrf, session.csrf), \"matching token accepted\");\nconsole.assert(!validateCsrf(session.csrf, \"guessed-token\"), \"wrong token rejected\");\nconsole.log(\"CSRF protects state-changing requests; SameSite cookies also help.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Issued CSRF token: d8078fc24c39...\nLegit POST valid: true\nForged POST valid: false\nCSRF protects state-changing requests; SameSite cookies also help.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

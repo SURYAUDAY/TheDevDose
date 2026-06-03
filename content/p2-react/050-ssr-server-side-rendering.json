@@ -1,0 +1,70 @@
+{
+  "id": "p2-050",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 50,
+  "orderInPhase": 50,
+  "slug": "ssr-server-side-rendering",
+  "title": "SSR (Server-Side Rendering)",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "ssr",
+    "server-side",
+    "rendering"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A news site server-renders each article so readers (and Google) get the full text immediately, even on slow devices."
+  },
+  "sections": {
+    "simple_en": "Server-Side Rendering generates a page's HTML on the server for each request and sends it fully formed to the browser. The user sees content faster (no waiting for JS to build the page) and search engines get real HTML, which helps SEO. React then 'hydrates' that HTML on the client, attaching event listeners to make it interactive.\n\nThe catch: the server-rendered markup and the client's first render must match, or you get hydration mismatches. SSR adds server cost and complexity compared to a static client-only app, so it's chosen when fast first paint, SEO, or per-request data matter.",
+    "hinglish": "Server-Side Rendering har request par page ka HTML server par banata hai aur poora-poora browser ko bhejta hai. User ko content jaldi dikhta hai (JS se page banne ka wait nahi), aur search engines ko real HTML milta hai jo SEO mein madad karta hai. Phir React client par us HTML ko 'hydrate' karta hai — event listeners laga kar interactive banata hai.\n\nCatch: server-rendered markup aur client ka pehla render match hone chahiye, warna hydration mismatch ho jaata hai. SSR server cost aur complexity badhata hai, isliye tab choose karo jab fast first paint, SEO ya per-request data zaroori ho.",
+    "keyPoints": [
+      "Server generates full HTML per request; the browser shows content faster.",
+      "Better SEO — crawlers receive real, complete HTML instead of an empty shell.",
+      "Hydration: the client attaches React to the server HTML to make it interactive.",
+      "Server and client first render must match, or hydration mismatches occur.",
+      "Adds server cost/complexity — use when first paint, SEO, or fresh data matter."
+    ],
+    "real_world": "A news site server-renders each article so readers (and Google) get the full text immediately, even on slow devices. The page is interactive once React hydrates, but the content is readable before any JavaScript runs — crucial for SEO and perceived speed.",
+    "followups": [
+      {
+        "q": "What is hydration?",
+        "a": "The process where React, running on the client, attaches to the server-rendered HTML and wires up event handlers and state, turning static markup into an interactive app."
+      },
+      {
+        "q": "What causes hydration mismatches?",
+        "a": "When the client's first render differs from the server's HTML — e.g., using Date.now(), random values, or browser-only data during render. Keep the initial render deterministic."
+      },
+      {
+        "q": "SSR vs CSR — when choose SSR?",
+        "a": "Choose SSR for SEO-critical pages, fast first contentful paint, or content that depends on per-request data. Pure client-side rendering is fine for app-like, behind-login dashboards."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// SSR: render to HTML on the server, then hydrate on the client.\n//\n// server.js (Express + React 18 streaming SSR)\nimport { renderToPipeableStream } from \"react-dom/server\";\nimport App from \"./App\";\n\nexport function handleRequest(req, res) {\n  const stream = renderToPipeableStream(<App url={req.url} />, {\n    bootstrapScripts: [\"/client.js\"], // script that hydrates on the client\n    onShellReady() {\n      res.setHeader(\"Content-Type\", \"text/html\");\n      stream.pipe(res); // send HTML as it renders\n    },\n  });\n}\n\n// client.js — hydrate the server-rendered markup (must match exactly).\n// import { hydrateRoot } from \"react-dom/client\";\n// hydrateRoot(document.getElementById(\"root\"), <App url={location.pathname} />);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// SSR — render a component to an HTML string on the server, then hydrate\nfunction renderToString(component, props){\n  return component(props);   // pure render -> HTML string (no DOM needed)\n}\nfunction App({ user }){ return `<div id=\"root\"><h1>Hello, ${user}</h1></div>`; }\n\nconst serverHTML = renderToString(App, { user: \"Asha\" });   // sent to the browser\nconsole.log(\"Server HTML:\", serverHTML);\n\n// Hydration: the same component runs on the client and must match the markup\nconst clientHTML = renderToString(App, { user: \"Asha\" });\nconst hydrationMatches = serverHTML === clientHTML;\nconsole.log(\"Hydration markup matches:\", hydrationMatches);\nconsole.assert(hydrationMatches, \"server and client output must match to hydrate cleanly\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Server HTML: <div id=\"root\"><h1>Hello, Asha</h1></div>\nHydration markup matches: true\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

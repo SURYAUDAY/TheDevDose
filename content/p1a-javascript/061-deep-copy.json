@@ -1,0 +1,65 @@
+{
+  "id": "p1a-061",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 61,
+  "orderInPhase": 61,
+  "slug": "deep-copy",
+  "title": "Deep Copy",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "deep",
+    "copy"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "Snapshotting application state before an undoable operation: a deep copy ensures the saved snapshot won't change when the live state is later mutated — essen…"
+  },
+  "sections": {
+    "simple_en": "A deep copy duplicates an object and all of its nested objects/arrays recursively, so the copy is fully independent — mutating any level of the copy never affects the original.\n\nModern approach: `structuredClone(obj)` (built into modern browsers and Node 17+). Other options: a recursive function, or `JSON.parse(JSON.stringify(obj))` (with limitations — it drops functions, undefined, symbols, and breaks Dates/Maps/circular refs). For complex needs, libraries like Lodash's `cloneDeep` are common.",
+    "hinglish": "Deep copy ek object aur uske saare nested objects/arrays ko recursively duplicate karti hai, isliye copy poori tarah independent hoti hai — copy ke kisi bhi level ko mutate karo, original kabhi affect nahi hota.\nModern tarika: `structuredClone(obj)` (modern browsers aur Node 17+ me built-in). Aur options: recursive function, ya `JSON.parse(JSON.stringify(obj))` (limitations ke saath — functions, undefined, symbols drop, Dates/Maps/circular refs break). Complex needs ke liye Lodash ka `cloneDeep` common hai.",
+    "keyPoints": [
+      "Recursively duplicates every level — copy is fully independent.",
+      "Best modern tool: `structuredClone(obj)`.",
+      "`JSON.parse(JSON.stringify())` works for simple JSON but has many limits.",
+      "Handle Dates, Maps, Sets, functions, and circular refs carefully.",
+      "Libraries (Lodash `cloneDeep`) cover edge cases robustly."
+    ],
+    "real_world": "Snapshotting application state before an undoable operation: a deep copy ensures the saved snapshot won't change when the live state is later mutated — essential for undo/redo features.",
+    "followups": [
+      {
+        "q": "What's the modern built-in way to deep copy?",
+        "a": "`structuredClone(obj)`, available in modern browsers and Node 17+. It handles nested objects, arrays, Dates, Maps, Sets, and circular references (but not functions)."
+      },
+      {
+        "q": "Why is `JSON.parse(JSON.stringify())` risky for deep copies?",
+        "a": "It silently drops functions, `undefined`, and symbols, converts Dates to strings, can't handle Maps/Sets, and throws on circular references."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Deep copy via structuredClone with a recursive fallback.\n\nfunction deepCopy(value) {\n  if (typeof structuredClone === \"function\") return structuredClone(value);\n  // simple recursive fallback (handles plain objects/arrays)\n  if (value === null || typeof value !== \"object\") return value;\n  if (Array.isArray(value)) return value.map(deepCopy);\n  const out = {};\n  for (const k of Object.keys(value)) out[k] = deepCopy(value[k]);\n  return out;\n}\n\nmodule.exports = { deepCopy };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { deepCopy } = require(\"./solution\");\n\nconst original = { name: \"Asha\", address: { city: \"Pune\" }, tags: [\"a\", \"b\"] };\nconst copy = deepCopy(original);\ncopy.address.city = \"Mumbai\";\ncopy.tags.push(\"c\");\n\nconsole.log(\"original city:\", original.address.city); // Pune (unchanged)\nconsole.log(\"copy city:\", copy.address.city);         // Mumbai\nconsole.log(\"original tags:\", original.tags);         // ['a','b']\n\nconsole.assert(original.address.city === \"Pune\", \"nested unaffected\");\nconsole.assert(copy.address.city === \"Mumbai\", \"copy changed independently\");\nconsole.assert(original.address !== copy.address, \"nested objects are distinct\");\nconsole.assert(original.tags.length === 2, \"original array unaffected\");\nconsole.log(\"deep copy assertions passed.\");",
+      "expectedOutput": "original city: Pune\ncopy city: Mumbai\noriginal tags: [ 'a', 'b' ]\ndeep copy assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

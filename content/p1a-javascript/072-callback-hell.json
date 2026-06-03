@@ -1,0 +1,65 @@
+{
+  "id": "p1a-072",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 72,
+  "orderInPhase": 72,
+  "slug": "callback-hell",
+  "title": "Callback Hell",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "callback",
+    "hell"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A signup flow: create user → send email → log analytics → update UI, each depending on the previous async step."
+  },
+  "sections": {
+    "simple_en": "Callback hell (the 'pyramid of doom') is the deeply nested, hard-to-read structure that results when multiple asynchronous operations depend on each other and each one is handled inside the previous callback. The code drifts rightward and becomes hard to follow and error-handle.\n\nSolutions: flatten with named functions, then move to Promises (chaining with `.then`), and ultimately async/await, which makes async code read top-to-bottom like synchronous code. These are the modern fixes the rest of this section builds toward.",
+    "hinglish": "Callback hell ('pyramid of doom') woh deeply nested, mushkil-se-padhne wali structure hai jo tab banti hai jab kai asynchronous operations ek doosre par depend karte hain aur har ek pichle callback ke andar handle hota hai. Code dayein (right) khiskta jaata hai aur follow aur error-handle karna mushkil ho jaata hai.\nSolutions: named functions se flatten karo, phir Promises par jao (`.then` se chaining), aur aakhir me async/await, jo async code ko synchronous code ki tarah upar-se-neeche padhne layak bana deta hai. Ye modern fixes hain jinki taraf ye section badh raha hai.",
+    "keyPoints": [
+      "Deeply nested dependent async callbacks → 'pyramid of doom'.",
+      "Hard to read, maintain, and handle errors consistently.",
+      "Fix 1: extract named functions to reduce nesting.",
+      "Fix 2: Promises with `.then` chaining flatten the structure.",
+      "Fix 3: async/await reads like synchronous code (the cleanest)."
+    ],
+    "real_world": "A signup flow: create user → send email → log analytics → update UI, each depending on the previous async step. As callbacks this nests four levels deep; as async/await it's four clean sequential lines.",
+    "followups": [
+      {
+        "q": "What causes callback hell?",
+        "a": "Multiple interdependent asynchronous operations each nested inside the previous one's callback, creating deeply indented, hard-to-read 'pyramid' code with scattered error handling."
+      },
+      {
+        "q": "What are the main ways to avoid it?",
+        "a": "Extract named functions, use Promise chaining with `.then`, and best of all use async/await, which lets sequential async code read like ordinary synchronous code."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// The nested style vs a flattened promise chain (same logic).\n\n// Simulated async steps returning promises\nconst step = (name, value) => new Promise((res) => setTimeout(() => res(value + \":\" + name), 0));\n\n// Callback-hell style (illustrative, nested)\nfunction nested(callback) {\n  step(\"a\", \"1\").then((a) =>\n    step(\"b\", a).then((b) =>\n      step(\"c\", b).then((c) => callback(c))\n    )\n  );\n}\n\n// Flattened promise chain (preferred)\nfunction flattened() {\n  return step(\"a\", \"1\")\n    .then((a) => step(\"b\", a))\n    .then((b) => step(\"c\", b));\n}\n\nmodule.exports = { nested, flattened };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { nested, flattened } = require(\"./solution\");\n\nnested((result) => {\n  console.log(\"nested:\", result); // 1:a:b:c\n  console.assert(result === \"1:a:b:c\", \"nested produces chained result\");\n\n  flattened().then((r) => {\n    console.log(\"flattened:\", r); // 1:a:b:c\n    console.assert(r === \"1:a:b:c\", \"flattened produces same result\");\n    console.log(\"callback hell assertions passed.\");\n  });\n});",
+      "expectedOutput": "nested: 1:a:b:c\nflattened: 1:a:b:c\ncallback hell assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

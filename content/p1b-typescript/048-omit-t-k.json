@@ -1,0 +1,64 @@
+{
+  "id": "p1b-048",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 48,
+  "orderInPhase": 48,
+  "slug": "omit-t-k",
+  "title": "Omit<T, K>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "omit"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Returning `Omit<User, \"password\" | \"passwordHash\">` from an API ensures credentials never leak to the client, and the type updates automatically if you add m…"
+  },
+  "sections": {
+    "simple_en": "`Omit<T, K>` constructs a new type with all properties of `T` EXCEPT those named in `K`. It's the go-to for removing sensitive or irrelevant fields — e.g. stripping `password` from a user before sending it to the client.\n\nUnlike `Pick`, `K` in `Omit` isn't restricted to keys of `T` (you can list non-existent keys without error in many versions), so be careful with typos. Omit is widely used for DTOs, public views, and 'everything but these' subset types.",
+    "hinglish": "`Omit<T, K>` ek naya type banata hai jisme `T` ki saari properties hain SIVAY un ke jo `K` me named hain. Ye sensitive ya irrelevant fields hatane ka go-to hai — jaise client ko bhejne se pehle user se `password` strip karna.\n`Pick` ke विपरीत, `Omit` me `K` `T` ki keys tak restricted nahi (kai versions me non-existent keys bina error ke list kar sakte ho), isliye typos se savdhaan. Omit DTOs, public views, aur 'in sab ke alawa' subset types ke liye widely use hota hai.",
+    "keyPoints": [
+      "Keeps all properties of T except the listed keys K.",
+      "Great for removing sensitive/irrelevant fields.",
+      "Complement of Pick (remove vs select).",
+      "K isn't strictly constrained to keyof T — watch for typos.",
+      "Common for DTOs and public API views."
+    ],
+    "real_world": "Returning `Omit<User, \"password\" | \"passwordHash\">` from an API ensures credentials never leak to the client, and the type updates automatically if you add more sensitive fields to remove.",
+    "followups": [
+      {
+        "q": "What does Omit<T, K> produce?",
+        "a": "A type with all of T's properties except those named in K — the inverse of Pick. It's commonly used to drop sensitive fields like passwords."
+      },
+      {
+        "q": "What's a gotcha with Omit's key argument?",
+        "a": "Unlike Pick, the keys in Omit aren't strictly required to exist on T in many TS versions, so a typo in a key name may not be flagged — double-check the key names."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Omit sensitive fields.\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n  password: string;\n}\n\nexport type SafeUser = Omit<User, \"password\">;\n\nexport function toSafe(user: User): SafeUser {\n  const { password, ...safe } = user;\n  return safe;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { toSafe } from \"./solution\";\n\nconst user = { id: 1, name: \"Asha\", email: \"a@x.com\", password: \"secret\" };\nconst safe = toSafe(user);\nconsole.log(safe);                  // no password\nconsole.log(\"password\" in safe);    // false\nconsole.log(safe.email);            // a@x.com\n\nconsole.assert(!(\"password\" in safe), \"Omit removes password\");\nconsole.assert(safe.id === 1 && safe.email === \"a@x.com\", \"remaining fields kept\");\nconsole.log(\"Omit assertions passed.\");",
+      "expectedOutput": "{ id: 1, name: 'Asha', email: 'a@x.com' }\nfalse\na@x.com\nOmit assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

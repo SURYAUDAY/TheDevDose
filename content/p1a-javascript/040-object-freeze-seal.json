@@ -1,0 +1,65 @@
+{
+  "id": "p1a-040",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 40,
+  "orderInPhase": 40,
+  "slug": "object-freeze-seal",
+  "title": "Object.freeze / seal",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "object.freeze",
+    "seal"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Freezing a configuration or a constants object so no part of the codebase can accidentally mutate shared settings at runtime — turning a whole category of su…"
+  },
+  "sections": {
+    "simple_en": "`Object.freeze(obj)` makes an object fully immutable at the top level: you cannot add, delete, or change its properties. `Object.seal(obj)` is less strict: you cannot add or delete properties, but you can still modify existing ones.\n\nBoth are shallow — nested objects remain mutable unless you freeze them too (a 'deep freeze' requires recursion). Use `Object.isFrozen` / `Object.isSealed` to check. In strict mode, illegal writes throw; in sloppy mode they fail silently.",
+    "hinglish": "`Object.freeze(obj)` object ko top level par poori tarah immutable bana deta hai: na property add, na delete, na change. `Object.seal(obj)` kam strict hai: add/delete nahi kar sakte, par existing properties modify kar sakte ho.\nDono shallow hain — nested objects mutable rehte hain jab tak unhe bhi freeze na karo ('deep freeze' ke liye recursion chahiye). Check karne ke liye `Object.isFrozen` / `Object.isSealed` use karo. Strict mode me illegal writes error dete hain; sloppy mode me silently fail.",
+    "keyPoints": [
+      "`freeze`: no add, no delete, no modify (fully locked at top level).",
+      "`seal`: no add, no delete, but existing values CAN be changed.",
+      "Both are shallow — nested objects stay mutable.",
+      "Check with `Object.isFrozen` / `Object.isSealed`.",
+      "Strict mode throws on violations; sloppy mode fails silently."
+    ],
+    "real_world": "Freezing a configuration or a constants object so no part of the codebase can accidentally mutate shared settings at runtime — turning a whole category of subtle bugs into immediate errors.",
+    "followups": [
+      {
+        "q": "Difference between freeze and seal?",
+        "a": "Both prevent adding/removing properties. `freeze` also prevents modifying existing values (fully immutable top level); `seal` still allows modifying existing values."
+      },
+      {
+        "q": "Does Object.freeze deeply freeze nested objects?",
+        "a": "No, it's shallow. Nested objects remain mutable. For deep immutability you must recursively freeze every nested object (a 'deep freeze')."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "\"use strict\";\n// freeze vs seal behaviour.\n\nfunction freezeDemo() {\n  const cfg = Object.freeze({ apiUrl: \"/api\", retries: 3 });\n  let changed = false;\n  try { cfg.retries = 5; } catch { /* throws in strict */ }\n  changed = cfg.retries; // still 3\n  return { value: changed, isFrozen: Object.isFrozen(cfg) };\n}\n\nfunction sealDemo() {\n  const o = Object.seal({ a: 1 });\n  o.a = 2;          // allowed: modify existing\n  let added = false;\n  try { o.b = 9; } catch { added = false; }\n  return { a: o.a, hasB: \"b\" in o, isSealed: Object.isSealed(o) };\n}\n\nmodule.exports = { freezeDemo, sealDemo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { freezeDemo, sealDemo } = require(\"./solution\");\n\nconsole.log(freezeDemo());\nconsole.log(sealDemo());\n\nconst f = freezeDemo();\nconsole.assert(f.value === 3, \"frozen value unchanged\");\nconsole.assert(f.isFrozen === true, \"object is frozen\");\nconst s = sealDemo();\nconsole.assert(s.a === 2, \"sealed object allows modifying existing\");\nconsole.assert(s.hasB === false, \"sealed object disallows new properties\");\nconsole.assert(s.isSealed === true, \"object is sealed\");\nconsole.log(\"freeze/seal assertions passed.\");",
+      "expectedOutput": "{ value: 3, isFrozen: true }\n{ a: 2, hasB: false, isSealed: true }\nfreeze/seal assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

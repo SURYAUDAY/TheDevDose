@@ -1,0 +1,69 @@
+{
+  "id": "p2-026",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 26,
+  "orderInPhase": 26,
+  "slug": "code-splitting",
+  "title": "Code splitting",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "code",
+    "splitting"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A SaaS app keeps its marketing landing page tiny by splitting the heavy dashboard, charts, and admin panel into separate chunks."
+  },
+  "sections": {
+    "simple_en": "Code splitting breaks your JavaScript bundle into smaller chunks that load on demand instead of shipping everything up front. The browser downloads only the code needed for the current view, which shrinks the initial bundle and speeds up first load.\n\nIn React this is done with dynamic import() plus React.lazy and Suspense, most commonly at the route level so each page is its own chunk. Bundlers like Webpack, Vite, and Rollup turn each dynamic import into a separate file automatically.",
+    "hinglish": "Code splitting aapke JavaScript bundle ko chhote chunks mein tod deta hai jo zaroorat par load hote hain, sab kuch ek saath nahi bhejte. Browser sirf current view ka code download karta hai, isliye initial bundle chhota aur first load fast hota hai.\n\nReact mein ye dynamic import() ke saath React.lazy aur Suspense se hota hai, aksar route level par taaki har page apna chunk ho. Webpack/Vite/Rollup har dynamic import ko alag file bana dete hain.",
+    "keyPoints": [
+      "Splits one big bundle into smaller chunks loaded on demand, reducing initial load.",
+      "Achieved via dynamic import(); React.lazy + Suspense wire it into components.",
+      "Route-based splitting is the highest-impact pattern — one chunk per page.",
+      "Bundlers create the separate chunk files automatically at each import() boundary.",
+      "Trade-off: too many tiny chunks add request overhead; split at meaningful boundaries."
+    ],
+    "real_world": "A SaaS app keeps its marketing landing page tiny by splitting the heavy dashboard, charts, and admin panel into separate chunks. A first-time visitor downloads only the landing chunk; the dashboard code arrives only after they log in.",
+    "followups": [
+      {
+        "q": "What's the difference between code splitting and lazy loading?",
+        "a": "Code splitting is creating separate chunks at build time; lazy loading is fetching a chunk at runtime only when needed. React.lazy does both — it marks a split point and loads it on first render."
+      },
+      {
+        "q": "Where should you split?",
+        "a": "At natural boundaries like routes and large, rarely-used features (modals, editors, admin). Over-splitting into many tiny chunks adds network overhead."
+      },
+      {
+        "q": "Is Suspense required for code splitting?",
+        "a": "When using React.lazy, yes — you need a Suspense boundary to show a fallback while the chunk loads."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Code splitting: split heavy routes into separate chunks via dynamic import.\nimport React, { Suspense, lazy } from \"react\";\nimport { Routes, Route } from \"react-router-dom\";\n\n// Each lazy() call creates its own JS chunk, loaded only when needed.\nconst Home = lazy(() => import(\"./Home\"));\nconst Admin = lazy(() => import(\"./Admin\"));     // separate chunk\nconst Charts = lazy(() => import(\"./Charts\"));   // separate chunk\n\nexport default function App() {\n  return (\n    <Suspense fallback={<p>Loading…</p>}>\n      <Routes>\n        <Route path=\"/\" element={<Home />} />\n        <Route path=\"/admin\" element={<Admin />} />\n        <Route path=\"/charts\" element={<Charts />} />\n      </Routes>\n    </Suspense>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Code splitting — initial bundle stays small; chunks load on demand\nconst chunks = {\n  main:   { size: 40, modules: [\"App\", \"Home\"] },\n  admin:  { size: 80, modules: [\"AdminDashboard\"] },\n  charts: { size: 120, modules: [\"HeavyChart\"] },\n};\nlet loaded = new Set([\"main\"]);\nconst loadedSize = () => [...loaded].reduce((s, c) => s + chunks[c].size, 0);\n\nconsole.log(\"Initial download (KB):\", loadedSize());   // only main\nfunction navigateTo(chunk){ loaded.add(chunk); console.log(`Loaded chunk \"${chunk}\" -> total ${loadedSize()}KB`); }\n\nnavigateTo(\"charts\");   // user opens a page that needs the charts chunk\nconsole.assert(loadedSize() === 160, \"main+charts loaded\");\nconsole.assert(!loaded.has(\"admin\"), \"admin never loaded for this user\");\nconsole.log(\"admin chunk loaded?\", loaded.has(\"admin\"));\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Initial download (KB): 40\nLoaded chunk \"charts\" -> total 160KB\nadmin chunk loaded? false\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

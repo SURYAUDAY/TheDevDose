@@ -1,0 +1,70 @@
+{
+  "id": "p2-028",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 28,
+  "orderInPhase": 28,
+  "slug": "nested-dynamic-routes",
+  "title": "Nested & dynamic routes",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "nested",
+    "dynamic",
+    "routes"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A dashboard has a persistent sidebar (parent route) and swaps the main panel for /dashboard/overview, /dashboard/reports/:reportId, etc."
+  },
+  "sections": {
+    "simple_en": "Nested routes let a parent route render shared layout (like a sidebar or tab bar) while child routes render inside it through an <Outlet>. This mirrors UI nesting in your route config and avoids repeating layout across pages.\n\nDynamic routes use URL parameters such as /users/:id. The :id segment is a placeholder you read with useParams, so one route definition serves many resources. You can combine both: nested layouts with dynamic child segments.",
+    "hinglish": "Nested routes mein parent route shared layout (sidebar, tabs) render karta hai aur child routes uske andar <Outlet> ke through aate hain. Isse layout har page par repeat nahi karna padta.\n\nDynamic routes URL parameters use karte hain jaise /users/:id. :id ek placeholder hai jise useParams se padhte ho, to ek hi route definition kai resources serve karti hai. Dono ko combine bhi kar sakte ho.",
+    "keyPoints": [
+      "Nested routes render child routes inside a parent layout via <Outlet>.",
+      "Dynamic segments (e.g., :id) capture URL parameters read with useParams.",
+      "One dynamic route definition serves many records (/users/1, /users/2, ...).",
+      "Index routes render at the parent's path when no child segment is present.",
+      "Combine nesting + dynamic segments for layouts with detail views."
+    ],
+    "real_world": "A dashboard has a persistent sidebar (parent route) and swaps the main panel for /dashboard/overview, /dashboard/reports/:reportId, etc. The sidebar renders once; only the <Outlet> content changes as you move between sections and specific reports.",
+    "followups": [
+      {
+        "q": "What does <Outlet> do?",
+        "a": "It's a placeholder in a parent route's element where the matched child route renders, enabling shared layouts around changing content."
+      },
+      {
+        "q": "How do you read a dynamic segment like :id?",
+        "a": "Use the useParams hook: const { id } = useParams(); it returns the URL parameters as strings."
+      },
+      {
+        "q": "What's an index route?",
+        "a": "A child route with the index prop (no path) that renders at the parent's exact URL — useful for a default view inside a layout."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Nested & dynamic routes: layout with <Outlet> and a :id param.\nimport React from \"react\";\nimport { Routes, Route, Outlet, useParams, Link } from \"react-router-dom\";\n\nfunction UsersLayout() {\n  return (\n    <div>\n      <h2>Users</h2>\n      <Link to=\"/users/42\">User 42</Link>\n      <Outlet /> {/* nested route renders here */}\n    </div>\n  );\n}\n\nfunction UserDetail() {\n  const { id } = useParams();        // read the :id segment\n  return <p>Showing user {id}</p>;\n}\n\nexport default function App() {\n  return (\n    <Routes>\n      <Route path=\"/users\" element={<UsersLayout />}>\n        <Route path=\":id\" element={<UserDetail />} /> {/* /users/:id */}\n      </Route>\n    </Routes>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Nested & dynamic routes — match /users/:id and extract params\nfunction matchDynamic(pattern, pathname){\n  const pp = pattern.split(\"/\").filter(Boolean);\n  const ap = pathname.split(\"/\").filter(Boolean);\n  if (pp.length !== ap.length) return null;\n  const params = {};\n  for (let i = 0; i < pp.length; i++){\n    if (pp[i].startsWith(\":\")) params[pp[i].slice(1)] = ap[i];\n    else if (pp[i] !== ap[i]) return null;\n  }\n  return params;\n}\nconsole.log(\"/users/42       ->\", matchDynamic(\"/users/:id\", \"/users/42\"));\nconsole.log(\"/users/42/posts/7 ->\", matchDynamic(\"/users/:id/posts/:postId\", \"/users/42/posts/7\"));\nconsole.log(\"/teams/9        ->\", matchDynamic(\"/users/:id\", \"/teams/9\"));\nconsole.assert(matchDynamic(\"/users/:id\", \"/users/42\").id === \"42\", \"id extracted\");\nconsole.assert(matchDynamic(\"/users/:id\", \"/teams/9\") === null, \"no match for different prefix\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "/users/42       -> { id: '42' }\n/users/42/posts/7 -> { id: '42', postId: '7' }\n/teams/9        -> null\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

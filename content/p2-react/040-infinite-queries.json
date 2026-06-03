@@ -1,0 +1,69 @@
+{
+  "id": "p2-040",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 40,
+  "orderInPhase": 40,
+  "slug": "infinite-queries",
+  "title": "Infinite queries",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "infinite",
+    "queries"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A social feed loads 10 posts, then fetches the next 10 each time the user nears the bottom (or clicks 'Load more')."
+  },
+  "sections": {
+    "simple_en": "Infinite queries power 'load more' and infinite-scroll experiences by fetching pages sequentially and accumulating them into one growing list. Instead of replacing data per page, each fetch appends the next page, using a cursor or next-page parameter returned by the previous response.\n\nReact Query's useInfiniteQuery manages the accumulated pages, exposes fetchNextPage and hasNextPage, and computes the next cursor via getNextPageParam. It's the natural fit for feeds, chat history, and search results.",
+    "hinglish": "Infinite queries 'load more' aur infinite-scroll ke liye hain — pages ek-ek karke fetch karke ek badhti hui list mein jodte jaate hain. Har fetch agla page append karta hai, pichhle response se mile cursor/next-page parameter ka use karke.\n\nReact Query ka useInfiniteQuery accumulated pages manage karta hai, fetchNextPage aur hasNextPage deta hai, aur getNextPageParam se next cursor nikalta hai. Feeds, chat history, search results ke liye perfect hai.",
+    "keyPoints": [
+      "Append pages into one growing list (vs. replacing per page in pagination).",
+      "useInfiniteQuery accumulates pages and exposes fetchNextPage/hasNextPage.",
+      "getNextPageParam reads the next cursor/token from the last page.",
+      "Flatten data.pages to render the combined list.",
+      "Ideal for infinite scroll and 'load more' feeds, chat, and search."
+    ],
+    "real_world": "A social feed loads 10 posts, then fetches the next 10 each time the user nears the bottom (or clicks 'Load more'). Posts accumulate seamlessly, and React Query stops requesting once getNextPageParam returns null — the end of the feed.",
+    "followups": [
+      {
+        "q": "How do infinite queries differ from pagination?",
+        "a": "Pagination shows one page at a time and replaces data; infinite queries accumulate pages into a single ever-growing list for scroll/'load more' UIs."
+      },
+      {
+        "q": "How does React Query know if more pages exist?",
+        "a": "Via getNextPageParam: it derives the next cursor from the last page; returning undefined/null signals there are no more pages (hasNextPage becomes false)."
+      },
+      {
+        "q": "How do you render all loaded items?",
+        "a": "Flatten the pages: data.pages.flatMap(p => p.items), then map over the combined array."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Infinite queries: load more pages with a cursor and a \"Load more\" button.\nimport React from \"react\";\nimport { useInfiniteQuery } from \"@tanstack/react-query\";\n\nexport default function Feed() {\n  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({\n    queryKey: [\"feed\"],\n    queryFn: ({ pageParam = 0 }) =>\n      fetch(`/api/feed?cursor=${pageParam}`).then((r) => r.json()),\n    initialPageParam: 0,\n    getNextPageParam: (lastPage) => lastPage.nextCursor, // null = no more pages\n  });\n\n  const items = data?.pages.flatMap((p) => p.items) ?? [];\n  return (\n    <div>\n      <ul>{items.map((it) => <li key={it.id}>{it.text}</li>)}</ul>\n      {hasNextPage && (\n        <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>\n          {isFetchingNextPage ? \"Loading…\" : \"Load more\"}\n        </button>\n      )}\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Infinite queries — fetch pages by cursor and accumulate results\nasync function fetchPage(cursor){\n  const pageSize = 3, all = Array.from({ length: 8 }, (_, i) => `item${i + 1}`);\n  const start = cursor ?? 0;\n  const data = all.slice(start, start + pageSize);\n  const nextCursor = start + pageSize < all.length ? start + pageSize : null;\n  return { data, nextCursor };\n}\n(async () => {\n  let cursor = 0, accumulated = [], pages = 0;\n  do {\n    const page = await fetchPage(cursor);\n    accumulated.push(...page.data);\n    cursor = page.nextCursor; pages++;\n    console.log(`Loaded page ${pages}: [${page.data.join(\", \")}] nextCursor=${cursor}`);\n  } while (cursor !== null);\n  console.log(\"Total items:\", accumulated.length);\n  console.assert(accumulated.length === 8, \"all items loaded across pages\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Loaded page 1: [item1, item2, item3] nextCursor=3\nLoaded page 2: [item4, item5, item6] nextCursor=6\nLoaded page 3: [item7, item8] nextCursor=null\nTotal items: 8\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

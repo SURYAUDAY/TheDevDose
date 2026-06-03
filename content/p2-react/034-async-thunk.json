@@ -1,0 +1,69 @@
+{
+  "id": "p2-034",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 34,
+  "orderInPhase": 34,
+  "slug": "async-thunk",
+  "title": "Async thunk",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "async",
+    "thunk"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A user profile page dispatches fetchUser(id)."
+  },
+  "sections": {
+    "simple_en": "createAsyncThunk handles asynchronous logic (like API calls) in Redux Toolkit. You give it a type prefix and an async function; it dispatches three lifecycle actions automatically — pending when it starts, fulfilled with the result on success, and rejected with the error on failure.\n\nYou handle those actions in a slice's extraReducers to update loading, data, and error state. This standardizes async flows so every request follows the same predictable pattern.",
+    "hinglish": "createAsyncThunk Redux Toolkit mein async logic (jaise API calls) handle karta hai. Aap ek type prefix aur async function dete ho; ye teen lifecycle actions automatically dispatch karta hai — start par pending, success par fulfilled (result ke saath), failure par rejected (error ke saath).\n\nIn actions ko slice ke extraReducers mein handle karke loading, data aur error state update karte ho. Isse har request ek hi predictable pattern follow karti hai.",
+    "keyPoints": [
+      "createAsyncThunk(typePrefix, asyncFn) wraps async logic into a dispatchable thunk.",
+      "Auto-dispatches three actions: pending, fulfilled (payload), rejected (error).",
+      "Handle them in extraReducers to set status/data/error consistently.",
+      "The async function's return value becomes the fulfilled action's payload.",
+      "Throwing (or rejectWithValue) drives the rejected case with error info."
+    ],
+    "real_world": "A user profile page dispatches fetchUser(id). The slice flips status to 'loading' on pending, stores the profile on fulfilled, and captures the message on rejected — so the component can show a spinner, the data, or an error with the same three-state pattern every feature uses.",
+    "followups": [
+      {
+        "q": "What three actions does createAsyncThunk dispatch?",
+        "a": "pending (started), fulfilled (succeeded, with the returned value as payload), and rejected (failed, with the error)."
+      },
+      {
+        "q": "How do you handle these in a slice?",
+        "a": "In extraReducers, add cases for thunk.pending/fulfilled/rejected to update loading, data, and error fields."
+      },
+      {
+        "q": "How do you return a custom error payload?",
+        "a": "Use the rejectWithValue helper inside the thunk: return rejectWithValue(serverError), which becomes action.payload on the rejected case."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Async thunk: createAsyncThunk handles pending/fulfilled/rejected for you.\nimport { createAsyncThunk, createSlice } from \"@reduxjs/toolkit\";\n\nexport const fetchUser = createAsyncThunk(\"user/fetch\", async (id) => {\n  const res = await fetch(`/api/users/${id}`);\n  if (!res.ok) throw new Error(\"Failed to load user\");\n  return res.json(); // becomes action.payload on fulfilled\n});\n\nconst userSlice = createSlice({\n  name: \"user\",\n  initialState: { data: null, status: \"idle\", error: null },\n  reducers: {},\n  extraReducers: (builder) => {\n    builder\n      .addCase(fetchUser.pending, (s) => { s.status = \"loading\"; })\n      .addCase(fetchUser.fulfilled, (s, a) => { s.status = \"done\"; s.data = a.payload; })\n      .addCase(fetchUser.rejected, (s, a) => { s.status = \"error\"; s.error = a.error.message; });\n  },\n});\n\nexport default userSlice.reducer;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Async thunk — dispatch pending -> fulfilled / rejected lifecycle\nfunction createAsyncThunk(type, payloadCreator){\n  return (arg) => async (dispatch) => {\n    dispatch({ type: `${type}/pending` });\n    try {\n      const data = await payloadCreator(arg);\n      dispatch({ type: `${type}/fulfilled`, payload: data });\n    } catch (err) {\n      dispatch({ type: `${type}/rejected`, error: err.message });\n    }\n  };\n}\nconst fetchUser = createAsyncThunk(\"user/fetch\", async (id) => {\n  if (id < 0) throw new Error(\"invalid id\");\n  return { id, name: \"Asha\" };\n});\nconst dispatched = [];\nconst dispatch = (a) => dispatched.push(a.type);\n\n(async () => {\n  await fetchUser(1)(dispatch);     // success path\n  await fetchUser(-1)(dispatch);    // error path\n  dispatched.forEach(t => console.log(t));\n  console.assert(dispatched.includes(\"user/fetch/fulfilled\"), \"success dispatched\");\n  console.assert(dispatched.includes(\"user/fetch/rejected\"), \"error dispatched\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "user/fetch/pending\nuser/fetch/fulfilled\nuser/fetch/pending\nuser/fetch/rejected\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

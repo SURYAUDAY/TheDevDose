@@ -1,0 +1,65 @@
+{
+  "id": "p1a-020",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 20,
+  "orderInPhase": 20,
+  "slug": "type-coercion",
+  "title": "Type Coercion",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "type",
+    "coercion"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "A form field returns the string '10'."
+  },
+  "sections": {
+    "simple_en": "Type coercion is JavaScript automatically converting a value from one type to another. It happens implicitly (e.g. `'5' + 1` becomes `'51'`) or explicitly when you call `Number()`, `String()`, `Boolean()` yourself.\n\nThe trickiest rules involve the `+` operator (string concatenation wins if either side is a string) versus other arithmetic operators (which convert to numbers). Understanding coercion prevents a whole class of subtle bugs and is a very common interview gotcha.",
+    "hinglish": "Type coercion ka matlab JavaScript ka apne aap ek value ko ek type se doosre type me badalna. Ye implicitly hota hai (jaise `'5' + 1` ban jaata hai `'51'`) ya explicitly jab aap khud `Number()`, `String()`, `Boolean()` call karte ho.\nSabse tricky rules `+` operator ke hain (agar ek side string ho to concatenation jeet jaata hai) vs baaki arithmetic operators (jo numbers me convert karte hain). Coercion samajhna bohot saare subtle bugs rok deta hai aur interview ka common gotcha hai.",
+    "keyPoints": [
+      "Implicit (automatic) vs explicit (`Number()`, `String()`, `Boolean()`) coercion.",
+      "`+` with any string operand → string concatenation; `-`, `*`, `/` → numeric coercion.",
+      "`'5' + 1` → '51', but `'5' - 1` → 4.",
+      "Booleans coerce in conditionals via truthy/falsy rules.",
+      "Prefer explicit conversion and `===` to avoid surprises."
+    ],
+    "real_world": "A form field returns the string '10'. Doing `total = '10' + 5` gives '105' (a display bug), while `Number('10') + 5` gives 15. Knowing coercion is the difference between a working calculator and a broken one.",
+    "followups": [
+      {
+        "q": "Why does `'5' + 1` differ from `'5' - 1`?",
+        "a": "`+` is overloaded for string concatenation, so a string operand makes the whole thing a string ('51'). `-` has no string meaning, so both operands coerce to numbers (4)."
+      },
+      {
+        "q": "How do you avoid coercion bugs?",
+        "a": "Convert inputs explicitly with `Number()`/`String()`/`Boolean()` and compare with `===` instead of `==`, which performs implicit coercion."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrates the +/-/* coercion rules and explicit conversion.\n\nfunction coercionExamples() {\n  return {\n    plusString: \"5\" + 1,     // \"51\"  (string concat)\n    minusNumber: \"5\" - 1,    // 4     (numeric)\n    multiply: \"6\" * \"2\",     // 12    (both to number)\n    boolAdd: true + 1,       // 2     (true -> 1)\n    nullPlus: null + 1,      // 1     (null -> 0)\n  };\n}\n\nfunction explicitConvert(input) {\n  return {\n    toNumber: Number(input),\n    toString: String(input),\n    toBoolean: Boolean(input),\n  };\n}\n\nmodule.exports = { coercionExamples, explicitConvert };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { coercionExamples, explicitConvert } = require(\"./solution\");\n\nconsole.log(coercionExamples());\nconsole.log(explicitConvert(\"42\"));\n\nconst c = coercionExamples();\nconsole.assert(c.plusString === \"51\", \"+ with string concatenates\");\nconsole.assert(c.minusNumber === 4, \"- coerces to number\");\nconsole.assert(c.multiply === 12, \"* coerces both to number\");\nconsole.assert(c.boolAdd === 2, \"true coerces to 1\");\nconsole.assert(c.nullPlus === 1, \"null coerces to 0\");\nconsole.assert(explicitConvert(\"42\").toNumber === 42, \"Number('42')===42\");\nconsole.log(\"type coercion assertions passed.\");",
+      "expectedOutput": "{ plusString: '51', minusNumber: 4, multiply: 12, boolAdd: 2, nullPlus: 1 }\n{ toNumber: 42, toString: '42', toBoolean: true }\ntype coercion assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

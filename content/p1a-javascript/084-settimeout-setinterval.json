@@ -1,0 +1,65 @@
+{
+  "id": "p1a-084",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 84,
+  "orderInPhase": 84,
+  "slug": "settimeout-setinterval",
+  "title": "setTimeout / setInterval",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "settimeout",
+    "setinterval"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A 'session expiring soon' banner shown after N minutes uses setTimeout; a live clock that ticks every second uses setInterval (and is cleared when the compon…"
+  },
+  "sections": {
+    "simple_en": "`setTimeout(fn, delay)` schedules a function to run once after at least `delay` milliseconds. `setInterval(fn, delay)` runs a function repeatedly every `delay` milliseconds until cleared. Both return an id used to cancel them with `clearTimeout`/`clearInterval`.\n\nThe delay is a minimum, not exact — the callback only runs once the call stack is clear and it's the function's turn in the macrotask queue. Always clear intervals you no longer need to avoid leaks, and remember any extra arguments after the delay are passed to the callback.",
+    "hinglish": "`setTimeout(fn, delay)` ek function ko kam se kam `delay` milliseconds baad ek baar chalane ke liye schedule karta hai. `setInterval(fn, delay)` ek function ko har `delay` milliseconds par baar-baar chalata hai jab tak clear na ho. Dono ek id return karte hain jise `clearTimeout`/`clearInterval` se cancel karte ho.\nDelay minimum hai, exact nahi — callback tabhi chalta hai jab call stack clear ho aur macrotask queue me uski baari aaye. Jo intervals zarurat nahi unhe hamesha clear karo (leak se bachne), aur yaad rakho delay ke baad ke extra arguments callback ko pass hote hain.",
+    "keyPoints": [
+      "`setTimeout` runs once after a minimum delay; `setInterval` repeats.",
+      "Both return ids; cancel with `clearTimeout`/`clearInterval`.",
+      "Delay is a minimum (macrotask), not a precise schedule.",
+      "Always clear intervals you no longer need (prevent leaks).",
+      "Extra args after the delay are forwarded to the callback."
+    ],
+    "real_world": "A 'session expiring soon' banner shown after N minutes uses setTimeout; a live clock that ticks every second uses setInterval (and is cleared when the component unmounts to avoid leaks).",
+    "followups": [
+      {
+        "q": "Is the setTimeout delay exact?",
+        "a": "No, it's a minimum. The callback is queued as a macrotask and only runs after the stack clears and earlier tasks/microtasks finish, so actual delay can be longer."
+      },
+      {
+        "q": "Why must you clear intervals?",
+        "a": "An uncleared `setInterval` keeps firing forever and keeps its closure (and any captured data) alive, causing memory leaks and wasted work — especially in SPAs when components unmount."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Promise-based delay built on setTimeout + a self-clearing interval.\n\nfunction delay(ms) {\n  return new Promise((resolve) => setTimeout(resolve, ms));\n}\n\n// Run a callback N times every interval, then stop automatically.\nfunction repeat(times, intervalMs, onTick) {\n  return new Promise((resolve) => {\n    let count = 0;\n    const id = setInterval(() => {\n      count++;\n      onTick(count);\n      if (count >= times) { clearInterval(id); resolve(count); }\n    }, intervalMs);\n  });\n}\n\nmodule.exports = { delay, repeat };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { delay, repeat } = require(\"./solution\");\n\n(async () => {\n  const start = Date.now();\n  await delay(20);\n  console.log(\"waited at least 20ms:\", Date.now() - start >= 18);\n\n  const ticks = [];\n  const total = await repeat(3, 5, (n) => ticks.push(n));\n  console.log(\"ticks:\", ticks, \"total:\", total); // [1,2,3] 3\n\n  console.assert(Date.now() - start >= 18, \"delay waited\");\n  console.assert(JSON.stringify(ticks) === \"[1,2,3]\", \"interval ran 3 times\");\n  console.assert(total === 3, \"interval auto-cleared after 3\");\n  console.log(\"setTimeout/setInterval assertions passed.\");\n})();",
+      "expectedOutput": "waited at least 20ms: true\nticks: [ 1, 2, 3 ] total: 3\nsetTimeout/setInterval assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

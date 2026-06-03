@@ -1,0 +1,64 @@
+{
+  "id": "p1a-044",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 44,
+  "orderInPhase": 44,
+  "slug": "array-foreach",
+  "title": "Array.forEach()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "array.foreach"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "Iterating over form fields to attach event listeners, or logging each item in a batch job — anywhere you act on each element but don't need a transformed res…"
+  },
+  "sections": {
+    "simple_en": "`forEach` runs a callback once for each element of an array, in order. It's used purely for side effects (logging, updating external state, DOM operations) — it always returns `undefined` and produces no new array.\n\nUnlike `map`/`filter`, it cannot be chained. You also cannot `break` or `return` out of a `forEach` early; if you need that, use a `for...of` loop or array methods like `some`/`every`/`find`.",
+    "hinglish": "`forEach` array ke har element ke liye ek callback ek baar order me chalata hai. Ye sirf side effects ke liye use hota hai (logging, external state update, DOM operations) — hamesha `undefined` return karta hai aur koi naya array nahi banata.\n`map`/`filter` ke विपरीत ise chain nahi kar sakte. `forEach` se early `break`/`return` bhi nahi kar sakte; agar woh chahiye to `for...of` loop ya `some`/`every`/`find` jaise methods use karo.",
+    "keyPoints": [
+      "Runs a callback for each element; returns `undefined`.",
+      "For side effects only — not for producing a new array.",
+      "Cannot be chained (returns undefined).",
+      "Cannot break/return early — use for...of or some/every/find for that.",
+      "Skips empty slots in sparse arrays."
+    ],
+    "real_world": "Iterating over form fields to attach event listeners, or logging each item in a batch job — anywhere you act on each element but don't need a transformed result back.",
+    "followups": [
+      {
+        "q": "Can you break out of a forEach?",
+        "a": "No. `forEach` always iterates the entire array; `break`/`continue` don't apply and `return` only exits the current callback. Use `for...of` or `some`/`every`/`find` when you need early exit."
+      },
+      {
+        "q": "When should you choose forEach over map?",
+        "a": "When you only need side effects and don't want a returned array. If you need a transformed array (or want to chain), use map."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// forEach for side effects (accumulating into external state).\n\nfunction collectLog(items) {\n  const log = [];\n  items.forEach((item, i) => {\n    log.push(\"[\" + i + \"] \" + item);\n  });\n  return log; // forEach itself returns undefined; we built 'log' externally\n}\n\nfunction forEachReturnsUndefined(arr) {\n  return arr.forEach((x) => x); // undefined\n}\n\nmodule.exports = { collectLog, forEachReturnsUndefined };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { collectLog, forEachReturnsUndefined } = require(\"./solution\");\n\nconsole.log(collectLog([\"save\", \"send\"]));            // ['[0] save','[1] send']\nconsole.log(\"returns:\", forEachReturnsUndefined([1])); // undefined\n\nconsole.assert(JSON.stringify(collectLog([\"a\",\"b\"])) === '[\"[0] a\",\"[1] b\"]', \"forEach side effect\");\nconsole.assert(forEachReturnsUndefined([1,2,3]) === undefined, \"forEach returns undefined\");\nconsole.log(\"forEach assertions passed.\");",
+      "expectedOutput": "[ '[0] save', '[1] send' ]\nreturns: undefined\nforEach assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

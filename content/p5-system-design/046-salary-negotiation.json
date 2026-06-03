@@ -1,0 +1,69 @@
+{
+  "id": "p5-046",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 46,
+  "orderInPhase": 46,
+  "slug": "salary-negotiation",
+  "title": "Salary negotiation",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "salary",
+    "negotiation"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Given a researched range, a candidate receives an offer below their floor and counters with a justified target citing market data and their experience — coll…"
+  },
+  "sections": {
+    "simple_en": "Salary negotiation starts with research: know the market range for the role, level, and location before you talk numbers. Anchor on a justified target based on the market and your fit — never on your current pay, and never below market. Then evaluate offers objectively against your researched floor, target, and stretch.\n\nNegotiate total compensation, not just base — equity, bonus, sign-on, and benefits all matter. Get the offer in writing, and stay collaborative rather than adversarial: framing it as finding a number that works for both sides usually yields better outcomes than confrontation. A respectful counter is expected and rarely rescinds an offer.",
+    "hinglish": "Salary negotiation research se shuru hoti hai: numbers ki baat karne se pehle role, level, aur location ke liye market range jaano. Ek justified target par anchor karo market aur apne fit ke aadhaar par — kabhi apni current pay par nahi, aur kabhi market se neeche nahi. Phir offers ko objectively apne researched floor, target, aur stretch ke against evaluate karo.\n\nTotal compensation negotiate karo, sirf base nahi — equity, bonus, sign-on, aur benefits sab matter karte hain. Offer ko writing mein lo, aur adversarial ke bajaye collaborative raho: ise ek aisa number dhoondhne ke roop mein frame karna jo dono sides ke liye kaam kare aksar confrontation se behtar outcomes deta hai. Ek respectful counter expected hai aur shaayad hi kabhi offer rescind karta hai.",
+    "keyPoints": [
+      "Research the market range for the role, level, and location first.",
+      "Anchor on a justified target (market + fit), never your current pay.",
+      "Evaluate offers against your floor, target, and stretch.",
+      "Negotiate total comp: base + equity + bonus + benefits.",
+      "Get it in writing; stay collaborative, not adversarial."
+    ],
+    "real_world": "Given a researched range, a candidate receives an offer below their floor and counters with a justified target citing market data and their experience — collaboratively, not combatively. The company adjusts upward, and the candidate accepts a number they'd have left on the table without negotiating.",
+    "followups": [
+      {
+        "q": "How do you prepare to negotiate salary?",
+        "a": "Research the market range for the role/level/location, define your floor, target, and stretch, and prepare a justification (your fit, experience, competing offers). Walk in with a number anchored to the market, not your past pay."
+      },
+      {
+        "q": "Should you negotiate total comp or just base?",
+        "a": "Total compensation — base plus equity, bonus, sign-on, and benefits. Some levers (equity, sign-on) have more room than base, so evaluating and negotiating the whole package matters."
+      },
+      {
+        "q": "Is countering an offer risky?",
+        "a": "A respectful, market-justified counter is expected and very rarely causes an offer to be withdrawn. Staying collaborative — framing it as finding a mutually agreeable number — keeps the relationship positive."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo computing a researched target range and evaluating offers against it, verifying the anchor-and-evaluate logic.",
+      "source": "# Salary negotiation — prepare a range, evaluate total comp, negotiate collaboratively.\n\ndef target_range(market_median: float, level_factor: float) -> dict:\n    \"\"\"Anchor around researched market data and your seniority/fit, not your current pay.\"\"\"\n    base = market_median * level_factor\n    return {\"floor\": round(base * 0.95), \"target\": round(base), \"stretch\": round(base * 1.12)}\n\ndef total_comp(base: float, bonus: float = 0, equity_per_year: float = 0, signon: float = 0) -> float:\n    \"\"\"Evaluate the whole package, not just base salary (year-1 view).\"\"\"\n    return base + bonus + equity_per_year + signon\n\n# Playbook:\n#   1) Research the market range (levels.fyi, Glassdoor, peers) for the role/location/level.\n#   2) Let the employer name a number first when possible; anchor with a justified target.\n#   3) Evaluate TOTAL comp (base + bonus + equity + sign-on + benefits), not just base.\n#   4) Counter once, politely and with rationale; get the final offer in writing.\n#   5) Stay collaborative — you're problem-solving together, not fighting.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Salary negotiation — anchor with a researched range and evaluate offers objectively\ndef target_range(market_median, your_level_factor):\n    # Aim slightly above median based on your fit/seniority; never anchor below market.\n    base = market_median * your_level_factor\n    return {\"floor\": round(base * 0.95), \"target\": round(base), \"stretch\": round(base * 1.12)}\ndef evaluate_offer(offer, rng):\n    if offer < rng[\"floor\"]: return \"counter (below your floor)\"\n    if offer < rng[\"target\"]: return \"counter toward target\"\n    return \"strong offer — consider accepting or a small counter\"\n\nrng = target_range(market_median=2000000, your_level_factor=1.05)   # e.g. INR/year\nprint(\"Researched range:\", rng)\nprint(\"Offer 1,900,000 ->\", evaluate_offer(1900000, rng))\nprint(\"Offer 2,200,000 ->\", evaluate_offer(2200000, rng))\nassert evaluate_offer(1900000, rng) == \"counter (below your floor)\"\nassert \"strong offer\" in evaluate_offer(2200000, rng)\nprint(\"\\nNegotiation: research the market range first, anchor with a justified target (not your current pay),\")\nprint(\"evaluate total comp (base+equity+bonus+benefits), get it in writing, and stay collaborative — it's not adversarial.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Researched range: {'floor': 1995000, 'target': 2100000, 'stretch': 2352000}\nOffer 1,900,000 -> counter (below your floor)\nOffer 2,200,000 -> strong offer — consider accepting or a small counter\n\nNegotiation: research the market range first, anchor with a justified target (not your current pay),\nevaluate total comp (base+equity+bonus+benefits), get it in writing, and stay collaborative — it's not adversarial.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

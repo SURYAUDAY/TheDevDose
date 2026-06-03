@@ -1,0 +1,71 @@
+{
+  "id": "p3-060",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 60,
+  "orderInPhase": 60,
+  "slug": "monitoring-observability-prometheus-grafana",
+  "title": "Monitoring & observability (Prometheus / Grafana)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "monitoring",
+    "observability",
+    "prometheus",
+    "grafana"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "An app exposes request counts and latency histograms at /metrics."
+  },
+  "sections": {
+    "simple_en": "Monitoring tells you whether your system is healthy; observability lets you understand why it behaves as it does. The three pillars are metrics (numeric time-series like request rate, error rate, latency), logs (discrete events), and traces (the path of a request across services). Together they help you detect, diagnose, and resolve issues.\n\nA common stack is Prometheus (scrapes and stores metrics your app exposes at /metrics) plus Grafana (dashboards and alerting). You instrument code with counters, gauges, and histograms, then build dashboards and alerts on thresholds — like p95 latency or error rate — so you find problems before users report them.",
+    "hinglish": "Monitoring batata hai system healthy hai ya nahi; observability batata hai wo aisa kyun behave kar raha hai. Teen pillars hain: metrics (numeric time-series jaise request rate, error rate, latency), logs (discrete events), aur traces (request ka path services ke across). Saath milkar ye issues detect, diagnose aur resolve karne mein madad karte hain.\n\nCommon stack: Prometheus (aapke app ke /metrics par expose kiye metrics scrape aur store karta hai) plus Grafana (dashboards aur alerting). Aap code ko counters, gauges, histograms se instrument karte ho, phir thresholds par dashboards aur alerts banate ho — jaise p95 latency ya error rate — taaki users report karne se pehle problems mil jaayein.",
+    "keyPoints": [
+      "Monitoring = is it healthy; observability = why does it behave this way.",
+      "Three pillars: metrics (time-series), logs (events), traces (request paths).",
+      "Prometheus scrapes metrics from /metrics; Grafana visualizes + alerts.",
+      "Instrument with counters, gauges, and histograms.",
+      "Alert on thresholds (error rate, p95 latency) to catch issues early."
+    ],
+    "real_world": "An app exposes request counts and latency histograms at /metrics. Prometheus scrapes them; a Grafana dashboard shows p95 latency climbing, and an alert fires when error rate exceeds 1% — paging the on-call engineer before customers notice the degradation.",
+    "followups": [
+      {
+        "q": "What are the three pillars of observability?",
+        "a": "Metrics (numeric time-series for trends/alerts), logs (discrete event records for detail), and traces (following a request across services to find bottlenecks)."
+      },
+      {
+        "q": "How do Prometheus and Grafana fit together?",
+        "a": "Prometheus collects and stores metrics by scraping your app's /metrics endpoint; Grafana queries Prometheus to render dashboards and trigger alerts on thresholds."
+      },
+      {
+        "q": "Counter vs gauge vs histogram?",
+        "a": "A counter only increases (e.g., total requests); a gauge goes up and down (e.g., active connections); a histogram buckets observations to compute distributions like p95 latency."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + prom-client code. The Node-runnable demo below collects counters and histograms like Prometheus so the metrics are verifiable here.",
+      "source": "// Monitoring & observability — expose Prometheus metrics from a Node app.\nconst express = require(\"express\");\nconst client = require(\"prom-client\");\nconst app = express();\n\n// Collect default Node/process metrics (CPU, memory, event loop lag).\nclient.collectDefaultMetrics();\n\n// Custom metrics:\nconst httpRequests = new client.Counter({\n  name: \"http_requests_total\",\n  help: \"Total HTTP requests\",\n  labelNames: [\"method\", \"route\", \"status\"],\n});\nconst httpDuration = new client.Histogram({\n  name: \"http_request_duration_seconds\",\n  help: \"Request latency\",\n  labelNames: [\"route\"],\n});\n\napp.use((req, res, next) => {\n  const end = httpDuration.startTimer({ route: req.path });\n  res.on(\"finish\", () => {\n    httpRequests.inc({ method: req.method, route: req.path, status: res.statusCode });\n    end();\n  });\n  next();\n});\n\n// Prometheus scrapes this endpoint; Grafana visualizes and alerts on it.\napp.get(\"/metrics\", async (req, res) => {\n  res.set(\"Content-Type\", client.register.contentType);\n  res.end(await client.register.metrics());\n});\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Monitoring & observability — collect metrics; the three pillars\nfunction createMetrics(){\n  const counters = {}, histograms = {};\n  return {\n    inc(name, by = 1){ counters[name] = (counters[name] || 0) + by; },\n    observe(name, value){ (histograms[name] ||= []).push(value); },\n    snapshot(){\n      const h = {};\n      for (const k in histograms){ const v = histograms[k].sort((a, b) => a - b);\n        h[k] = { count: v.length, p50: v[Math.floor(v.length * 0.5)], p95: v[Math.floor(v.length * 0.95)] }; }\n      return { counters, latency: h };\n    },\n  };\n}\nconst m = createMetrics();\n[\"GET /users\", \"GET /users\", \"POST /users\"].forEach(() => m.inc(\"http_requests_total\"));\nm.inc(\"http_errors_total\");\n[10, 12, 9, 200, 15, 11, 13, 14, 250, 8].forEach(v => m.observe(\"request_ms\", v));\nconsole.log(\"Metrics snapshot:\", JSON.stringify(m.snapshot()));\nconsole.assert(m.snapshot().counters.http_requests_total === 3, \"request counter works\");\nconsole.log(\"Three pillars of observability: metrics (Prometheus), logs, and traces.\");\nconsole.log(\"Grafana visualizes metrics; alerts fire on thresholds (e.g., p95 latency, error rate).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Metrics snapshot: {\"counters\":{\"http_requests_total\":3,\"http_errors_total\":1},\"latency\":{\"request_ms\":{\"count\":10,\"p50\":13,\"p95\":250}}}\nThree pillars of observability: metrics (Prometheus), logs, and traces.\nGrafana visualizes metrics; alerts fire on thresholds (e.g., p95 latency, error rate).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

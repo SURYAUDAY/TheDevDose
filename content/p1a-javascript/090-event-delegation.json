@@ -1,0 +1,65 @@
+{
+  "id": "p1a-090",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 90,
+  "orderInPhase": 90,
+  "slug": "event-delegation",
+  "title": "Event Delegation",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "event",
+    "delegation"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A to-do list where each item has a delete button: instead of a listener per button, one listener on the `<ul>` catches all clicks and checks `event.target.cl…"
+  },
+  "sections": {
+    "simple_en": "Event delegation is a pattern where, instead of attaching a listener to many child elements, you attach ONE listener to a common ancestor and use event bubbling to handle events from any descendant. You inspect `event.target` to decide what was clicked.\n\nBenefits: fewer listeners (better performance and memory), and it automatically works for elements added to the DOM later (dynamic content). It's a staple for lists, tables, and menus. Use `target.closest(selector)` to robustly find the relevant element.",
+    "hinglish": "Event delegation ek pattern hai jisme kai child elements par listener lagane ke bajaye, aap EK listener ek common ancestor par lagate ho aur event bubbling se kisi bhi descendant ke events handle karte ho. `event.target` inspect karke decide karte ho kya click hua.\nFaayde: kam listeners (better performance aur memory), aur ye un elements ke liye bhi automatically chalta hai jo DOM me baad me add hote hain (dynamic content). Lists, tables, menus ke liye ye staple hai. Relevant element robustly dhoondhne ke liye `target.closest(selector)` use karo.",
+    "keyPoints": [
+      "One listener on a parent handles events from all descendants (via bubbling).",
+      "Inspect `event.target` (or `target.closest(sel)`) to identify the source.",
+      "Fewer listeners → better performance and lower memory.",
+      "Works for dynamically added elements automatically.",
+      "Ideal for lists, tables, toolbars, and menus."
+    ],
+    "real_world": "A to-do list where each item has a delete button: instead of a listener per button, one listener on the `<ul>` catches all clicks and checks `event.target.closest('.delete')` — and still works for items added after page load.",
+    "followups": [
+      {
+        "q": "Why is event delegation more efficient?",
+        "a": "It uses one listener on a parent instead of many on children, reducing memory and setup cost, and it automatically handles elements added to the DOM later — no need to re-bind."
+      },
+      {
+        "q": "How do you reliably identify the clicked element in delegation?",
+        "a": "Use `event.target.closest(selector)`, which walks up from the actual target to the nearest matching ancestor, handling clicks on nested inner elements correctly."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Browser code (runs in a browser):\n//\n//   list.addEventListener(\"click\", (e) => {\n//     const btn = e.target.closest(\".delete\");\n//     if (btn) removeItem(btn.dataset.id);\n//   });\n//\n// Node demo: simulate delegation by matching against a target descriptor.\n\nfunction delegate(handlers) {\n  // returns a single handler that dispatches based on target.matches\n  return function (event) {\n    for (const { selector, run } of handlers) {\n      if (event.target.matches && event.target.matches(selector)) {\n        return run(event);\n      }\n    }\n    return null;\n  };\n}\n\nmodule.exports = { delegate };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (simulated target with a matches() method) ---\nconst { delegate } = require(\"./solution\");\n\nconst results = [];\nconst onClick = delegate([\n  { selector: \".delete\", run: (e) => results.push(\"delete:\" + e.target.id) },\n  { selector: \".edit\", run: (e) => results.push(\"edit:\" + e.target.id) },\n]);\n\n// fake events with target.matches()\nconst makeTarget = (cls, id) => ({ target: { id, matches: (s) => s === \".\" + cls } });\nonClick(makeTarget(\"delete\", \"1\"));\nonClick(makeTarget(\"edit\", \"2\"));\nonClick(makeTarget(\"other\", \"3\")); // no handler\n\nconsole.log(results); // ['delete:1','edit:2']\n\nconsole.assert(JSON.stringify(results) === '[\"delete:1\",\"edit:2\"]', \"delegates by selector\");\nconsole.assert(onClick(makeTarget(\"other\", \"3\")) === null, \"unmatched target ignored\");\nconsole.log(\"event delegation assertions passed.\");",
+      "expectedOutput": "[ 'delete:1', 'edit:2' ]\nevent delegation assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

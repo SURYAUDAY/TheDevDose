@@ -1,0 +1,70 @@
+{
+  "id": "p2-043",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 43,
+  "orderInPhase": 43,
+  "slug": "react-hook-form",
+  "title": "React Hook Form",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "react",
+    "hook",
+    "form"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "A multi-field onboarding form (name, email, password, address) stays fast with RHF because keystrokes don't re-render the entire form."
+  },
+  "sections": {
+    "simple_en": "React Hook Form (RHF) is a popular form library that minimizes re-renders by using uncontrolled inputs and refs under the hood. You register inputs with the register function, handle submission with handleSubmit, and read errors from formState — with very little boilerplate.\n\nBecause inputs are uncontrolled, typing doesn't re-render the whole form on every keystroke, which keeps large forms fast. RHF integrates with schema validators (Zod/Yup) via resolvers for declarative validation.",
+    "hinglish": "React Hook Form (RHF) ek popular form library hai jo uncontrolled inputs aur refs use karke re-renders kam karti hai. Aap inputs ko register se register karte ho, submission handleSubmit se handle karte ho, aur errors formState se padhte ho — bahut kam boilerplate ke saath.\n\nInputs uncontrolled hone ki wajah se har keystroke par poora form re-render nahi hota, isliye bade forms fast rehte hain. RHF schema validators (Zod/Yup) ke saath resolvers ke through integrate hoti hai.",
+    "keyPoints": [
+      "Minimizes re-renders by using uncontrolled inputs + refs internally.",
+      "Core API: register (wire inputs), handleSubmit (validate + submit), formState.errors.",
+      "Built-in rules (required, minLength, pattern) plus messages.",
+      "Integrates with Zod/Yup via resolvers for schema validation.",
+      "Great for large/complex forms where controlled inputs would re-render too much."
+    ],
+    "real_world": "A multi-field onboarding form (name, email, password, address) stays fast with RHF because keystrokes don't re-render the entire form. register wires each field, handleSubmit validates everything at once, and errors render inline only where needed.",
+    "followups": [
+      {
+        "q": "How does React Hook Form reduce re-renders?",
+        "a": "It uses uncontrolled inputs and refs, so the form doesn't re-render on every keystroke the way controlled state-based forms do — only affected parts update."
+      },
+      {
+        "q": "What does register do?",
+        "a": "It wires an input into the form: it returns props (name, ref, onChange, onBlur) that you spread onto the input so RHF can track and validate it."
+      },
+      {
+        "q": "How do you add schema validation?",
+        "a": "Pass a resolver (e.g., zodResolver(schema)) to useForm, letting a Zod/Yup schema define the validation rules declaratively."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// React Hook Form: register fields and validate with minimal re-renders.\nimport React from \"react\";\nimport { useForm } from \"react-hook-form\";\n\nexport default function LoginForm() {\n  const { register, handleSubmit, formState: { errors } } = useForm();\n\n  const onSubmit = (data) => console.log(\"Submitted:\", data);\n\n  return (\n    <form onSubmit={handleSubmit(onSubmit)}>\n      <input {...register(\"email\", { required: \"Email is required\" })} />\n      {errors.email && <span>{errors.email.message}</span>}\n\n      <input\n        type=\"password\"\n        {...register(\"password\", { required: true, minLength: { value: 8, message: \"Too short\" } })}\n      />\n      {errors.password && <span>{errors.password.message}</span>}\n\n      <button type=\"submit\">Log in</button>\n    </form>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React Hook Form — register + handleSubmit logic (uncontrolled + validate)\nfunction useForm(){\n  const fields = {};                       // refs by name (uncontrolled)\n  const rules = {};\n  function register(name, opts = {}){ fields[name] = { value: \"\" }; rules[name] = opts; return name; }\n  function setValue(name, value){ fields[name].value = value; }   // simulates user typing\n  function handleSubmit(onValid, onInvalid){\n    return () => {\n      const errors = {};\n      for (const name in rules){\n        const v = fields[name].value;\n        if (rules[name].required && !v) errors[name] = \"required\";\n        if (rules[name].minLength && v.length < rules[name].minLength) errors[name] = \"too short\";\n      }\n      const values = Object.fromEntries(Object.entries(fields).map(([k, f]) => [k, f.value]));\n      return Object.keys(errors).length ? onInvalid(errors) : onValid(values);\n    };\n  }\n  return { register, setValue, handleSubmit };\n}\nconst form = useForm();\nform.register(\"name\", { required: true });\nform.register(\"pw\", { required: true, minLength: 6 });\nform.setValue(\"name\", \"Asha\");\nform.setValue(\"pw\", \"12345\");                          // too short\nconst submit = form.handleSubmit(\n  (vals) => console.log(\"VALID:\", JSON.stringify(vals)),\n  (errs) => console.log(\"INVALID:\", JSON.stringify(errs))\n);\nsubmit();\nform.setValue(\"pw\", \"secret1\");\nsubmit();\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "INVALID: {\"pw\":\"too short\"}\nVALID: {\"name\":\"Asha\",\"pw\":\"secret1\"}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

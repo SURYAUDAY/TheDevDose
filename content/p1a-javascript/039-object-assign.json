@@ -1,0 +1,64 @@
+{
+  "id": "p1a-039",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 39,
+  "orderInPhase": 39,
+  "slug": "object-assign",
+  "title": "Object.assign()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "object.assign"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Applying default options: `const opts = Object.assign({}, defaults, userOptions)` produces a merged config where the user's values win, without mutating eith…"
+  },
+  "sections": {
+    "simple_en": "`Object.assign(target, ...sources)` copies the own enumerable properties from one or more source objects into a target object, and returns the target. Later sources overwrite earlier ones for matching keys. It's commonly used to merge objects or to clone a shallow copy.\n\nImportant: the copy is shallow — nested objects are copied by reference, not deeply. The modern spread syntax `{ ...a, ...b }` does the same merge in most cases and is often preferred for readability.",
+    "hinglish": "`Object.assign(target, ...sources)` ek ya zyada source objects ki own enumerable properties target object me copy karta hai aur target return karta hai. Same keys ke liye baad wale sources pehle wale ko overwrite kar dete hain. Iska use objects merge karne ya shallow clone banane me hota hai.\nImportant: copy shallow hoti hai — nested objects reference se copy hote hain, deeply nahi. Modern spread syntax `{ ...a, ...b }` zyadatar cases me yahi merge karta hai aur readability ke liye aksar preferred hai.",
+    "keyPoints": [
+      "`Object.assign(target, ...sources)` merges sources into target and returns target.",
+      "Later sources overwrite earlier ones on key conflicts.",
+      "Performs a SHALLOW copy — nested objects are shared by reference.",
+      "Mutates the target; pass `{}` as target to avoid mutating originals.",
+      "Spread `{ ...a, ...b }` is an equivalent, often clearer, alternative."
+    ],
+    "real_world": "Applying default options: `const opts = Object.assign({}, defaults, userOptions)` produces a merged config where the user's values win, without mutating either the defaults or the user's object.",
+    "followups": [
+      {
+        "q": "Is Object.assign a deep or shallow copy?",
+        "a": "Shallow. Top-level properties are copied, but nested objects/arrays are copied by reference, so mutating a nested value affects both the source and the copy."
+      },
+      {
+        "q": "How does spread `{...a, ...b}` compare to Object.assign?",
+        "a": "For merging plain objects they're largely equivalent (both shallow). Spread creates a new object literal (doesn't mutate a target) and is often more readable; Object.assign can mutate an existing target and invokes setters on the target."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Merging with defaults and showing shallow-copy behaviour.\n\nfunction withDefaults(defaults, userOptions) {\n  return Object.assign({}, defaults, userOptions); // user wins, originals safe\n}\n\nfunction shallowCopyCaveat() {\n  const source = { nested: { x: 1 } };\n  const copy = Object.assign({}, source);\n  copy.nested.x = 99;             // mutates shared nested object!\n  return { sourceX: source.nested.x, sharedRef: source.nested === copy.nested };\n}\n\nmodule.exports = { withDefaults, shallowCopyCaveat };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { withDefaults, shallowCopyCaveat } = require(\"./solution\");\n\nconsole.log(withDefaults({ color: \"red\", size: \"M\" }, { size: \"L\" }));\nconsole.log(shallowCopyCaveat());\n\nconst merged = withDefaults({ color: \"red\", size: \"M\" }, { size: \"L\" });\nconsole.assert(merged.color === \"red\" && merged.size === \"L\", \"user options win\");\nconst s = shallowCopyCaveat();\nconsole.assert(s.sourceX === 99, \"nested mutated (shallow copy)\");\nconsole.assert(s.sharedRef === true, \"nested objects shared by reference\");\nconsole.log(\"Object.assign assertions passed.\");",
+      "expectedOutput": "{ color: 'red', size: 'L' }\n{ sourceX: 99, sharedRef: true }\nObject.assign assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p3-076",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 76,
+  "orderInPhase": 76,
+  "slug": "api-testing",
+  "title": "API testing",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "api",
+    "testing"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Before each deploy, CI runs API tests that POST to /users with valid and invalid bodies, confirm a 201 with an id versus a 400 error, and check that protecte…"
+  },
+  "sections": {
+    "simple_en": "API testing verifies your endpoints behave correctly from the outside: given a request, do you get the right status code, response body, and error handling? It treats the API as a contract — testing what clients actually depend on, independent of internal implementation details.\n\nGood API tests cover the happy path, validation failures, authentication/authorization, and edge cases (missing fields, not-found, conflicts). In Node, Jest (the test runner and assertions) with Supertest (which sends HTTP requests to your Express app) is the standard combination. These tests catch contract regressions before they reach clients.",
+    "hinglish": "API testing verify karta hai ki aapke endpoints bahar se sahi behave karte hain: ek request par, kya aapko sahi status code, response body, aur error handling milti hai? Ye API ko ek contract ki tarah treat karta hai — wo test karta hai jo clients par actually depend karte hain, internal implementation se independent.\n\nAchhe API tests happy path, validation failures, authentication/authorization, aur edge cases (missing fields, not-found, conflicts) cover karte hain. Node mein Jest (test runner aur assertions) with Supertest (jo aapke Express app ko HTTP requests bhejta hai) standard combination hai. Ye tests contract regressions clients tak pahunchne se pehle pakad lete hain.",
+    "keyPoints": [
+      "Verify endpoints from the outside: status codes, response body, errors.",
+      "Treat the API as a contract clients depend on.",
+      "Cover happy path, validation, auth, and edge cases (404/409).",
+      "Jest (runner + assertions) + Supertest (HTTP requests) is the standard combo.",
+      "Catches contract regressions before they reach clients."
+    ],
+    "real_world": "Before each deploy, CI runs API tests that POST to /users with valid and invalid bodies, confirm a 201 with an id versus a 400 error, and check that protected routes reject requests without a token — so a refactor that accidentally breaks the response shape fails the build instead of breaking the mobile app.",
+    "followups": [
+      {
+        "q": "What should API tests check beyond status codes?",
+        "a": "Response body shape and values, error responses, headers, authentication/authorization behavior, and edge cases like missing fields, not-found, and conflicts — the full contract clients rely on."
+      },
+      {
+        "q": "What do Jest and Supertest each do?",
+        "a": "Jest is the test runner and assertion library; Supertest sends real HTTP requests to your Express app (without binding a port) so you can assert on the actual responses."
+      },
+      {
+        "q": "Why test the API contract rather than internals?",
+        "a": "Clients depend on the external behavior, not the implementation. Contract tests let you refactor internals freely while guaranteeing the API still responds the way consumers expect."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Jest + Supertest test code. The Node-runnable demo below runs a minimal test runner against a fake API so the assertions are verifiable here.",
+      "source": "// API testing — black-box tests against a running API with Jest + Supertest.\nconst request = require(\"supertest\");\nconst app = require(\"../app\"); // your Express app\n\ndescribe(\"Users API\", () => {\n  it(\"GET /health returns 200\", async () => {\n    const res = await request(app).get(\"/health\");\n    expect(res.status).toBe(200);\n    expect(res.body.ok).toBe(true);\n  });\n\n  it(\"POST /users creates a user\", async () => {\n    const res = await request(app)\n      .post(\"/users\")\n      .send({ email: \"asha@x.com\" });\n    expect(res.status).toBe(201);\n    expect(res.body).toHaveProperty(\"id\");\n  });\n\n  it(\"POST /users rejects missing email\", async () => {\n    const res = await request(app).post(\"/users\").send({});\n    expect(res.status).toBe(400);\n  });\n\n  it(\"GET /users/:id 404s for unknown id\", async () => {\n    const res = await request(app).get(\"/users/99999\");\n    expect(res.status).toBe(404);\n  });\n});\n// API tests verify the contract: status codes, response shape, and errors.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// API testing — send requests to an API and assert on the responses\n// A tiny fake API + a minimal test runner (real tests use Jest + Supertest).\nconst api = {\n  async handle(method, path, body){\n    if (method === \"GET\" && path === \"/health\") return { status: 200, body: { ok: true } };\n    if (method === \"POST\" && path === \"/users\"){\n      if (!body?.email) return { status: 400, body: { error: \"email required\" } };\n      return { status: 201, body: { id: 1, email: body.email } };\n    }\n    return { status: 404, body: {} };\n  },\n};\nconst results = [];\nasync function test(name, fn){ try { await fn(); results.push({ name, pass: true }); }\n  catch (e){ results.push({ name, pass: false, err: e.message }); } }\nconst expect = (a) => ({ toBe: (b) => { if (a !== b) throw new Error(`expected ${b}, got ${a}`); } });\n\n(async () => {\n  await test(\"GET /health -> 200\", async () => { const r = await api.handle(\"GET\", \"/health\"); expect(r.status).toBe(200); expect(r.body.ok).toBe(true); });\n  await test(\"POST /users valid -> 201\", async () => { const r = await api.handle(\"POST\", \"/users\", { email: \"a@x.com\" }); expect(r.status).toBe(201); });\n  await test(\"POST /users missing email -> 400\", async () => { const r = await api.handle(\"POST\", \"/users\", {}); expect(r.status).toBe(400); });\n  results.forEach(r => console.log(`${r.pass ? \"PASS\" : \"FAIL\"} ${r.name}${r.err ? \" - \" + r.err : \"\"}`));\n  console.assert(results.every(r => r.pass), \"all API tests pass\");\n  console.log(\"Test the contract: status codes, response shape, and error handling.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "PASS GET /health -> 200\nPASS POST /users valid -> 201\nPASS POST /users missing email -> 400\nTest the contract: status codes, response shape, and error handling.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

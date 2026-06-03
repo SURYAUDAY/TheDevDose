@@ -1,0 +1,70 @@
+{
+  "id": "p3-070",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 70,
+  "orderInPhase": 70,
+  "slug": "pagination-api-design",
+  "title": "Pagination (API design)",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "pagination",
+    "api",
+    "design"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A list API returns { data: [...], meta: { page: 2, pageSize: 20, total: 45, totalPages: 3 }, links: { next: '...page=3', prev: '...page=1' } }."
+  },
+  "sections": {
+    "simple_en": "Beyond the database mechanics, pagination is also an API design concern: how you shape the paginated response so clients can navigate predictably. A good convention returns a consistent envelope — the page of data plus metadata (current page, page size, total count, total pages) and often navigation links (next, prev, self, last) or a next cursor.\n\nYou also decide the strategy at the API layer: offset/page-number pagination (simple, supports jumping to a page) versus cursor-based (efficient and stable for large or fast-changing data, but no arbitrary page jumps). Document the contract clearly, cap the page size, and keep the response shape uniform across endpoints.",
+    "hinglish": "Database mechanics ke alawa, pagination ek API design concern bhi hai: aap paginated response ko kaise shape karte ho taaki clients predictably navigate karein. Achha convention ek consistent envelope return karta hai — data ka page plus metadata (current page, page size, total count, total pages) aur aksar navigation links (next, prev, self, last) ya ek next cursor.\n\nAap API layer par strategy bhi decide karte ho: offset/page-number pagination (simple, page par jump support) ya cursor-based (bade ya tezi se badalte data ke liye efficient aur stable, par arbitrary page jumps nahi). Contract clearly document karo, page size cap karo, aur response shape sab endpoints par uniform rakho.",
+    "keyPoints": [
+      "Return a consistent envelope: data + meta (page, size, total, totalPages).",
+      "Include navigation links (next/prev/self/last) or a next cursor.",
+      "Choose offset/page-number (simple) vs cursor (scalable, stable).",
+      "Cap the maximum page size to protect the server.",
+      "Keep the pagination contract uniform and documented across endpoints."
+    ],
+    "real_world": "A list API returns { data: [...], meta: { page: 2, pageSize: 20, total: 45, totalPages: 3 }, links: { next: '...page=3', prev: '...page=1' } }. The frontend renders page controls purely from meta and links, without hardcoding any pagination logic — and switching an endpoint to cursors only changes the envelope, not the client pattern.",
+    "followups": [
+      {
+        "q": "What should a paginated API response include?",
+        "a": "The page of data plus metadata (current page/size, total count, total pages) and ideally navigation links or a next cursor, so clients can paginate without guessing."
+      },
+      {
+        "q": "How do you decide offset vs cursor at the API level?",
+        "a": "Offset/page-number for small datasets and UIs needing arbitrary page jumps; cursor-based for large or frequently changing data where deep pages must stay fast and stable."
+      },
+      {
+        "q": "Why cap the page size?",
+        "a": "To stop clients from requesting enormous pages that strain the database and inflate payloads. Enforce a sensible maximum (e.g., 100) regardless of the requested size."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + node-postgres code. The Node-runnable demo below builds a consistent data + meta + links pagination envelope so the response shape is verifiable here.",
+      "source": "// Pagination (API design) — a consistent paginated response envelope.\nconst express = require(\"express\");\nconst { Pool } = require(\"pg\");\nconst app = express();\nconst pool = new Pool();\n\napp.get(\"/api/items\", async (req, res) => {\n  const page = Math.max(1, Number(req.query.page) || 1);\n  const pageSize = Math.min(100, Number(req.query.pageSize) || 20);\n  const offset = (page - 1) * pageSize;\n\n  const [data, count] = await Promise.all([\n    pool.query(\"SELECT * FROM items ORDER BY id LIMIT $1 OFFSET $2\", [pageSize, offset]),\n    pool.query(\"SELECT COUNT(*) FROM items\"),\n  ]);\n  const total = Number(count.rows[0].count);\n  const totalPages = Math.ceil(total / pageSize);\n  const link = (p) => (p >= 1 && p <= totalPages ? `/api/items?page=${p}&pageSize=${pageSize}` : null);\n\n  res.json({\n    data: data.rows,\n    meta: { page, pageSize, total, totalPages },\n    links: { self: link(page), prev: link(page - 1), next: link(page + 1), last: link(totalPages) },\n  });\n});\napp.listen(3000);\n// Return data + meta + links so clients can paginate without guesswork.\n// For large/changing datasets, expose cursor-based pagination instead.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Pagination (API design) — return data plus pagination metadata / links\nfunction buildPagedResponse(rows, { page, pageSize, baseUrl }){\n  const total = rows.length;\n  const totalPages = Math.ceil(total / pageSize);\n  const start = (page - 1) * pageSize;\n  const data = rows.slice(start, start + pageSize);\n  const link = (p) => p >= 1 && p <= totalPages ? `${baseUrl}?page=${p}&pageSize=${pageSize}` : null;\n  return {\n    data,\n    meta: { page, pageSize, total, totalPages },\n    links: { self: link(page), prev: link(page - 1), next: link(page + 1), last: link(totalPages) },\n  };\n}\nconst rows = Array.from({ length: 45 }, (_, i) => i + 1);\nconst res = buildPagedResponse(rows, { page: 2, pageSize: 20, baseUrl: \"/api/items\" });\nconsole.log(\"data:\", JSON.stringify(res.data.slice(0, 3)) + \"...\", \"(\" + res.data.length + \" items)\");\nconsole.log(\"meta:\", JSON.stringify(res.meta));\nconsole.log(\"links:\", JSON.stringify(res.links));\nconsole.assert(res.meta.totalPages === 3 && res.links.next.includes(\"page=3\"), \"metadata + links correct\");\nconsole.log(\"A consistent pagination envelope (data + meta + links) makes APIs predictable.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "data: [21,22,23]... (20 items)\nmeta: {\"page\":2,\"pageSize\":20,\"total\":45,\"totalPages\":3}\nlinks: {\"self\":\"/api/items?page=2&pageSize=20\",\"prev\":\"/api/items?page=1&pageSize=20\",\"next\":\"/api/items?page=3&pageSize=20\",\"last\":\"/api/items?page=3&pageSize=20\"}\nA consistent pagination envelope (data + meta + links) makes APIs predictable.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "p2-071",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 71,
+  "orderInPhase": 71,
+  "slug": "drag-drop-kanban-board",
+  "title": "Drag & Drop Kanban Board",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "drag",
+    "drop",
+    "kanban",
+    "board"
+  ],
+  "estMinutes": 8,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A team board lets users drag a 'Build' card from Doing to Done."
+  },
+  "sections": {
+    "simple_en": "A Kanban board (like Trello) has columns (To Do, Doing, Done) holding draggable cards. The core logic is moving a card from a source column to a target column at a specific position — remove it from where it was and insert it where it's dropped — while keeping state immutable.\n\nIn React you typically use a drag-and-drop library (dnd-kit or react-beautiful-dnd) to handle pointer/keyboard interactions and accessibility, and you implement the onDragEnd handler that updates your board state. The data model is usually a map of columns to ordered card arrays.",
+    "hinglish": "Kanban board (Trello jaisa) mein columns (To Do, Doing, Done) hote hain jo draggable cards rakhte hain. Core logic hai card ko source column se target column mein ek specific position par move karna — jahan tha wahan se hatao aur jahan drop hua wahan insert karo — state immutable rakhte hue.\n\nReact mein aksar drag-and-drop library (dnd-kit ya react-beautiful-dnd) use karte hain jo pointer/keyboard interactions aur accessibility handle karti hai, aur aap onDragEnd handler likhte ho jo board state update kare. Data model aksar columns -> ordered card arrays ka map hota hai.",
+    "keyPoints": [
+      "Model: columns mapped to ordered arrays of cards.",
+      "Core move logic: remove from source, insert into target at the drop index.",
+      "Keep state immutable when reordering (new arrays, not mutation).",
+      "Use a DnD library (dnd-kit) for pointer/keyboard interaction + a11y.",
+      "Implement onDragEnd to compute and commit the new board state."
+    ],
+    "real_world": "A team board lets users drag a 'Build' card from Doing to Done. The onDragEnd handler removes it from the Doing array and appends it to Done, React re-renders both columns, and (in a real app) the change is persisted to the backend.",
+    "followups": [
+      {
+        "q": "Why use a DnD library instead of the native HTML5 drag API?",
+        "a": "Libraries like dnd-kit handle pointer and keyboard interactions, accessibility (screen-reader announcements), auto-scrolling, and edge cases the raw API makes painful."
+      },
+      {
+        "q": "What's the core state update on drop?",
+        "a": "Identify the source and target columns, remove the card from the source array, and insert it into the target array at the drop index — immutably, so React re-renders correctly."
+      },
+      {
+        "q": "How would you persist the changes?",
+        "a": "On drag end, update local state optimistically and send the move to the server (often with an order/position field), rolling back if the request fails."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "A real React component (.jsx) using dnd-kit. The Node-runnable demo below verifies the card-move/reorder logic.",
+      "source": "// Drag & Drop Kanban Board — move cards between columns (dnd-kit style handler).\nimport React, { useState } from \"react\";\nimport { DndContext } from \"@dnd-kit/core\";\n\nconst initial = {\n  todo: [{ id: \"a\", text: \"Design\" }, { id: \"b\", text: \"Spec\" }],\n  doing: [{ id: \"c\", text: \"Build\" }],\n  done: [],\n};\n\nexport default function Kanban() {\n  const [board, setBoard] = useState(initial);\n\n  function handleDragEnd({ active, over }) {\n    if (!over) return;\n    const from = Object.keys(board).find((col) => board[col].some((c) => c.id === active.id));\n    const to = over.id; // droppable column id\n    if (from === to) return;\n\n    setBoard((prev) => {\n      const card = prev[from].find((c) => c.id === active.id);\n      return {\n        ...prev,\n        [from]: prev[from].filter((c) => c.id !== active.id), // remove from source\n        [to]: [...prev[to], card],                            // append to target\n      };\n    });\n  }\n\n  return (\n    <DndContext onDragEnd={handleDragEnd}>\n      <div className=\"board\">\n        {Object.entries(board).map(([col, cards]) => (\n          <Column key={col} id={col} cards={cards} />\n        ))}\n      </div>\n    </DndContext>\n  );\n}\n\nfunction Column({ id, cards }) {\n  return (\n    <div className=\"column\" data-col={id}>\n      <h3>{id}</h3>\n      {cards.map((c) => <div key={c.id} className=\"card\">{c.text}</div>)}\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Drag & Drop Kanban Board — move a card between columns at an index\nfunction moveCard(board, cardId, toColumn, toIndex){\n  const next = structuredClone(board);\n  let card;\n  for (const col in next){\n    const i = next[col].findIndex(c => c.id === cardId);\n    if (i !== -1){ [card] = next[col].splice(i, 1); break; }   // remove from source\n  }\n  next[toColumn].splice(toIndex, 0, card);                      // insert at target\n  return next;\n}\nlet board = {\n  todo: [{ id: \"a\", text: \"Design\" }, { id: \"b\", text: \"Spec\" }],\n  doing: [{ id: \"c\", text: \"Build\" }],\n  done: [],\n};\nboard = moveCard(board, \"a\", \"doing\", 1);   // drag \"Design\" into doing\nboard = moveCard(board, \"c\", \"done\", 0);    // drag \"Build\" into done\nconsole.log(\"todo: \", board.todo.map(c => c.text).join(\", \"));\nconsole.log(\"doing:\", board.doing.map(c => c.text).join(\", \"));\nconsole.log(\"done: \", board.done.map(c => c.text).join(\", \"));\nconsole.assert(board.done[0].text === \"Build\", \"card moved to done\");\nconsole.assert(board.doing.length === 1 && board.doing[0].text === \"Design\", \"card reordered into doing\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "todo:  Spec\ndoing: Design\ndone:  Build\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

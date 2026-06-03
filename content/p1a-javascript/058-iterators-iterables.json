@@ -1,0 +1,65 @@
+{
+  "id": "p1a-058",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 58,
+  "orderInPhase": 58,
+  "slug": "iterators-iterables",
+  "title": "Iterators & Iterables",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "iterators",
+    "iterables"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A custom range or paginated-data object that you can loop over with `for...of` or spread into an array — implementing the iterator protocol once lets your ob…"
+  },
+  "sections": {
+    "simple_en": "An iterable is any object that defines a `[Symbol.iterator]` method, which returns an iterator. An iterator is an object with a `next()` method that returns `{ value, done }` on each call. This protocol is what makes `for...of`, spread, and destructuring work.\n\nBuilt-in iterables include arrays, strings, Maps, and Sets. You can make your own object iterable by implementing `[Symbol.iterator]`, which lets it be used anywhere the iteration protocol is expected.",
+    "hinglish": "Iterable koi bhi object hai jo `[Symbol.iterator]` method define karta hai, jo ek iterator return karta hai. Iterator ek object hai jiska `next()` method har call par `{ value, done }` return karta hai. Yahi protocol `for...of`, spread, aur destructuring ko chalata hai.\nBuilt-in iterables me arrays, strings, Maps, Sets aate hain. Aap apne object ko bhi iterable bana sakte ho `[Symbol.iterator]` implement karke, jisse woh har jagah use ho sakta hai jahan iteration protocol expected ho.",
+    "keyPoints": [
+      "Iterable: has a `[Symbol.iterator]()` method returning an iterator.",
+      "Iterator: has `next()` returning `{ value, done }`.",
+      "The protocol powers `for...of`, spread `...`, and array destructuring.",
+      "Built-in iterables: Array, String, Map, Set, arguments, NodeList.",
+      "Implement `[Symbol.iterator]` to make custom objects iterable."
+    ],
+    "real_world": "A custom range or paginated-data object that you can loop over with `for...of` or spread into an array — implementing the iterator protocol once lets your object plug into all the language's iteration features.",
+    "followups": [
+      {
+        "q": "What's the difference between an iterable and an iterator?",
+        "a": "An iterable has a `[Symbol.iterator]()` method that produces an iterator. An iterator is the object with `next()` that actually yields `{ value, done }` results on each call."
+      },
+      {
+        "q": "How do you make a custom object work with for...of?",
+        "a": "Implement a `[Symbol.iterator]()` method that returns an iterator object with a `next()` method following the `{ value, done }` protocol."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// A custom iterable 'range' object.\n\nfunction range(start, end) {\n  return {\n    [Symbol.iterator]() {\n      let current = start;\n      return {\n        next() {\n          return current <= end\n            ? { value: current++, done: false }\n            : { value: undefined, done: true };\n        },\n      };\n    },\n  };\n}\n\nmodule.exports = { range };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { range } = require(\"./solution\");\n\nconst collected = [];\nfor (const n of range(1, 4)) collected.push(n);\nconsole.log(collected);          // [1,2,3,4]\nconsole.log([...range(5, 7)]);   // [5,6,7] (spread works)\nconst [first, second] = range(10, 20);\nconsole.log(first, second);      // 10 11 (destructuring works)\n\nconsole.assert(JSON.stringify(collected) === \"[1,2,3,4]\", \"for...of works\");\nconsole.assert(JSON.stringify([...range(5, 7)]) === \"[5,6,7]\", \"spread works\");\nconsole.assert(first === 10 && second === 11, \"destructuring works\");\nconsole.log(\"iterators/iterables assertions passed.\");",
+      "expectedOutput": "[ 1, 2, 3, 4 ]\n[ 5, 6, 7 ]\n10 11\niterators/iterables assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "p2-067",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 67,
+  "orderInPhase": 67,
+  "slug": "storybook",
+  "title": "Storybook",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "storybook"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A design system ships a Button with stories for primary, danger, disabled, and loading states."
+  },
+  "sections": {
+    "simple_en": "Storybook is a tool for building and documenting UI components in isolation, outside your app. Each component gets 'stories' — named examples of its different states and variants — that render in an interactive explorer where you can tweak props (args) live and see every edge case.\n\nIt doubles as living documentation and a development sandbox, helps teams share a consistent component library, and supports add-ons for accessibility checks, interaction tests, and visual regression testing. Designers and developers can review components without running the whole app.",
+    "hinglish": "Storybook UI components ko app ke bahar, isolation mein build aur document karne ka tool hai. Har component ki 'stories' hoti hain — uske different states/variants ke named examples — jo ek interactive explorer mein render hote hain jahan aap props (args) live badal kar har edge case dekh sakte ho.\n\nYe living documentation aur development sandbox dono hai, teams ko consistent component library share karne mein madad karta hai, aur accessibility, interaction tests, visual regression ke add-ons support karta hai. Designers/developers poori app chalaye bina components review kar sakte hain.",
+    "keyPoints": [
+      "Develop and document components in isolation, outside the full app.",
+      "Stories are named examples of a component's states/variants.",
+      "Live-edit props (args) in an interactive explorer to cover edge cases.",
+      "Acts as living documentation and a shared component catalog.",
+      "Add-ons enable a11y checks, interaction tests, and visual regression."
+    ],
+    "real_world": "A design system ships a Button with stories for primary, danger, disabled, and loading states. Designers review them in Storybook, QA runs visual regression on each story, and developers grab the exact variant they need — all without booting the main app.",
+    "followups": [
+      {
+        "q": "What is a 'story'?",
+        "a": "A single rendered example of a component in a specific state/variant, defined by its args. A component typically has several stories covering its key states."
+      },
+      {
+        "q": "How does Storybook help teams?",
+        "a": "It provides isolated development, living documentation, and a shared catalog of components, so design, dev, and QA align on the same source of truth."
+      },
+      {
+        "q": "Can Storybook be used for testing?",
+        "a": "Yes — stories serve as targets for interaction tests, accessibility audits, and visual regression testing via add-ons."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Storybook story code (run with the Storybook dev server). The Node-runnable demo below simulates a story registry so the output is verifiable here.",
+      "source": "// Storybook — document and develop components in isolation with stories.\n// Button.stories.jsx\nimport { Button } from \"./Button\";\n\nexport default {\n  title: \"Components/Button\",\n  component: Button,\n  args: { children: \"Click me\" },                 // default args\n  argTypes: { variant: { control: \"select\", options: [\"primary\", \"secondary\", \"danger\"] } },\n};\n\n// Each named export is a \"story\" = one state/variant of the component.\nexport const Primary = { args: { variant: \"primary\" } };\nexport const Danger = { args: { variant: \"danger\" } };\nexport const Disabled = { args: { disabled: true } };\n\n// Run with: npx storybook dev -p 6006\n// Stories double as visual docs and as targets for interaction/visual tests.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Storybook — a story registry catalogs component states/variants\nfunction createStorybook(){\n  const stories = [];\n  return {\n    add(component, name, args){ stories.push({ component, name, args }); },\n    render(){ return stories.map(s => `${s.component}/${s.name}: ${JSON.stringify(s.args)}`); },\n    count: () => stories.length,\n  };\n}\nconst sb = createStorybook();\nsb.add(\"Button\", \"Primary\",   { variant: \"primary\", label: \"Save\" });\nsb.add(\"Button\", \"Danger\",    { variant: \"danger\",  label: \"Delete\" });\nsb.add(\"Button\", \"Disabled\",  { disabled: true,     label: \"Save\" });\nsb.render().forEach(s => console.log(s));\nconsole.log(\"Total stories:\", sb.count());\nconsole.assert(sb.count() === 3, \"three Button stories registered\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Button/Primary: {\"variant\":\"primary\",\"label\":\"Save\"}\nButton/Danger: {\"variant\":\"danger\",\"label\":\"Delete\"}\nButton/Disabled: {\"disabled\":true,\"label\":\"Save\"}\nTotal stories: 3\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

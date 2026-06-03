@@ -1,0 +1,64 @@
+{
+  "id": "p1b-039",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 39,
+  "orderInPhase": 39,
+  "slug": "generics",
+  "title": "Generics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "generics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A typed `first<T>(arr: T[]): T | undefined` returns an element of the same type as the array — call it on `User[]` and get a `User`, on `number[]` and get a…"
+  },
+  "sections": {
+    "simple_en": "Generics let you write reusable, type-safe code that works over MANY types while preserving the relationship between inputs and outputs. A type parameter (commonly `<T>`) acts as a placeholder filled in when the function/class is used.\n\nWithout generics you'd either duplicate code per type or fall back to `any` (losing safety). With generics, an `identity<T>(x: T): T` keeps the exact type: pass a string, get a string back — checked by the compiler. They're the backbone of typed collections and utilities.",
+    "hinglish": "Generics aapko reusable, type-safe code likhne dete hain jo KAI types par chale jabki inputs aur outputs ka rishta bana rahe. Ek type parameter (aam taur par `<T>`) ek placeholder ki tarah kaam karta hai jo function/class use hone par bhar jaata hai.\nGenerics ke bina aap ya to per type code duplicate karte ya `any` par gir jaate (safety khote). Generics se, ek `identity<T>(x: T): T` exact type rakhta hai: string do, string wapas milega — compiler se checked. Ye typed collections aur utilities ki reedh hain.",
+    "keyPoints": [
+      "Type parameters (`<T>`) make code reusable across types.",
+      "Preserve the input↔output type relationship (unlike `any`).",
+      "Filled in at the use site, often inferred automatically.",
+      "Foundation of typed collections and utility functions.",
+      "Multiple parameters allowed: `<T, U>`."
+    ],
+    "real_world": "A typed `first<T>(arr: T[]): T | undefined` returns an element of the same type as the array — call it on `User[]` and get a `User`, on `number[]` and get a `number`, all without duplicating the function.",
+    "followups": [
+      {
+        "q": "Why use generics instead of `any`?",
+        "a": "Generics preserve type information and the relationship between inputs and outputs, so the compiler still checks usage. `any` discards type safety entirely."
+      },
+      {
+        "q": "Do you always have to specify the type argument?",
+        "a": "No — TypeScript usually infers it from the arguments (e.g. `identity(42)` infers `T = number`). You can specify it explicitly (`identity<number>(42)`) when inference isn't possible or you want to constrain it."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — basic generics.\n\nexport function identity<T>(value: T): T {\n  return value;\n}\n\nexport function first<T>(arr: T[]): T | undefined {\n  return arr[0];\n}\n\nexport function pair<A, B>(a: A, b: B): [A, B] {\n  return [a, b];\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { identity, first, pair } from \"./solution\";\n\nconsole.log(identity(\"hello\"));   // hello (typed as string)\nconsole.log(identity(42));        // 42    (typed as number)\nconsole.log(first([10, 20, 30])); // 10\nconsole.log(first<string>([]));   // undefined\nconsole.log(pair(\"age\", 30));     // ['age', 30]\n\nconsole.assert(identity(\"hello\") === \"hello\", \"generic identity\");\nconsole.assert(first([10, 20]) === 10, \"generic first\");\nconsole.assert(first([]) === undefined, \"empty -> undefined\");\nconsole.assert(JSON.stringify(pair(\"age\", 30)) === '[\"age\",30]', \"two type params\");\nconsole.log(\"generics assertions passed.\");",
+      "expectedOutput": "hello\n42\n10\nundefined\n[ 'age', 30 ]\ngenerics assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

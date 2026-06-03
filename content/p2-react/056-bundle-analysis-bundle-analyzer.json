@@ -1,0 +1,70 @@
+{
+  "id": "p2-056",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 56,
+  "orderInPhase": 56,
+  "slug": "bundle-analysis-bundle-analyzer",
+  "title": "Bundle analysis (bundle analyzer)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "bundle",
+    "analysis",
+    "analyzer"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A team's bundle is mysteriously large."
+  },
+  "sections": {
+    "simple_en": "A bundle analyzer visualizes exactly what's inside your production build — every module and its size — usually as an interactive treemap. This turns bundle optimization from guesswork into data: you can see which dependencies are bloating the bundle and decide what to trim, replace, or lazy-load.\n\nTools like rollup-plugin-visualizer (Vite) and webpack-bundle-analyzer generate these reports. The typical workflow is: analyze, spot the biggest contributors, apply a fix (tree-shake, swap a library, split a chunk), then re-analyze to confirm the win.",
+    "hinglish": "Bundle analyzer aapke production build ke andar exactly kya hai — har module aur uska size — ek interactive treemap mein dikhata hai. Isse optimization guesswork se data-driven ban jaata hai: aap dekh sakte ho kaun si dependency bundle ko bhaari kar rahi hai.\n\nTools jaise rollup-plugin-visualizer (Vite) aur webpack-bundle-analyzer ye reports banate hain. Workflow: analyze karo, sabse bade contributors dhoondo, fix lagao (tree-shake, library badlo, chunk split karo), phir dobara analyze karke win confirm karo.",
+    "keyPoints": [
+      "Visualizes every module and its size, usually as a treemap.",
+      "Makes optimization data-driven — see the real culprits, don't guess.",
+      "Vite: rollup-plugin-visualizer; Webpack: webpack-bundle-analyzer.",
+      "Reveals duplicate deps, oversized libraries, and accidentally bundled code.",
+      "Workflow: analyze -> fix (tree-shake/replace/split) -> re-analyze."
+    ],
+    "real_world": "A team's bundle is mysteriously large. The analyzer treemap shows moment.js and its locales taking a huge slice. They replace it with date-fns and drop unused locales — the next report confirms the bundle shrank by a third.",
+    "followups": [
+      {
+        "q": "What does a bundle analyzer help you find?",
+        "a": "The largest modules, duplicate dependencies, oversized libraries, and code that shouldn't be in the bundle — so you know exactly where to optimize."
+      },
+      {
+        "q": "How do you use it in practice?",
+        "a": "Generate the report, identify the biggest contributors, apply a targeted fix (tree-shake, swap a lighter library, lazy-load), then re-run to verify the reduction."
+      },
+      {
+        "q": "Which tools generate these reports?",
+        "a": "rollup-plugin-visualizer for Vite/Rollup and webpack-bundle-analyzer for Webpack are the common ones."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Build-tool plugin configuration for analysis. The Node-runnable demo below illustrates how the size report is produced.",
+      "source": "// Bundle analysis: visualize what's in your bundle to find bloat.\n// vite.config.js\nimport { defineConfig } from \"vite\";\nimport { visualizer } from \"rollup-plugin-visualizer\";\n\nexport default defineConfig({\n  plugins: [\n    visualizer({ filename: \"stats.html\", open: true, gzipSize: true }),\n  ],\n});\n\n// Webpack equivalent:\n// const { BundleAnalyzerPlugin } = require(\"webpack-bundle-analyzer\");\n// plugins: [new BundleAnalyzerPlugin()]\n//\n// The generated report shows each module's size so you can spot heavy\n// dependencies (e.g., swap moment.js for date-fns, lazy-load big libs).",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Bundle analysis — report the biggest modules in a bundle\nconst bundleStats = [\n  { name: \"lodash\", size: 72 },\n  { name: \"moment\", size: 65 },\n  { name: \"app-code\", size: 40 },\n  { name: \"react-dom\", size: 38 },\n];\nfunction analyze(stats){\n  const total = stats.reduce((s, m) => s + m.size, 0);\n  const ranked = [...stats].sort((a, b) => b.size - a.size);\n  return ranked.map(m => ({ ...m, pct: Math.round((m.size / total) * 100) }));\n}\nconst report = analyze(bundleStats);\nreport.forEach(m => console.log(`${m.name.padEnd(12)} ${m.size}KB  (${m.pct}%)`));\nconsole.log(\"Biggest offender:\", report[0].name);\nconsole.assert(report[0].name === \"lodash\", \"largest module identified\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "lodash       72KB  (33%)\nmoment       65KB  (30%)\napp-code     40KB  (19%)\nreact-dom    38KB  (18%)\nBiggest offender: lodash\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

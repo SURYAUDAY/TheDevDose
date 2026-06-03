@@ -1,0 +1,65 @@
+{
+  "id": "p1b-040",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 40,
+  "orderInPhase": 40,
+  "slug": "generic-functions",
+  "title": "Generic Functions",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "generic",
+    "functions"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A `groupBy<T, K>(items: T[], keyFn: (item: T) => K)` utility works for any item and key type, returning a correctly-typed map — written once, reused for user…"
+  },
+  "sections": {
+    "simple_en": "A generic function declares one or more type parameters in angle brackets before its parameter list, then uses them in its parameters and return type. This lets a single function adapt to whatever types it's called with while staying type-safe.\n\nType arguments are usually INFERRED from the arguments you pass, so you rarely write them explicitly. Generic functions are everywhere in typed utilities — mapping, picking, wrapping — and they keep the precise types flowing from input to output.",
+    "hinglish": "Generic function apne parameter list se pehle angle brackets me ek ya zyada type parameters declare karta hai, phir unhe apne parameters aur return type me use karta hai. Isse ek hi function jin types ke saath call ho un par adapt kar leta hai jabki type-safe rehta hai.\nType arguments aam taur par aapke pass kiye arguments se INFER hote hain, isliye aap inhe shaayad hi explicitly likho. Generic functions typed utilities me har jagah hain — mapping, picking, wrapping — aur ye precise types ko input se output tak flow karte rehte hain.",
+    "keyPoints": [
+      "Declare type params before the parameter list: `function f<T>(...)`.",
+      "Use the params in parameters and return type.",
+      "Type arguments are usually inferred from the call.",
+      "Enable reusable, type-preserving utilities.",
+      "Can have several params: `function f<T, U>(...)`."
+    ],
+    "real_world": "A `groupBy<T, K>(items: T[], keyFn: (item: T) => K)` utility works for any item and key type, returning a correctly-typed map — written once, reused for users, orders, anything.",
+    "followups": [
+      {
+        "q": "Do you usually pass type arguments to generic functions explicitly?",
+        "a": "No — TypeScript infers them from the arguments. You only specify them when inference can't determine the type or you want to enforce a particular one."
+      },
+      {
+        "q": "Where do you declare a function's type parameters?",
+        "a": "In angle brackets immediately before the parameter list: `function f<T>(arg: T): T`. They're then usable throughout the signature and body."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — generic functions with inference.\n\nexport function last<T>(arr: T[]): T | undefined {\n  return arr[arr.length - 1];\n}\n\nexport function mapKeys<T, K extends string>(items: T[], keyFn: (item: T) => K): Record<K, T> {\n  const out = {} as Record<K, T>;\n  for (const item of items) out[keyFn(item)] = item;\n  return out;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { last, mapKeys } from \"./solution\";\n\nconsole.log(last([1, 2, 3]));        // 3\nconsole.log(last([\"a\", \"b\"]));       // b\n\nconst users = [{ id: \"u1\", name: \"Asha\" }, { id: \"u2\", name: \"Ravi\" }];\nconst byId = mapKeys(users, (u) => u.id);\nconsole.log(byId.u1.name);           // Asha\n\nconsole.assert(last([1, 2, 3]) === 3, \"generic last (number)\");\nconsole.assert(last([\"a\", \"b\"]) === \"b\", \"generic last (string)\");\nconsole.assert(byId.u2.name === \"Ravi\", \"mapKeys builds typed record\");\nconsole.log(\"generic-functions assertions passed.\");",
+      "expectedOutput": "3\nb\nAsha\ngeneric-functions assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

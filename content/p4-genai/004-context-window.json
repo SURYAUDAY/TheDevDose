@@ -1,0 +1,69 @@
+{
+  "id": "p4-004",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 4,
+  "orderInPhase": 4,
+  "slug": "context-window",
+  "title": "Context window",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "context",
+    "window"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A chatbot in a long support conversation eventually exceeds its context window."
+  },
+  "sections": {
+    "simple_en": "The context window is the maximum number of tokens an LLM can consider at once — it includes everything: the system prompt, conversation history, the user's input, AND the space reserved for the model's output. If the total exceeds the window, something must be dropped or the request fails.\n\nWindow sizes vary by model (from a few thousand to hundreds of thousands of tokens). Because the model can only 'see' what's in the window, long conversations or large documents require strategies: truncate or summarize old turns, or retrieve only the relevant pieces (RAG) instead of stuffing everything in.",
+    "hinglish": "Context window wo maximum number of tokens hai jo ek LLM ek saath consider kar sakta hai — isme sab kuch shamil hai: system prompt, conversation history, user ka input, AUR model ke output ke liye reserved space. Agar total window se zyada ho, to kuch drop karna padta hai ya request fail hoti hai.\n\nWindow sizes model ke hisaab se alag hote hain (kuch hazaar se hundreds of thousands tokens tak). Kyunki model sirf wahi 'dekh' sakta hai jo window mein hai, lambi conversations ya bade documents ke liye strategies chahiye: purane turns truncate ya summarize karo, ya sirf relevant pieces retrieve karo (RAG) sab kuch thoosne ke bajaye.",
+    "keyPoints": [
+      "Max tokens the model can attend to at once — the model's 'working memory'.",
+      "Includes system prompt + history + user input + reserved output space.",
+      "Exceeding it forces truncation, summarization, or an error.",
+      "Sizes vary widely by model (thousands to hundreds of thousands of tokens).",
+      "Long chats/docs need truncation, summary memory, or retrieval (RAG)."
+    ],
+    "real_world": "A chatbot in a long support conversation eventually exceeds its context window. The app keeps the system prompt and the last several turns, summarizes or drops older ones, and uses retrieval to pull only relevant past details — so the model always has room to respond.",
+    "followups": [
+      {
+        "q": "What counts against the context window?",
+        "a": "Everything sent and generated: the system prompt, all prior messages you include, the current user input, and the tokens the model produces as output — all must fit within the limit."
+      },
+      {
+        "q": "What happens when a conversation exceeds the window?",
+        "a": "You must reduce what you send — truncate or summarize old turns, or retrieve only relevant context (RAG). Otherwise the oldest context is dropped or the API rejects the request."
+      },
+      {
+        "q": "Does a bigger context window solve everything?",
+        "a": "It helps, but stuffing huge contexts increases cost and latency and can dilute relevance ('lost in the middle'). Retrieval of only relevant chunks is often better than maximizing raw context."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real tiktoken-based budgeting code. The Python-runnable demo below simulates a sliding context window so the truncation behavior is verifiable here.",
+      "source": "# Context window — fit system + history + input + expected output within the limit.\nimport tiktoken\n\nenc = tiktoken.encoding_for_model(\"gpt-4o-mini\")\nMODEL_CONTEXT = 128_000   # example model context size (tokens)\nRESERVE_FOR_OUTPUT = 1_000\n\ndef tokens(text): return len(enc.encode(text))\n\ndef fit_history(system, history, user, max_ctx=MODEL_CONTEXT):\n    budget = max_ctx - RESERVE_FOR_OUTPUT - tokens(system) - tokens(user)\n    kept = []\n    # Keep the most recent turns that fit (drop oldest first).\n    for msg in reversed(history):\n        t = tokens(msg[\"content\"])\n        if budget - t < 0:\n            break\n        budget -= t\n        kept.insert(0, msg)\n    return [{\"role\": \"system\", \"content\": system}, *kept, {\"role\": \"user\", \"content\": user}]\n\n# When a conversation grows beyond the window you must truncate, summarize older\n# turns, or retrieve only the relevant context (RAG) instead of sending everything.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Context window — the model can only \"see\" a fixed number of tokens at once\ndef count_tokens(text):  # toy: ~1 token per 4 chars\n    return max(1, len(text) // 4)\n\nclass ContextWindow:\n    def __init__(self, max_tokens):\n        self.max_tokens = max_tokens\n        self.messages = []\n    def add(self, role, content):\n        self.messages.append({\"role\": role, \"content\": content, \"tokens\": count_tokens(content)})\n        self._truncate()\n    def _truncate(self):\n        # Drop oldest messages when over budget (sliding window)\n        while sum(m[\"tokens\"] for m in self.messages) > self.max_tokens and len(self.messages) > 1:\n            self.messages.pop(0)\n    def total(self):\n        return sum(m[\"tokens\"] for m in self.messages)\n\nctx = ContextWindow(max_tokens=20)\nfor i in range(8):\n    ctx.add(\"user\", \"This is message number \" + str(i) + \" with some words\")\nprint(\"Window budget: 20 tokens | current usage:\", ctx.total())\nprint(\"Messages still in context:\", len(ctx.messages), \"(oldest were dropped)\")\nassert ctx.total() <= 20, \"never exceeds the context window\"\nprint(\"If a conversation exceeds the context window, you must truncate, summarize, or use retrieval.\")\nprint(\"Everything the model 'knows' for a reply must fit in the window: system + history + input + output.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Window budget: 20 tokens | current usage: 20\nMessages still in context: 2 (oldest were dropped)\nIf a conversation exceeds the context window, you must truncate, summarize, or use retrieval.\nEverything the model 'knows' for a reply must fit in the window: system + history + input + output.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

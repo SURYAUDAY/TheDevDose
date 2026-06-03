@@ -1,0 +1,69 @@
+{
+  "id": "p4-023",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 23,
+  "orderInPhase": 23,
+  "slug": "tool-calling",
+  "title": "Tool calling",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "tool",
+    "calling"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An assistant with search, a calculator, and a calendar tool answers 'How many days until my next meeting, and what's 15% of the budget?' by calling the calen…"
+  },
+  "sections": {
+    "simple_en": "Tool calling is function calling generalized to multiple tools: you give the model a set of tools (each with a name and schema), and it selects the right one(s) for the task, returns the call(s), and — after you execute them and return results — can call more tools in a loop until it can answer. 'Tool' is the modern term; the mechanism is the same as function calling.\n\nThis loop — the model choosing tools, observing results, and continuing — is the foundation of AI agents. With tools like search, a calculator, a database query, or an API client, the LLM can chain multiple actions to accomplish complex tasks it couldn't do from its weights alone.",
+    "hinglish": "Tool calling function calling ka multiple tools tak generalized version hai: aap model ko tools ka ek set dete ho (har ek name aur schema ke saath), aur ye task ke liye sahi tool(s) select karta hai, call(s) return karta hai, aur — aapke unhe execute karke results return karne ke baad — ek loop mein aur tools call kar sakta hai jab tak answer na de sake. 'Tool' modern term hai; mechanism function calling jaisa hi hai.\n\nYe loop — model tools choose karta hai, results observe karta hai, aur continue karta hai — AI agents ka aadhaar hai. Search, calculator, database query, ya API client jaise tools ke saath, LLM complex tasks accomplish karne ke liye multiple actions chain kar sakta hai jo wo akele apne weights se nahi kar sakta.",
+    "keyPoints": [
+      "Function calling generalized to a set of multiple tools.",
+      "The model picks the right tool(s), returns calls, and can loop.",
+      "You execute each tool and return results; the model continues.",
+      "'Tool' is the modern term; same mechanism as function calling.",
+      "The tool-use loop is the foundation of AI agents."
+    ],
+    "real_world": "An assistant with search, a calculator, and a calendar tool answers 'How many days until my next meeting, and what's 15% of the budget?' by calling the calendar tool, then the calculator, combining both observations into one answer — routing to the right tool for each part.",
+    "followups": [
+      {
+        "q": "How is tool calling different from function calling?",
+        "a": "It's essentially the same mechanism applied to multiple tools. The model chooses among several tools (and may call them in sequence) rather than a single function. 'Tools' is the current terminology."
+      },
+      {
+        "q": "Why is tool calling the basis of agents?",
+        "a": "Agents perceive a task, choose and call tools, observe results, and repeat until done. Tool calling provides exactly that loop, letting the LLM take real actions and chain steps autonomously."
+      },
+      {
+        "q": "Can the model call multiple tools for one request?",
+        "a": "Yes — it can call several tools across multiple turns of the loop, using each result to decide the next call, until it has enough information to produce a final answer."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI tool-calling loop code (needs an API key). The Python-runnable demo below routes among multiple tools so the selection logic is verifiable here.",
+      "source": "# Tool calling — register multiple tools; the model picks and may chain them.\nimport json\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef get_weather(city): return {\"temp_c\": 31, \"condition\": \"sunny\"}\ndef calculator(expression): return {\"result\": eval(expression, {\"__builtins__\": {}})}\nREGISTRY = {\"get_weather\": get_weather, \"calculator\": calculator}\n\ntools = [\n    {\"type\": \"function\", \"function\": {\"name\": \"get_weather\",\n        \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"]}}},\n    {\"type\": \"function\", \"function\": {\"name\": \"calculator\",\n        \"parameters\": {\"type\": \"object\", \"properties\": {\"expression\": {\"type\": \"string\"}}, \"required\": [\"expression\"]}}},\n]\n\ndef run(user_message: str) -> str:\n    messages = [{\"role\": \"user\", \"content\": user_message}]\n    while True:\n        resp = client.chat.completions.create(model=\"gpt-4o-mini\", messages=messages, tools=tools)\n        msg = resp.choices[0].message\n        if not msg.tool_calls:\n            return msg.content                       # done: final natural-language answer\n        messages.append(msg)\n        for call in msg.tool_calls:                  # the model may call several tools\n            fn = REGISTRY[call.function.name]\n            result = fn(**json.loads(call.function.arguments))\n            messages.append({\"role\": \"tool\", \"tool_call_id\": call.id, \"content\": json.dumps(result)})\n\n# Tool calling is the foundation of agents: the model routes to tools, observes\n# results, and loops until it can answer.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Tool calling — give the model several tools; it picks the right one (often in a loop)\nimport json\ndef get_weather(city): return f\"{city}: 31C sunny\"\ndef calculator(expression): return str(eval(expression, {\"__builtins__\": {}}))\ndef web_search(query): return f\"results for '{query}'\"\nTOOLS = {\"get_weather\": get_weather, \"calculator\": calculator, \"web_search\": web_search}\n\ndef model_choose_tool(user_msg):\n    # The model selects a tool + arguments based on the request (simulated routing).\n    if \"weather\" in user_msg: return {\"tool\": \"get_weather\", \"args\": {\"city\": \"Pune\"}}\n    if any(c.isdigit() for c in user_msg) and any(op in user_msg for op in \"+-*/\"):\n        return {\"tool\": \"calculator\", \"args\": {\"expression\": \"12 * 7\"}}\n    return {\"tool\": \"web_search\", \"args\": {\"query\": user_msg}}\n\nfor msg in [\"what's the weather?\", \"compute 12 * 7\", \"who won the cup?\"]:\n    choice = model_choose_tool(msg)\n    output = TOOLS[choice[\"tool\"]](**choice[\"args\"])\n    print(f\"{msg!r} -> tool={choice['tool']} -> {output}\")\n\nc = model_choose_tool(\"compute 12 * 7\")\nassert c[\"tool\"] == \"calculator\" and TOOLS[c[\"tool\"]](**c[\"args\"]) == \"84\"\nprint(\"\\nTool calling = function calling with MANY tools; the model routes to the right one and may chain calls.\")\nprint(\"This is the backbone of AI agents: perceive -> choose tool -> act -> observe -> repeat.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "\"what's the weather?\" -> tool=get_weather -> Pune: 31C sunny\n'compute 12 * 7' -> tool=calculator -> 84\n'who won the cup?' -> tool=web_search -> results for 'who won the cup?'\n\nTool calling = function calling with MANY tools; the model routes to the right one and may chain calls.\nThis is the backbone of AI agents: perceive -> choose tool -> act -> observe -> repeat.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p4-009",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 9,
+  "orderInPhase": 9,
+  "slug": "user-prompts",
+  "title": "User prompts",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "user",
+    "prompts"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A developer's user prompt — 'This Python function throws IndexError on empty input; here's the code: [...]."
+  },
+  "sections": {
+    "simple_en": "A user prompt is the actual request or message from the human — the question, instruction, or input you want the model to act on. In the chat format, it's sent as a message with role 'user', combined with the system prompt and any prior conversation history into the list the API receives.\n\nThe quality of a user prompt strongly affects the answer: specific, well-scoped prompts with relevant context and a clear desired output get far better results than vague ones. While the system prompt sets overall behavior, the user prompt carries the specific task for each turn.",
+    "hinglish": "User prompt human se aane wala actual request ya message hai — wo question, instruction, ya input jis par aap model ko act karwana chahte ho. Chat format mein, ye role 'user' ke saath ek message ke roop mein jaata hai, system prompt aur kisi bhi prior conversation history ke saath milkar us list mein jo API receive karta hai.\n\nUser prompt ki quality answer ko strongly affect karti hai: specific, well-scoped prompts jisme relevant context aur clear desired output ho, vague waalon se kahin behtar results dete hain. System prompt overall behavior set karta hai, jabki user prompt har turn ke liye specific task carry karta hai.",
+    "keyPoints": [
+      "The human's actual request, sent as a role:'user' message.",
+      "Combined with system prompt + history into the API message list.",
+      "Specific, well-scoped prompts with context get better answers.",
+      "Carries the per-turn task; the system prompt sets overall behavior.",
+      "Provide relevant details and the desired output format for best results."
+    ],
+    "real_world": "A developer's user prompt — 'This Python function throws IndexError on empty input; here's the code: [...]. Fix it and explain the change.' — gives the model exactly what it needs. A vague 'fix my code' (with no code or error) would get a far weaker response.",
+    "followups": [
+      {
+        "q": "What's the difference between user and system prompts?",
+        "a": "The user prompt is the specific request for the current turn; the system prompt is the overarching instruction that governs how the assistant behaves across the whole conversation."
+      },
+      {
+        "q": "How do you write a good user prompt?",
+        "a": "Be specific, include the necessary context and data, state the desired output format, and avoid ambiguity. Show, don't just tell — paste the code/error rather than describing it vaguely."
+      },
+      {
+        "q": "How do user prompts fit into the API call?",
+        "a": "They're appended (role 'user') to the messages array after the system prompt and any conversation history, forming the full context the model uses to generate its reply."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI message-assembly code (needs an API key). The Python-runnable demo below assembles system + history + user messages so the request structure is verifiable here.",
+      "source": "# User prompts — the human's request, sent alongside system + prior history.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef chat(system: str, history: list, user_prompt: str) -> str:\n    messages = [{\"role\": \"system\", \"content\": system}]\n    messages.extend(history)                                  # previous turns (memory)\n    messages.append({\"role\": \"user\", \"content\": user_prompt}) # the new user prompt\n    response = client.chat.completions.create(model=\"gpt-4o-mini\", messages=messages)\n    return response.choices[0].message.content\n\n# A good user prompt is specific and provides the context the model needs:\n#   Weak:   \"fix my code\"\n#   Strong: \"This Python function throws IndexError on empty input. Here's the code: ...\n#            Please fix it and explain the change.\"\nhistory = [\n    {\"role\": \"user\", \"content\": \"What is a Python list?\"},\n    {\"role\": \"assistant\", \"content\": \"An ordered, mutable sequence.\"},\n]\n# chat(\"You are a concise tutor.\", history, \"How do I append to it?\")",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# User prompts — the actual request; combined with the system prompt into a message list\ndef assemble(system, history, user):\n    messages = [{\"role\": \"system\", \"content\": system}]\n    messages += history                       # prior turns (memory)\n    messages.append({\"role\": \"user\", \"content\": user})   # the new user prompt\n    return messages\n\nsystem = \"You are a concise coding tutor.\"\nhistory = [\n    {\"role\": \"user\", \"content\": \"What is a list?\"},\n    {\"role\": \"assistant\", \"content\": \"An ordered, mutable collection.\"},\n]\nuser = \"How do I add to it?\"\nmsgs = assemble(system, history, user)\nfor m in msgs:\n    print(f\"{m['role']:9}: {m['content']}\")\nassert msgs[0][\"role\"] == \"system\" and msgs[-1][\"content\"] == user\nassert msgs[-1][\"role\"] == \"user\"\nprint(\"\\nThe user prompt is the human's input; the API receives system + history + the new user message.\")\nprint(\"Clear, specific user prompts (with context and desired format) get better answers.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "system   : You are a concise coding tutor.\nuser     : What is a list?\nassistant: An ordered, mutable collection.\nuser     : How do I add to it?\n\nThe user prompt is the human's input; the API receives system + history + the new user message.\nClear, specific user prompts (with context and desired format) get better answers.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p5-006",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 6,
+  "orderInPhase": 6,
+  "slug": "trees-graphs-basics",
+  "title": "Trees & graphs basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "trees",
+    "graphs",
+    "basics"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Finding the fewest 'degrees of separation' between two people on a social network is BFS (shortest hops)."
+  },
+  "sections": {
+    "simple_en": "Trees model hierarchy (one root, parent-child links, no cycles) and graphs model networks (nodes connected by edges, possibly cyclic). They underpin file systems, routing, social networks, dependency resolution, and more. The two fundamental ways to traverse them are DFS and BFS.\n\nDFS (depth-first, via recursion or a stack) goes as deep as possible before backtracking — good for exploring all paths, detecting cycles, and tree depth. BFS (breadth-first, via a queue) explores level by level, which is why it finds the shortest path in hops in an unweighted graph. Knowing when to use each is a core interview skill.",
+    "hinglish": "Trees hierarchy model karte hain (ek root, parent-child links, koi cycles nahi) aur graphs networks model karte hain (nodes edges se connected, possibly cyclic). Ye file systems, routing, social networks, dependency resolution, aur zyada ko underpin karte hain. Inhe traverse karne ke do fundamental tareeke hain DFS aur BFS.\n\nDFS (depth-first, recursion ya stack se) backtrack karne se pehle jitna ho sake utna deep jaata hai — saare paths explore karne, cycles detect karne, aur tree depth ke liye achha. BFS (breadth-first, queue se) level by level explore karta hai, isiliye ye unweighted graph mein hops mein shortest path dhoondhta hai. Kab kaun sa use karna hai ye jaanna ek core interview skill hai.",
+    "keyPoints": [
+      "Tree: hierarchy with a root, parent-child links, no cycles.",
+      "Graph: nodes + edges modeling a network (may have cycles).",
+      "DFS (recursion/stack): go deep first — paths, cycles, depth.",
+      "BFS (queue): explore level by level — finds shortest hops.",
+      "Underpin file systems, routing, social graphs, dependencies."
+    ],
+    "real_world": "Finding the fewest 'degrees of separation' between two people on a social network is BFS (shortest hops). Walking every folder and file under a directory, or evaluating a nested expression, is DFS — going deep down each branch before moving on.",
+    "followups": [
+      {
+        "q": "DFS vs BFS — when to use which?",
+        "a": "Use BFS when you need the shortest path in an unweighted graph or level-order processing. Use DFS to explore all paths, detect cycles, compute depth, or do topological work. BFS uses a queue; DFS uses recursion or a stack."
+      },
+      {
+        "q": "Why does BFS find the shortest path in an unweighted graph?",
+        "a": "BFS visits nodes in order of increasing distance from the start, so the first time it reaches the goal is via the fewest edges. For weighted graphs you'd use Dijkstra's algorithm instead."
+      },
+      {
+        "q": "How do you avoid infinite loops in graph traversal?",
+        "a": "Track visited nodes in a set and skip already-visited ones. Graphs can have cycles, so without a visited set, traversal could loop forever."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real, runnable JavaScript: recursive tree depth (DFS) and shortest-path BFS on a graph. The Node demo below runs both and verifies the results.",
+      "source": "// Trees & graphs — model hierarchies and networks; traverse with DFS (depth) and BFS (breadth).\n\nclass TreeNode { constructor(val) { this.val = val; this.left = this.right = null; } }\n\n// DFS via recursion: in-order traversal of a binary tree.\nfunction inOrder(node, out = []) {\n  if (!node) return out;\n  inOrder(node.left, out);\n  out.push(node.val);\n  inOrder(node.right, out);\n  return out;\n}\n\n// BFS on a graph (adjacency list): shortest path in hops for an unweighted graph.\nfunction shortestPath(graph, start, goal) {\n  const queue = [[start]];\n  const visited = new Set([start]);\n  while (queue.length) {\n    const path = queue.shift();\n    const node = path[path.length - 1];\n    if (node === goal) return path;\n    for (const neighbor of graph[node] || []) {\n      if (!visited.has(neighbor)) {\n        visited.add(neighbor);\n        queue.push([...path, neighbor]);\n      }\n    }\n  }\n  return null;\n}\n\n// DFS uses a stack/recursion and goes deep; BFS uses a queue and explores level by level,\n// so BFS finds the fewest-hops path. Both are O(V + E) on a graph.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Trees & graphs — model hierarchy/networks; traverse with DFS and BFS\n// Binary tree depth via recursion (DFS).\nfunction maxDepth(node) {\n  if (!node) return 0;\n  return 1 + Math.max(maxDepth(node.left), maxDepth(node.right));\n}\nconst tree = { val: 1, left: { val: 2, left: null, right: null },\n               right: { val: 3, left: { val: 4, left: null, right: null }, right: null } };\n// Graph BFS (shortest hops in an unweighted graph).\nfunction bfs(graph, start, goal) {\n  const queue = [[start]]; const visited = new Set([start]);\n  while (queue.length) {\n    const path = queue.shift(); const node = path[path.length - 1];\n    if (node === goal) return path;\n    for (const next of graph[node] || [])\n      if (!visited.has(next)) { visited.add(next); queue.push([...path, next]); }\n  }\n  return null;\n}\nconst graph = { A: [\"B\", \"C\"], B: [\"D\"], C: [\"D\"], D: [] };\nconsole.log(\"maxDepth(tree) ->\", maxDepth(tree));\nconsole.log(\"bfs A->D shortest path ->\", bfs(graph, \"A\", \"D\"));\nconsole.assert(maxDepth(tree) === 3, \"depth 3\");\nconsole.assert(bfs(graph, \"A\", \"D\").length === 3, \"A->B->D (3 nodes)\");\nconsole.log(\"DFS (stack/recursion) goes deep; BFS (queue) explores level by level — BFS finds shortest hops.\");\nconsole.log(\"Trees and graphs underpin file systems, routing, social networks, and dependency resolution.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "maxDepth(tree) -> 3\nbfs A->D shortest path -> [ 'A', 'B', 'D' ]\nDFS (stack/recursion) goes deep; BFS (queue) explores level by level — BFS finds shortest hops.\nTrees and graphs underpin file systems, routing, social networks, and dependency resolution.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

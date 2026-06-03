@@ -1,0 +1,65 @@
+{
+  "id": "p1a-089",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 89,
+  "orderInPhase": 89,
+  "slug": "event-capturing",
+  "title": "Event Capturing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "event",
+    "capturing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "container",
+    "seedText": "A global overlay that must intercept and possibly block clicks before any inner button handles them can register a capturing listener on a container, catchin…"
+  },
+  "sections": {
+    "simple_en": "Capturing (or 'trickling') is the phase that happens BEFORE bubbling: the event travels from the top (document) DOWN to the target (document → ... → parent → target). By default listeners run in the bubbling phase, but you can opt into capturing.\n\nYou enable it by passing `true` (or `{ capture: true }`) as the third argument to `addEventListener`. The full event flow is: capturing phase (top→target), then the target, then bubbling phase (target→top). Capturing is useful when an ancestor needs to intercept an event first.",
+    "hinglish": "Capturing (ya 'trickling') woh phase hai jo bubbling se PEHLE hota hai: event top (document) se DOWN target tak jaata hai (document → ... → parent → target). Default me listeners bubbling phase me chalte hain, par aap capturing me opt-in kar sakte ho.\nIse `addEventListener` ke teesre argument me `true` (ya `{ capture: true }`) deke enable karte ho. Poora event flow: capturing phase (top→target), phir target, phir bubbling phase (target→top). Capturing tab useful hai jab kisi ancestor ko event pehle intercept karna ho.",
+    "keyPoints": [
+      "Capturing runs top→target, BEFORE the bubbling phase.",
+      "Enable with `addEventListener(type, fn, true)` or `{capture:true}`.",
+      "Full flow: capture (down) → target → bubble (up).",
+      "Default listeners are in the bubbling phase.",
+      "Use capturing to intercept events at an ancestor before the target sees them."
+    ],
+    "real_world": "A global overlay that must intercept and possibly block clicks before any inner button handles them can register a capturing listener on a container, catching the event on the way down.",
+    "followups": [
+      {
+        "q": "How do you make a listener run in the capturing phase?",
+        "a": "Pass `true` or `{ capture: true }` as the third argument to `addEventListener`. By default (false) the listener runs in the bubbling phase."
+      },
+      {
+        "q": "What is the full order of event propagation?",
+        "a": "Capturing phase from the document down to the target, then the target itself, then the bubbling phase from the target back up to the document."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Simulate full capture -> target -> bubble flow.\n\nfunction simulateFlow(pathTopToBottom) {\n  // capturing: top->target ; bubbling: target->top (target listed once at the turn)\n  const capture = pathTopToBottom.map((n) => \"capture:\" + n);\n  const bubble = [...pathTopToBottom].reverse().map((n) => \"bubble:\" + n);\n  return [...capture, ...bubble];\n}\n\nmodule.exports = { simulateFlow };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (simulation; browser uses {capture:true}) ---\nconst { simulateFlow } = require(\"./solution\");\n\nconst path = [\"document\", \"ul\", \"button\"]; // top -> target\nconsole.log(simulateFlow(path));\n\nconst flow = simulateFlow(path);\nconsole.assert(flow[0] === \"capture:document\", \"capture starts at top\");\nconsole.assert(flow[2] === \"capture:button\", \"capture reaches target\");\nconsole.assert(flow[3] === \"bubble:button\", \"bubble starts at target\");\nconsole.assert(flow[flow.length - 1] === \"bubble:document\", \"bubble ends at top\");\nconsole.log(\"event capturing assertions passed.\");",
+      "expectedOutput": "[\n  'capture:document', 'capture:ul', 'capture:button',\n  'bubble:button', 'bubble:ul', 'bubble:document'\n]\nevent capturing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "p4-038",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 38,
+  "orderInPhase": 38,
+  "slug": "chunking-strategies-recursive-semantic",
+  "title": "Chunking strategies (recursive / semantic)",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "chunking",
+    "strategies",
+    "recursive",
+    "semantic"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A legal-docs RAG kept retrieving chunks that ended mid-clause with fixed splitting."
+  },
+  "sections": {
+    "simple_en": "How you chunk matters as much as how big. Fixed-size splitting can cut mid-sentence, harming coherence. Recursive character splitting tries a hierarchy of separators — paragraphs, then sentences, then words — keeping each chunk under the size limit while respecting natural boundaries, which makes it the robust default.\n\nSemantic chunking goes further: it splits where meaning shifts (using embedding distance between consecutive sentences), so each chunk is topically cohesive even when paragraph structure is messy. It's more expensive but can improve retrieval on mixed-topic documents. Start with recursive splitting and adopt semantic chunking when retrieval quality demands it — and always evaluate.",
+    "hinglish": "Aap kaise chunk karte ho ye utna hi matter karta hai jitna kitna bada. Fixed-size splitting mid-sentence cut kar sakti hai, coherence ko nuksan pahunchakar. Recursive character splitting separators ki ek hierarchy try karti hai — paragraphs, phir sentences, phir words — har chunk ko size limit ke neeche rakhte hue natural boundaries respect karke, jo use robust default banata hai.\n\nSemantic chunking aage badhti hai: ye wahan split karti hai jahan meaning shift hota hai (consecutive sentences ke beech embedding distance use karke), to har chunk topically cohesive hota hai chahe paragraph structure messy ho. Ye zyada expensive hai par mixed-topic documents par retrieval improve kar sakti hai. Recursive splitting se shuru karo aur semantic chunking tab apnao jab retrieval quality demand kare — aur hamesha evaluate karo.",
+    "keyPoints": [
+      "Fixed-size splitting can cut mid-sentence — hurts coherence.",
+      "Recursive: try paragraph -> sentence -> word boundaries (robust default).",
+      "Semantic: split where meaning shifts (embedding distance) for cohesive chunks.",
+      "Semantic is costlier but better on mixed-topic documents.",
+      "Start recursive; adopt semantic when retrieval quality needs it; always evaluate."
+    ],
+    "real_world": "A legal-docs RAG kept retrieving chunks that ended mid-clause with fixed splitting. Switching to recursive splitting (respecting sentence/paragraph boundaries) produced coherent chunks and noticeably better retrieval — and semantic chunking helped further on documents mixing several topics.",
+    "followups": [
+      {
+        "q": "What is recursive character splitting?",
+        "a": "A strategy that tries progressively smaller separators (paragraphs, then sentences, then words) to keep chunks under a size limit while respecting natural boundaries — avoiding mid-sentence cuts. It's the robust default."
+      },
+      {
+        "q": "How does semantic chunking differ?",
+        "a": "It splits based on meaning — detecting where topics shift via embedding distance between sentences — producing topically cohesive chunks, at higher computational cost. Useful for mixed-topic documents."
+      },
+      {
+        "q": "Which strategy should you use?",
+        "a": "Start with recursive splitting (fast, reliable). Move to semantic chunking when documents mix topics and retrieval quality is critical. Tune size/overlap and evaluate (e.g., RAGAS) to decide."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain RecursiveCharacterTextSplitter and SemanticChunker code. The Python-runnable demo below compares naive vs recursive splitting so the boundary-awareness is verifiable here.",
+      "source": "# Chunking strategies — recursive (structure-aware) and semantic (meaning-aware).\nfrom langchain_text_splitters import RecursiveCharacterTextSplitter\n\n# 1) Recursive: split on the largest natural boundary first (paragraph, then line,\n#    then sentence, then word) so chunks rarely cut mid-thought. Good default.\nrecursive = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)\n\n# 2) Semantic: split where the topic shifts, detected via embedding similarity\n#    between consecutive sentences (keeps each chunk on one coherent idea).\nfrom langchain_experimental.text_splitter import SemanticChunker\nfrom langchain_openai import OpenAIEmbeddings\nsemantic = SemanticChunker(OpenAIEmbeddings(), breakpoint_threshold_type=\"percentile\")\n\n# Other specialized splitters: by Markdown headers, by code structure (language-aware),\n# or token-based splitting to align exactly with the model's tokenizer.\n# chunks = semantic.create_documents([long_text])\n\n# Pick by content: recursive for general prose/docs; semantic for mixed-topic text\n# where clean topical boundaries materially improve retrieval quality.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Chunking strategies — fixed vs recursive (respect natural boundaries) vs semantic\ndef fixed_chunk(text, size):\n    words = text.split()\n    return [\" \".join(words[i:i+size]) for i in range(0, len(words), size)]\n\ndef recursive_chunk(text, max_chars):\n    # Split on the largest natural boundary that keeps chunks under the limit.\n    # Order of separators: paragraphs -> sentences -> words.\n    for sep in [\"\\n\\n\", \". \", \" \"]:\n        parts = text.split(sep)\n        chunks, cur = [], \"\"\n        for p in parts:\n            piece = (cur + sep + p).strip(sep) if cur else p\n            if len(piece) <= max_chars:\n                cur = piece\n            else:\n                if cur: chunks.append(cur)\n                cur = p\n        if cur: chunks.append(cur)\n        if all(len(c) <= max_chars for c in chunks):\n            return chunks\n    return chunks\n\ntext = (\"Intro sentence one. Intro sentence two.\\n\\n\"\n        \"Second paragraph here. It has two sentences.\")\nfixed = fixed_chunk(text, 4)\nrec = recursive_chunk(text, max_chars=40)\nprint(\"Fixed (4 words):\", fixed[:2], \"...\")\nprint(\"Recursive (<=40 chars):\")\nfor c in rec: print(\"  -\", repr(c))\nassert all(len(c) <= 40 for c in rec), \"recursive respects the size limit\"\nassert len(rec) >= 2, \"splits at natural boundaries\"\nprint(\"\\nFixed: simple but cuts mid-sentence. Recursive: splits on paragraphs/sentences first (cleaner).\")\nprint(\"Semantic chunking groups text by meaning (embedding similarity) for the most coherent chunks.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Fixed (4 words): ['Intro sentence one. Intro', 'sentence two. Second paragraph'] ...\nRecursive (<=40 chars):\n  - 'Intro sentence one. Intro sentence'\n  - 'two.\\n\\nSecond paragraph here. It has two'\n  - 'sentences.'\n\nFixed: simple but cuts mid-sentence. Recursive: splits on paragraphs/sentences first (cleaner).\nSemantic chunking groups text by meaning (embedding similarity) for the most coherent chunks.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

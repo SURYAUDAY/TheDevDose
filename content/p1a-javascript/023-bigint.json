@@ -1,0 +1,64 @@
+{
+  "id": "p1a-023",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 23,
+  "orderInPhase": 23,
+  "slug": "bigint",
+  "title": "BigInt",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "bigint"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Twitter/X snowflake IDs and many database 64-bit IDs exceed JS's safe integer range; reading them as a regular Number silently corrupts the last digits."
+  },
+  "sections": {
+    "simple_en": "`BigInt` is a primitive type for integers of arbitrary size, beyond the safe integer limit of regular numbers (`Number.MAX_SAFE_INTEGER`, about 9 quadrillion). You create one by appending `n` to an integer literal (`123n`) or calling `BigInt(123)`.\n\nBigInts support normal arithmetic among themselves but cannot be mixed directly with regular numbers (`1n + 1` throws a TypeError) — you must convert explicitly. They're used for very large IDs, high-precision counters, cryptography, and timestamps in nanoseconds.",
+    "hinglish": "`BigInt` ek primitive type hai bilkul bade integers ke liye, jo normal number ki safe limit (`Number.MAX_SAFE_INTEGER`, lagbhag 9 quadrillion) se aage jaate hain. Banane ke liye integer ke aage `n` lagao (`123n`) ya `BigInt(123)` call karo.\nBigInts aapas me normal arithmetic karte hain par seedhe regular numbers ke saath mix nahi ho sakte (`1n + 1` TypeError deta hai) — explicitly convert karna padta hai. Inka use bohot bade IDs, high-precision counters, cryptography, aur nanosecond timestamps me hota hai.",
+    "keyPoints": [
+      "A primitive for arbitrarily large integers; `typeof 1n` is 'bigint'.",
+      "Create via literal `10n` or `BigInt(10)`.",
+      "Cannot mix BigInt and Number in arithmetic without explicit conversion (TypeError otherwise).",
+      "No decimals — BigInt is integers only.",
+      "Use cases: large IDs, precise counters, crypto, beyond MAX_SAFE_INTEGER values."
+    ],
+    "real_world": "Twitter/X snowflake IDs and many database 64-bit IDs exceed JS's safe integer range; reading them as a regular Number silently corrupts the last digits. Storing them as BigInt (or string) keeps the exact value.",
+    "followups": [
+      {
+        "q": "Can you add a BigInt and a Number directly?",
+        "a": "No — `1n + 1` throws a TypeError. You must convert explicitly, e.g. `1n + BigInt(1)` or `Number(1n) + 1`, being mindful of precision loss when converting down to Number."
+      },
+      {
+        "q": "When would you reach for BigInt?",
+        "a": "When you need exact integers larger than `Number.MAX_SAFE_INTEGER` — large database/snowflake IDs, cryptography, high-resolution counters, or precise nanosecond timestamps."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// BigInt for values beyond MAX_SAFE_INTEGER.\n\nfunction safeLimitDemo() {\n  const max = Number.MAX_SAFE_INTEGER;     // 9007199254740991\n  const numberWrong = max + 2;             // loses precision\n  const bigRight = BigInt(max) + 2n;       // exact\n  return {\n    typeofBig: typeof 10n,                 // \"bigint\"\n    bigRight: bigRight.toString(),         // exact string\n    precisionLost: (numberWrong === max + 1) // true: + 2 collapsed\n  };\n}\n\nfunction safeAdd(numA, numB) {\n  // explicit conversion to mix safely\n  return BigInt(numA) + BigInt(numB);\n}\n\nmodule.exports = { safeLimitDemo, safeAdd };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { safeLimitDemo, safeAdd } = require(\"./solution\");\n\nconsole.log(safeLimitDemo());\nconsole.log(safeAdd(5, 7).toString()); // 12\n\nconst d = safeLimitDemo();\nconsole.assert(d.typeofBig === \"bigint\", \"typeof 10n is bigint\");\nconsole.assert(d.bigRight === \"9007199254740993\", \"BigInt keeps precision\");\nconsole.assert(safeAdd(5, 7) === 12n, \"BigInt addition\");\n\nlet threw = false;\ntry { /* mixing throws */ const x = 1n + 1; } catch { threw = true; }\nconsole.assert(threw, \"mixing BigInt and Number throws TypeError\");\nconsole.log(\"BigInt assertions passed.\");",
+      "expectedOutput": "{ typeofBig: 'bigint', bigRight: '9007199254740993', precisionLost: true }\n12\nBigInt assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

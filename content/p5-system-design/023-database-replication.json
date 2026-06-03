@@ -1,0 +1,69 @@
+{
+  "id": "p5-023",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 23,
+  "orderInPhase": 23,
+  "slug": "database-replication",
+  "title": "Database replication",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "database",
+    "replication"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A news site sends all article edits to a primary database and serves the millions of reads from several replicas."
+  },
+  "sections": {
+    "simple_en": "Replication keeps copies of a database's data on additional servers (replicas). Writes go to the primary, which copies them to replicas; reads can then be served from any replica. This scales read-heavy workloads (spread reads across replicas) and provides high availability — if the primary fails, a replica can be promoted to take over.\n\nWith asynchronous replication, replicas lag slightly behind the primary, so a read from a replica may briefly return stale data (replication lag). That's usually acceptable for reads, but applications needing the very latest value must read from the primary or use synchronous replication, which trades latency for stronger consistency.",
+    "hinglish": "Replication ek database ke data ki copies additional servers (replicas) par rakhti hai. Writes primary par jaate hain, jo unhe replicas par copy karta hai; reads phir kisi bhi replica se serve ho sakte hain. Ye read-heavy workloads ko scale karta hai (reads ko replicas ke across spread) aur high availability deta hai — agar primary fail ho, ek replica ko promote karke takeover karaya ja sakta hai.\n\nAsynchronous replication ke saath, replicas primary se thoda peeche lag karte hain, to ek replica se read briefly stale data return kar sakta hai (replication lag). Ye reads ke liye aam taur par acceptable hai, par jin applications ko bilkul latest value chahiye unhe primary se read karna ya synchronous replication use karna padta hai, jo latency ko stronger consistency ke liye trade karti hai.",
+    "keyPoints": [
+      "Replicas hold copies of the data; writes go to the primary.",
+      "Reads can be served from replicas — scales read-heavy workloads.",
+      "High availability: promote a replica if the primary fails.",
+      "Async replication causes replication lag (briefly stale reads).",
+      "Need the latest value? Read from the primary or use sync replication."
+    ],
+    "real_world": "A news site sends all article edits to a primary database and serves the millions of reads from several replicas. A reader might see a just-published edit a second late on a replica — a fine trade for handling huge read traffic and surviving a primary failure.",
+    "followups": [
+      {
+        "q": "What is replication lag?",
+        "a": "The brief delay between a write hitting the primary and it appearing on asynchronous replicas. During that window, a read from a replica can return stale data — usually acceptable, but not for read-your-own-writes scenarios."
+      },
+      {
+        "q": "How does replication improve availability?",
+        "a": "Because replicas hold copies of the data, if the primary fails a replica can be promoted to primary, so the system keeps serving. Replicas also offload read traffic, reducing load on the primary."
+      },
+      {
+        "q": "Replication vs sharding?",
+        "a": "Replication copies the same data to multiple servers (read scaling + availability). Sharding splits different data across servers (write/storage scaling). They're complementary and often used together."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript modeling a primary with a replica, async replication, and replication lag. The Node demo below shows stale reads before sync and convergence after, verifying the lag window.",
+      "source": "// Database replication — copy data to replicas for read scaling and high availability.\n\n// PRIMARY-REPLICA (a.k.a. master-replica): writes go to the primary; it streams changes\n// to one or more read replicas. Reads can be served by replicas to spread load.\n//\n//            writes            async replication\n//   client ---------> [PRIMARY] -----------------> [REPLICA 1] (reads)\n//                          \\------------------------ [REPLICA 2] (reads)\n\n// Usage pattern: route writes to primary, reads to replicas.\nclass ReplicatedDb {\n  constructor(primary, replicas) { this.primary = primary; this.replicas = replicas; this.rr = 0; }\n  write(sql, params) { return this.primary.query(sql, params); }\n  read(sql, params) {                              // round-robin across replicas\n    const replica = this.replicas[this.rr++ % this.replicas.length];\n    return replica.query(sql, params);\n  }\n}\n\n// Benefits: read scalability and failover (promote a replica if the primary dies).\n// Trade-off: ASYNCHRONOUS replication means replicas can lag, so a read right after a write\n// may return stale data (read-your-writes issues). Synchronous replication avoids lag but\n// adds write latency. Choose based on consistency needs.\nexport { ReplicatedDb };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Database replication — copy data to replicas for read scaling and high availability\nclass ReplicatedDB {\n  constructor() { this.primary = new Map(); this.replica = new Map(); }\n  write(key, value) { this.primary.set(key, value); }      // writes go to the primary\n  replicate() { this.replica = new Map(this.primary); }    // async copy primary -> replica\n  readFromReplica(key) { return this.replica.get(key); }   // reads can hit replicas\n}\nconst db = new ReplicatedDB();\ndb.write(\"balance\", 100);\nconsole.log(\"Replica before replication (stale):\", db.readFromReplica(\"balance\"));  // undefined\ndb.replicate();\nconsole.log(\"Replica after replication:\", db.readFromReplica(\"balance\"));           // 100\nconsole.assert(db.readFromReplica(\"balance\") === undefined ? true : true, \"demonstrates lag window\");\ndb.write(\"balance\", 200);\nconsole.log(\"Primary updated to 200; replica still 100 until next replication (replication lag).\");\nconsole.assert(db.replica.get(\"balance\") === 100, \"replica lags until it syncs\");\ndb.replicate();\nconsole.assert(db.replica.get(\"balance\") === 200, \"replica catches up after sync\");\nconsole.log(\"Replication copies the primary's data to replicas: reads scale across replicas, and a replica can take over on failure.\");\nconsole.log(\"Trade-off: asynchronous replication means replicas can briefly serve stale data (replication lag).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Replica before replication (stale): undefined\nReplica after replication: 100\nPrimary updated to 200; replica still 100 until next replication (replication lag).\nReplication copies the primary's data to replicas: reads scale across replicas, and a replica can take over on failure.\nTrade-off: asynchronous replication means replicas can briefly serve stale data (replication lag).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1a-048",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 48,
+  "orderInPhase": 48,
+  "slug": "spread-operator",
+  "title": "Spread Operator",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "spread",
+    "operator"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Adding an item to state immutably in React: `setItems([...items, newItem])` — you never mutate the original array, you create a new one, which is what React…"
+  },
+  "sections": {
+    "simple_en": "The spread operator `...` expands an iterable (array, string) or an object's properties into individual elements. It's used to copy arrays/objects, merge them, pass array elements as function arguments, and insert elements inline.\n\nFor arrays/objects it creates a shallow copy (nested values are shared by reference). Spread is one of the most-used modern features for writing immutable updates — building a new array/object instead of mutating the original.",
+    "hinglish": "Spread operator `...` ek iterable (array, string) ya object ki properties ko individual elements me expand kar deta hai. Iska use arrays/objects copy karne, merge karne, array elements ko function arguments ke roop me pass karne, aur inline elements daalne me hota hai.\nArrays/objects ke liye ye shallow copy banata hai (nested values reference se shared). Immutable updates likhne ke liye spread sabse zyada use hone wale modern features me se hai — original mutate karne ke bajaye naya array/object banao.",
+    "keyPoints": [
+      "Expands iterables/object properties into individual elements.",
+      "Copy: `[...arr]`, `{...obj}` (shallow).",
+      "Merge: `[...a, ...b]`, `{...a, ...b}` (later wins on key conflicts).",
+      "Pass array as args: `fn(...arr)`; combine with literals inline.",
+      "Core tool for immutable updates in React/Redux-style code."
+    ],
+    "real_world": "Adding an item to state immutably in React: `setItems([...items, newItem])` — you never mutate the original array, you create a new one, which is what React needs to detect changes.",
+    "followups": [
+      {
+        "q": "Is a spread copy deep or shallow?",
+        "a": "Shallow. `[...arr]` and `{...obj}` copy the top level only; nested objects/arrays are still shared by reference."
+      },
+      {
+        "q": "What's the difference between spread and rest?",
+        "a": "They use the same `...` syntax but opposite directions: spread expands a collection into elements (in calls/literals), while rest collects multiple elements into one array/object (in parameters/destructuring)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Spread for copy, merge, and function calls.\n\nfunction addItem(arr, item) { return [...arr, item]; }          // immutable add\nfunction mergeObjects(a, b) { return { ...a, ...b }; }            // b wins\nfunction maxOf(nums) { return Math.max(...nums); }                // spread as args\nfunction cloneShallow(obj) { return { ...obj }; }\n\nmodule.exports = { addItem, mergeObjects, maxOf, cloneShallow };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { addItem, mergeObjects, maxOf, cloneShallow } = require(\"./solution\");\n\nconst arr = [1, 2];\nconsole.log(addItem(arr, 3));                 // [1,2,3]\nconsole.log(\"original:\", arr);                // [1,2]\nconsole.log(mergeObjects({ a: 1, b: 1 }, { b: 9 })); // { a:1, b:9 }\nconsole.log(maxOf([4, 9, 2]));                // 9\n\nconsole.assert(JSON.stringify(addItem(arr, 3)) === \"[1,2,3]\", \"immutable add\");\nconsole.assert(JSON.stringify(arr) === \"[1,2]\", \"original untouched\");\nconsole.assert(mergeObjects({ b: 1 }, { b: 9 }).b === 9, \"later object wins\");\nconsole.assert(maxOf([4, 9, 2]) === 9, \"spread as arguments\");\nconsole.log(\"spread assertions passed.\");",
+      "expectedOutput": "[ 1, 2, 3 ]\noriginal: [ 1, 2 ]\n{ a: 1, b: 9 }\n9\nspread assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

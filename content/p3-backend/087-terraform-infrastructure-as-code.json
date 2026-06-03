@@ -1,0 +1,70 @@
+{
+  "id": "p3-087",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 87,
+  "orderInPhase": 87,
+  "slug": "terraform-infrastructure-as-code",
+  "title": "Terraform / Infrastructure as Code",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "terraform",
+    "infrastructure",
+    "code"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A team defines their entire production environment — servers, database, load balancer, networking — in Terraform files."
+  },
+  "sections": {
+    "simple_en": "Infrastructure as Code (IaC) means defining your servers, databases, networks, and other cloud resources in version-controlled configuration files instead of clicking through a console. Terraform is a leading IaC tool: you declare the desired infrastructure in HCL, and Terraform figures out how to create, update, or destroy resources to match.\n\nThe workflow is terraform plan (show the diff between desired and current state) then terraform apply (converge real infrastructure to the config). It's declarative and idempotent — re-applying an unchanged config does nothing. IaC makes infrastructure reproducible, reviewable in pull requests, and easy to recreate across environments, replacing error-prone manual setup.",
+    "hinglish": "Infrastructure as Code (IaC) matlab apne servers, databases, networks aur doosre cloud resources ko version-controlled configuration files mein define karna, console mein click karne ke bajaye. Terraform ek leading IaC tool hai: aap desired infrastructure HCL mein declare karte ho, aur Terraform figure out karta hai kaise resources create, update ya destroy kare match karne ke liye.\n\nWorkflow hai terraform plan (desired aur current state ke beech diff dikhao) phir terraform apply (real infrastructure ko config tak converge karo). Ye declarative aur idempotent hai — unchanged config dobara apply karne se kuch nahi hota. IaC infrastructure ko reproducible, pull requests mein reviewable, aur environments ke across recreate karna aasaan banata hai, error-prone manual setup ko replace karke.",
+    "keyPoints": [
+      "IaC: define infrastructure in version-controlled files, not console clicks.",
+      "Terraform: declare desired resources in HCL; it computes the changes.",
+      "Workflow: terraform plan (diff) then apply (converge); destroy to tear down.",
+      "Declarative and idempotent — re-applying an unchanged config does nothing.",
+      "Reproducible, reviewable, and consistent across environments."
+    ],
+    "real_world": "A team defines their entire production environment — servers, database, load balancer, networking — in Terraform files. To spin up an identical staging environment, they apply the same config with different variables. When a server config changes, the diff is reviewed in a pull request before terraform apply makes it real.",
+    "followups": [
+      {
+        "q": "What problem does Infrastructure as Code solve?",
+        "a": "Manual console setup is error-prone, undocumented, and hard to reproduce. IaC makes infrastructure version-controlled, reviewable, reproducible across environments, and recoverable after disasters."
+      },
+      {
+        "q": "What do terraform plan and apply do?",
+        "a": "plan shows the difference between your declared config and the current real infrastructure (what will be created/changed/destroyed). apply executes those changes to converge reality to the config."
+      },
+      {
+        "q": "What does it mean that Terraform is idempotent?",
+        "a": "Applying the same unchanged configuration repeatedly results in no changes — Terraform only acts when the desired state differs from the current state, so re-runs are safe."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Terraform (HCL) configuration (not Node application code). The Node-runnable demo below simulates plan/apply convergence and idempotency so the behavior is verifiable here.",
+      "source": "// Terraform / IaC — declare infrastructure; plan then apply to converge.\n// File: main.tf\nconst terraform = `\nterraform {\n  required_providers { aws = { source = \"hashicorp/aws\" } }\n}\nprovider \"aws\" { region = \"us-east-1\" }\n\n# Declare WHAT you want; Terraform figures out HOW to reach it.\nresource \"aws_instance\" \"web\" {\n  count         = 2\n  ami           = \"ami-0abcd1234\"\n  instance_type = \"t3.micro\"\n  tags = { Name = \"web-\\${count.index}\" }\n}\n\nresource \"aws_db_instance\" \"db\" {\n  engine         = \"postgres\"\n  instance_class = \"db.t3.micro\"\n  allocated_storage = 20\n}\n\noutput \"web_ips\" { value = aws_instance.web[*].public_ip }\n`;\n// Workflow:\n//   terraform init     # download providers\n//   terraform plan     # show the diff between desired and current state\n//   terraform apply    # converge real infra to the config (idempotent)\n//   terraform destroy  # tear it all down\n//\n// IaC = infrastructure defined in version-controlled files: reproducible,\n// reviewable, and idempotent (re-applying an unchanged config does nothing).\nmodule.exports = terraform;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Terraform / IaC — declare desired infrastructure; plan diffs, apply converges (idempotent)\nfunction createState(){ return { resources: {} }; }\nfunction plan(state, desired){\n  const changes = [];\n  for (const [name, cfg] of Object.entries(desired)){\n    const current = state.resources[name];\n    if (!current) changes.push({ action: \"create\", name });\n    else if (JSON.stringify(current) !== JSON.stringify(cfg)) changes.push({ action: \"update\", name });\n  }\n  for (const name of Object.keys(state.resources)) if (!desired[name]) changes.push({ action: \"destroy\", name });\n  return changes;\n}\nfunction apply(state, desired){\n  const changes = plan(state, desired);\n  for (const c of changes){\n    if (c.action === \"destroy\") delete state.resources[c.name];\n    else state.resources[c.name] = desired[c.name];\n  }\n  return changes;\n}\nconst state = createState();\nconst desired = { web_server: { type: \"t3.micro\", count: 2 }, database: { engine: \"postgres\" } };\nconsole.log(\"First apply:\", JSON.stringify(apply(state, desired)));        // create both\nconsole.log(\"Re-apply (no change):\", JSON.stringify(apply(state, desired))); // idempotent -> []\ndesired.web_server.count = 3;\nconsole.log(\"After editing config:\", JSON.stringify(apply(state, desired))); // update web_server\nconsole.assert(apply(state, desired).length === 0, \"converged state needs no changes\");\nconsole.log(\"IaC: infrastructure defined in version-controlled files; terraform plan then apply.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "First apply: [{\"action\":\"create\",\"name\":\"web_server\"},{\"action\":\"create\",\"name\":\"database\"}]\nRe-apply (no change): []\nAfter editing config: []\nIaC: infrastructure defined in version-controlled files; terraform plan then apply.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

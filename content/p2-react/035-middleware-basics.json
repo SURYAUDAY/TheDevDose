@@ -1,0 +1,69 @@
+{
+  "id": "p2-035",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 35,
+  "orderInPhase": 35,
+  "slug": "middleware-basics",
+  "title": "Middleware basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "middleware",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A logging middleware records every dispatched action and the resulting state, which is invaluable for debugging."
+  },
+  "sections": {
+    "simple_en": "Redux middleware sits between dispatching an action and the moment it reaches the reducer. It's a function with the signature store => next => action => result, letting you intercept, log, transform, delay, or stop actions — this is how thunks, logging, and analytics are implemented.\n\nMiddleware runs in a chain: each one calls next(action) to pass control to the next, and finally to the reducer. Redux Toolkit includes thunk and helpful dev checks by default, and you can append your own.",
+    "hinglish": "Redux middleware action dispatch hone aur reducer tak pahunchne ke beech baithta hai. Iska signature store => next => action => result hota hai, jisse aap actions ko intercept, log, transform ya delay kar sakte ho — thunks aur logging isi se bante hain.\n\nMiddleware ek chain mein chalte hain: har ek next(action) call karke control aage bhejta hai, aakhir mein reducer tak. Redux Toolkit thunk aur dev checks by default deta hai, aur aap apna middleware add kar sakte ho.",
+    "keyPoints": [
+      "Middleware intercepts actions between dispatch and the reducer.",
+      "Signature: store => next => action => result (a curried chain).",
+      "Call next(action) to continue the chain; omit it to stop the action.",
+      "Powers thunks (async), logging, analytics, crash reporting, and more.",
+      "RTK adds thunk + dev-only checks by default; append yours via the middleware option."
+    ],
+    "real_world": "A logging middleware records every dispatched action and the resulting state, which is invaluable for debugging. An analytics middleware can watch for specific actions (like 'order/placed') and fire a tracking event — all without touching reducers or components.",
+    "followups": [
+      {
+        "q": "What does calling next(action) do?",
+        "a": "It passes the action to the next middleware in the chain, and eventually to the reducer. If you don't call it, the action is swallowed and never reaches the reducer."
+      },
+      {
+        "q": "How are async thunks related to middleware?",
+        "a": "The thunk middleware lets you dispatch functions (not just plain objects); it calls them with dispatch and getState, enabling async flows."
+      },
+      {
+        "q": "How do you add custom middleware in RTK?",
+        "a": "Use configureStore's middleware option: (getDefault) => getDefault().concat(myMiddleware), preserving the built-in defaults."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Middleware basics: a custom logger middleware sits between dispatch and reducer.\nimport { configureStore } from \"@reduxjs/toolkit\";\nimport counterReducer from \"./counterSlice\";\n\n// Middleware signature: store => next => action => result\nconst logger = (store) => (next) => (action) => {\n  console.log(\"dispatching:\", action.type, \"| prev:\", store.getState());\n  const result = next(action);  // pass action to the next middleware/reducer\n  console.log(\"next state:\", store.getState());\n  return result;\n};\n\nexport const store = configureStore({\n  reducer: { counter: counterReducer },\n  // RTK includes thunk + dev checks by default; we append our logger.\n  middleware: (getDefault) => getDefault().concat(logger),\n});",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Middleware basics — a logger middleware wraps dispatch\nfunction applyMiddleware(store, ...middlewares){\n  let dispatch = store.dispatch;\n  const api = { getState: store.getState, dispatch: (a) => dispatch(a) };\n  middlewares.reverse().forEach(mw => { dispatch = mw(api)(dispatch); });\n  return { ...store, dispatch };\n}\nconst logs = [];\nconst logger = (api) => (next) => (action) => {\n  logs.push(`before: ${action.type} (state=${api.getState().n})`);\n  const result = next(action);\n  logs.push(`after:  ${action.type} (state=${api.getState().n})`);\n  return result;\n};\nlet state = { n: 0 };\nconst baseStore = {\n  getState: () => state,\n  dispatch: (a) => { if (a.type === \"inc\") state = { n: state.n + 1 }; return a; },\n};\nconst store = applyMiddleware(baseStore, logger);\nstore.dispatch({ type: \"inc\" });\nlogs.forEach(l => console.log(l));\nconsole.assert(state.n === 1, \"reducer ran through middleware\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "before: inc (state=0)\nafter:  inc (state=1)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

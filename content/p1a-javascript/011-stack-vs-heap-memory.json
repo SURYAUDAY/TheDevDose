@@ -1,0 +1,66 @@
+{
+  "id": "p1a-011",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 11,
+  "orderInPhase": 11,
+  "slug": "stack-vs-heap-memory",
+  "title": "Stack vs Heap Memory",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "stack",
+    "heap",
+    "memory"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "The stack is like a sticky note with a value written directly on it."
+  },
+  "sections": {
+    "simple_en": "JavaScript stores data in two regions. The Stack holds primitive values (number, string, boolean, null, undefined, symbol, bigint) and references — it's small, fast, and organised in LIFO order. The Heap holds objects, arrays, and functions — larger, unordered, dynamically sized memory.\n\nWhen you assign a primitive, the value is copied on the stack. When you assign an object, the stack stores a reference (a pointer) to the object that lives in the heap. This single distinction explains why primitives are copied by value and objects are 'copied' by reference.",
+    "hinglish": "JavaScript data ko do jagah store karta hai. Stack me primitive values (number, string, boolean, null, undefined, symbol, bigint) aur references rehte hain — chhota, fast, LIFO order me. Heap me objects, arrays, functions rehte hain — bada, unordered, dynamically sized.\nJab aap primitive assign karte ho, value stack par copy hoti hai. Jab object assign karte ho, stack me ek reference (pointer) store hota hai jo heap me pade object ko point karta hai. Yahi ek baat samjhati hai ki primitives value se copy hote hain aur objects reference se.",
+    "keyPoints": [
+      "Stack: primitives + references; small, fast, LIFO, fixed-size slots.",
+      "Heap: objects, arrays, functions; large, dynamic, unordered.",
+      "Primitives are copied by value; objects are referenced (the reference is what's copied).",
+      "Two variables can point to the SAME heap object → changing one affects the other.",
+      "This underlies shallow vs deep copy, equality of objects, and mutation bugs."
+    ],
+    "real_world": "The stack is like a sticky note with a value written directly on it. The heap object is like a house, and the stack holds its address. Copying the sticky note address gives two notes pointing at the same house — repaint it and both 'see' the change.",
+    "followups": [
+      {
+        "q": "Where are objects stored, and what is on the stack for them?",
+        "a": "The object itself lives on the heap; the stack holds only a reference (pointer) to that heap location."
+      },
+      {
+        "q": "Why does changing one variable change another?",
+        "a": "If both variables hold references to the same heap object, mutating the object through one reference is visible through the other — they point at the same memory."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrates value-copy (stack) vs reference-copy (heap).\n\nfunction primitiveCopy() {\n  let a = 10;\n  let b = a;   // value copied\n  b = 20;      // changing b does NOT affect a\n  return { a, b };\n}\n\nfunction referenceCopy() {\n  const obj1 = { count: 1 };\n  const obj2 = obj1;     // reference copied (same heap object)\n  obj2.count = 99;       // mutates the shared object\n  return { sameRef: obj1 === obj2, obj1count: obj1.count };\n}\n\nmodule.exports = { primitiveCopy, referenceCopy };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { primitiveCopy, referenceCopy } = require(\"./solution\");\n\nconsole.log(\"primitive:\", primitiveCopy());\nconsole.log(\"reference:\", referenceCopy());\n\nconsole.assert(primitiveCopy().a === 10 && primitiveCopy().b === 20, \"primitives copy by value\");\nconsole.assert(referenceCopy().sameRef === true, \"objects share reference\");\nconsole.assert(referenceCopy().obj1count === 99, \"mutation visible via both refs\");\nconsole.log(\"stack/heap assertions passed.\");",
+      "expectedOutput": "primitive: { a: 10, b: 20 }\nreference: { sameRef: true, obj1count: 99 }\nstack/heap assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

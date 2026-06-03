@@ -1,0 +1,65 @@
+{
+  "id": "p1b-063",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 63,
+  "orderInPhase": 63,
+  "slug": "recursive-types",
+  "title": "Recursive Types",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "recursive",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Typing a comment thread where each comment has `replies: Comment[]` — a recursive type captures unlimited nesting so the whole tree is type-safe to traverse."
+  },
+  "sections": {
+    "simple_en": "A recursive type references itself in its own definition, letting you model arbitrarily nested data — trees, linked lists, nested comments, or JSON. For example a JSON value type refers to itself for arrays and objects of JSON values.\n\nTypeScript supports recursion in type aliases and interfaces. It's essential for typing self-similar structures and for advanced recursive utility types (like a `DeepReadonly<T>` or `DeepPartial<T>` that applies recursively to every nested level).",
+    "hinglish": "Recursive type apni definition me khud ko reference karta hai, jisse aap arbitrarily nested data model kar sakte ho — trees, linked lists, nested comments, ya JSON. Jaise ek JSON value type arrays aur objects of JSON values ke liye khud ko reference karta hai.\nTypeScript type aliases aur interfaces me recursion support karta hai. Ye self-similar structures type karne aur advanced recursive utility types (jaise `DeepReadonly<T>` ya `DeepPartial<T>` jo har nested level par recursively apply ho) ke liye zaruri hai.",
+    "keyPoints": [
+      "A type that references itself to model nested data.",
+      "Models trees, linked lists, comments, and JSON.",
+      "Supported in type aliases and interfaces.",
+      "Enables deep recursive utilities (DeepReadonly, DeepPartial).",
+      "Each recursive reference handles one nesting level."
+    ],
+    "real_world": "Typing a comment thread where each comment has `replies: Comment[]` — a recursive type captures unlimited nesting so the whole tree is type-safe to traverse.",
+    "followups": [
+      {
+        "q": "What is a recursive type?",
+        "a": "A type that refers to itself in its definition, used to model arbitrarily nested structures like trees, linked lists, or JSON values."
+      },
+      {
+        "q": "Give an example of a recursive utility type.",
+        "a": "`DeepReadonly<T>` or `DeepPartial<T>` — they apply the transformation recursively to every nested object level, unlike the shallow built-in `Readonly`/`Partial`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — recursive type for a tree + a JSON value type.\n\nexport interface TreeNode {\n  value: number;\n  children: TreeNode[];\n}\n\nexport function sumTree(node: TreeNode): number {\n  return node.value + node.children.reduce((acc, c) => acc + sumTree(c), 0);\n}\n\nexport type Json =\n  | string | number | boolean | null\n  | Json[]\n  | { [key: string]: Json };\n\nexport function depth(json: Json): number {\n  if (Array.isArray(json)) return 1 + Math.max(0, ...json.map(depth));\n  if (json && typeof json === \"object\") return 1 + Math.max(0, ...Object.values(json).map(depth));\n  return 0;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { sumTree, depth } from \"./solution\";\n\nconst tree = { value: 1, children: [{ value: 2, children: [] }, { value: 3, children: [{ value: 4, children: [] }] }] };\nconsole.log(sumTree(tree)); // 10\nconsole.log(depth({ a: { b: [1, 2] } })); // 3\n\nconsole.assert(sumTree(tree) === 10, \"recursive tree sum\");\nconsole.assert(depth({ a: { b: [1] } }) === 3, \"recursive JSON depth\");\nconsole.log(\"recursive-types assertions passed.\");",
+      "expectedOutput": "10\n3\nrecursive-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

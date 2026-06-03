@@ -1,0 +1,69 @@
+{
+  "id": "p3-009",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 9,
+  "orderInPhase": 9,
+  "slug": "error-handling",
+  "title": "Error handling",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "error",
+    "handling"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "A handler throws new AppError('User not found', 404)."
+  },
+  "sections": {
+    "simple_en": "Robust error handling means failures produce consistent, safe responses instead of crashes or leaked internals. In Express, a centralized error-handling middleware (with four arguments) catches errors from routes, converts them into proper status codes and JSON messages, and logs the technical details server-side.\n\nAsync handlers need care: a rejected promise won't reach the error middleware unless you forward it (try/catch with next(err), or an asyncHandler wrapper). A common pattern is a custom AppError class carrying a statusCode, so handlers throw meaningful errors that the central handler formats.",
+    "hinglish": "Robust error handling matlab failures consistent, safe responses dein, crash ya internal details leak na karein. Express mein ek centralized error-handling middleware (chaar arguments wala) routes se errors pakad kar unhe sahi status codes aur JSON messages mein badalta hai, aur technical details server par log karta hai.\n\nAsync handlers mein dhyaan: rejected promise error middleware tak tab tak nahi pahunchti jab tak aap use forward na karo (try/catch + next(err), ya asyncHandler wrapper). Common pattern: ek custom AppError class jisme statusCode ho, taaki handlers meaningful errors throw karein jo central handler format kare.",
+    "keyPoints": [
+      "Centralize handling in a 4-arg error middleware (err, req, res, next).",
+      "Forward async errors via try/catch + next(err) or an asyncHandler wrapper.",
+      "Use a custom AppError with statusCode for meaningful, throwable errors.",
+      "Return safe messages + correct codes; log full details server-side only.",
+      "Never leak stack traces or internals to clients in production."
+    ],
+    "real_world": "A handler throws new AppError('User not found', 404). The async wrapper forwards it to the central error middleware, which responds { error: 'User not found', status: 404 } and logs the stack trace to the monitoring service — clean for the client, detailed for the team.",
+    "followups": [
+      {
+        "q": "Why won't a thrown error in an async handler reach the error middleware automatically?",
+        "a": "An async function returns a rejected promise rather than throwing synchronously. You must catch it and call next(err) (or use a wrapper), or Express won't see it."
+      },
+      {
+        "q": "What does an asyncHandler wrapper do?",
+        "a": "It wraps an async route so a rejected promise is caught and passed to next(), routing the error to the centralized handler without repeating try/catch everywhere."
+      },
+      {
+        "q": "What should you avoid sending to clients on error?",
+        "a": "Stack traces, internal messages, and implementation details — they aid attackers. Send a safe message and the right status code; log the rest server-side."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express error-handling code. The Node-runnable demo below verifies the centralized handler logic.",
+      "source": "// Error handling — async wrapper + a centralized error-handling middleware.\nconst express = require(\"express\");\nconst app = express();\napp.use(express.json());\n\nclass AppError extends Error {\n  constructor(message, statusCode) {\n    super(message);\n    this.statusCode = statusCode;\n  }\n}\n\n// Wrap async handlers so rejected promises reach the error middleware.\nconst asyncHandler = (fn) => (req, res, next) =>\n  Promise.resolve(fn(req, res, next)).catch(next);\n\napp.get(\"/users/:id\", asyncHandler(async (req, res) => {\n  const user = await findUser(req.params.id); // may throw / reject\n  if (!user) throw new AppError(\"User not found\", 404);\n  res.json(user);\n}));\n\n// Centralized error handler (4 args) — Express recognizes it by arity.\napp.use((err, req, res, next) => {\n  const status = err.statusCode || 500;\n  console.error(err);\n  res.status(status).json({ error: err.message, status });\n});\n\nasync function findUser(id) { return id === \"1\" ? { id } : null; }\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Error handling — async wrapper + centralized error middleware\nclass AppError extends Error { constructor(message, status){ super(message); this.status = status; } }\nconst asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);\n\nfunction errorHandler(err, req, res){\n  const status = err.status || 500;\n  res.statusCode = status;\n  res.body = { error: err.message, status };\n}\nasync function getUser(req, res){\n  if (!req.params.id) throw new AppError(\"id is required\", 400);\n  if (req.params.id === \"999\") throw new AppError(\"user not found\", 404);\n  res.statusCode = 200; res.body = { id: req.params.id };\n}\nasync function simulate(params){\n  const req = { params }, res = { statusCode: 0, body: null };\n  try { await asyncHandler(getUser)(req, res, (err) => errorHandler(err, req, res)); }\n  catch (e) {}\n  return res;\n}\n(async () => {\n  console.log(\"valid:  \", JSON.stringify(await simulate({ id: \"1\" })));\n  console.log(\"missing:\", JSON.stringify(await simulate({})));\n  console.log(\"404:    \", JSON.stringify(await simulate({ id: \"999\" })));\n  const r = await simulate({});\n  console.assert(r.statusCode === 400, \"missing id -> 400 via central handler\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "valid:   {\"statusCode\":200,\"body\":{\"id\":\"1\"}}\nmissing: {\"statusCode\":400,\"body\":{\"error\":\"id is required\",\"status\":400}}\n404:     {\"statusCode\":404,\"body\":{\"error\":\"user not found\",\"status\":404}}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

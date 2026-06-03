@@ -1,0 +1,66 @@
+{
+  "id": "p1a-009",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 9,
+  "orderInPhase": 9,
+  "slug": "var-vs-let-vs-const",
+  "title": "var vs let vs const",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "var",
+    "let",
+    "const"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "The classic interview trap: a `for` loop creating 3 timers."
+  },
+  "sections": {
+    "simple_en": "These three keywords declare variables but behave differently in three ways: scope, hoisting/TDZ, and re-assignment. `var` is function-scoped, hoisted as `undefined`, and can be redeclared. `let` and `const` are block-scoped and live in the TDZ until declared.\n\n`let` allows re-assignment; `const` does not (the binding is fixed). Note that `const` makes the *binding* constant, not the value — a `const` object can still have its properties mutated. The modern best practice is: use `const` by default, `let` when you must reassign, and avoid `var`.",
+    "hinglish": "Teeno keywords variable declare karte hain par teen tarike se alag behave karte hain: scope, hoisting/TDZ, aur re-assignment. `var` function-scoped hota hai, `undefined` ke saath hoist hota hai, aur redeclare ho sakta hai. `let`/`const` block-scoped hote hain aur declare hone tak TDZ me rehte hain.\n`let` ko reassign kar sakte ho; `const` ko nahi (binding fixed hai). Dhyaan do — `const` binding ko constant banata hai, value ko nahi: ek `const` object ki properties abhi bhi change ho sakti hain. Best practice: default me `const` use karo, reassign chahiye to `let`, aur `var` se bacho.",
+    "keyPoints": [
+      "Scope: `var` is function-scoped; `let`/`const` are block-scoped ({ } blocks count).",
+      "Hoisting: `var` → undefined; `let`/`const` → TDZ (ReferenceError if accessed early).",
+      "Re-declaration: `var` allows it; `let`/`const` throw a SyntaxError on re-declare in the same scope.",
+      "Re-assignment: `var` and `let` allow it; `const` does not (but objects/arrays remain mutable).",
+      "Best practice: prefer `const`, use `let` when reassignment is needed, avoid `var`."
+    ],
+    "real_world": "The classic interview trap: a `for` loop creating 3 timers. With `var`, all callbacks share one variable and print the final value; with `let`, each iteration gets a fresh block-scoped binding and they print 0, 1, 2 correctly.",
+    "followups": [
+      {
+        "q": "Does `const` make an object immutable?",
+        "a": "No. `const` only prevents re-assigning the variable. The object's properties can still change. Use `Object.freeze()` for shallow immutability of the contents."
+      },
+      {
+        "q": "Why does the `var` loop print the final value in all callbacks?",
+        "a": "Because `var` is function-scoped — there is a single `i` shared by all callbacks, and by the time they run the loop has finished, so `i` is its final value."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// The famous loop-closure difference between var and let.\n\nfunction loopWithVar() {\n  const out = [];\n  for (var i = 0; i < 3; i++) {\n    out.push(() => i); // all closures share the SAME i\n  }\n  return out.map(fn => fn()); // [3,3,3]\n}\n\nfunction loopWithLet() {\n  const out = [];\n  for (let i = 0; i < 3; i++) {\n    out.push(() => i); // each iteration: a fresh block-scoped i\n  }\n  return out.map(fn => fn()); // [0,1,2]\n}\n\n// const fixes the binding, not the object contents.\nfunction constMutation() {\n  const user = { name: \"Asha\" };\n  user.name = \"Ravi\";       // allowed: mutating the object\n  let threw = false;\n  try { /* user = {} */ eval(\"user = {}\"); } catch (e) { threw = true; }\n  return { name: user.name, reassignThrew: threw };\n}\n\nmodule.exports = { loopWithVar, loopWithLet, constMutation };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { loopWithVar, loopWithLet, constMutation } = require(\"./solution\");\n\nconsole.log(\"var loop:\", loopWithVar());\nconsole.log(\"let loop:\", loopWithLet());\nconsole.log(\"const:\", constMutation());\n\nconsole.assert(JSON.stringify(loopWithVar()) === \"[3,3,3]\", \"var shares one binding\");\nconsole.assert(JSON.stringify(loopWithLet()) === \"[0,1,2]\", \"let gives fresh bindings\");\nconsole.assert(constMutation().name === \"Ravi\", \"const object is mutable\");\nconsole.assert(constMutation().reassignThrew === true, \"const reassignment throws\");\nconsole.log(\"var/let/const assertions passed.\");",
+      "expectedOutput": "var loop: [ 3, 3, 3 ]\nlet loop: [ 0, 1, 2 ]\nconst: { name: 'Ravi', reassignThrew: true }\nvar/let/const assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

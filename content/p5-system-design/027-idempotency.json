@@ -1,0 +1,68 @@
+{
+  "id": "p5-027",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 27,
+  "orderInPhase": 27,
+  "slug": "idempotency",
+  "title": "Idempotency",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "idempotency"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A checkout request times out, so the app retries it."
+  },
+  "sections": {
+    "simple_en": "An operation is idempotent if performing it multiple times has the same effect as performing it once. This matters because networks are unreliable: a request may time out and be retried, or a user may double-click, and you must not double-charge a card or create duplicate orders.\n\nThe common implementation is an idempotency key: the client sends a unique key with the request, and the server records the result per key, so a retry with the same key returns the original result instead of repeating the action. By HTTP convention GET, PUT, and DELETE are naturally idempotent; POST usually is not, which is why payment and order APIs require idempotency keys.",
+    "hinglish": "Ek operation idempotent hai agar use multiple times perform karne ka wahi effect ho jo ek baar perform karne ka. Ye matter karta hai kyunki networks unreliable hain: ek request time out hokar retry ho sakti hai, ya user double-click kar sakta hai, aur aapko ek card double-charge ya duplicate orders create nahi karne chahiye.\n\nCommon implementation ek idempotency key hai: client request ke saath ek unique key bhejta hai, aur server result ko per key record karta hai, to same key ke saath retry original result return karta hai action repeat karne ke bajaye. HTTP convention se GET, PUT, aur DELETE naturally idempotent hain; POST aam taur par nahi hai, isiliye payment aur order APIs idempotency keys require karte hain.",
+    "keyPoints": [
+      "Idempotent: doing it many times equals doing it once.",
+      "Matters because of retries, timeouts, and double-clicks.",
+      "Implement with an idempotency key: record the result per key.",
+      "A retry with the same key returns the original result (no re-action).",
+      "GET/PUT/DELETE are naturally idempotent; POST usually isn't."
+    ],
+    "real_world": "A checkout request times out, so the app retries it. Because it sends the same idempotency key, the payment service recognizes the duplicate and returns the original charge — the customer is billed exactly once even though the request was sent twice.",
+    "followups": [
+      {
+        "q": "Why is idempotency important in APIs?",
+        "a": "Networks fail and clients retry. Without idempotency, a retried 'create order' or 'charge card' could run twice, causing duplicates or double charges. Idempotency makes safe retries possible."
+      },
+      {
+        "q": "How do idempotency keys work?",
+        "a": "The client attaches a unique key to a request; the server stores the outcome keyed by it. If the same key arrives again, the server returns the stored result instead of re-executing the operation."
+      },
+      {
+        "q": "Which HTTP methods are idempotent?",
+        "a": "GET, PUT, and DELETE are idempotent by convention (repeating them yields the same state). POST generally is not — it creates new resources — so POST endpoints that must be safe to retry use idempotency keys."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript implementing an idempotency-key payment service. The Node demo below shows a retry with the same key not double-charging, verifying the dedup behavior.",
+      "source": "// Idempotency — safe retries via idempotency keys.\n\n// HTTP semantics: GET, PUT, DELETE are idempotent by definition; POST usually is NOT.\n// To make POST (e.g., \"create payment\") safe to retry, the client sends an idempotency key\n// and the server records the result for that key, returning it on duplicates.\n\n// Express-style middleware sketch:\n//   app.post(\"/payments\", async (req, res) => {\n//     const key = req.header(\"Idempotency-Key\");\n//     const existing = await store.get(key);\n//     if (existing) return res.json(existing);        // duplicate -> same result, no re-charge\n//     const result = await processPayment(req.body);\n//     await store.set(key, result, { ttlSeconds: 86400 });\n//     res.json(result);\n//   });\n\n// Why it matters: networks retry, users double-click, queues redeliver. Idempotency makes\n// \"apply once\" hold even when a request arrives multiple times — preventing double charges,\n// duplicate orders, and duplicate side effects. Store keys with a TTL and scope them per client.\nmodule.exports = {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Idempotency — the same request applied multiple times has the same effect as applying it once\n// Use an idempotency key so retries (network blips, double-clicks) don't double-charge/duplicate.\nclass PaymentService {\n  constructor() { this.processed = new Map(); this.charges = []; }\n  charge(idempotencyKey, amount) {\n    if (this.processed.has(idempotencyKey)) {\n      return this.processed.get(idempotencyKey);   // return the SAME result, don't re-charge\n    }\n    const result = { id: this.charges.length + 1, amount, status: \"charged\" };\n    this.charges.push(result);\n    this.processed.set(idempotencyKey, result);\n    return result;\n  }\n}\nconst pay = new PaymentService();\nconst r1 = pay.charge(\"key-abc\", 100);   // first attempt: charges\nconst r2 = pay.charge(\"key-abc\", 100);   // retry with same key: no double charge\nconst r3 = pay.charge(\"key-xyz\", 100);   // different key: a new charge\nconsole.log(\"First charge:\", r1);\nconsole.log(\"Retry (same key):\", r2);\nconsole.log(\"Total real charges:\", pay.charges.length);\nconsole.assert(r1.id === r2.id, \"same key returns the same charge (idempotent)\");\nconsole.assert(pay.charges.length === 2, \"two distinct keys -> two charges, retries deduped\");\nconsole.log(\"Idempotency: repeating an operation yields the same result/state as doing it once.\");\nconsole.log(\"Implement with idempotency keys; GET/PUT/DELETE are naturally idempotent, POST usually isn't.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "First charge: { id: 1, amount: 100, status: 'charged' }\nRetry (same key): { id: 1, amount: 100, status: 'charged' }\nTotal real charges: 2\nIdempotency: repeating an operation yields the same result/state as doing it once.\nImplement with idempotency keys; GET/PUT/DELETE are naturally idempotent, POST usually isn't.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

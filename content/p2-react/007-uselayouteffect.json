@@ -1,0 +1,68 @@
+{
+  "id": "p2-007",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 7,
+  "orderInPhase": 7,
+  "slug": "uselayouteffect",
+  "title": "useLayoutEffect",
+  "difficulty": "beginner",
+  "tags": [
+    "p2",
+    "uselayouteffect"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A tooltip that must appear above a button needs to measure the button and tooltip sizes, then position itself — all before paint, so users never see it flash…"
+  },
+  "sections": {
+    "simple_en": "useLayoutEffect has the same signature as useEffect but runs synchronously after the DOM is mutated and before the browser paints. This lets you read layout (measure size/position) and make DOM changes that the user will see without a flicker.\n\nBecause it blocks painting, overusing it can hurt performance. Reach for it only when you must measure or adjust the DOM before the user sees the frame; otherwise prefer useEffect, which runs after paint and doesn't block rendering.",
+    "hinglish": "useLayoutEffect ka signature useEffect jaisa hi hai, par ye DOM update hone ke baad aur browser paint hone se pehle synchronously chalta hai. Isse aap size/position measure karke flicker ke bina DOM adjust kar sakte ho.\n\nKyunki ye paint ko block karta hai, zyada use karna performance kharab karta hai. Sirf tab use karo jab paint se pehle measure ya adjust karna zaroori ho, warna useEffect hi behtar hai.",
+    "keyPoints": [
+      "Runs synchronously after DOM mutations, before the browser paints the frame.",
+      "useEffect runs asynchronously after paint — that's the key timing difference.",
+      "Use useLayoutEffect to measure DOM (getBoundingClientRect) and adjust before the user sees it.",
+      "It blocks painting, so prefer useEffect unless you have a visible flicker problem.",
+      "On the server it does nothing useful and warns — guard SSR code or use useEffect there."
+    ],
+    "real_world": "A tooltip that must appear above a button needs to measure the button and tooltip sizes, then position itself — all before paint, so users never see it flash in the wrong spot. That measure-then-position step is the classic useLayoutEffect case.",
+    "followups": [
+      {
+        "q": "What's the difference between useEffect and useLayoutEffect?",
+        "a": "useLayoutEffect runs synchronously before paint (good for measuring/positioning); useEffect runs asynchronously after paint (good for most side effects and better for performance)."
+      },
+      {
+        "q": "Why does useLayoutEffect warn during SSR?",
+        "a": "There's no layout to measure on the server. React can't run layout effects there, so it warns; move the logic to useEffect or guard it for the client."
+      },
+      {
+        "q": "Can overusing useLayoutEffect hurt performance?",
+        "a": "Yes — because it blocks painting, heavy work delays the visible frame. Use it sparingly and only when timing before paint matters."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// useLayoutEffect: measure the DOM and position a tooltip BEFORE paint\n// so the user never sees it flash in the wrong spot.\nimport React, { useLayoutEffect, useRef, useState } from \"react\";\n\nexport default function Tooltip({ children }) {\n  const ref = useRef(null);\n  const [top, setTop] = useState(0);\n\n  useLayoutEffect(() => {\n    // Runs synchronously after DOM mutation, before browser paints.\n    const rect = ref.current.getBoundingClientRect();\n    setTop(-rect.height - 8); // place tooltip above the element\n  }, [children]);\n\n  return (\n    <div ref={ref} style={{ position: \"absolute\", top }} className=\"tooltip\">\n      {children}\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// useLayoutEffect vs useEffect — execution ordering relative to paint\nconst timeline = [];\nfunction commitPhase() {\n  timeline.push(\"DOM mutated\");\n  timeline.push(\"useLayoutEffect (sync, before paint)\");\n  timeline.push(\"BROWSER PAINT\");\n  // passive effects flushed after paint\n  setTimeout(() => {\n    timeline.push(\"useEffect (async, after paint)\");\n    timeline.forEach((t, i) => console.log(`${i + 1}. ${t}`));\n    console.assert(timeline.indexOf(\"useLayoutEffect (sync, before paint)\") <\n                   timeline.indexOf(\"BROWSER PAINT\"), \"layout effect runs before paint\");\n    console.assert(timeline.indexOf(\"BROWSER PAINT\") <\n                   timeline.indexOf(\"useEffect (async, after paint)\"), \"effect runs after paint\");\n    console.log(\"All assertions passed.\");\n  }, 0);\n}\ncommitPhase();",
+      "expectedOutput": "1. DOM mutated\n2. useLayoutEffect (sync, before paint)\n3. BROWSER PAINT\n4. useEffect (async, after paint)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

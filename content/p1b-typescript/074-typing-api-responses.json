@@ -1,0 +1,66 @@
+{
+  "id": "p1b-074",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 74,
+  "orderInPhase": 74,
+  "slug": "typing-api-responses",
+  "title": "Typing API Responses",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "typing",
+    "api",
+    "responses"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A typed `getJSON<User[]>(\"/api/users\")` returns `Promise<User[]>`, so the component mapping over the result has fully-typed users — and a schema check at the…"
+  },
+  "sections": {
+    "simple_en": "Since `fetch`/JSON return `any`/`unknown`, you should type API responses explicitly so the rest of the app works with known shapes. A common pattern is a generic wrapper type and a typed fetch helper that returns `Promise<T>` for a specific response type.\n\nFor untrusted data, validate at the boundary (with a type guard or a schema library like Zod) so the typed result actually matches reality. Typing responses gives end-to-end safety from the network call to the UI, catching shape mismatches at compile time.",
+    "hinglish": "Kyunki `fetch`/JSON `any`/`unknown` return karte hain, aapko API responses explicitly type karne chahiye taaki baaki app known shapes ke saath kaam kare. Common pattern ek generic wrapper type aur ek typed fetch helper hai jo specific response type ke liye `Promise<T>` return kare.\nUntrusted data ke liye, boundary par validate karo (type guard ya Zod jaisi schema library se) taaki typed result actually reality se match kare. Responses type karna network call se UI tak end-to-end safety deta hai, shape mismatches compile time par pakad kar.",
+    "keyPoints": [
+      "Type responses explicitly — fetch/JSON return any/unknown.",
+      "Use a generic helper returning `Promise<T>` for the expected shape.",
+      "Validate untrusted data at the boundary (type guard or Zod).",
+      "Gives end-to-end type safety from network to UI.",
+      "Define response interfaces close to where data is consumed."
+    ],
+    "real_world": "A typed `getJSON<User[]>(\"/api/users\")` returns `Promise<User[]>`, so the component mapping over the result has fully-typed users — and a schema check at the boundary guards against malformed payloads.",
+    "followups": [
+      {
+        "q": "Why type API responses explicitly?",
+        "a": "Because `fetch`/`JSON.parse` produce `any`/`unknown`. Declaring the expected shape (e.g. via a generic `getJSON<T>`) gives the rest of the app type-safe access instead of untyped data."
+      },
+      {
+        "q": "How do you ensure the typed response matches reality?",
+        "a": "Validate at the boundary with a type guard or a runtime schema validator (like Zod). Static types alone don't check actual data; validation confirms the payload before you trust the type."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// React/fetch usage:\n//\n//   async function getJSON<T>(url: string): Promise<T> {\n//     const res = await fetch(url);\n//     if (!res.ok) throw new Error(\"HTTP \" + res.status);\n//     return res.json() as Promise<T>;\n//   }\n//   const users = await getJSON<User[]>(\"/api/users\");\n//\n// Runnable stand-in: a typed parser over a mocked response.\n\nexport interface User { id: number; name: string; }\n\nexport function parseUsers(json: string): User[] {\n  const data = JSON.parse(json) as unknown;\n  if (!Array.isArray(data)) throw new Error(\"expected array\");\n  return data as User[];\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { parseUsers } from \"./solution\";\n\nconst users = parseUsers('[{\"id\":1,\"name\":\"Asha\"},{\"id\":2,\"name\":\"Ravi\"}]');\nconsole.log(users.map((u) => u.name)); // ['Asha','Ravi']\n\nconsole.assert(users.length === 2 && users[0].name === \"Asha\", \"typed API response parsed\");\nlet threw = false; try { parseUsers('{\"not\":\"array\"}'); } catch { threw = true; }\nconsole.assert(threw, \"boundary validation rejects bad shape\");\nconsole.log(\"typing-api-responses assertions passed.\");",
+      "expectedOutput": "[ 'Asha', 'Ravi' ]\ntyping-api-responses assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1b-042",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 42,
+  "orderInPhase": 42,
+  "slug": "generic-constraints",
+  "title": "Generic Constraints",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "generic",
+    "constraints"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A type-safe `getProperty(obj, key)` constrained with `K extends keyof T` guarantees the key exists on the object and returns the correctly-typed value — impo…"
+  },
+  "sections": {
+    "simple_en": "A generic constraint limits what types a type parameter can be, using `extends`: `<T extends { length: number }>` allows only types that have a `length`. This lets you safely use members of `T` inside the function while still being generic.\n\nWithout a constraint, the compiler knows nothing about `T` and won't let you access its properties. Constraints strike the balance between flexibility and safety, and `keyof` constraints (e.g. `K extends keyof T`) power type-safe property access.",
+    "hinglish": "Generic constraint `extends` se limit karta hai ki type parameter kaunse types ho sakte hain: `<T extends { length: number }>` sirf un types ko allow karta hai jinme `length` ho. Isse aap function ke andar `T` ke members safely use kar sakte ho jabki generic rehte ho.\nConstraint ke bina, compiler `T` ke baare me kuch nahi jaanta aur uski properties access nahi karne deta. Constraints flexibility aur safety ke beech balance laate hain, aur `keyof` constraints (jaise `K extends keyof T`) type-safe property access deते hain.",
+    "keyPoints": [
+      "`<T extends Constraint>` restricts what T can be.",
+      "Lets you safely access members guaranteed by the constraint.",
+      "Without a constraint, T's members are unknown and inaccessible.",
+      "`K extends keyof T` enables type-safe property access by key.",
+      "Balances generic flexibility with member safety."
+    ],
+    "real_world": "A type-safe `getProperty(obj, key)` constrained with `K extends keyof T` guarantees the key exists on the object and returns the correctly-typed value — impossible to call with a misspelled key.",
+    "followups": [
+      {
+        "q": "Why constrain a generic type parameter?",
+        "a": "To safely use members of the type inside the function. `<T extends { length: number }>` guarantees `T` has `length`, so accessing it is type-safe; without the constraint the compiler wouldn't allow it."
+      },
+      {
+        "q": "What does `K extends keyof T` achieve?",
+        "a": "It restricts `K` to the actual property names of `T`, enabling type-safe property access (`obj[key]` returns `T[K]`) and rejecting invalid/misspelled keys at compile time."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — constraints with extends and keyof.\n\nexport function longest<T extends { length: number }>(a: T, b: T): T {\n  return a.length >= b.length ? a : b;\n}\n\nexport function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {\n  return obj[key]; // type-safe: key must be a valid property of T\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { longest, getProperty } from \"./solution\";\n\nconsole.log(longest(\"abc\", \"de\"));         // abc\nconsole.log(longest([1, 2], [3, 4, 5]));   // [3,4,5]\n\nconst user = { id: 1, name: \"Asha\" };\nconsole.log(getProperty(user, \"name\"));    // Asha (typed as string)\nconsole.log(getProperty(user, \"id\"));      // 1    (typed as number)\n// getProperty(user, \"age\"); // compile error: 'age' is not a key of user\n\nconsole.assert(longest(\"abc\", \"de\") === \"abc\", \"constraint allows .length\");\nconsole.assert(JSON.stringify(longest([1,2],[3,4,5])) === \"[3,4,5]\", \"works for arrays too\");\nconsole.assert(getProperty(user, \"name\") === \"Asha\", \"keyof constraint\");\nconsole.log(\"generic-constraints assertions passed.\");",
+      "expectedOutput": "abc\n[ 3, 4, 5 ]\nAsha\n1\ngeneric-constraints assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

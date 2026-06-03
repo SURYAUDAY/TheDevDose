@@ -1,0 +1,69 @@
+{
+  "id": "p2-025",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 25,
+  "orderInPhase": 25,
+  "slug": "lazy-loading",
+  "title": "Lazy loading",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "lazy",
+    "loading"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An e-commerce app lazy-loads the checkout flow and the admin dashboard — most shoppers never open admin, so its code never downloads for them."
+  },
+  "sections": {
+    "simple_en": "Lazy loading defers loading code or resources until they're actually needed, shrinking the initial bundle and speeding up first load. In React, React.lazy(() => import('./Comp')) turns a dynamic import into a component that loads its code on first render, shown inside a Suspense fallback.\n\nCombined with route-based code splitting, lazy loading means users only download the JavaScript for the page they visit. The same idea applies to images (loading='lazy'), data, and any heavy feature that isn't needed up front.",
+    "hinglish": "Lazy loading code ya resources ko tab tak load nahi karta jab tak zaroorat na ho, jisse initial bundle chhota aur first load fast hota hai. React mein React.lazy(() => import('./Comp')) dynamic import ko ek component bana deta hai jo first render par load hota hai.\n\nRoute-based code splitting ke saath, user sirf usi page ka JavaScript download karta hai jahan wo jaata hai. Yahi idea images, data aur kisi bhi heavy feature par bhi lagta hai.",
+    "keyPoints": [
+      "Defer loading until needed; reduces the initial bundle and improves first-load time.",
+      "React.lazy(() => import('./Comp')) creates a component loaded on first render.",
+      "Must be rendered inside a <Suspense> boundary to show a fallback while loading.",
+      "Route-level lazy loading downloads only the visited page's code.",
+      "The chunk is fetched once, then cached by the browser/module system for reuse."
+    ],
+    "real_world": "An e-commerce app lazy-loads the checkout flow and the admin dashboard — most shoppers never open admin, so its code never downloads for them. The landing page bundle stays tiny, and checkout code arrives only when a user actually starts buying.",
+    "followups": [
+      {
+        "q": "What must wrap a React.lazy component?",
+        "a": "A <Suspense> boundary with a fallback, so React has something to show while the lazily imported chunk downloads."
+      },
+      {
+        "q": "Does the lazy chunk download every time?",
+        "a": "No. After the first load it's cached by the module system/browser, so subsequent renders use the already-loaded code."
+      },
+      {
+        "q": "Where does lazy loading help most?",
+        "a": "Large, rarely-used, or route-specific features — admin panels, modals, heavy editors — where keeping them out of the initial bundle noticeably speeds first load."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Lazy loading: route-level code splitting with React.lazy + Suspense.\nimport React, { Suspense, lazy } from \"react\";\nimport { Routes, Route } from \"react-router-dom\";\n\nconst Home = lazy(() => import(\"./pages/Home\"));\nconst Checkout = lazy(() => import(\"./pages/Checkout\"));\nconst Admin = lazy(() => import(\"./pages/Admin\")); // most users never load this\n\nexport default function App() {\n  return (\n    <Suspense fallback={<div>Loading page…</div>}>\n      <Routes>\n        <Route path=\"/\" element={<Home />} />\n        <Route path=\"/checkout\" element={<Checkout />} />\n        <Route path=\"/admin\" element={<Admin />} />\n      </Routes>\n    </Suspense>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Lazy loading — dynamic import resolved on demand, cached after first load\nlet networkFetches = 0;\nconst moduleCache = new Map();\nfunction dynamicImport(name){\n  if (moduleCache.has(name)) return Promise.resolve(moduleCache.get(name));\n  networkFetches++;\n  const mod = { default: () => `<${name} />` };\n  moduleCache.set(name, mod);\n  return Promise.resolve(mod);\n}\nasync function loadAndRender(name){ const m = await dynamicImport(name); return m.default(); }\n\n(async () => {\n  console.log(await loadAndRender(\"Chart\"));   // fetched\n  console.log(await loadAndRender(\"Chart\"));   // cached, no new fetch\n  console.log(await loadAndRender(\"Map\"));     // fetched\n  console.log(\"Network fetches:\", networkFetches);\n  console.assert(networkFetches === 2, \"each module fetched once\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "<Chart />\n<Chart />\n<Map />\nNetwork fetches: 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

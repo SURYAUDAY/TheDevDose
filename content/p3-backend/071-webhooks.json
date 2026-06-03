@@ -1,0 +1,68 @@
+{
+  "id": "p3-071",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 71,
+  "orderInPhase": 71,
+  "slug": "webhooks",
+  "title": "Webhooks",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "webhooks"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "Stripe POSTs a 'payment.succeeded' webhook to your /webhooks endpoint."
+  },
+  "sections": {
+    "simple_en": "A webhook is how one service notifies another of an event by making an HTTP request to a URL you register — the inverse of polling. Instead of you repeatedly asking 'has the payment succeeded?', the provider POSTs to your endpoint the moment it does. Webhooks power integrations like payment confirmations, CI build results, and chat events.\n\nReceiving them securely requires verifying a signature: the sender signs the payload with a shared secret (HMAC), and you recompute and compare it (in constant time) on the raw body to reject forgeries. Also respond quickly with a 2xx (do heavy work asynchronously) and handle retries idempotently, since senders re-deliver if they don't get a prompt success.",
+    "hinglish": "Webhook wo tarika hai jisse ek service doosri ko event ke baare mein notify karti hai aapke register kiye URL par HTTP request karke — polling ka ulta. Baar-baar 'payment succeed hua?' poochhne ke bajaye, provider hote hi aapke endpoint par POST karta hai. Webhooks payment confirmations, CI build results, chat events jaise integrations chalate hain.\n\nInhe securely receive karne ke liye signature verify karni padti hai: sender payload ko ek shared secret se sign karta hai (HMAC), aur aap raw body par use recompute karke (constant time mein) compare karte ho taaki forgeries reject hon. Saath hi jaldi 2xx se respond karo (heavy kaam asynchronously) aur retries ko idempotently handle karo, kyunki prompt success na milne par senders dobara deliver karte hain.",
+    "keyPoints": [
+      "Provider POSTs to your URL when an event happens — the inverse of polling.",
+      "Verify the HMAC signature on the RAW body (constant-time compare).",
+      "Respond fast with 2xx; do heavy work asynchronously (enqueue).",
+      "Handle retries idempotently (dedupe by event id).",
+      "Uses: payment events, CI results, chat/integration events."
+    ],
+    "real_world": "Stripe POSTs a 'payment.succeeded' webhook to your /webhooks endpoint. You verify its HMAC signature against your webhook secret, ignore the event if you've already processed its id (idempotency), fulfill the order, and return 200 quickly — so Stripe doesn't retry. A forged request with a bad signature is rejected with 401.",
+    "followups": [
+      {
+        "q": "How do you secure a webhook endpoint?",
+        "a": "Verify the signature the sender includes — recompute an HMAC of the raw payload with the shared secret and compare in constant time. Reject mismatches. Also restrict by IP/HTTPS where possible."
+      },
+      {
+        "q": "Why must webhook handlers be idempotent?",
+        "a": "Senders retry on timeouts or non-2xx responses, so the same event can arrive multiple times. Dedupe by the event id and make processing safe to repeat to avoid double-charging or duplicate actions."
+      },
+      {
+        "q": "Webhooks vs polling?",
+        "a": "Polling repeatedly asks for changes (wasteful, delayed); webhooks push notifications the instant an event occurs (efficient, near real-time). Webhooks shift the work to the event source."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express webhook code (raw body + HMAC). The Node-runnable demo below verifies signatures and idempotent replay using Node's real crypto, so tampering is provably rejected.",
+      "source": "// Webhooks — receive and verify a signed webhook (Stripe-style).\nconst express = require(\"express\");\nconst crypto = require(\"crypto\");\nconst app = express();\n\nconst WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;\nconst processed = new Set(); // for idempotency (use a DB/Redis in production)\n\n// Use the RAW body for signature verification (not parsed JSON).\napp.post(\"/webhooks/payments\",\n  express.raw({ type: \"application/json\" }),\n  (req, res) => {\n    const signature = req.header(\"x-signature\");\n    const expected = crypto.createHmac(\"sha256\", WEBHOOK_SECRET)\n      .update(req.body).digest(\"hex\");\n\n    // Constant-time comparison to prevent timing attacks.\n    const valid = signature && signature.length === expected.length &&\n      crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));\n    if (!valid) return res.status(401).send(\"invalid signature\");\n\n    const event = JSON.parse(req.body.toString());\n    if (processed.has(event.id)) return res.status(200).send(\"duplicate\"); // idempotent\n    processed.add(event.id);\n\n    handleEvent(event);          // do the work (ideally enqueue, then 200 fast)\n    res.status(200).send(\"ok\");  // respond quickly so the sender doesn't retry\n  });\n\nfunction handleEvent(event) { /* ... */ }\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Webhooks — verify an incoming webhook's HMAC signature + idempotency\nconst crypto = require(\"crypto\");\nconst SECRET = \"whsec_test\";\nfunction sign(payload){ return crypto.createHmac(\"sha256\", SECRET).update(payload).digest(\"hex\"); }\n\nconst processedIds = new Set();\nfunction receiveWebhook(rawBody, signatureHeader){\n  const expected = sign(rawBody);\n  const a = Buffer.from(signatureHeader || \"\"), b = Buffer.from(expected);\n  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return { status: 401, error: \"bad signature\" };\n  const event = JSON.parse(rawBody);\n  if (processedIds.has(event.id)) return { status: 200, note: \"duplicate ignored (idempotent)\" };\n  processedIds.add(event.id);\n  return { status: 200, handled: event.type };\n}\nconst body = JSON.stringify({ id: \"evt_1\", type: \"payment.succeeded\" });\nconst sig = sign(body);\nconsole.log(\"Valid webhook:\", JSON.stringify(receiveWebhook(body, sig)));\nconsole.log(\"Replay (same id):\", JSON.stringify(receiveWebhook(body, sig)));\nconsole.log(\"Forged signature:\", JSON.stringify(receiveWebhook(body, \"deadbeef\")));\nconsole.assert(receiveWebhook(body, \"deadbeef\").status === 401, \"bad signature rejected\");\nconsole.log(\"Webhooks: verify the signature, respond 2xx fast, and handle retries idempotently.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Valid webhook: {\"status\":200,\"handled\":\"payment.succeeded\"}\nReplay (same id): {\"status\":200,\"note\":\"duplicate ignored (idempotent)\"}\nForged signature: {\"status\":401,\"error\":\"bad signature\"}\nWebhooks: verify the signature, respond 2xx fast, and handle retries idempotently.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "p2-024",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 24,
+  "orderInPhase": 24,
+  "slug": "suspense",
+  "title": "Suspense",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "suspense"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A dashboard lazy-loads a heavy analytics panel: const Analytics = React.lazy(() => import('./Analytics'))."
+  },
+  "sections": {
+    "simple_en": "Suspense lets a component 'wait' for something (like lazily loaded code or data) and show a fallback UI until it's ready. You wrap part of your tree in <Suspense fallback={...}>; if a child suspends, React shows the fallback instead of a broken or empty UI.\n\nThe most common use today is with React.lazy for code splitting. Data-fetching with Suspense is supported by frameworks and modern data libraries (and React Server Components), where a resource throws a promise that Suspense catches until it resolves.",
+    "hinglish": "Suspense kisi component ko kisi cheez ka 'wait' karne deta hai (jaise lazy code ya data) aur tab tak fallback UI dikhata hai. Aap tree ka hissa <Suspense fallback={...}> mein wrap karte ho; child suspend hone par React fallback dikha deta hai.\n\nAaj sabse common use React.lazy ke saath code splitting ke liye hai. Data fetching ke liye Suspense frameworks aur modern data libraries (aur Server Components) ke saath chalta hai.",
+    "keyPoints": [
+      "<Suspense fallback={<Spinner/>}> shows the fallback while a child is suspending.",
+      "A component suspends by throwing a promise; React renders the fallback until it resolves.",
+      "Primary use: React.lazy code splitting; data fetching needs framework/library support.",
+      "You can nest Suspense boundaries for granular loading states across a page.",
+      "Pairs with transitions to avoid jarring fallback flashes during updates."
+    ],
+    "real_world": "A dashboard lazy-loads a heavy analytics panel: const Analytics = React.lazy(() => import('./Analytics')). Wrapping it in <Suspense fallback={<Skeleton/>}> shows a skeleton while the chunk downloads, then swaps in the real panel — no blank screen.",
+    "followups": [
+      {
+        "q": "How does a component 'suspend'?",
+        "a": "It throws a promise during render. React catches it, shows the nearest Suspense fallback, and re-renders the subtree once the promise resolves."
+      },
+      {
+        "q": "What's Suspense most used for today?",
+        "a": "Code splitting with React.lazy. Suspense for data fetching is increasingly common via frameworks (e.g., Next.js) and Server Components, but isn't something you wire up by hand with plain fetch."
+      },
+      {
+        "q": "Why nest multiple Suspense boundaries?",
+        "a": "To give different parts of the UI independent loading states, so one slow section doesn't make the whole page wait behind a single fallback."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Suspense: show a fallback while a lazy component loads.\nimport React, { Suspense, lazy } from \"react\";\n\nconst Analytics = lazy(() => import(\"./Analytics\")); // code-split chunk\n\nfunction Skeleton() {\n  return <div className=\"skeleton\">Loading analytics…</div>;\n}\n\nexport default function Dashboard() {\n  return (\n    <div>\n      <h1>Dashboard</h1>\n      <Suspense fallback={<Skeleton />}>\n        <Analytics />\n      </Suspense>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Suspense — a resource that \"suspends\" (throws a promise) then resolves\nfunction wrapPromise(promise){\n  let status = \"pending\", result;\n  const suspender = promise.then(r => { status = \"success\"; result = r; },\n                                 e => { status = \"error\"; result = e; });\n  return { read(){\n    if (status === \"pending\") throw suspender;   // Suspense catches this\n    if (status === \"error\") throw result;\n    return result;\n  }};\n}\nfunction renderWithSuspense(resource){\n  try { return \"Content: \" + resource.read(); }\n  catch (p) { if (p.then){ return \"Fallback: Loading...\"; } throw p; }\n}\nconst resource = wrapPromise(Promise.resolve(\"User profile loaded\"));\nconsole.log(renderWithSuspense(resource));   // pending -> fallback\nsetTimeout(() => {\n  console.log(renderWithSuspense(resource)); // resolved -> content\n  console.assert(renderWithSuspense(resource).startsWith(\"Content\"), \"should resolve\");\n  console.log(\"All assertions passed.\");\n}, 0);",
+      "expectedOutput": "Fallback: Loading...\nContent: User profile loaded\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

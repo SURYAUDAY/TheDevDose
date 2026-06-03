@@ -1,0 +1,65 @@
+{
+  "id": "p1a-047",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 47,
+  "orderInPhase": 47,
+  "slug": "array-flat-flatmap",
+  "title": "Array.flat() / flatMap()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "array.flat",
+    "flatmap"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Splitting sentences into words: `sentences.flatMap(s => s.split(' '))` turns an array of strings into a single flat array of words — no nested arrays to clea…"
+  },
+  "sections": {
+    "simple_en": "`flat(depth)` creates a new array with sub-array elements concatenated up to the specified depth (default 1). `arr.flat(Infinity)` fully flattens any level of nesting. It's the clean modern replacement for manual recursion or `concat`-based flattening.\n\n`flatMap(fn)` is `map` followed by a single-level `flat` — it maps each element and then flattens one level, in one efficient pass. It's handy when each item can expand into zero, one, or many results.",
+    "hinglish": "`flat(depth)` ek naya array banata hai jisme sub-array elements specified depth tak concatenate ho jaate hain (default 1). `arr.flat(Infinity)` kisi bhi level ki nesting poori flatten kar deta hai. Ye manual recursion ya `concat` flattening ka saaf modern replacement hai.\n`flatMap(fn)` matlab `map` ke baad ek single-level `flat` — har element ko map karta hai phir ek level flatten, ek efficient pass me. Tab useful jab har item zero, ek, ya kai results me expand ho sakta hai.",
+    "keyPoints": [
+      "`flat(depth=1)` flattens nested arrays up to `depth`; `flat(Infinity)` flattens fully.",
+      "Returns a new array; original unchanged.",
+      "`flatMap(fn)` = map then flatten ONE level, in a single pass.",
+      "flatMap is great when a mapper returns arrays (expand items).",
+      "`flat` also removes empty slots in sparse arrays."
+    ],
+    "real_world": "Splitting sentences into words: `sentences.flatMap(s => s.split(' '))` turns an array of strings into a single flat array of words — no nested arrays to clean up afterward.",
+    "followups": [
+      {
+        "q": "How do you fully flatten a deeply nested array?",
+        "a": "Use `arr.flat(Infinity)`, which flattens every level of nesting regardless of depth."
+      },
+      {
+        "q": "What is flatMap equivalent to?",
+        "a": "`arr.map(fn).flat(1)` — it maps then flattens one level, but in a single, more efficient pass. It only flattens one level, not deeply."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// flat and flatMap.\n\nfunction flattenAll(nested) {\n  return nested.flat(Infinity);\n}\n\nfunction wordsOf(sentences) {\n  return sentences.flatMap((s) => s.split(\" \"));\n}\n\nfunction expandPairs(nums) {\n  // each number expands into [n, n*10]\n  return nums.flatMap((n) => [n, n * 10]);\n}\n\nmodule.exports = { flattenAll, wordsOf, expandPairs };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { flattenAll, wordsOf, expandPairs } = require(\"./solution\");\n\nconsole.log(flattenAll([1, [2, [3, [4]]]]));        // [1,2,3,4]\nconsole.log(wordsOf([\"hello world\", \"foo bar\"]));    // ['hello','world','foo','bar']\nconsole.log(expandPairs([1, 2]));                    // [1,10,2,20]\n\nconsole.assert(JSON.stringify(flattenAll([1,[2,[3,[4]]]])) === \"[1,2,3,4]\", \"deep flat\");\nconsole.assert(JSON.stringify(wordsOf([\"a b\",\"c\"])) === '[\"a\",\"b\",\"c\"]', \"flatMap split\");\nconsole.assert(JSON.stringify(expandPairs([1,2])) === \"[1,10,2,20]\", \"flatMap expand\");\nconsole.log(\"flat/flatMap assertions passed.\");",
+      "expectedOutput": "[ 1, 2, 3, 4 ]\n[ 'hello', 'world', 'foo', 'bar' ]\n[ 1, 10, 2, 20 ]\nflat/flatMap assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

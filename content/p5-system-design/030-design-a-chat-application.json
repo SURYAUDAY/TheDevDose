@@ -1,0 +1,70 @@
+{
+  "id": "p5-030",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 30,
+  "orderInPhase": 30,
+  "slug": "design-a-chat-application",
+  "title": "Design a chat application",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "design",
+    "chat",
+    "application"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "In a team chat, when Asha posts in #general, the server immediately pushes her message over WebSockets to Ravi and Mira (but not back to Asha), and saves it…"
+  },
+  "sections": {
+    "simple_en": "A chat application's core is delivering messages to the right recipients in real time. The basic model is rooms (or conversations) with members; when someone sends a message, the server fans it out to every other member — in a real system, pushing it over a persistent connection like a WebSocket rather than waiting for clients to poll.\n\nBeyond the core, a production chat needs a persistent message store (history), presence (who's online), delivery and read receipts, and a pub/sub layer so messages reach users connected to different servers. The fan-out-on-send pattern keeps delivery fast; group and broadcast scale considerations build on top of it.",
+    "hinglish": "Ek chat application ka core hai sahi recipients tak real time mein messages deliver karna. Basic model hai rooms (ya conversations) jisme members hon; jab koi message bhejta hai, server use har doosre member tak fan-out karta hai — ek real system mein, use ek persistent connection jaise WebSocket par push karke clients ke poll karne ka wait karne ke bajaye.\n\nCore ke alawa, ek production chat ko chahiye ek persistent message store (history), presence (kaun online hai), delivery aur read receipts, aur ek pub/sub layer taaki messages alag servers se connected users tak pahunchein. Fan-out-on-send pattern delivery ko fast rakhta hai; group aur broadcast scale considerations iske upar build hote hain.",
+    "keyPoints": [
+      "Core: rooms/conversations with members; deliver messages to recipients.",
+      "Fan-out on send: push the message to every other member.",
+      "Use WebSockets (persistent push) rather than client polling.",
+      "Add a persistent message store, presence, delivery/read receipts.",
+      "A pub/sub layer routes messages across multiple servers at scale."
+    ],
+    "real_world": "In a team chat, when Asha posts in #general, the server immediately pushes her message over WebSockets to Ravi and Mira (but not back to Asha), and saves it to history so anyone who was offline sees it later — the fan-out-on-send pattern in action.",
+    "followups": [
+      {
+        "q": "Why use WebSockets for chat?",
+        "a": "They provide a persistent, bidirectional connection so the server can push messages instantly, rather than clients repeatedly polling for new messages. This gives the low-latency, real-time delivery chat requires."
+      },
+      {
+        "q": "What does 'fan-out on send' mean?",
+        "a": "When a message is sent, the server immediately distributes (fans it out) to all recipients/members of the conversation. It's the core delivery step; at scale a pub/sub layer fans out across servers."
+      },
+      {
+        "q": "What else does a production chat need?",
+        "a": "Persistent message storage for history, presence/online status, delivery and read receipts, ordering and deduplication, and horizontal scaling via a pub/sub system so users on different servers still receive messages."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript modeling rooms, members, and fan-out-on-send to member inboxes. The Node demo below sends a message and verifies members receive it while the sender doesn't.",
+      "source": "// Design a chat application — delivery model and scaling.\n\n// Core: rooms (channels) with members; on send, fan-out the message to members' connections.\n// Real-time transport: WebSocket (or SSE) keeps a persistent connection so the server can PUSH.\n\n// HLD:\n//   client <--WebSocket--> chat server(s) <--pub/sub--> other chat servers\n//                                |\n//                          message store (history), presence store\n//\n//   - Persist every message (e.g., Cassandra/DynamoDB by (room, timestamp)) for history/scrollback.\n//   - Use a pub/sub layer (Redis Pub/Sub, Kafka) so a message sent on server A reaches users\n//     connected to server B (horizontal scale).\n//   - Track presence (online/typing), delivery + read receipts, and unread counts.\n//   - For 1:1 vs group, fan-out differs; very large groups may fan-out on read.\n\n// This file documents the design; the runnable demo simulates the room + fan-out delivery.\nmodule.exports = {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Design a chat application — deliver messages to room members (fan-out on send)\nclass ChatServer {\n  constructor() { this.rooms = new Map(); this.inboxes = new Map(); }\n  join(user, room) {\n    if (!this.rooms.has(room)) this.rooms.set(room, new Set());\n    this.rooms.get(room).add(user);\n    if (!this.inboxes.has(user)) this.inboxes.set(user, []);\n  }\n  send(from, room, text) {\n    const msg = { from, room, text, ts: Date.now() };\n    // Fan-out: deliver to every member's inbox except the sender (real apps push over WebSocket).\n    for (const member of this.rooms.get(room) || [])\n      if (member !== from) this.inboxes.get(member).push(msg);\n    return msg;\n  }\n  inbox(user) { return this.inboxes.get(user) || []; }\n}\nconst chat = new ChatServer();\nchat.join(\"Asha\", \"general\"); chat.join(\"Ravi\", \"general\"); chat.join(\"Mira\", \"general\");\nchat.send(\"Asha\", \"general\", \"Hi everyone!\");\nconsole.log(\"Ravi's inbox:\", chat.inbox(\"Ravi\").map((m) => `${m.from}: ${m.text}`));\nconsole.log(\"Asha's inbox (sender, none):\", chat.inbox(\"Asha\").length);\nconsole.assert(chat.inbox(\"Ravi\")[0].text === \"Hi everyone!\", \"members receive the message\");\nconsole.assert(chat.inbox(\"Asha\").length === 0, \"sender doesn't receive own message\");\nconsole.log(\"Chat design: rooms with members; on send, fan-out the message to members (push via WebSocket).\");\nconsole.log(\"At scale: persistent message store, presence, delivery/read receipts, and a pub/sub layer across servers.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Ravi's inbox: [ 'Asha: Hi everyone!' ]\nAsha's inbox (sender, none): 0\nChat design: rooms with members; on send, fan-out the message to members (push via WebSocket).\nAt scale: persistent message store, presence, delivery/read receipts, and a pub/sub layer across servers.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

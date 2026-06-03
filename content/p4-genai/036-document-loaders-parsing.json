@@ -1,0 +1,70 @@
+{
+  "id": "p4-036",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 36,
+  "orderInPhase": 36,
+  "slug": "document-loaders-parsing",
+  "title": "Document loaders & parsing",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "document",
+    "loaders",
+    "parsing"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A RAG system over a company's mixed knowledge base uses different loaders for PDFs (one Document per page), the support wiki (HTML), and a product CSV (one D…"
+  },
+  "sections": {
+    "simple_en": "Document loaders read source files — PDFs, HTML pages, CSVs, Word docs, Notion exports, and more — and parse them into a common Document structure of text plus metadata (source, page, type). This normalization is the first step of a RAG pipeline, letting all downstream stages stay format-agnostic.\n\nParsing quality matters a lot: messy extraction (garbled PDF text, lost tables, leftover markup) produces poor chunks, embeddings, and retrieval. Good loaders preserve clean text and useful metadata you can later filter on. The principle is 'garbage in, garbage out' — careful loading and parsing underpin everything that follows.",
+    "hinglish": "Document loaders source files padhte hain — PDFs, HTML pages, CSVs, Word docs, Notion exports, aur zyada — aur unhe ek common Document structure mein parse karte hain jo text plus metadata (source, page, type) hai. Ye normalization RAG pipeline ka pehla step hai, jo saare downstream stages ko format-agnostic rehne deta hai.\n\nParsing quality bahut matter karti hai: messy extraction (garbled PDF text, lost tables, leftover markup) kharab chunks, embeddings, aur retrieval produce karta hai. Achhe loaders clean text aur useful metadata preserve karte hain jis par aap baad mein filter kar sako. Principle hai 'garbage in, garbage out' — careful loading aur parsing baaki sab ka aadhaar hain.",
+    "keyPoints": [
+      "Read varied sources (PDF/HTML/CSV/Docx/...) into Document objects.",
+      "Normalize to text + metadata (source, page, type).",
+      "First step of RAG; keeps downstream stages format-agnostic.",
+      "Parsing quality drives chunk/embedding/retrieval quality.",
+      "Preserve clean text and useful metadata for later filtering."
+    ],
+    "real_world": "A RAG system over a company's mixed knowledge base uses different loaders for PDFs (one Document per page), the support wiki (HTML), and a product CSV (one Document per row) — all normalized into the same Document shape so chunking and embedding treat them uniformly.",
+    "followups": [
+      {
+        "q": "What does a document loader produce?",
+        "a": "Document objects containing the parsed text (page_content) and metadata (source, page number, type), normalized across formats so the rest of the pipeline doesn't care about the original file type."
+      },
+      {
+        "q": "Why does parsing quality matter so much?",
+        "a": "Poorly extracted text (garbled PDFs, lost structure) leads to bad chunks, weak embeddings, and irrelevant retrieval. Clean parsing is the foundation of good RAG — garbage in, garbage out."
+      },
+      {
+        "q": "What metadata is useful to capture?",
+        "a": "Source/filename, page or section, document type, dates, and any tags — so you can later filter retrieval (e.g., only this product's docs) and cite where an answer came from."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain document-loader code. The Python-runnable demo below parses txt/markdown/CSV into normalized Document objects so the loading step is verifiable here.",
+      "source": "# Document loaders & parsing — turn varied files into clean text (LangChain loaders).\nfrom langchain_community.document_loaders import (\n    PyPDFLoader, TextLoader, CSVLoader, WebBaseLoader,\n)\n\n# Each loader returns a list of Document objects: .page_content (text) + .metadata.\ndef load_any(path: str):\n    if path.endswith(\".pdf\"):\n        return PyPDFLoader(path).load()        # one Document per page\n    if path.endswith(\".csv\"):\n        return CSVLoader(path).load()          # one Document per row\n    if path.startswith(\"http\"):\n        return WebBaseLoader(path).load()      # fetch + strip HTML\n    return TextLoader(path).load()\n\n# docs = load_any(\"handbook.pdf\")\n# print(docs[0].page_content[:200], docs[0].metadata)\n\n# Clean parsing is foundational: bad extraction (broken tables, headers/footers, OCR\n# errors) leads to bad chunks and poor retrieval. Inspect parsed output before indexing.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Document loaders & parsing — extract clean text from varied formats into a common shape\ndef load_txt(content): return content.strip()\ndef load_csv(content):\n    rows = [line.split(\",\") for line in content.strip().splitlines()]\n    header, *data = rows\n    return \"\\n\".join(\", \".join(f\"{h}={c}\" for h, c in zip(header, row)) for row in data)\ndef load_html(content):\n    import re\n    text = re.sub(r\"<[^>]+>\", \" \", content)        # strip tags\n    return re.sub(r\"\\s+\", \" \", text).strip()\n\nLOADERS = {\"txt\": load_txt, \"csv\": load_csv, \"html\": load_html}\ndef load(filename, content):\n    ext = filename.rsplit(\".\", 1)[-1]\n    text = LOADERS[ext](content)\n    return {\"source\": filename, \"text\": text}        # common Document shape\n\ndocs = [\n    load(\"notes.txt\", \"  Hello world  \"),\n    load(\"people.csv\", \"name,role\\nAsha,dev\\nRavi,pm\"),\n    load(\"page.html\", \"<h1>Title</h1><p>Body text</p>\"),\n]\nfor d in docs:\n    print(f\"{d['source']:11} -> {d['text']!r}\")\nassert docs[0][\"text\"] == \"Hello world\"\nassert \"name=Asha\" in docs[1][\"text\"] and \"role=dev\" in docs[1][\"text\"] and \"<\" not in docs[2][\"text\"]\nprint(\"Loaders read PDFs, DOCX, HTML, CSV, etc., and normalize them into clean text + metadata.\")\nprint(\"Clean parsing is critical: garbage in (bad extraction) means garbage retrieval later.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "notes.txt   -> 'Hello world'\npeople.csv  -> 'name=Asha, role=dev\\nname=Ravi, role=pm'\npage.html   -> 'Title Body text'\nLoaders read PDFs, DOCX, HTML, CSV, etc., and normalize them into clean text + metadata.\nClean parsing is critical: garbage in (bad extraction) means garbage retrieval later.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

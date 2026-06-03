@@ -1,0 +1,70 @@
+{
+  "id": "p2-010",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 10,
+  "orderInPhase": 10,
+  "slug": "controlled-vs-uncontrolled-components",
+  "title": "Controlled vs uncontrolled components",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "controlled",
+    "uncontrolled",
+    "components"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "A signup form that disables the submit button until the email looks valid and shows a live password-strength meter must be controlled — React needs the value…"
+  },
+  "sections": {
+    "simple_en": "A controlled component keeps its form value in React state: the input's value comes from state and every change goes through an onChange handler. React is the single source of truth, which makes validation, conditional disabling, and formatting straightforward.\n\nAn uncontrolled component lets the DOM hold the value; you read it with a ref only when needed (e.g., on submit). It's simpler for basic forms and integrates with non-React code, but you lose React's instant insight into the value.",
+    "hinglish": "Controlled component apni value React state mein rakhta hai: input ki value state se aati hai aur har change onChange se hota hai. React single source of truth hota hai, isliye validation aur formatting easy ho jaati hai.\n\nUncontrolled component value DOM mein rakhta hai; aap ref se sirf zaroorat par padhte ho (jaise submit par). Simple forms ke liye aasaan hai par React ko har waqt value ka pata nahi hota.",
+    "keyPoints": [
+      "Controlled: value={state} + onChange handler; React state is the source of truth.",
+      "Uncontrolled: value lives in the DOM; read it via a ref (defaultValue sets the initial value).",
+      "Controlled enables live validation, formatting, and conditional logic on every keystroke.",
+      "Uncontrolled is lighter and good for simple forms or integrating with non-React widgets.",
+      "Don't mix value and defaultValue on the same input — pick one model."
+    ],
+    "real_world": "A signup form that disables the submit button until the email looks valid and shows a live password-strength meter must be controlled — React needs the value on every keystroke. A simple 'upload a file' field is naturally uncontrolled because file inputs are read-only in React.",
+    "followups": [
+      {
+        "q": "Which should you default to?",
+        "a": "Controlled, for most forms — it gives you validation, formatting, and consistent behavior. Reach for uncontrolled when the form is trivial or you must integrate with the DOM/third-party code."
+      },
+      {
+        "q": "How do you set an initial value on an uncontrolled input?",
+        "a": "Use the defaultValue (or defaultChecked) prop. value would make it controlled."
+      },
+      {
+        "q": "Why are file inputs usually uncontrolled?",
+        "a": "Their value is read-only for security reasons; you can't set it from React, so you read the selected file via a ref."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Controlled (React state) vs Uncontrolled (DOM + ref) inputs.\nimport React, { useState, useRef } from \"react\";\n\nexport default function FormExample() {\n  // Controlled: React owns the value, validate on every keystroke.\n  const [email, setEmail] = useState(\"\");\n  const emailValid = email.includes(\"@\");\n\n  // Uncontrolled: the DOM owns the value, read it only on submit.\n  const fileRef = useRef(null);\n\n  const handleSubmit = () => {\n    console.log(\"Email:\", email);\n    console.log(\"File:\", fileRef.current.files[0]?.name);\n  };\n\n  return (\n    <div>\n      <input\n        value={email}\n        onChange={(e) => setEmail(e.target.value)}\n        placeholder=\"Email\"\n      />\n      {!emailValid && email && <span>Enter a valid email</span>}\n\n      <input type=\"file\" ref={fileRef} />\n      <button onClick={handleSubmit} disabled={!emailValid}>Submit</button>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Controlled vs Uncontrolled inputs\n// Controlled: value lives in React state (single source of truth)\nlet state = { value: \"\" };\nfunction onChangeControlled(e){ state.value = e.target.value; }   // state drives UI\nonChangeControlled({ target: { value: \"He\" } });\nonChangeControlled({ target: { value: \"Hello\" } });\nconsole.log(\"Controlled state value:\", state.value);\n\n// Uncontrolled: value lives in the DOM node, read via ref only when needed\nconst domNode = { value: \"\" };\nconst inputRef = { current: domNode };\ninputRef.current.value = \"World\";          // DOM holds the truth\nconsole.log(\"Uncontrolled ref value (read on submit):\", inputRef.current.value);\n\nconsole.assert(state.value === \"Hello\", \"controlled tracks every keystroke\");\nconsole.assert(inputRef.current.value === \"World\", \"uncontrolled read from DOM\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Controlled state value: Hello\nUncontrolled ref value (read on submit): World\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

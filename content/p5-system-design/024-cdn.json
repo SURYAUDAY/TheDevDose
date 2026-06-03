@@ -1,0 +1,68 @@
+{
+  "id": "p5-024",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 24,
+  "orderInPhase": 24,
+  "slug": "cdn",
+  "title": "CDN",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "cdn"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A global app's logo and JavaScript load instantly for a user in Mumbai because a nearby CDN edge has them cached."
+  },
+  "sections": {
+    "simple_en": "A CDN (Content Delivery Network) caches static content — images, JavaScript, CSS, video — on edge servers physically close to users around the world. When a user requests an asset, the nearby edge serves it (fast) instead of the distant origin server, dramatically cutting latency and reducing load on the origin.\n\nThe first request to a given edge is a cache miss that fetches from origin; after that, that edge serves the asset directly. CDNs also improve availability and absorb traffic spikes. The main thing to manage is cache invalidation and TTLs — ensuring updated assets reach users rather than serving stale versions from the edge.",
+    "hinglish": "Ek CDN (Content Delivery Network) static content — images, JavaScript, CSS, video — ko edge servers par cache karta hai jo duniya bhar mein users ke physically close hote hain. Jab ek user ek asset request karta hai, paas wala edge use serve karta hai (fast) door wale origin server ke bajaye, latency ko dramatically kam karke aur origin par load kam karke.\n\nEk diye gaye edge par pehli request ek cache miss hai jo origin se fetch karti hai; uske baad, wo edge asset ko directly serve karta hai. CDNs availability bhi improve karte hain aur traffic spikes absorb karte hain. Main cheez jo manage karni hai wo hai cache invalidation aur TTLs — ye ensure karna ki updated assets users tak pahunchein, edge se stale versions serve karne ke bajaye.",
+    "keyPoints": [
+      "Caches static assets on edge servers close to users.",
+      "Edge serves assets fast instead of the distant origin.",
+      "First request per edge misses (fetch origin), then caches.",
+      "Cuts latency, reduces origin load, improves availability.",
+      "Manage cache invalidation and TTLs to avoid stale assets."
+    ],
+    "real_world": "A global app's logo and JavaScript load instantly for a user in Mumbai because a nearby CDN edge has them cached. Only the first visitor to that edge triggered a fetch from the origin in another country; everyone after is served locally.",
+    "followups": [
+      {
+        "q": "What does a CDN cache and why?",
+        "a": "Static, cacheable content — images, CSS, JS, video — stored on edge servers near users. Serving from a nearby edge cuts latency and offloads the origin, improving speed and availability."
+      },
+      {
+        "q": "How does a CDN reduce origin load?",
+        "a": "After the first request populates an edge cache, subsequent requests in that region are served from the edge, never reaching the origin. The origin only handles cache misses and dynamic content."
+      },
+      {
+        "q": "What's the main challenge with CDNs?",
+        "a": "Cache invalidation — ensuring updated assets propagate so users don't get stale versions. Teams handle this with TTLs, cache-busting (versioned filenames/hashes), and explicit purges."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript modeling edge caches per region with origin fallback. The Node demo below shows an origin miss then edge hits per region, verifying origin hits happen once per edge.",
+      "source": "// CDN — cache static content at edge locations near users (lower latency, less origin load).\n\n// Without a CDN: every user fetches assets from your origin server (far away = slow).\n// With a CDN: assets are cached at edge POPs worldwide; users hit the nearest edge.\n//\n//   User (Mumbai) --> CDN edge (Mumbai)  [cache hit: ~10ms]\n//                         |-- miss --> Origin (us-east)  [~200ms, then cached at edge]\n\n// Setup is mostly configuration: serve assets via the CDN domain and set cache headers.\n//   // Express: long cache for fingerprinted static files\n//   app.use(\"/static\", express.static(\"public\", {\n//     setHeaders: (res) => res.set(\"Cache-Control\", \"public, max-age=31536000, immutable\"),\n//   }));\n\n// Use a CDN for images, JS/CSS bundles, fonts, and video. Use content hashes in filenames\n// (app.abc123.js) so you can cache \"forever\" and bust the cache by changing the filename.\n// CDNs also absorb traffic spikes and add DDoS protection. Watch out for cache invalidation.\nexport {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CDN — cache static assets at edge locations near users to cut latency and origin load\nclass CDN {\n  constructor(origin) { this.origin = origin; this.edges = new Map(); this.originHits = 0; }\n  fetch(asset, edge) {\n    const cache = this.edges.get(edge) || new Map();\n    if (cache.has(asset)) return { from: `edge:${edge}`, latencyMs: 10 };   // edge cache hit\n    const data = this.origin[asset];                                        // miss -> origin\n    this.originHits++;\n    cache.set(asset, data); this.edges.set(edge, cache);\n    return { from: \"origin\", latencyMs: 200 };\n  }\n}\nconst cdn = new CDN({ \"logo.png\": \"<bytes>\" });\nconsole.log(\"User in Mumbai, 1st fetch:\", cdn.fetch(\"logo.png\", \"mumbai\"));  // origin (slow)\nconsole.log(\"User in Mumbai, 2nd fetch:\", cdn.fetch(\"logo.png\", \"mumbai\")); // edge (fast)\nconsole.log(\"User in London, 1st fetch:\", cdn.fetch(\"logo.png\", \"london\")); // origin once per edge\nconsole.log(\"Total origin hits:\", cdn.originHits);\nconsole.assert(cdn.fetch(\"logo.png\", \"mumbai\").from.startsWith(\"edge\"), \"served from edge after caching\");\nconsole.assert(cdn.originHits === 2, \"origin hit once per edge, then cached\");\nconsole.log(\"A CDN caches static content (images, JS, CSS, video) at edge servers close to users.\");\nconsole.log(\"Benefits: lower latency, less origin load, better availability. Mind cache invalidation and TTLs.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "User in Mumbai, 1st fetch: { from: 'origin', latencyMs: 200 }\nUser in Mumbai, 2nd fetch: { from: 'edge:mumbai', latencyMs: 10 }\nUser in London, 1st fetch: { from: 'origin', latencyMs: 200 }\nTotal origin hits: 2\nA CDN caches static content (images, JS, CSS, video) at edge servers close to users.\nBenefits: lower latency, less origin load, better availability. Mind cache invalidation and TTLs.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

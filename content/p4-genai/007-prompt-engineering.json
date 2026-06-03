@@ -1,0 +1,69 @@
+{
+  "id": "p4-007",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 7,
+  "orderInPhase": 7,
+  "slug": "prompt-engineering",
+  "title": "Prompt Engineering",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "prompt",
+    "engineering"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Instead of 'tell me about dogs', a product team prompts: 'You are a veterinarian."
+  },
+  "sections": {
+    "simple_en": "Prompt engineering is the practice of crafting inputs to get reliable, high-quality outputs from an LLM. Since the model's behavior depends heavily on how you ask, good prompts provide role/context, state the task specifically, define the desired output format, and often include examples.\n\nKey techniques include assigning a role ('You are an expert...'), giving clear constraints, specifying structure (JSON, bullet list, length), showing few-shot examples, and asking for step-by-step reasoning when needed. It's iterative: you test, observe failures, and refine. Strong prompting often beats more complex solutions for getting consistent results.",
+    "hinglish": "Prompt engineering inputs craft karne ki practice hai taaki LLM se reliable, high-quality outputs milein. Kyunki model ka behavior is par bahut depend karta hai ki aap kaise poochhte ho, achhe prompts role/context dete hain, task specifically batate hain, desired output format define karte hain, aur aksar examples include karte hain.\n\nKey techniques: role assign karna ('You are an expert...'), clear constraints dena, structure specify karna (JSON, bullet list, length), few-shot examples dikhana, aur zaroorat par step-by-step reasoning maangna. Ye iterative hai: aap test karte ho, failures observe karte ho, aur refine karte ho. Strong prompting aksar consistent results ke liye zyada complex solutions se behtar hoti hai.",
+    "keyPoints": [
+      "Crafting inputs to reliably get high-quality LLM outputs.",
+      "Provide role/context, a specific task, and the desired output format.",
+      "Techniques: roles, constraints, examples (few-shot), step-by-step reasoning.",
+      "Iterative: test, observe failures, refine.",
+      "Often beats more complex solutions for consistent results."
+    ],
+    "real_world": "Instead of 'tell me about dogs', a product team prompts: 'You are a veterinarian. Give 3 specific care tips for a Labrador puppy as a numbered list, each under 15 words.' The structured, role-based prompt yields consistent, usable output every time.",
+    "followups": [
+      {
+        "q": "What makes a prompt effective?",
+        "a": "Clarity and specificity: a defined role/context, an explicit task, output-format constraints, and often examples. Vague prompts get vague, inconsistent answers."
+      },
+      {
+        "q": "What are common prompt-engineering techniques?",
+        "a": "Role assignment, clear constraints, output-format specification, few-shot examples, chain-of-thought ('think step by step'), and decomposition of complex tasks into steps."
+      },
+      {
+        "q": "Is prompt engineering a one-time task?",
+        "a": "No — it's iterative. You test prompts against real cases, observe failure modes, and refine wording, examples, and structure to improve reliability."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI prompting code (needs an API key). The Python-runnable demo below scores prompt quality so the difference between vague and engineered prompts is verifiable here.",
+      "source": "# Prompt Engineering — structure prompts with role, context, task, and format.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef engineered_prompt(topic: str) -> str:\n    system = \"You are an expert technical writer who is clear and concise.\"\n    user = f\"\"\"Task: Explain \"{topic}\" to a beginner.\nConstraints:\n- Use at most 3 sentences.\n- Avoid jargon; if you must use a term, define it.\n- End with a one-line analogy.\nFormat: plain text, no headings.\"\"\"\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        messages=[{\"role\": \"system\", \"content\": system}, {\"role\": \"user\", \"content\": user}],\n    )\n    return response.choices[0].message.content\n\n# Effective prompts: set a role, give context, state the task precisely, specify the\n# output format and constraints, and (often) include examples. Iterate and measure.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Prompt Engineering — clearer, more specific prompts yield better results\ndef score_prompt(prompt):\n    s = 0\n    if len(prompt) > 20: s += 1                              # has detail\n    if any(w in prompt.lower() for w in (\"specific\", \"format\", \"json\", \"list\", \"steps\")): s += 1  # output spec\n    if \"example\" in prompt.lower() or \"e.g.\" in prompt.lower(): s += 1   # examples\n    if any(w in prompt.lower() for w in (\"you are\", \"act as\", \"role\")): s += 1   # role/persona\n    if prompt.strip().endswith(\"?\") or \":\" in prompt: s += 1  # clear ask\n    return s\n\nvague = \"tell me about dogs\"\ngood = (\"You are a veterinarian. List 3 specific care tips for a Labrador puppy, \"\n        \"in a numbered list. Example tip: 'Feed puppy-formula food 3x/day.'\")\nprint(f\"Vague prompt score: {score_prompt(vague)}/5 -> {vague!r}\")\nprint(f\"Engineered prompt score: {score_prompt(good)}/5\")\nassert score_prompt(good) > score_prompt(vague), \"a well-engineered prompt scores higher\"\nprint(\"Good prompts: give role/context, be specific, specify output format, and show examples.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Vague prompt score: 0/5 -> 'tell me about dogs'\nEngineered prompt score: 5/5\nGood prompts: give role/context, be specific, specify output format, and show examples.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

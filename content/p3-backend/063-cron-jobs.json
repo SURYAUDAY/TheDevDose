@@ -1,0 +1,69 @@
+{
+  "id": "p3-063",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 63,
+  "orderInPhase": 63,
+  "slug": "cron-jobs",
+  "title": "Cron jobs",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "cron",
+    "jobs"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A SaaS app schedules '30 2 * * *' to purge expired sessions every night at 2:30, and '0 9 * * 1' to email a weekly summary every Monday at 9am."
+  },
+  "sections": {
+    "simple_en": "Cron jobs are tasks that run automatically on a schedule — every hour, nightly at 2:30, every Monday morning. The schedule is expressed in cron syntax (minute, hour, day-of-month, month, day-of-week), and a scheduler triggers the job whenever the current time matches.\n\nTypical uses are recurring maintenance: cleaning up expired data, sending periodic reports, refreshing caches, and backups. In Node you can use node-cron in-process, or rely on the system cron or a managed scheduler. A key caveat: in multi-instance deployments, ensure only one instance runs each job (via a lock) to avoid duplicate execution.",
+    "hinglish": "Cron jobs aise tasks hain jo schedule par automatically chalte hain — har ghante, raat 2:30 baje, har Monday subah. Schedule cron syntax mein hota hai (minute, hour, day-of-month, month, day-of-week), aur scheduler job trigger karta hai jab current time match kare.\n\nTypical uses recurring maintenance hain: expired data cleanup, periodic reports, cache refresh, aur backups. Node mein aap node-cron in-process use kar sakte ho, ya system cron ya managed scheduler par depend kar sakte ho. Ek key caveat: multi-instance deployments mein ensure karo har job sirf ek instance chalaye (lock se) taaki duplicate execution na ho.",
+    "keyPoints": [
+      "Run tasks on a recurring schedule via cron syntax.",
+      "Fields: minute, hour, day-of-month, month, day-of-week.",
+      "Uses: cleanup, periodic reports, cache refresh, backups.",
+      "node-cron (in-process), system cron, or a managed scheduler.",
+      "In multi-instance setups, use a lock so only one instance runs each job."
+    ],
+    "real_world": "A SaaS app schedules '30 2 * * *' to purge expired sessions every night at 2:30, and '0 9 * * 1' to email a weekly summary every Monday at 9am. The schedule lives in code, runs unattended, and uses a distributed lock so only one server executes it.",
+    "followups": [
+      {
+        "q": "What do the five cron fields mean?",
+        "a": "Minute, hour, day-of-month, month, and day-of-week. An asterisk means 'every', so '30 2 * * *' runs at 02:30 every day."
+      },
+      {
+        "q": "What's the risk of cron jobs in a multi-instance deployment?",
+        "a": "Every instance running node-cron would execute the job multiple times. Use a distributed lock (or an external scheduler) so exactly one instance runs each scheduled task."
+      },
+      {
+        "q": "In-process cron vs system/managed scheduler?",
+        "a": "In-process (node-cron) is simple but tied to your app's uptime and instances. System cron or a managed scheduler decouples scheduling from the app and avoids duplicate runs across instances."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real node-cron code. The Node-runnable demo below matches a cron spec against a time so the scheduling logic is verifiable here.",
+      "source": "// Cron jobs — schedule recurring tasks with node-cron.\nconst cron = require(\"node-cron\");\n\n// Fields: minute hour day-of-month month day-of-week\n// Run every day at 02:30 — e.g., clean up expired sessions.\ncron.schedule(\"30 2 * * *\", async () => {\n  await deleteExpiredSessions();\n  console.log(\"Cleaned expired sessions\");\n});\n\n// Run every hour on the hour — e.g., refresh a cache.\ncron.schedule(\"0 * * * *\", async () => {\n  await refreshLeaderboardCache();\n});\n\n// Every Monday at 09:00 — weekly report.\ncron.schedule(\"0 9 * * 1\", async () => {\n  await sendWeeklyReport();\n}, { timezone: \"Asia/Kolkata\" });\n\nasync function deleteExpiredSessions() {}\nasync function refreshLeaderboardCache() {}\nasync function sendWeeklyReport() {}\n// For multi-instance deployments, ensure only ONE instance runs the job\n// (use a distributed lock) or use an external scheduler.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Cron jobs — scheduled tasks; match a simple cron spec against a time\n// Fields: minute hour (0=any via '*'). We'll support '*' and exact numbers.\nfunction matches(field, value){ return field === \"*\" || Number(field) === value; }\nfunction shouldRun(cron, time){\n  const [min, hour] = cron.split(\" \");\n  return matches(min, time.minute) && matches(hour, time.hour);\n}\nconst daily230am = \"30 2\";   // “at 02:30 every day”\nconst everyHourOnTheHour = \"0 *\";\nconsole.log(\"02:30 -> daily 2:30 job:\", shouldRun(daily230am, { minute: 30, hour: 2 }));\nconsole.log(\"03:30 -> daily 2:30 job:\", shouldRun(daily230am, { minute: 30, hour: 3 }));\nconsole.log(\"14:00 -> hourly job:\", shouldRun(everyHourOnTheHour, { minute: 0, hour: 14 }));\nconsole.log(\"14:05 -> hourly job:\", shouldRun(everyHourOnTheHour, { minute: 5, hour: 14 }));\nconsole.assert(shouldRun(daily230am, { minute: 30, hour: 2 }), \"fires at scheduled time\");\nconsole.assert(!shouldRun(daily230am, { minute: 30, hour: 3 }), \"doesn't fire otherwise\");\nconsole.log(\"Use node-cron / a scheduler for recurring tasks (cleanup, reports, backups).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "02:30 -> daily 2:30 job: true\n03:30 -> daily 2:30 job: false\n14:00 -> hourly job: true\n14:05 -> hourly job: false\nUse node-cron / a scheduler for recurring tasks (cleanup, reports, backups).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

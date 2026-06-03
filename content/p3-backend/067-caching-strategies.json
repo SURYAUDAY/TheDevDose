@@ -1,0 +1,69 @@
+{
+  "id": "p3-067",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 67,
+  "orderInPhase": 67,
+  "slug": "caching-strategies",
+  "title": "Caching strategies",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "caching",
+    "strategies"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A product page reads from Redis first; on a miss it queries Postgres and caches the result for 5 minutes."
+  },
+  "sections": {
+    "simple_en": "Caching stores frequently accessed data in a fast layer (like Redis or memory) to avoid repeating expensive work — database queries, computations, API calls — cutting latency and load. The main strategies differ in how the cache is populated and kept consistent.\n\nCache-aside (lazy loading) is most common: the app checks the cache, and on a miss reads the source and populates the cache. Write-through writes to cache and database together (fresh but slower writes); write-back writes to cache first and flushes later (fast but riskier). The hard parts are invalidation (avoiding stale data) and choosing a TTL that balances freshness against hit rate.",
+    "hinglish": "Caching frequently accessed data ko ek fast layer (jaise Redis ya memory) mein store karta hai taaki mehengaa kaam dobara na ho — database queries, computations, API calls — latency aur load kam karke. Main strategies is mein farak rakhti hain ki cache kaise populate aur consistent rakha jaata hai.\n\nCache-aside (lazy loading) sabse common hai: app cache check karta hai, aur miss par source padh kar cache populate karta hai. Write-through cache aur database saath likhta hai (fresh par slow writes); write-back pehle cache likhta hai aur baad mein flush karta hai (fast par risky). Mushkil hisse hain invalidation (stale data se bachna) aur aisa TTL choose karna jo freshness aur hit rate balance kare.",
+    "keyPoints": [
+      "Store hot data in a fast layer to skip expensive repeated work.",
+      "Cache-aside (lazy): check cache, on miss load source then populate.",
+      "Write-through: write cache + DB together (fresh, slower writes).",
+      "Write-back: write cache first, flush later (fast, riskier).",
+      "Hard parts: invalidation (stale data) and TTL selection."
+    ],
+    "real_world": "A product page reads from Redis first; on a miss it queries Postgres and caches the result for 5 minutes. Most reads become instant cache hits. When a product is updated, the app invalidates that cache key so users don't see stale prices — the classic cache-aside pattern.",
+    "followups": [
+      {
+        "q": "What is cache-aside (lazy loading)?",
+        "a": "The application checks the cache first; on a miss it loads from the source (DB) and stores the result in the cache. Only requested data is cached, populated on demand."
+      },
+      {
+        "q": "Why is cache invalidation hard?",
+        "a": "Keeping cached data consistent with the source is tricky — you must invalidate or update entries on writes, handle race conditions, and pick TTLs. Stale data and thundering-herd misses are common pitfalls."
+      },
+      {
+        "q": "Write-through vs write-back?",
+        "a": "Write-through updates cache and database together, keeping them consistent at the cost of slower writes. Write-back updates the cache first and persists later — faster but risks data loss if the cache fails before flushing."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Redis cache-aside code (with invalidation). The Node-runnable demo below verifies hits/misses with TTL so the behavior is verifiable here.",
+      "source": "// Caching strategies — cache-aside with Redis, plus invalidation on write.\nconst { createClient } = require(\"redis\");\nconst redis = createClient();\nconst TTL = 300; // seconds\n\n// CACHE-ASIDE (lazy loading): check cache, fall back to DB, then populate.\nasync function getProduct(id, db) {\n  const key = `product:${id}`;\n  const cached = await redis.get(key);\n  if (cached) return JSON.parse(cached);          // HIT\n\n  const product = await db.findProduct(id);       // MISS -> read source\n  await redis.set(key, JSON.stringify(product), { EX: TTL }); // populate\n  return product;\n}\n\n// On update, invalidate (or rewrite) the cache to avoid stale reads.\nasync function updateProduct(id, data, db) {\n  const product = await db.updateProduct(id, data);\n  await redis.del(`product:${id}`);               // invalidate\n  // (write-through alternative: set the new value here instead of deleting)\n  return product;\n}\n\n// Strategies: cache-aside (lazy), write-through, write-back. The hard parts\n// are invalidation and choosing a TTL that balances freshness vs hit rate.\nmodule.exports = { getProduct, updateProduct };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Caching strategies — cache-aside (lazy) with TTL; measure hits/misses\nfunction createCacheAside(ttl){\n  const cache = new Map(); let hits = 0, misses = 0;\n  async function get(key, loader, now){\n    const rec = cache.get(key);\n    if (rec && rec.exp > now){ hits++; return rec.value; }          // HIT\n    misses++;                                                        // MISS -> load from source\n    const value = await loader(key);\n    cache.set(key, { value, exp: now + ttl });                      // populate cache\n    return value;\n  }\n  return { get, stats: () => ({ hits, misses }) };\n}\n(async () => {\n  const cache = createCacheAside(100);\n  let dbReads = 0;\n  const loadUser = async (id) => { dbReads++; return { id, name: \"User\" + id }; };\n  await cache.get(\"user:1\", loadUser, 0);    // miss -> DB\n  await cache.get(\"user:1\", loadUser, 10);   // hit  -> cache\n  await cache.get(\"user:1\", loadUser, 20);   // hit\n  await cache.get(\"user:1\", loadUser, 150);  // expired -> miss -> DB\n  console.log(\"DB reads:\", dbReads, \"| cache stats:\", JSON.stringify(cache.stats()));\n  console.assert(dbReads === 2 && cache.stats().hits === 2, \"cache served repeated reads\");\n  console.log(\"Strategies: cache-aside (lazy), write-through, write-back. Watch invalidation & TTL.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "DB reads: 2 | cache stats: {\"hits\":2,\"misses\":2}\nStrategies: cache-aside (lazy), write-through, write-back. Watch invalidation & TTL.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

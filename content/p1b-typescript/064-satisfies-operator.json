@@ -1,0 +1,65 @@
+{
+  "id": "p1b-064",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 64,
+  "orderInPhase": 64,
+  "slug": "satisfies-operator",
+  "title": "satisfies Operator",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "satisfies",
+    "operator"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A theme config `const theme = {...} satisfies Record<string, string>` is validated as a string map yet each key keeps its literal type, so `theme.primary` au…"
+  },
+  "sections": {
+    "simple_en": "The `satisfies` operator (TS 4.9+) checks that an expression conforms to a type WITHOUT widening or changing the expression's own inferred type. You get validation against a constraint while keeping the most specific inferred type.\n\nContrast with a type annotation, which would widen the value to the annotated type. `satisfies` is ideal for config objects: you ensure the object matches a shape (catching missing/extra keys) but still retain the precise literal types for autocomplete and narrowing.",
+    "hinglish": "`satisfies` operator (TS 4.9+) check karta hai ki ek expression ek type ke anuroop hai BINA expression ke apne inferred type ko widen ya change kiye. Aapko ek constraint ke against validation milti hai jabki sabse specific inferred type bana rehta hai.\nType annotation ke विपरीत, jo value ko annotated type me widen kar deti, `satisfies` config objects ke liye ideal hai: aap ensure karte ho ki object ek shape se match kare (missing/extra keys pakad kar) par precise literal types autocomplete aur narrowing ke liye retain karte ho.",
+    "keyPoints": [
+      "`expr satisfies Type` validates against Type without widening expr.",
+      "Keeps the most specific inferred type (literals preserved).",
+      "Catches missing/extra/wrong properties like an annotation would.",
+      "Better than annotation when you want both checking AND narrow types.",
+      "Available since TypeScript 4.9."
+    ],
+    "real_world": "A theme config `const theme = {...} satisfies Record<string, string>` is validated as a string map yet each key keeps its literal type, so `theme.primary` autocompletes and narrows precisely — something a plain annotation would lose.",
+    "followups": [
+      {
+        "q": "How does `satisfies` differ from a type annotation?",
+        "a": "An annotation widens the value to the annotated type. `satisfies` only checks conformance while keeping the expression's own, more specific inferred type (preserving literals and exact keys)."
+      },
+      {
+        "q": "When is `satisfies` especially useful?",
+        "a": "For config/constant objects where you want to validate the overall shape but retain precise literal types for autocomplete, narrowing, and `keyof typeof` derivations."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — satisfies validates without widening.\n\ntype Color = string;\nconst palette = {\n  primary: \"#1f4e79\",\n  danger: \"#d33\",\n} satisfies Record<string, Color>;\n\n// 'palette.primary' keeps its literal type, but the shape was checked.\nexport function getColor(key: keyof typeof palette): string {\n  return palette[key];\n}\n\nexport const keys = Object.keys(palette);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { getColor, keys } from \"./solution\";\n\nconsole.log(getColor(\"primary\")); // #1f4e79\nconsole.log(getColor(\"danger\"));  // #d33\nconsole.log(keys);                // ['primary','danger']\n\nconsole.assert(getColor(\"primary\") === \"#1f4e79\", \"satisfies preserves literal access\");\nconsole.assert(keys.length === 2, \"shape validated, keys intact\");\nconsole.log(\"satisfies assertions passed.\");",
+      "expectedOutput": "#1f4e79\n#d33\n[ 'primary', 'danger' ]\nsatisfies assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

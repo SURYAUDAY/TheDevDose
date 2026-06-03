@@ -1,0 +1,70 @@
+{
+  "id": "p5-036",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 36,
+  "orderInPhase": 36,
+  "slug": "explain-chunking-indexing",
+  "title": "Explain chunking/indexing",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "explain",
+    "chunking",
+    "indexing"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Preparing a 100-page manual for a RAG bot, you split it into ~500-token overlapping chunks and index their embeddings."
+  },
+  "sections": {
+    "simple_en": "Chunking splits documents into smaller, often overlapping pieces before embedding, because retrieval works best on focused passages and chunks must fit the embedding model and leave room in the context window. Overlap between consecutive chunks preserves context so an idea isn't cut in half at a boundary.\n\nIndexing is the step of embedding each chunk once and storing the vectors (typically in a vector DB) so retrieval is fast and repeatable. Together, chunking and indexing prepare your data for RAG: good chunk size and overlap strongly affect retrieval quality, and indexing decouples the expensive embedding work from cheap, repeated queries.",
+    "hinglish": "Chunking documents ko embedding se pehle chhote, aksar overlapping pieces mein split karti hai, kyunki retrieval focused passages par best kaam karti hai aur chunks ko embedding model mein fit hona chahiye aur context window mein room chhodna chahiye. Consecutive chunks ke beech overlap context preserve karta hai taaki ek idea boundary par aadha na kate.\n\nIndexing wo step hai jisme har chunk ko ek baar embed karke vectors store kiye jaate hain (aksar ek vector DB mein) taaki retrieval fast aur repeatable ho. Saath mein, chunking aur indexing aapke data ko RAG ke liye prepare karte hain: achha chunk size aur overlap retrieval quality ko strongly affect karte hain, aur indexing expensive embedding work ko cheap, repeated queries se decouple karta hai.",
+    "keyPoints": [
+      "Chunking splits documents into small (often overlapping) pieces.",
+      "Needed because retrieval favors focused passages with size limits.",
+      "Overlap preserves context so ideas aren't cut at boundaries.",
+      "Indexing embeds each chunk once and stores the vectors (vector DB).",
+      "Chunk size/overlap strongly affect RAG retrieval quality."
+    ],
+    "real_world": "Preparing a 100-page manual for a RAG bot, you split it into ~500-token overlapping chunks and index their embeddings. A question then retrieves just the two or three relevant chunks — not the whole manual — and the overlap ensures a procedure spanning a page break still appears intact in a chunk.",
+    "followups": [
+      {
+        "q": "Why chunk documents for RAG?",
+        "a": "Embeddings and context windows have size limits, and retrieval is more precise on focused passages. Chunking lets you retrieve just the relevant pieces of a long document rather than the whole thing."
+      },
+      {
+        "q": "Why add overlap between chunks?",
+        "a": "So information spanning a boundary isn't split awkwardly across two chunks. Overlap keeps continuity, increasing the chance a complete idea lands within a single retrievable chunk."
+      },
+      {
+        "q": "What does indexing mean here?",
+        "a": "Embedding each chunk once and storing the vectors (usually in a vector DB with an ANN index), so retrieval is fast and you don't re-embed the corpus on every query."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo that splits text into overlapping chunks and builds an index over them, verifying overlap and that every chunk is indexed.",
+      "source": "# Explain chunking/indexing — the RAG ingestion pipeline (LangChain).\nfrom langchain_text_splitters import RecursiveCharacterTextSplitter\nfrom langchain_openai import OpenAIEmbeddings\nfrom langchain_community.vectorstores import FAISS\n\n# Chunking: split documents into focused, overlapping pieces that fit the embedding model\n# and retrieve precisely. Recursive splitting respects natural boundaries (paragraphs/sentences).\nsplitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)\n# chunks = splitter.split_documents(docs)\n\n# Indexing: embed each chunk once and store the vectors (+ text + metadata) in a vector store,\n# so queries reuse the index instead of re-embedding the corpus.\n# index = FAISS.from_documents(chunks, OpenAIEmbeddings())\n# index.save_local(\"faiss_index\")\n\n# Interview definition: chunking breaks documents into retrievable units (with overlap to keep\n# context); indexing embeds and stores those chunks for fast similarity search. Chunk size and\n# overlap strongly affect retrieval quality — too big adds noise, too small loses context.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Explain chunking/indexing — split docs into overlapping chunks, then embed + store them\ndef chunk(text, size, overlap):\n    words = text.split(); chunks = []; start = 0\n    while start < len(words):\n        end = start + size\n        chunks.append(\" \".join(words[start:end]))\n        if end >= len(words): break\n        start = end - overlap           # overlap preserves context across boundaries\n    return chunks\ntext = \" \".join(f\"w{i}\" for i in range(1, 11))   # 10 words\nchunks = chunk(text, size=4, overlap=1)\nfor i, c in enumerate(chunks): print(f\"chunk {i}: {c}\")\n# \"Indexing\" = embed each chunk once and store the vectors for fast retrieval.\nindex = {f\"chunk{i}\": c for i, c in enumerate(chunks)}\nassert chunks[1].split()[0] == chunks[0].split()[-1], \"chunks overlap by 1 word\"\nassert len(index) == len(chunks), \"every chunk is indexed\"\nprint(\"Indexed chunks:\", list(index.keys()))\nprint(\"\\nInterview answer: chunking splits documents into small overlapping pieces so retrieval is\")\nprint(\"focused and fits the model; indexing embeds each chunk once and stores it (in a vector DB) for fast similarity search.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "chunk 0: w1 w2 w3 w4\nchunk 1: w4 w5 w6 w7\nchunk 2: w7 w8 w9 w10\nIndexed chunks: ['chunk0', 'chunk1', 'chunk2']\n\nInterview answer: chunking splits documents into small overlapping pieces so retrieval is\nfocused and fits the model; indexing embeds each chunk once and stores it (in a vector DB) for fast similarity search.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

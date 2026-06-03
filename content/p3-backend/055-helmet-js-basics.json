@@ -1,0 +1,69 @@
+{
+  "id": "p3-055",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 55,
+  "orderInPhase": 55,
+  "slug": "helmet-js-basics",
+  "title": "Helmet.js basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "helmet.js",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A team adds app.use(helmet()) and instantly gains a dozen protective headers — their pages can no longer be framed by other sites (anti-clickjacking), the br…"
+  },
+  "sections": {
+    "simple_en": "Helmet is Express middleware that sets a baseline of HTTP security headers to harden your app against common attacks — with essentially one line, app.use(helmet()). These headers instruct the browser to behave more securely.\n\nKey headers include Content-Security-Policy (restricts where resources/scripts can load from, mitigating XSS), X-Content-Type-Options: nosniff (stops MIME sniffing), X-Frame-Options: DENY (prevents clickjacking via framing), and Strict-Transport-Security (forces HTTPS). Helmet provides sensible defaults you can fine-tune per header.",
+    "hinglish": "Helmet Express middleware hai jo HTTP security headers ka ek baseline set karta hai aapke app ko common attacks se harden karne ke liye — lagbhag ek line mein, app.use(helmet()). Ye headers browser ko zyada securely behave karne ko kehte hain.\n\nKey headers: Content-Security-Policy (resources/scripts kahan se load ho restrict karta hai, XSS mitigate), X-Content-Type-Options: nosniff (MIME sniffing rokta hai), X-Frame-Options: DENY (framing se clickjacking rokta hai), aur Strict-Transport-Security (HTTPS force karta hai). Helmet sensible defaults deta hai jo aap per header tune kar sakte ho.",
+    "keyPoints": [
+      "Express middleware that sets a batch of security headers in one line.",
+      "Content-Security-Policy restricts resource/script origins (anti-XSS).",
+      "X-Content-Type-Options: nosniff stops MIME-type sniffing.",
+      "X-Frame-Options: DENY mitigates clickjacking; HSTS forces HTTPS.",
+      "Sensible defaults; each protection is individually configurable."
+    ],
+    "real_world": "A team adds app.use(helmet()) and instantly gains a dozen protective headers — their pages can no longer be framed by other sites (anti-clickjacking), the browser won't MIME-sniff responses, and a baseline CSP is in place — closing several attack vectors with minimal effort.",
+    "followups": [
+      {
+        "q": "What does Helmet actually do?",
+        "a": "It sets a collection of HTTP response headers (CSP, X-Frame-Options, HSTS, nosniff, and more) that tell browsers to enforce safer behavior, reducing exposure to XSS, clickjacking, and protocol-downgrade attacks."
+      },
+      {
+        "q": "Does Helmet make an app fully secure?",
+        "a": "No — it's one helpful layer. You still need input validation, parameterized queries, proper auth, escaping, and a real CSP. Helmet hardens headers; it doesn't fix application logic."
+      },
+      {
+        "q": "What does X-Frame-Options prevent?",
+        "a": "Clickjacking — it stops other sites from embedding your pages in an iframe to trick users into clicking hidden elements. DENY blocks all framing (CSP frame-ancestors is the modern equivalent)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + helmet code. The Node-runnable demo below lists the security headers helmet sets and what each one does.",
+      "source": "// Helmet.js — set a baseline of security headers in one line.\nconst express = require(\"express\");\nconst helmet = require(\"helmet\");\nconst app = express();\n\napp.use(helmet()); // sets a sensible default set of security headers, including:\n// - Content-Security-Policy        (restrict resource origins; mitigates XSS)\n// - X-Content-Type-Options: nosniff (stop MIME sniffing)\n// - X-Frame-Options: DENY          (anti-clickjacking)\n// - Strict-Transport-Security      (force HTTPS; HSTS)\n// - Referrer-Policy, and more\n\n// You can configure individual protections:\napp.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true }));\napp.use(helmet.frameguard({ action: \"deny\" }));\n\napp.get(\"/\", (req, res) => res.send(\"secured headers\"));\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Helmet.js — set HTTP security headers to harden responses\nfunction helmetHeaders(){\n  return {\n    \"Content-Security-Policy\": \"default-src 'self'\",          // restrict resource origins (anti-XSS)\n    \"X-Content-Type-Options\": \"nosniff\",                       // don't MIME-sniff\n    \"X-Frame-Options\": \"DENY\",                                 // anti-clickjacking\n    \"Strict-Transport-Security\": \"max-age=31536000; includeSubDomains\", // force HTTPS\n    \"Referrer-Policy\": \"no-referrer\",\n    \"X-DNS-Prefetch-Control\": \"off\",\n  };\n}\nconst headers = helmetHeaders();\nObject.entries(headers).forEach(([k, v]) => console.log(`${k}: ${v}`));\nconsole.assert(headers[\"X-Frame-Options\"] === \"DENY\", \"clickjacking protection set\");\nconsole.assert(\"Content-Security-Policy\" in headers, \"CSP set\");\nconsole.log(\"Helmet sets sensible security headers with one app.use(helmet()).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Content-Security-Policy: default-src 'self'\nX-Content-Type-Options: nosniff\nX-Frame-Options: DENY\nStrict-Transport-Security: max-age=31536000; includeSubDomains\nReferrer-Policy: no-referrer\nX-DNS-Prefetch-Control: off\nHelmet sets sensible security headers with one app.use(helmet()).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p3-020",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 20,
+  "orderInPhase": 20,
+  "slug": "mysql-basics",
+  "title": "MySQL basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "mysql",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A WordPress-style CMS stores posts in MySQL."
+  },
+  "sections": {
+    "simple_en": "MySQL is one of the most widely used open-source relational databases, valued for speed, reliability, and a massive ecosystem (it powers much of the web, including the classic LAMP stack). It supports standard SQL, transactions (with the InnoDB engine), and replication for scaling reads.\n\nFrom Node you commonly use the mysql2 driver with a connection pool and ? placeholders for parameterized queries (the driver escapes values to prevent injection). MySQL uses AUTO_INCREMENT for surrogate primary keys and is functionally similar to Postgres for everyday CRUD.",
+    "hinglish": "MySQL sabse zyada use hone wale open-source relational databases mein se ek hai, jo speed, reliability aur bade ecosystem ke liye jaana jaata hai (LAMP stack samet web ka bada hissa isi par chalta hai). Ye standard SQL, transactions (InnoDB engine se), aur read scaling ke liye replication support karta hai.\n\nNode se aam taur par mysql2 driver, connection pool aur ? placeholders (parameterized queries) use karte ho — driver values escape karta hai injection rokne ke liye. MySQL surrogate primary keys ke liye AUTO_INCREMENT use karta hai aur rozana CRUD ke liye Postgres jaisa hi hai.",
+    "keyPoints": [
+      "Widely used open-source relational DB; fast, reliable, huge ecosystem.",
+      "InnoDB engine provides ACID transactions and foreign keys.",
+      "Use the mysql2 driver with a connection pool from Node.",
+      "? placeholders parameterize queries (driver escapes values).",
+      "AUTO_INCREMENT generates surrogate primary keys."
+    ],
+    "real_world": "A WordPress-style CMS stores posts in MySQL. The Node admin service uses mysql2 with pooled connections and ? placeholders to insert and fetch posts, relying on AUTO_INCREMENT ids — a battle-tested setup for content-heavy sites.",
+    "followups": [
+      {
+        "q": "MySQL vs PostgreSQL — a quick distinction?",
+        "a": "Both are solid relational DBs. Postgres is known for standards compliance and advanced features (JSONB, window functions); MySQL for speed, simplicity, and ubiquity. For most CRUD apps either works well."
+      },
+      {
+        "q": "What's the role of the InnoDB engine?",
+        "a": "It's MySQL's default storage engine providing ACID transactions, row-level locking, and foreign key support — essential for reliable, concurrent writes."
+      },
+      {
+        "q": "How does MySQL prevent SQL injection in mysql2?",
+        "a": "By using ? placeholders with parameters; the driver safely escapes the values so they're treated as data, never executable SQL."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real mysql2 code (runs against MySQL). The Node-runnable demo below simulates placeholder queries and AUTO_INCREMENT so the output is verifiable here.",
+      "source": "// MySQL basics — mysql2 with a connection pool and ? placeholders.\nconst mysql = require(\"mysql2/promise\");\n\nconst pool = mysql.createPool({\n  host: process.env.DB_HOST,\n  user: process.env.DB_USER,\n  password: process.env.DB_PASS,\n  database: process.env.DB_NAME,\n  connectionLimit: 10,\n});\n\nasync function createProduct(name, price) {\n  // ? placeholders are escaped by the driver (prevents SQL injection).\n  const [result] = await pool.execute(\n    \"INSERT INTO products (name, price) VALUES (?, ?)\",\n    [name, price]\n  );\n  return result.insertId; // AUTO_INCREMENT id of the new row\n}\n\nasync function findProduct(id) {\n  const [rows] = await pool.execute(\"SELECT * FROM products WHERE id = ?\", [id]);\n  return rows[0];\n}\n\nmodule.exports = { createProduct, findProduct };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// MySQL basics — ? placeholders + AUTO_INCREMENT primary key\nfunction createTable(){\n  let autoIncrement = 0; const rows = [];\n  return {\n    insert(values){ const id = ++autoIncrement; rows.push({ id, ...values }); return { insertId: id, affectedRows: 1 }; },\n    query(sql, params){ // SELECT ... WHERE col = ?\n      const col = sql.match(/WHERE (\\w+) = \\?/)?.[1];\n      return col ? rows.filter(r => r[col] === params[0]) : rows;\n    },\n  };\n}\nconst products = createTable();\nconsole.log(\"Insert 1:\", JSON.stringify(products.insert({ name: \"Phone\" })));\nconsole.log(\"Insert 2:\", JSON.stringify(products.insert({ name: \"Laptop\" })));\nconsole.log(\"Select where name=?:\", JSON.stringify(products.query(\"SELECT * FROM products WHERE name = ?\", [\"Laptop\"])));\nconsole.assert(products.insert({ name: \"Tablet\" }).insertId === 3, \"AUTO_INCREMENT yields next id\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Insert 1: {\"insertId\":1,\"affectedRows\":1}\nInsert 2: {\"insertId\":2,\"affectedRows\":1}\nSelect where name=?: [{\"id\":2,\"name\":\"Laptop\"}]\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

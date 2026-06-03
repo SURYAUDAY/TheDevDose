@@ -1,0 +1,69 @@
+{
+  "id": "p4-028",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 28,
+  "orderInPhase": 28,
+  "slug": "cosine-similarity",
+  "title": "Cosine similarity",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "cosine",
+    "similarity"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A semantic search ranks documents by cosine similarity to the query embedding."
+  },
+  "sections": {
+    "simple_en": "Cosine similarity measures how aligned two vectors are by the cosine of the angle between them. It ranges from 1 (same direction, most similar) through 0 (orthogonal, unrelated) to -1 (opposite). Crucially, it ignores magnitude — only direction matters — which makes it ideal for comparing text embeddings regardless of text length.\n\nIt's the standard metric for embedding similarity in semantic search and RAG. Computationally, for L2-normalized vectors cosine similarity equals the dot product, which is why vector databases often store normalized vectors and use fast inner-product search to find nearest neighbors.",
+    "hinglish": "Cosine similarity maapti hai ki do vectors kitne aligned hain, unke beech ke angle ke cosine se. Ye 1 (same direction, sabse similar) se 0 (orthogonal, unrelated) hote hue -1 (opposite) tak hoti hai. Khaas baat: ye magnitude ignore karti hai — sirf direction matter karti hai — jo use text embeddings compare karne ke liye ideal banata hai chahe text length kuch bhi ho.\n\nYe semantic search aur RAG mein embedding similarity ka standard metric hai. Computationally, L2-normalized vectors ke liye cosine similarity dot product ke barabar hoti hai, isiliye vector databases aksar normalized vectors store karke fast inner-product search use karte hain nearest neighbors dhoondhne ke liye.",
+    "keyPoints": [
+      "Cosine of the angle between vectors: 1 = same, 0 = unrelated, -1 = opposite.",
+      "Ignores magnitude — compares direction/meaning, not length.",
+      "The standard metric for embedding similarity in search/RAG.",
+      "For normalized vectors, cosine similarity == dot product.",
+      "Vector DBs exploit this with fast inner-product search."
+    ],
+    "real_world": "A semantic search ranks documents by cosine similarity to the query embedding. A short FAQ entry and a long article on the same topic both score highly because cosine ignores length and focuses on directional meaning.",
+    "followups": [
+      {
+        "q": "Why use cosine similarity instead of Euclidean distance?",
+        "a": "Cosine focuses on direction (meaning) and ignores magnitude, so texts of different lengths compare fairly. Euclidean distance is sensitive to vector magnitude, which can distort text-embedding comparisons."
+      },
+      {
+        "q": "What does a cosine similarity of 0 mean?",
+        "a": "The vectors are orthogonal — essentially unrelated in meaning. Values near 1 mean very similar; negative values mean opposing direction."
+      },
+      {
+        "q": "How does normalization relate to cosine similarity?",
+        "a": "If vectors are L2-normalized, cosine similarity equals their dot product. Vector DBs store normalized vectors so they can use fast inner-product search as an exact cosine ranking."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real NumPy cosine-similarity code. The Python-runnable demo below computes it for identical, scaled, orthogonal, and opposite vectors so the metric's behavior is verifiable here.",
+      "source": "# Cosine similarity — the standard metric for comparing embeddings.\nimport numpy as np\n\ndef cosine_similarity(a, b) -> float:\n    a, b = np.array(a), np.array(b)\n    return float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b)))\n\n# If vectors are already L2-normalized, cosine similarity is just the dot product:\ndef cosine_normalized(a, b) -> float:\n    return float(np.dot(a, b))\n\n# Cosine measures the angle between vectors (direction), ignoring magnitude:\n#   1.0  = same meaning/direction\n#   0.0  = unrelated (orthogonal)\n#  -1.0  = opposite\n# Vector DBs let you pick the metric (cosine, dot product, or Euclidean/L2).",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Cosine similarity — measure similarity by the angle between vectors (ignores magnitude)\nimport math\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a)); nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n\nsame      = cosine([1, 2, 3], [1, 2, 3])      # identical direction -> 1.0\nscaled    = cosine([1, 2, 3], [2, 4, 6])      # same direction, different magnitude -> 1.0\northog    = cosine([1, 0], [0, 1])            # perpendicular -> 0.0\nopposite  = cosine([1, 0], [-1, 0])           # opposite -> -1.0\nprint(f\"identical:   {same:.2f}\")\nprint(f\"scaled (2x): {scaled:.2f}  (magnitude ignored)\")\nprint(f\"orthogonal:  {orthog:.2f}\")\nprint(f\"opposite:    {opposite:.2f}\")\nassert abs(same - 1.0) < 1e-9 and abs(scaled - 1.0) < 1e-9\nassert abs(orthog) < 1e-9 and abs(opposite + 1.0) < 1e-9\nprint(\"Cosine similarity = cos(angle): 1 = same direction, 0 = unrelated, -1 = opposite.\")\nprint(\"It compares meaning/direction regardless of vector length \\u2014 the standard for embeddings.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "identical:   1.00\nscaled (2x): 1.00  (magnitude ignored)\northogonal:  0.00\nopposite:    -1.00\nCosine similarity = cos(angle): 1 = same direction, 0 = unrelated, -1 = opposite.\nIt compares meaning/direction regardless of vector length — the standard for embeddings.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

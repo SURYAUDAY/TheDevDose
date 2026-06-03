@@ -1,0 +1,64 @@
+{
+  "id": "p1b-046",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 46,
+  "orderInPhase": 46,
+  "slug": "required-t",
+  "title": "Required<T>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "required"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A function takes an optional `Partial<Options>` from users, merges it with defaults, and returns a `Required<Options>` so the rest of the code never has to n…"
+  },
+  "sections": {
+    "simple_en": "`Required<T>` is the opposite of `Partial<T>`: it produces a new type with all of `T`'s properties made REQUIRED, removing every `?`. Use it when you've validated/filled in an object and want to guarantee no optional fields remain.\n\nIt's a mapped type that strips optionality (and, since TS, the implicit `undefined`). A common pattern is to accept a `Partial`/optional config from the caller, merge with defaults, and then treat the result as `Required<Config>` internally.",
+    "hinglish": "`Required<T>` `Partial<T>` ka ulta hai: ye ek naya type banata hai jisme `T` ki saari properties REQUIRED ho jaati hain, har `?` hata kar. Ise tab use karo jab aapne ek object validate/fill kar liya ho aur guarantee chahiye ki koi optional field na bache.\nYe ek mapped type hai jo optionality (aur implicit `undefined`) strip karta hai. Common pattern: caller se `Partial`/optional config lo, defaults ke saath merge karo, phir result ko internally `Required<Config>` ki tarah treat karo.",
+    "keyPoints": [
+      "Makes every property of T required (removes `?`).",
+      "Opposite of Partial<T>.",
+      "Useful after merging defaults to guarantee completeness.",
+      "Implemented as a mapped type removing optionality.",
+      "Helps internal code assume all fields are present."
+    ],
+    "real_world": "A function takes an optional `Partial<Options>` from users, merges it with defaults, and returns a `Required<Options>` so the rest of the code never has to null-check those fields again.",
+    "followups": [
+      {
+        "q": "What does Required<T> do?",
+        "a": "It produces a type where every property of T is required, removing all `?` optional markers — the inverse of Partial<T>."
+      },
+      {
+        "q": "Give a typical use of Required<T>.",
+        "a": "After merging user-supplied optional options with defaults, type the result as `Required<Options>` so downstream code can assume all fields are present without null checks."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Required after merging defaults.\n\ninterface Options {\n  retries?: number;\n  timeout?: number;\n}\n\nconst DEFAULTS: Required<Options> = { retries: 3, timeout: 3000 };\n\nexport function resolveOptions(opts: Options): Required<Options> {\n  return { ...DEFAULTS, ...opts }; // result has no optional fields\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { resolveOptions } from \"./solution\";\n\nconsole.log(resolveOptions({}));                  // { retries: 3, timeout: 3000 }\nconsole.log(resolveOptions({ retries: 5 }));      // { retries: 5, timeout: 3000 }\n\nconst r = resolveOptions({ timeout: 1000 });\nconsole.assert(r.retries === 3 && r.timeout === 1000, \"defaults filled, override applied\");\nconsole.assert(Object.keys(resolveOptions({})).length === 2, \"all required fields present\");\nconsole.log(\"Required assertions passed.\");",
+      "expectedOutput": "{ retries: 3, timeout: 3000 }\n{ retries: 5, timeout: 3000 }\nRequired assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

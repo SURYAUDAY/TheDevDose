@@ -1,0 +1,65 @@
+{
+  "id": "p1b-061",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 61,
+  "orderInPhase": 61,
+  "slug": "infer-infer-basics",
+  "title": "Infer (infer basics)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "infer",
+    "basics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Writing your own `UnwrapPromise<T> = T extends Promise<infer V> ?"
+  },
+  "sections": {
+    "simple_en": "The `infer` keyword, used inside a conditional type's `extends` clause, captures part of a type into a new type variable you can then use. For example `T extends (infer E)[] ? E : never` extracts the element type `E` from an array type.\n\nIt's the key to extracting parts of complex types — array elements, promise values, function return types, parameter types. The built-in `ReturnType`, `Parameters`, and `Awaited` are all implemented with `infer`.",
+    "hinglish": "`infer` keyword, ek conditional type ke `extends` clause ke andar use hota hai, ek type ke hisse ko ek naye type variable me capture karta hai jise aap phir use kar sakte ho. Jaise `T extends (infer E)[] ? E : never` array type se element type `E` extract karta hai.\nYe complex types ke hisse extract karne ki kunji hai — array elements, promise values, function return types, parameter types. Built-in `ReturnType`, `Parameters`, aur `Awaited` sab `infer` se bane hain.",
+    "keyPoints": [
+      "`infer X` captures a type within a conditional's `extends` clause.",
+      "Use the captured `X` in the true branch.",
+      "Extracts array elements, promise values, return/param types.",
+      "Powers ReturnType, Parameters, Awaited internally.",
+      "Only valid inside the `extends` part of a conditional type."
+    ],
+    "real_world": "Writing your own `UnwrapPromise<T> = T extends Promise<infer V> ? V : T` to get the resolved value type of any promise — exactly the pattern the built-in `Awaited` uses.",
+    "followups": [
+      {
+        "q": "What does `infer` do?",
+        "a": "Inside a conditional type's `extends` clause, it captures a portion of the matched type into a new type variable you can use in the result — e.g. extracting an array's element type or a promise's value type."
+      },
+      {
+        "q": "Name a built-in utility implemented with infer.",
+        "a": "`ReturnType`, `Parameters`, and `Awaited` all use `infer` to extract the return type, parameter tuple, and resolved promise value respectively."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — infer to extract inner types.\n\ntype ElementType<T> = T extends (infer E)[] ? E : never;\ntype UnwrapPromise<T> = T extends Promise<infer V> ? V : T;\n\nexport function firstElement<T extends unknown[]>(arr: T): ElementType<T> {\n  return arr[0] as ElementType<T>;\n}\n\nexport async function unwrap<T>(p: Promise<T>): Promise<UnwrapPromise<Promise<T>>> {\n  return await p;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { firstElement, unwrap } from \"./solution\";\n\nconsole.log(firstElement([10, 20, 30])); // 10\nconsole.log(firstElement([\"a\", \"b\"]));   // a\n\n(async () => {\n  const v = await unwrap(Promise.resolve(42));\n  console.log(v); // 42\n  console.assert(firstElement([10, 20]) === 10, \"infer element type\");\n  console.assert(v === 42, \"infer promise value\");\n  console.log(\"infer assertions passed.\");\n})();",
+      "expectedOutput": "10\na\n42\ninfer assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

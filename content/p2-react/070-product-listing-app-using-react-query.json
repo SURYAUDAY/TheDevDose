@@ -1,0 +1,72 @@
+{
+  "id": "p2-070",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 70,
+  "orderInPhase": 70,
+  "slug": "product-listing-app-using-react-query",
+  "title": "Product Listing App using React Query",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "product",
+    "listing",
+    "app",
+    "react",
+    "query"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A shop page loads products once via React Query and caches them."
+  },
+  "sections": {
+    "simple_en": "A product listing app fetches a catalog from an API and lets users filter and sort it. React Query is a natural fit: useQuery handles fetching, caching, loading and error states, and background refetching, so the component focuses on presentation and the filter/sort logic.\n\nBecause the data is cached by query key, navigating away and back is instant, and multiple components needing the same products share one request. Filtering and sorting are derived from the cached data on the client (or pushed to the server via query params for large datasets).",
+    "hinglish": "Product listing app ek catalog API se fetch karta hai aur users ko filter/sort karne deta hai. React Query yahan perfect hai: useQuery fetching, caching, loading/error states, aur background refetch handle karta hai, isliye component presentation aur filter/sort logic par focus karta hai.\n\nData query key se cached hota hai, isliye navigate karke wapas aana instant hai, aur same products chahne wale kai components ek hi request share karte hain. Filtering/sorting cached data se client par derive hoti hai (ya bade datasets ke liye server params se).",
+    "keyPoints": [
+      "useQuery fetches the catalog with caching, loading/error states, and refetch.",
+      "Cached by query key — revisits are instant and requests are deduped.",
+      "Filter/sort derived from cached data on the client for small sets.",
+      "For large datasets, push filtering/sorting/pagination to the server via params.",
+      "Keeps components focused on UI while React Query owns server state."
+    ],
+    "real_world": "A shop page loads products once via React Query and caches them. Users switch category filters and price sorting instantly because it all works off the cached list — no refetch — and returning from a product detail page shows the list immediately from cache.",
+    "followups": [
+      {
+        "q": "Why use React Query for a product list?",
+        "a": "It removes manual fetch/loading/error/caching boilerplate, dedupes requests, caches by key for instant revisits, and refetches stale data in the background."
+      },
+      {
+        "q": "Should filtering happen on the client or server?",
+        "a": "For small datasets, client-side off the cached list is simplest and instant. For large catalogs, send filter/sort/pagination as query params so the server returns only what's needed."
+      },
+      {
+        "q": "How do revisits become instant?",
+        "a": "React Query caches responses by query key; navigating back finds fresh cached data and renders immediately while optionally refetching in the background."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "A real React component (.jsx) using TanStack Query. The Node-runnable demo below verifies the fetch/cache/filter/sort logic.",
+      "source": "// Product Listing App using React Query — fetch, cache, filter, and sort.\nimport React, { useState } from \"react\";\nimport { useQuery } from \"@tanstack/react-query\";\n\nfunction useProducts() {\n  return useQuery({\n    queryKey: [\"products\"],\n    queryFn: () => fetch(\"/api/products\").then((r) => r.json()),\n    staleTime: 60_000, // cached & fresh for a minute\n  });\n}\n\nexport default function ProductList() {\n  const { data = [], isLoading, isError } = useProducts();\n  const [category, setCategory] = useState(\"all\");\n\n  if (isLoading) return <p>Loading…</p>;\n  if (isError) return <p>Failed to load products.</p>;\n\n  const visible = data\n    .filter((p) => category === \"all\" || p.category === category)\n    .sort((a, b) => a.price - b.price);\n\n  return (\n    <div>\n      <select value={category} onChange={(e) => setCategory(e.target.value)}>\n        <option value=\"all\">All</option>\n        <option value=\"tech\">Tech</option>\n        <option value=\"wear\">Wear</option>\n      </select>\n      <ul>\n        {visible.map((p) => (\n          <li key={p.id}>{p.name} — ${p.price}</li>\n        ))}\n      </ul>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Product Listing App using React Query — fetch + cache + filter + sort\nfunction createProductStore(){\n  const cache = new Map(); let fetches = 0;\n  const db = [\n    { id: 1, name: \"Phone\",  price: 699, category: \"tech\" },\n    { id: 2, name: \"Shirt\",  price: 25,  category: \"wear\" },\n    { id: 3, name: \"Laptop\", price: 1299, category: \"tech\" },\n  ];\n  async function fetchProducts(){\n    if (cache.has(\"products\")) return cache.get(\"products\");\n    fetches++; cache.set(\"products\", db); return db;\n  }\n  return { fetchProducts, fetchCount: () => fetches };\n}\n(async () => {\n  const store = createProductStore();\n  await store.fetchProducts();\n  const products = await store.fetchProducts();   // cached, no 2nd fetch\n  const tech = products.filter(p => p.category === \"tech\").sort((a, b) => a.price - b.price);\n  console.log(\"Tech products (cheapest first):\", tech.map(p => `${p.name} $${p.price}`).join(\", \"));\n  console.log(\"Network fetches:\", store.fetchCount());\n  console.assert(store.fetchCount() === 1, \"second call served from cache\");\n  console.assert(tech[0].name === \"Phone\", \"sorted by price\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Tech products (cheapest first): Phone $699, Laptop $1299\nNetwork fetches: 1\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

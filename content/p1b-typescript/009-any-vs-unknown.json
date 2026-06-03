@@ -1,0 +1,65 @@
+{
+  "id": "p1b-009",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 9,
+  "orderInPhase": 9,
+  "slug": "any-vs-unknown",
+  "title": "any vs unknown",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "any",
+    "unknown"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Parsing untrusted JSON: typing it as `unknown` forces a validation step (e.g."
+  },
+  "sections": {
+    "simple_en": "`any` opts a value OUT of type checking entirely — you can do anything with it and TypeScript won't complain, which defeats the purpose of types and can hide bugs. `unknown` is the type-safe counterpart: it can hold any value, but you must narrow/check it before you can use it.\n\nRule of thumb: prefer `unknown` over `any` for values of uncertain type (like JSON from an API or user input), because `unknown` forces you to validate before use. Reserve `any` for rare escape hatches during migration.",
+    "hinglish": "`any` ek value ko type checking se poori tarah BAHAR kar deta hai — aap usse kuch bhi kar sakte ho aur TypeScript complain nahi karega, jo types ka maksad hi khatam kar deta hai aur bugs chhupa sakta hai. `unknown` iska type-safe roop hai: ye koi bhi value rakh sakta hai, par use karne se pehle aapko narrow/check karna padta hai.\nRule of thumb: uncertain type wali values (jaise API se JSON ya user input) ke liye `any` ke bajaye `unknown` prefer karo, kyunki `unknown` aapko use se pehle validate karne par majboor karta hai. `any` ko migration ke dauraan rare escape hatch ke liye rakho.",
+    "keyPoints": [
+      "`any` disables type checking — unsafe, hides bugs.",
+      "`unknown` accepts any value but blocks usage until narrowed.",
+      "Prefer `unknown` for uncertain values (API data, user input).",
+      "Narrow `unknown` with typeof/instanceof/checks before using it.",
+      "Use `any` only as a deliberate, temporary escape hatch."
+    ],
+    "real_world": "Parsing untrusted JSON: typing it as `unknown` forces a validation step (e.g. checking shape) before you treat it as a `User`, preventing the classic bug where bad data flows unchecked through the app.",
+    "followups": [
+      {
+        "q": "Why prefer unknown over any?",
+        "a": "`unknown` keeps type safety: it accepts any value but won't let you use it until you narrow/validate the type, whereas `any` disables checking entirely and can hide runtime bugs."
+      },
+      {
+        "q": "How do you use an `unknown` value?",
+        "a": "Narrow it first — with `typeof`, `instanceof`, `Array.isArray`, property checks, or a custom type guard (`value is T`) — after which TypeScript treats it as the narrowed type."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — unknown forces safe narrowing; any does not.\n\nexport function safeLength(value: unknown): number {\n  // Must narrow before use:\n  if (typeof value === \"string\") return value.length;\n  if (Array.isArray(value)) return value.length;\n  return 0;\n}\n\n// With 'any' this would compile but could crash at runtime:\n//   function unsafe(value: any) { return value.length; } // no checks!\n\nexport function isUser(value: unknown): value is { id: number; name: string } {\n  return (\n    typeof value === \"object\" && value !== null &&\n    \"id\" in value && \"name\" in value\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { safeLength, isUser } from \"./solution\";\n\nconsole.log(safeLength(\"hello\"));   // 5\nconsole.log(safeLength([1, 2, 3])); // 3\nconsole.log(safeLength(42));        // 0 (not narrowable)\nconsole.log(isUser({ id: 1, name: \"Asha\" })); // true\nconsole.log(isUser({ id: 1 }));     // false\n\nconsole.assert(safeLength(\"hello\") === 5, \"string length\");\nconsole.assert(safeLength([1, 2, 3]) === 3, \"array length\");\nconsole.assert(safeLength(42) === 0, \"non-narrowable -> 0\");\nconsole.assert(isUser({ id: 1, name: \"Asha\" }) === true, \"type guard passes\");\nconsole.assert(isUser({ id: 1 }) === false, \"type guard fails\");\nconsole.log(\"any-vs-unknown assertions passed.\");",
+      "expectedOutput": "5\n3\n0\ntrue\nfalse\nany-vs-unknown assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

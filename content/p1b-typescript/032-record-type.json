@@ -1,0 +1,65 @@
+{
+  "id": "p1b-032",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 32,
+  "orderInPhase": 32,
+  "slug": "record-type",
+  "title": "Record Type",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "record",
+    "type"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Mapping each app theme to its color: `Record<\"light\" | \"dark\", string>` guarantees you provide a value for every theme, so adding a new theme to the union fo…"
+  },
+  "sections": {
+    "simple_en": "`Record<K, V>` is a built-in utility type that constructs an object type with keys of type `K` and values of type `V`. For example `Record<string, number>` is an object whose every key is a string mapping to a number.\n\nIt shines with a finite key set expressed as a literal union: `Record<\"a\" | \"b\", number>` requires exactly those keys. This is often clearer and safer than an index signature when the keys are known, and the compiler ensures all required keys are present.",
+    "hinglish": "`Record<K, V>` ek built-in utility type hai jo ek object type banata hai jiski keys `K` type ki aur values `V` type ki hoti hain. Jaise `Record<string, number>` ek aisa object hai jiski har key string ek number se map karti hai.\nYe literal union se express kiye gaye finite key set ke saath chamakta hai: `Record<\"a\" | \"b\", number>` bilkul un keys ki maang karta hai. Jab keys known hon to ye index signature se aksar clearer aur safe hai, aur compiler ensure karta hai ki saari required keys present hain.",
+    "keyPoints": [
+      "`Record<K, V>` builds an object type with keys K and values V.",
+      "Use a literal union for K to require an exact set of keys.",
+      "Clearer/safer than an index signature when keys are known.",
+      "Compiler enforces presence of all required keys.",
+      "Great for lookup maps, enums-to-value maps, config dictionaries."
+    ],
+    "real_world": "Mapping each app theme to its color: `Record<\"light\" | \"dark\", string>` guarantees you provide a value for every theme, so adding a new theme to the union forces you to fill in its color.",
+    "followups": [
+      {
+        "q": "What does `Record<K, V>` produce?",
+        "a": "An object type whose keys are of type K and whose values are of type V — e.g. `Record<'a'|'b', number>` requires keys `a` and `b`, each mapping to a number."
+      },
+      {
+        "q": "Record vs index signature?",
+        "a": "Use `Record` with a literal-union key when the key set is known (it enforces all keys exist). Use an index signature for open-ended/dynamic keys where any string/number key is allowed."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Record with a literal-union key set.\n\ntype Theme = \"light\" | \"dark\";\nconst colors: Record<Theme, string> = { light: \"#fff\", dark: \"#000\" };\n\nexport function colorFor(theme: Theme): string {\n  return colors[theme];\n}\n\n// Open-ended Record (any string key -> number)\nexport function tally(items: string[]): Record<string, number> {\n  const out: Record<string, number> = {};\n  for (const i of items) out[i] = (out[i] ?? 0) + 1;\n  return out;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { colorFor, tally } from \"./solution\";\n\nconsole.log(colorFor(\"dark\"));  // #000\nconsole.log(colorFor(\"light\")); // #fff\nconsole.log(tally([\"a\", \"b\", \"a\"])); // { a: 2, b: 1 }\n\nconsole.assert(colorFor(\"dark\") === \"#000\", \"record literal-key lookup\");\nconsole.assert(tally([\"a\", \"b\", \"a\"]).a === 2, \"open record tally\");\nconsole.log(\"record-type assertions passed.\");",
+      "expectedOutput": "#000\n#fff\n{ a: 2, b: 1 }\nrecord-type assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

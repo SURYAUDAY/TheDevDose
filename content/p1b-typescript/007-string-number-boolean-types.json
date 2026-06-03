@@ -1,0 +1,67 @@
+{
+  "id": "p1b-007",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 7,
+  "orderInPhase": 7,
+  "slug": "string-number-boolean-types",
+  "title": "string / number / boolean types",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "string",
+    "number",
+    "boolean",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "A pricing function typed `(price: number, currency: string, taxable: boolean) => string` makes its contract obvious and rejects callers that, say, pass the p…"
+  },
+  "sections": {
+    "simple_en": "These are TypeScript's basic primitive types, matching JavaScript's primitives: `string` for text, `number` for all numeric values (integers and floats alike), and `boolean` for true/false. You annotate variables, parameters, and return values with them.\n\nTypeScript can also INFER these automatically (`let x = 5` infers `number`), so you don't always need explicit annotations. Use lowercase `string`/`number`/`boolean` (the primitive types) — not the capitalized `String`/`Number`/`Boolean` wrapper object types, which you almost never want.",
+    "hinglish": "Ye TypeScript ke basic primitive types hain, JavaScript ke primitives se match karte: text ke liye `string`, sabhi numeric values (integers aur floats dono) ke liye `number`, aur true/false ke liye `boolean`. Inse aap variables, parameters, aur return values annotate karte ho.\nTypeScript inhe automatically INFER bhi kar leta hai (`let x = 5` se `number` infer hota hai), isliye hamesha explicit annotations ki zarurat nahi. Lowercase `string`/`number`/`boolean` (primitive types) use karo — capitalized `String`/`Number`/`Boolean` wrapper object types nahi, jinki aapko lagbhag kabhi zarurat nahi.",
+    "keyPoints": [
+      "`string`, `number` (ints + floats), `boolean` are the core primitives.",
+      "Annotate via `let x: number = 5` or rely on inference (`let x = 5`).",
+      "Use lowercase primitive types, not `String`/`Number`/`Boolean` wrappers.",
+      "Types flow into parameters and return values for safety.",
+      "Mismatched assignments (e.g. number into a string) are compile errors."
+    ],
+    "real_world": "A pricing function typed `(price: number, currency: string, taxable: boolean) => string` makes its contract obvious and rejects callers that, say, pass the price as a string from a form field without conversion.",
+    "followups": [
+      {
+        "q": "Does TypeScript distinguish integers from floats?",
+        "a": "No. There's a single `number` type for all numeric values — integers, floats, hex, etc. (BigInt has its own `bigint` type.)"
+      },
+      {
+        "q": "Why use `string` instead of `String`?",
+        "a": "`string` is the primitive type you almost always want. `String` is the wrapper object type; using it is misleading and can cause subtle issues, so lowercase primitives are the convention."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — basic primitive types in action.\n\nexport function describeProduct(\n  name: string,\n  price: number,\n  inStock: boolean\n): string {\n  const status = inStock ? \"available\" : \"sold out\";\n  return name + \" costs $\" + price.toFixed(2) + \" (\" + status + \")\";\n}\n\n// Inference: TS infers the types here without annotations.\nexport const inferred = { count: 3, label: \"items\", ready: true };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { describeProduct, inferred } from \"./solution\";\n\nconsole.log(describeProduct(\"Pen\", 1.5, true));   // Pen costs $1.50 (available)\nconsole.log(describeProduct(\"Lamp\", 20, false));  // Lamp costs $20.00 (sold out)\nconsole.log(inferred.count, inferred.label, inferred.ready); // 3 items true\n\nconsole.assert(describeProduct(\"Pen\", 1.5, true) === \"Pen costs $1.50 (available)\", \"string/number/boolean\");\nconsole.assert(describeProduct(\"Lamp\", 20, false).includes(\"sold out\"), \"boolean branch\");\nconsole.log(\"primitive-types assertions passed.\");",
+      "expectedOutput": "Pen costs $1.50 (available)\nLamp costs $20.00 (sold out)\n3 items true\nprimitive-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

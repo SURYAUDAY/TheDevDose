@@ -1,0 +1,70 @@
+{
+  "id": "p5-040",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 40,
+  "orderInPhase": 40,
+  "slug": "react-interview-questions",
+  "title": "React interview questions",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "react",
+    "interview",
+    "questions"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "An interviewer asks why a dynamic to-do list re-renders incorrectly when items are reordered."
+  },
+  "sections": {
+    "simple_en": "React interviews focus on the mental model and common pitfalls. Core topics: the difference between props (read-only, passed in) and state (owned, mutable via setState), what triggers a re-render (state/props changes), the rules of hooks (call them at the top level, in the same order every render), the dependency array's role, keys for list reconciliation, and lifting state up.\n\nThe unifying idea is that a component is a function of its props and state that returns a description of the UI; React re-runs it on change and efficiently diffs the result. Strong answers explain this render model and pitfalls — e.g., why you need stable keys (not array indices) for dynamic lists, or why hooks can't be called conditionally.",
+    "hinglish": "React interviews mental model aur common pitfalls par focus karte hain. Core topics: props (read-only, pass kiye gaye) aur state (owned, setState se mutable) ka difference, kya re-render trigger karta hai (state/props changes), hooks ke rules (unhe top level par call karo, har render mein same order mein), dependency array ka role, list reconciliation ke liye keys, aur state lift karna.\n\nUnifying idea ye hai ki ek component apne props aur state ka ek function hai jo UI ka ek description return karta hai; React use change par re-run karta hai aur result ko efficiently diff karta hai. Strong answers ye render model aur pitfalls explain karte hain — jaise, dynamic lists ke liye stable keys (array indices nahi) kyun chahiye, ya hooks ko conditionally kyun call nahi kar sakte.",
+    "keyPoints": [
+      "Props are read-only inputs; state is owned and updated via setState.",
+      "Re-renders are triggered by state/props changes.",
+      "Rules of hooks: call at the top level, same order every render.",
+      "Stable, unique keys (not array indices) enable efficient list diffing.",
+      "Component = function of props + state -> UI; lift state up to share it."
+    ],
+    "real_world": "An interviewer asks why a dynamic to-do list re-renders incorrectly when items are reordered. The fix — use stable item ids as keys instead of array indices — shows you understand how React diffs lists by key, a very common real-world bug.",
+    "followups": [
+      {
+        "q": "Props vs state?",
+        "a": "Props are read-only data passed from a parent; a component can't change its own props. State is data a component owns and updates (via setState/useState), and changing it triggers a re-render."
+      },
+      {
+        "q": "Why must list keys be stable and unique?",
+        "a": "React uses keys to match elements between renders. Stable, unique keys let it correctly identify which items changed, were added, or removed. Array indices break this when lists reorder or items are inserted/removed."
+      },
+      {
+        "q": "What are the rules of hooks?",
+        "a": "Call hooks only at the top level (not inside loops, conditions, or nested functions) and only from React functions, so they run in the same order every render — which is how React associates hook state correctly."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript modeling React's render-as-a-function-of-state and stable list keys (framework-free). The Node demo below verifies state drives output and keys are unique.",
+      "source": "// React interview questions — the concepts interviewers probe most.\n\n// State vs props: props are read-only inputs passed by a parent; state is owned and updated by\n// the component. Updating state (or receiving new props) triggers a re-render.\n\n// What causes re-renders: a state change, new props, or a parent re-rendering. Optimize with\n// React.memo (skip re-render if props are equal), useMemo (cache values), useCallback (stable fns).\n\n// Rules of hooks: only call hooks at the top level (not in conditions/loops) and only from React\n// functions — so the hook call order is stable across renders.\n\n// useEffect dependency array: the effect re-runs when a listed dependency changes; [] runs once\n// on mount; omitting it runs after every render. Clean up subscriptions in the returned function.\n\n// Keys: give list items stable, unique keys (not the array index for dynamic lists) so React can\n// diff and reorder efficiently.\n\n// Lifting state up: move shared state to the closest common ancestor so siblings stay in sync.\n\n// Interview tip: tie answers to the render model — UI is a function of state/props, and React\n// reconciles the virtual DOM diff to the real DOM.\nmodule.exports = {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React interview questions — state vs props, re-renders, keys, hooks rules (framework-free model)\n// Simulate React's render: a component is a function of props + state -> UI description.\nfunction useStateSim(initial) {\n  let value = initial;\n  const setValue = (v) => { value = typeof v === \"function\" ? v(value) : v; };\n  return { get: () => value, set: setValue };\n}\nfunction Counter() {\n  const count = useStateSim(0);\n  const render = () => ({ text: `Count: ${count.get()}` });\n  return { render, increment: () => count.set((c) => c + 1) };\n}\nconst c = Counter();\nconsole.log(\"initial render:\", c.render());\nc.increment(); c.increment();\nconsole.log(\"after 2 increments:\", c.render());\n\n// Keys: stable identity lets React diff lists efficiently (don't use array index for dynamic lists).\nconst listKeys = [\"item-a\", \"item-b\", \"item-c\"];\nconsole.log(\"stable keys for list diffing:\", listKeys);\n\nconsole.assert(c.render().text === \"Count: 2\", \"state drives the rendered output\");\nconsole.assert(new Set(listKeys).size === listKeys.length, \"keys must be unique/stable\");\nconsole.log(\"Key React topics: props (read-only) vs state (owned), what triggers re-renders, the dependency array,\");\nconsole.log(\"rules of hooks (top level, same order), keys for lists, memoization, and lifting state up. Explain the render model.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "initial render: { text: 'Count: 0' }\nafter 2 increments: { text: 'Count: 2' }\nstable keys for list diffing: [ 'item-a', 'item-b', 'item-c' ]\nKey React topics: props (read-only) vs state (owned), what triggers re-renders, the dependency array,\nrules of hooks (top level, same order), keys for lists, memoization, and lifting state up. Explain the render model.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

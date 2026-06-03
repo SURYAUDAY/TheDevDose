@@ -1,0 +1,72 @@
+{
+  "id": "p2-062",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 62,
+  "orderInPhase": 62,
+  "slug": "web-vitals-lcp-inp-cls",
+  "title": "Web Vitals (LCP, INP, CLS)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "web",
+    "vitals",
+    "lcp",
+    "inp",
+    "cls"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A store finds its CLS is poor because images and ads load without reserved space, shoving content down as users tap."
+  },
+  "sections": {
+    "simple_en": "Core Web Vitals are Google's user-centric metrics for real-world experience. LCP (Largest Contentful Paint) measures loading — when the main content appears (good ≤ 2.5s). INP (Interaction to Next Paint) measures responsiveness to user input (good ≤ 200ms). CLS (Cumulative Layout Shift) measures visual stability — unexpected layout jumps (good ≤ 0.1).\n\nEach metric has good / needs-improvement / poor thresholds. You measure them in the field with the web-vitals library and send results to analytics, since real-user data reflects actual devices and networks better than lab scores alone.",
+    "hinglish": "Core Web Vitals Google ke user-centric metrics hain. LCP (Largest Contentful Paint) loading measure karta hai — main content kab dikhta hai (good ≤ 2.5s). INP (Interaction to Next Paint) input ki responsiveness (good ≤ 200ms). CLS (Cumulative Layout Shift) visual stability — unexpected layout jumps (good ≤ 0.1).\n\nHar metric ke good / needs-improvement / poor thresholds hain. Inhe field mein web-vitals library se measure karke analytics bhejte hain, kyunki real-user data lab scores se behtar actual devices/networks dikhata hai.",
+    "keyPoints": [
+      "LCP — loading: when main content renders (good ≤ 2.5s).",
+      "INP — responsiveness: delay from interaction to next paint (good ≤ 200ms).",
+      "CLS — visual stability: unexpected layout shift score (good ≤ 0.1).",
+      "Each has good / needs-improvement / poor thresholds.",
+      "Measure in the field with the web-vitals library; INP replaced FID in 2024."
+    ],
+    "real_world": "A store finds its CLS is poor because images and ads load without reserved space, shoving content down as users tap. Adding width/height (and reserving ad slots) stabilizes the layout, fixes accidental mis-taps, and improves the CLS score.",
+    "followups": [
+      {
+        "q": "What do LCP, INP, and CLS each measure?",
+        "a": "LCP = loading (main content paint), INP = responsiveness (interaction to next paint), CLS = visual stability (unexpected layout shifts). Together they capture core UX quality."
+      },
+      {
+        "q": "How do you improve CLS?",
+        "a": "Reserve space for images, ads, and embeds (set width/height or aspect-ratio), avoid inserting content above existing content, and use font-display strategies to prevent layout jumps."
+      },
+      {
+        "q": "Lab vs field data — what's the difference?",
+        "a": "Lab data (e.g., Lighthouse) is simulated in a controlled environment; field data (web-vitals/CrUX) comes from real users and reflects actual device and network variety."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Real browser instrumentation code using the web-vitals library. The Node-runnable demo below shows how each metric is rated against thresholds.",
+      "source": "// Web Vitals — measure LCP, INP, CLS from real users with the web-vitals lib.\nimport { onLCP, onINP, onCLS } from \"web-vitals\";\n\nfunction sendToAnalytics(metric) {\n  // metric: { name, value, rating: 'good' | 'needs-improvement' | 'poor' }\n  navigator.sendBeacon(\"/analytics\", JSON.stringify(metric));\n}\n\nexport function reportWebVitals() {\n  onLCP(sendToAnalytics); // Largest Contentful Paint  (loading)   good <= 2.5s\n  onINP(sendToAnalytics); // Interaction to Next Paint (interactivity) good <= 200ms\n  onCLS(sendToAnalytics); // Cumulative Layout Shift   (visual stability) good <= 0.1\n}\n\n// Call once at app startup (e.g., in main.jsx) to collect field data.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Web Vitals — rate LCP, INP, CLS against Google's thresholds\nfunction rate(metric, value){\n  const t = { LCP: [2500, 4000], INP: [200, 500], CLS: [0.1, 0.25] }[metric];\n  if (value <= t[0]) return \"good\";\n  if (value <= t[1]) return \"needs-improvement\";\n  return \"poor\";\n}\nconst sample = { LCP: 2200, INP: 350, CLS: 0.3 };  // ms, ms, unitless\nfor (const m in sample) console.log(`${m}: ${sample[m]} -> ${rate(m, sample[m])}`);\nconsole.assert(rate(\"LCP\", 2200) === \"good\", \"LCP under 2.5s is good\");\nconsole.assert(rate(\"CLS\", 0.3) === \"poor\", \"CLS over 0.25 is poor\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "LCP: 2200 -> good\nINP: 350 -> needs-improvement\nCLS: 0.3 -> poor\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p2-004",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 4,
+  "orderInPhase": 4,
+  "slug": "hooks-deep-dive",
+  "title": "Hooks deep dive",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "hooks",
+    "deep",
+    "dive"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "Think of a coat check that hands out tickets in order."
+  },
+  "sections": {
+    "simple_en": "Hooks are functions that let function components 'hook into' React features like state and lifecycle. React stores each hook's data in an ordered list tied to the component instance, and it relies on hooks being called in the same order on every render to match each call to its stored slot.\n\nThat is why the Rules of Hooks exist: only call hooks at the top level (never inside conditions, loops, or nested functions) and only from React functions. Breaking the order desynchronizes React's internal slot index and corrupts your state.",
+    "hinglish": "Hooks aise functions hain jo function component ko React ke features — jaise state aur lifecycle — se connect karte hain. React har hook ka data ek ordered list mein store karta hai aur expect karta hai ki har render par hooks usi order mein call ho.\n\nIsi liye Rules of Hooks hain: hooks ko sirf top level par call karo, kisi if/loop ke andar nahi. Order todoge to React ka internal index gadbada jaayega aur state corrupt ho jaayegi.",
+    "keyPoints": [
+      "Hooks connect function components to state, context, refs, and effects.",
+      "React tracks hooks by call order (an internal index), not by name — order must be stable.",
+      "Rules of Hooks: call only at the top level, and only from React function components or custom hooks.",
+      "Conditional or looped hook calls shift the index and bind state to the wrong slot.",
+      "Custom hooks (functions starting with 'use') compose built-in hooks to share logic."
+    ],
+    "real_world": "Think of a coat check that hands out tickets in order. If you always pick up coats in the same order you dropped them, every ticket matches. If you skip a ticket one day (a conditional hook), every following coat goes to the wrong person — that's the hook-order bug.",
+    "followups": [
+      {
+        "q": "Why can't hooks be called conditionally?",
+        "a": "React identifies hooks by the order they're called. A skipped or extra call shifts subsequent indices, so React reads the wrong stored state for each hook."
+      },
+      {
+        "q": "What makes something a custom hook?",
+        "a": "A function whose name starts with 'use' and that calls other hooks. The naming convention lets lint rules enforce the Rules of Hooks."
+      },
+      {
+        "q": "Do hooks work in class components?",
+        "a": "No. Hooks only work inside function components and other hooks; classes use lifecycle methods instead."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Hooks must be called at the top level, in the same order every render.\nimport React, { useState, useEffect } from \"react\";\n\nexport default function Profile() {\n  // ✅ Top-level hooks, always in this order:\n  const [count, setCount] = useState(0);\n  const [name, setName] = useState(\"Asha\");\n\n  useEffect(() => {\n    document.title = `${name}: ${count}`;\n  }, [name, count]);\n\n  // ❌ NEVER do this — conditional hook breaks the call order:\n  // if (count > 0) { const [x] = useState(0); }\n\n  return (\n    <div>\n      <input value={name} onChange={(e) => setName(e.target.value)} />\n      <p>{name} clicked {count} times</p>\n      <button onClick={() => setCount((c) => c + 1)}>Click</button>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Hooks deep dive — mini useState showing why hook ORDER must be stable\nlet hookState = [];\nlet cursor = 0;\nfunction useState(initial) {\n  const i = cursor;\n  if (hookState[i] === undefined) hookState[i] = initial;\n  const setState = (v) => { hookState[i] = v; };\n  cursor++;\n  return [hookState[i], setState];\n}\nfunction render() {\n  cursor = 0;                       // reset cursor every render\n  const [count, setCount] = useState(0);\n  const [name, setName]  = useState(\"Asha\");\n  return { count, name, setCount, setName };\n}\n\nlet ui = render();\nconsole.log(\"Render 1:\", ui.count, ui.name);\nui.setCount(5);\nui.setName(\"Ravi\");\nui = render();\nconsole.log(\"Render 2:\", ui.count, ui.name);\nconsole.assert(ui.count === 5 && ui.name === \"Ravi\", \"state should persist by index\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Render 1: 0 Asha\nRender 2: 5 Ravi\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

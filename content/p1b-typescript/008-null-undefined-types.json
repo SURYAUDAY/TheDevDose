@@ -1,0 +1,66 @@
+{
+  "id": "p1b-008",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 8,
+  "orderInPhase": 8,
+  "slug": "null-undefined-types",
+  "title": "null / undefined types",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "null",
+    "undefined",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An API field that may be absent is typed `email: string | null`."
+  },
+  "sections": {
+    "simple_en": "`null` and `undefined` each have their own types in TypeScript. Under `strictNullChecks`, they are NOT automatically part of other types — so a `string` cannot be `null` unless you explicitly write `string | null`. This is what forces safe handling of 'missing' values.\n\nThe convention: `undefined` usually means 'not provided/not yet set', and `null` means 'intentionally empty'. To use a possibly-null value you must narrow it first (an `if` check, optional chaining `?.`, or the non-null assertion `!` when you're certain).",
+    "hinglish": "`null` aur `undefined` dono ke TypeScript me apne types hain. `strictNullChecks` ke under, ye automatically doosre types ka hissa NAHI hote — to ek `string` `null` nahi ho sakti jab tak aap explicitly `string | null` na likho. Yahi 'missing' values ke safe handling par majboor karta hai.\nConvention: `undefined` ka matlab aam taur par 'provide nahi kiya/abhi set nahi', aur `null` ka matlab 'jaan-bujhkar khaali'. Possibly-null value use karne ke liye pehle use narrow karo (`if` check, optional chaining `?.`, ya non-null assertion `!` jab aap sure ho).",
+    "keyPoints": [
+      "`null` and `undefined` have distinct types.",
+      "Under strictNullChecks they're excluded from other types unless added (`T | null`).",
+      "Convention: `undefined` = not set/provided; `null` = intentionally empty.",
+      "Narrow before use: `if` check, optional chaining `?.`, or `??` default.",
+      "Non-null assertion `x!` tells TS 'this isn't null' — use sparingly."
+    ],
+    "real_world": "An API field that may be absent is typed `email: string | null`. The compiler then forces every consumer to handle the null case (e.g. show 'no email on file') instead of crashing when `email` is missing.",
+    "followups": [
+      {
+        "q": "Under strictNullChecks, can a `string` variable hold null?",
+        "a": "No. You must explicitly widen the type to `string | null` (or `| undefined`). Otherwise assigning null/undefined is a compile error, forcing you to handle those cases."
+      },
+      {
+        "q": "What's the conventional difference between null and undefined?",
+        "a": "`undefined` typically means a value was never set or provided; `null` typically means it was intentionally set to 'empty'. TypeScript treats them as distinct types."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — handling nullable types safely.\n\nexport function displayName(name: string | null | undefined): string {\n  // narrow with nullish coalescing\n  return name ?? \"Guest\";\n}\n\nexport function firstInitial(name: string | null): string {\n  if (name === null || name.length === 0) return \"?\";\n  return name[0].toUpperCase();\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { displayName, firstInitial } from \"./solution\";\n\nconsole.log(displayName(\"Asha\"));    // Asha\nconsole.log(displayName(null));      // Guest\nconsole.log(displayName(undefined)); // Guest\nconsole.log(firstInitial(\"ravi\"));   // R\nconsole.log(firstInitial(null));     // ?\n\nconsole.assert(displayName(null) === \"Guest\", \"null defaults to Guest\");\nconsole.assert(displayName(\"Asha\") === \"Asha\", \"value passes through\");\nconsole.assert(firstInitial(\"ravi\") === \"R\", \"first initial uppercased\");\nconsole.assert(firstInitial(null) === \"?\", \"null initial handled\");\nconsole.log(\"null/undefined assertions passed.\");",
+      "expectedOutput": "Asha\nGuest\nGuest\nR\n?\nnull/undefined assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

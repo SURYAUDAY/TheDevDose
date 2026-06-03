@@ -1,0 +1,65 @@
+{
+  "id": "p1b-021",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 21,
+  "orderInPhase": 21,
+  "slug": "index-signatures",
+  "title": "Index Signatures",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "index",
+    "signatures"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A word-frequency counter typed `{ [word: string]: number }` lets you accumulate counts under arbitrary word keys, with the compiler ensuring every value is a…"
+  },
+  "sections": {
+    "simple_en": "An index signature describes the type of properties whose names you don't know in advance, like a dictionary. The syntax `{ [key: string]: number }` means 'any string key maps to a number value'. Keys can be `string`, `number`, or `symbol`.\n\nIndex signatures are used for dynamic key-value maps (e.g. a lookup table of counts). Note: all explicitly declared properties must be compatible with the index signature's value type. For known fixed keys, prefer `Record<K, V>` or specific properties; reach for index signatures when keys are truly open-ended.",
+    "hinglish": "Index signature un properties ka type describe karta hai jinke naam aapko pehle se nahi pata, jaise dictionary. Syntax `{ [key: string]: number }` ka matlab 'koi bhi string key ek number value se map karti hai'. Keys `string`, `number`, ya `symbol` ho sakti hain.\nIndex signatures dynamic key-value maps ke liye use hote hain (jaise counts ki lookup table). Note: saari explicitly declared properties index signature ke value type se compatible honi chahiye. Known fixed keys ke liye `Record<K, V>` ya specific properties prefer karo; index signatures tab use karo jab keys sach me open-ended hon.",
+    "keyPoints": [
+      "`{ [key: string]: V }` types objects with unknown/dynamic keys.",
+      "Key types allowed: string, number, symbol.",
+      "All declared properties must match the index value type.",
+      "Use for dictionaries/lookup maps with open-ended keys.",
+      "Prefer `Record<K, V>` for known key sets; index signatures for dynamic ones."
+    ],
+    "real_world": "A word-frequency counter typed `{ [word: string]: number }` lets you accumulate counts under arbitrary word keys, with the compiler ensuring every value is a number.",
+    "followups": [
+      {
+        "q": "What is an index signature for?",
+        "a": "Typing objects with dynamic/unknown property names, like dictionaries — e.g. `{ [key: string]: number }` allows any string key mapping to a number."
+      },
+      {
+        "q": "Index signature vs Record<K, V>?",
+        "a": "`Record<K, V>` is best when the set of keys is known/finite (it can use literal unions as keys). Index signatures are for genuinely open-ended keys where any string/number key is allowed."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — index signature for a dynamic map.\n\ninterface CountMap {\n  [word: string]: number;\n}\n\nexport function countWords(words: string[]): CountMap {\n  const counts: CountMap = {};\n  for (const w of words) counts[w] = (counts[w] ?? 0) + 1;\n  return counts;\n}\n\n// Record<K, V> alternative for a fixed key set:\nexport type Scores = Record<\"math\" | \"science\", number>;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { countWords } from \"./solution\";\n\nconst counts = countWords([\"a\", \"b\", \"a\", \"a\", \"b\"]);\nconsole.log(counts); // { a: 3, b: 2 }\n\nconsole.assert(counts.a === 3, \"count of a\");\nconsole.assert(counts.b === 2, \"count of b\");\nconsole.assert(counts.z === undefined, \"missing key is undefined\");\nconsole.log(\"index-signatures assertions passed.\");",
+      "expectedOutput": "{ a: 3, b: 2 }\nindex-signatures assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

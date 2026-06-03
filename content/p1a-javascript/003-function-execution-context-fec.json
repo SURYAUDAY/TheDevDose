@@ -1,0 +1,67 @@
+{
+  "id": "p1a-003",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 3,
+  "orderInPhase": 3,
+  "slug": "function-execution-context-fec",
+  "title": "Function Execution Context (FEC)",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "function",
+    "execution",
+    "context",
+    "fec"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "Imagine a photocopier that prints a fresh worksheet each time you press 'copy'."
+  },
+  "sections": {
+    "simple_en": "A Function Execution Context is created every single time a function is invoked (called), not when it is defined. It gives the function its own private space for arguments, local variables, and its own `this`.\n\nLike the global context, it is built in two phases — memory creation (parameters and locals are allocated, function declarations hoisted) and execution (code runs line by line). When the function returns, its context is popped off the call stack and (unless captured by a closure) its locals are eligible for garbage collection.",
+    "hinglish": "Function Execution Context har baar tab banta hai jab function call hota hai — define karte time nahi. Ye function ko apni private jagah deta hai jisme arguments, local variables aur apna `this` hota hai.\nGlobal context ki tarah ye bhi do phase me banta hai — pehle memory (parameters, locals allocate, function declarations hoist), phir code execute. Jaise hi function return karta hai, uska context call stack se hat jaata hai aur (agar closure ne pakda na ho to) uske locals garbage collect ho sakte hain.",
+    "keyPoints": [
+      "Created on every invocation — calling a function 3 times creates 3 contexts.",
+      "Contains the `arguments` object, the parameters, local variables, `this`, and the outer reference.",
+      "Built in the same two phases (memory creation, then execution).",
+      "Pushed onto the call stack when called, popped when it returns.",
+      "Its locals are independent across calls — that independence powers closures and recursion."
+    ],
+    "real_world": "Imagine a photocopier that prints a fresh worksheet each time you press 'copy'. Each worksheet (context) can be filled in independently; finishing one doesn't affect the others — even though they came from the same master template (the function).",
+    "followups": [
+      {
+        "q": "Is a function context created at definition or at call time?",
+        "a": "At call time. Defining a function only creates the function object; the execution context is built each time the function is invoked."
+      },
+      {
+        "q": "Why can recursion work without variables clashing?",
+        "a": "Each recursive call gets its own execution context with its own copy of parameters and locals, stacked on the call stack, so the `n` in one frame never overwrites the `n` in another."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Each call to greet() builds a fresh function execution context.\n// 'arguments' and locals are private to each invocation.\n\nfunction greet(name) {\n  const prefix = \"Hello, \";          // local to this context\n  const argCount = arguments.length; // arguments object per context\n  return prefix + name + \" (\" + argCount + \" arg)\";\n}\n\n// Recursion proves each call has its own context with its own 'n'.\nfunction factorial(n) {\n  if (n <= 1) return 1;       // base case\n  return n * factorial(n - 1); // each call = new context with its own n\n}\n\nmodule.exports = { greet, factorial };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { greet, factorial } = require(\"./solution\");\n\nconsole.log(greet(\"Asha\"));   // Hello, Asha (1 arg)\nconsole.log(factorial(5));    // 120\n\nconsole.assert(greet(\"Ravi\") === \"Hello, Ravi (1 arg)\", \"greet basic\");\nconsole.assert(factorial(0) === 1, \"0! = 1\");\nconsole.assert(factorial(5) === 120, \"5! = 120\");\nconsole.assert(factorial(6) === 720, \"6! = 720\");\nconsole.log(\"Function execution context assertions passed.\");",
+      "expectedOutput": "Hello, Asha (1 arg)\n120\nFunction execution context assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

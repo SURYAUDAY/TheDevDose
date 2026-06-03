@@ -1,0 +1,66 @@
+{
+  "id": "p1a-103",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 103,
+  "orderInPhase": 103,
+  "slug": "implement-throttle-from-scratch",
+  "title": "Implement throttle (from scratch)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "implement",
+    "throttle",
+    "scratch"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Hand-rolling a throttle for a scroll handler that updates a progress indicator at most every 100ms — smooth and responsive without running heavy work on ever…"
+  },
+  "sections": {
+    "simple_en": "Implementing throttle tests the same skills as debounce but with different timing semantics: the wrapped function should run at most once per `interval`, even under continuous calls. A common approach tracks the last execution time and only runs again once enough time has elapsed (leading edge).\n\nA more complete version also schedules a trailing call so the final event isn't lost, and exposes a `cancel`. Interviewers look for correct timing, preserved `this`/arguments, and awareness of the leading/trailing trade-off versus debounce.",
+    "hinglish": "Throttle implement karna debounce jaisi hi skills test karta hai par alag timing semantics ke saath: wrapped function ko per `interval` zyada se zyada ek baar chalna chahiye, continuous calls me bhi. Common approach last execution time track karta hai aur tabhi dobara chalata hai jab kaafi time guzar jaaye (leading edge).\nZyada complete version ek trailing call bhi schedule karta hai taaki aakhri event na chhoote, aur ek `cancel` expose karta hai. Interviewers correct timing, preserved `this`/arguments, aur debounce ke mukable leading/trailing trade-off ki samajh dekhte hain.",
+    "keyPoints": [
+      "Runs at most once per `interval` under continuous calls.",
+      "Leading edge: track `lastTime`; run when `now - lastTime >= interval`.",
+      "Optionally schedule a trailing call so the last event still fires.",
+      "Preserve `this`/arguments with `apply`.",
+      "Contrast with debounce (which waits for calls to stop)."
+    ],
+    "real_world": "Hand-rolling a throttle for a scroll handler that updates a progress indicator at most every 100ms — smooth and responsive without running heavy work on every scroll event.",
+    "followups": [
+      {
+        "q": "How does a leading-edge throttle decide whether to run?",
+        "a": "It records the last execution time and runs again only when `Date.now() - lastTime >= interval`; calls arriving sooner are ignored (or deferred to a trailing call)."
+      },
+      {
+        "q": "Why add a trailing call to a throttle?",
+        "a": "Without it, the very last event in a burst (after the leading call) can be dropped. A scheduled trailing call ensures the final state/args are still processed once the interval elapses."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Throttle with leading + trailing execution.\n\nfunction throttle(fn, interval) {\n  let lastTime = 0;\n  let trailingTimer = null;\n  let lastArgs = null;\n\n  function throttled(...args) {\n    const now = Date.now();\n    const remaining = interval - (now - lastTime);\n    lastArgs = args;\n    if (remaining <= 0) {\n      lastTime = now;\n      fn.apply(this, args); // leading edge\n    } else if (trailingTimer === null) {\n      // schedule a trailing call for the final invocation\n      trailingTimer = setTimeout(() => {\n        lastTime = Date.now();\n        trailingTimer = null;\n        fn.apply(this, lastArgs);\n      }, remaining);\n    }\n  }\n  throttled.cancel = () => { clearTimeout(trailingTimer); trailingTimer = null; lastTime = 0; };\n  return throttled;\n}\n\nmodule.exports = { throttle };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { throttle } = require(\"./solution\");\n\n(async () => {\n  let calls = 0;\n  const fn = throttle(() => calls++, 30);\n\n  // burst: 1 leading call now + 1 trailing call scheduled\n  fn(); fn(); fn();\n  console.log(\"after burst (leading):\", calls); // 1\n\n  await new Promise((r) => setTimeout(r, 50));\n  console.log(\"after wait (trailing fired):\", calls); // 2\n\n  console.assert(calls === 2, \"leading + trailing = 2 calls for a burst\");\n  console.log(\"throttle implementation assertions passed.\");\n})();",
+      "expectedOutput": "after burst (leading): 1\nafter wait (trailing fired): 2\nthrottle implementation assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

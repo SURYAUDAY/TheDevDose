@@ -1,0 +1,69 @@
+{
+  "id": "p3-069",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 69,
+  "orderInPhase": 69,
+  "slug": "email-services",
+  "title": "Email services",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "email",
+    "services"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "On password reset, the app enqueues an email job; a worker renders the 'reset' template with a secure link and sends it via SendGrid."
+  },
+  "sections": {
+    "simple_en": "Sending email from a backend means using a transactional email provider (SendGrid, Amazon SES, Mailgun, Resend) rather than your own mail server, because deliverability — getting past spam filters — depends on reputation, SPF/DKIM/DMARC, and infrastructure the provider manages. In Node, Nodemailer (SMTP) or a provider SDK sends the message.\n\nBest practices: send emails asynchronously via a queue so the request isn't blocked on delivery, use templates for consistent content (welcome, password reset, receipts), and handle failures/retries. Always configure SPF/DKIM/DMARC for your domain, and include unsubscribe handling for non-transactional mail.",
+    "hinglish": "Backend se email bhejne ka matlab hai apne mail server ke bajaye ek transactional email provider (SendGrid, Amazon SES, Mailgun, Resend) use karna, kyunki deliverability — spam filters paar karna — reputation, SPF/DKIM/DMARC, aur provider ke manage kiye infrastructure par depend karti hai. Node mein Nodemailer (SMTP) ya provider SDK message bhejta hai.\n\nBest practices: emails ko queue se asynchronously bhejo taaki request delivery par block na ho, consistent content (welcome, password reset, receipts) ke liye templates use karo, aur failures/retries handle karo. Apne domain ke liye hamesha SPF/DKIM/DMARC configure karo, aur non-transactional mail ke liye unsubscribe handling rakho.",
+    "keyPoints": [
+      "Use a transactional provider (SendGrid/SES/Mailgun/Resend) for deliverability.",
+      "Nodemailer (SMTP) or a provider SDK sends the message from Node.",
+      "Send asynchronously via a queue — don't block the request on delivery.",
+      "Use templates for consistent emails (welcome, reset, receipts).",
+      "Configure SPF/DKIM/DMARC; handle retries and unsubscribes."
+    ],
+    "real_world": "On password reset, the app enqueues an email job; a worker renders the 'reset' template with a secure link and sends it via SendGrid. Because the domain has SPF/DKIM/DMARC set up, the message lands in the inbox rather than spam, and the user's request returned instantly without waiting on delivery.",
+    "followups": [
+      {
+        "q": "Why use a provider instead of your own SMTP server?",
+        "a": "Deliverability — reputable providers manage IP reputation, authentication (SPF/DKIM/DMARC), and infrastructure so your mail reaches inboxes instead of spam. Running your own is hard and error-prone."
+      },
+      {
+        "q": "Why send emails via a queue?",
+        "a": "So the HTTP request returns immediately instead of waiting on the email provider, and so sends can be retried on transient failures without affecting the user's request."
+      },
+      {
+        "q": "What are SPF/DKIM/DMARC?",
+        "a": "Email authentication standards proving your domain is authorized to send mail (SPF), signing messages cryptographically (DKIM), and setting policy for failures (DMARC). They're essential for deliverability and anti-spoofing."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Nodemailer code (provider SMTP). The Node-runnable demo below renders templates and queues messages so the flow is verifiable here.",
+      "source": "// Email services — send transactional email via a provider (Nodemailer + SMTP).\nconst nodemailer = require(\"nodemailer\");\n\nconst transporter = nodemailer.createTransport({\n  host: process.env.SMTP_HOST,         // e.g., an SES/SendGrid/Mailgun SMTP endpoint\n  port: 587,\n  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },\n});\n\n// Simple template helper.\nconst templates = {\n  welcome: (name) => ({\n    subject: `Welcome, ${name}!`,\n    html: `<h1>Welcome, ${name}</h1><p>Thanks for signing up.</p>`,\n  }),\n};\n\nasync function sendWelcome(to, name) {\n  const { subject, html } = templates.welcome(name);\n  return transporter.sendMail({ from: \"no-reply@example.com\", to, subject, html });\n}\n\n// Best practices: send asynchronously via a queue (don't block the request),\n// use a reputable provider for deliverability, verify SPF/DKIM/DMARC, and\n// keep templates and unsubscribe handling consistent.\nmodule.exports = { sendWelcome };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Email services — render a template and queue a transactional email\nfunction createMailer(){\n  const sent = [];\n  const templates = {\n    welcome: (d) => ({ subject: `Welcome, ${d.name}!`, body: `Hi ${d.name}, thanks for joining.` }),\n    reset:   (d) => ({ subject: \"Reset your password\", body: `Reset link: ${d.link}` }),\n  };\n  return {\n    async send(to, template, data){\n      const { subject, body } = templates[template](data);\n      // In production this calls a provider (SendGrid, SES, Resend) over an API.\n      sent.push({ to, subject, body, status: \"queued\" });\n      return { messageId: \"msg_\" + sent.length, status: \"queued\" };\n    },\n    sent,\n  };\n}\n(async () => {\n  const mailer = createMailer();\n  console.log(JSON.stringify(await mailer.send(\"asha@x.com\", \"welcome\", { name: \"Asha\" })));\n  console.log(JSON.stringify(await mailer.send(\"ravi@x.com\", \"reset\", { link: \"https://x.com/r/abc\" })));\n  console.log(\"Outbox:\", mailer.sent.map(m => `${m.to}: ${m.subject}`).join(\" | \"));\n  console.assert(mailer.sent.length === 2 && mailer.sent[0].subject.includes(\"Asha\"), \"templated emails queued\");\n  console.log(\"Use a provider for deliverability; send async via a queue; use templates.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "{\"messageId\":\"msg_1\",\"status\":\"queued\"}\n{\"messageId\":\"msg_2\",\"status\":\"queued\"}\nOutbox: asha@x.com: Welcome, Asha! | ravi@x.com: Reset your password\nUse a provider for deliverability; send async via a queue; use templates.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

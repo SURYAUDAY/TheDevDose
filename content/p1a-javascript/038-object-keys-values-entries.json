@@ -1,0 +1,66 @@
+{
+  "id": "p1a-038",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 38,
+  "orderInPhase": 38,
+  "slug": "object-keys-values-entries",
+  "title": "Object.keys / values / entries",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "object.keys",
+    "values",
+    "entries"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "Turning a settings object into query parameters, or summing values in a totals map: `Object.values(scores).reduce((a,b)=>a+b,0)` totals every score without w…"
+  },
+  "sections": {
+    "simple_en": "These three static methods extract data from an object's own enumerable string-keyed properties. `Object.keys(obj)` returns an array of keys, `Object.values(obj)` returns an array of values, and `Object.entries(obj)` returns an array of `[key, value]` pairs.\n\nThey're the standard way to iterate over an object (objects aren't directly iterable with `for...of`). `Object.entries` pairs beautifully with destructuring and with `Object.fromEntries` to transform objects functionally.",
+    "hinglish": "Ye teen static methods object ki own enumerable string-keyed properties se data nikaalte hain. `Object.keys(obj)` keys ka array deta hai, `Object.values(obj)` values ka array, aur `Object.entries(obj)` `[key, value]` pairs ka array.\nObject par iterate karne ka standard tarika yahi hai (objects seedhe `for...of` se iterable nahi). `Object.entries` destructuring aur `Object.fromEntries` ke saath bahut achha chalta hai objects ko functionally transform karne ke liye.",
+    "keyPoints": [
+      "`Object.keys` → array of own enumerable keys.",
+      "`Object.values` → array of corresponding values.",
+      "`Object.entries` → array of `[key, value]` pairs.",
+      "Only own, enumerable, string keys (not inherited, not symbols).",
+      "Combine with `Object.fromEntries` to map/filter objects functionally."
+    ],
+    "real_world": "Turning a settings object into query parameters, or summing values in a totals map: `Object.values(scores).reduce((a,b)=>a+b,0)` totals every score without writing a manual loop.",
+    "followups": [
+      {
+        "q": "Do these methods include inherited properties?",
+        "a": "No. They only return an object's own enumerable string-keyed properties — not inherited ones and not symbol keys."
+      },
+      {
+        "q": "How do you rebuild an object after transforming entries?",
+        "a": "Use `Object.fromEntries(arrayOfPairs)`, the inverse of `Object.entries`, to convert `[key, value]` pairs back into an object."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Iterating and transforming objects.\n\nfunction summarise(scores) {\n  const keys = Object.keys(scores);\n  const total = Object.values(scores).reduce((a, b) => a + b, 0);\n  const labelled = Object.entries(scores).map(([k, v]) => k + \"=\" + v);\n  return { keys, total, labelled };\n}\n\n// Transform an object: double every value via entries + fromEntries\nfunction doubleValues(obj) {\n  return Object.fromEntries(\n    Object.entries(obj).map(([k, v]) => [k, v * 2])\n  );\n}\n\nmodule.exports = { summarise, doubleValues };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { summarise, doubleValues } = require(\"./solution\");\n\nconst scores = { math: 90, science: 80, art: 70 };\nconsole.log(summarise(scores));\nconsole.log(doubleValues({ a: 1, b: 2 }));\n\nconst s = summarise(scores);\nconsole.assert(JSON.stringify(s.keys) === '[\"math\",\"science\",\"art\"]', \"keys\");\nconsole.assert(s.total === 240, \"values sum\");\nconsole.assert(JSON.stringify(s.labelled) === '[\"math=90\",\"science=80\",\"art=70\"]', \"entries\");\nconsole.assert(JSON.stringify(doubleValues({ a: 1, b: 2 })) === '{\"a\":2,\"b\":4}', \"fromEntries transform\");\nconsole.log(\"Object.keys/values/entries assertions passed.\");",
+      "expectedOutput": "{ keys: [ 'math', 'science', 'art' ], total: 240, labelled: [ 'math=90', 'science=80', 'art=70' ] }\n{ a: 2, b: 4 }\nObject.keys/values/entries assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "p2-017",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 17,
+  "orderInPhase": 17,
+  "slug": "usememo",
+  "title": "useMemo",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "usememo"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A data table that filters and sorts thousands of rows recomputes that derived list on every render by default."
+  },
+  "sections": {
+    "simple_en": "useMemo caches the result of an expensive calculation and only recomputes it when one of its dependencies changes. You pass a function and a dependency array; React returns the memoized value, skipping the work on renders where dependencies are unchanged.\n\nUse it for genuinely costly computations or to keep a referentially stable value (like a derived object/array) that's passed to memoized children or used in dependency arrays. Don't sprinkle it everywhere — memoization has its own cost and can hurt readability.",
+    "hinglish": "useMemo ek mehngi calculation ka result cache karta hai aur sirf tab dobara compute karta hai jab koi dependency change ho. Aap ek function aur dependency array dete ho, React memoized value return karta hai.\n\nIse sach mein heavy computation ke liye ya referentially stable value (jaise derived object/array) banane ke liye use karo jo memoized child ko jaaye. Har jagah lagana theek nahi — memoization ka apna cost hota hai.",
+    "keyPoints": [
+      "Signature: const value = useMemo(() => compute(a, b), [a, b]).",
+      "Recomputes only when a dependency changes; otherwise returns the cached value.",
+      "Use for expensive calculations or to stabilize a derived object/array reference.",
+      "Stable references prevent unnecessary re-renders of memoized children and effect re-runs.",
+      "Don't over-apply — the comparison and memory cost can outweigh tiny computations."
+    ],
+    "real_world": "A data table that filters and sorts thousands of rows recomputes that derived list on every render by default. Wrapping the filter/sort in useMemo keyed on [rows, query, sortKey] avoids redoing the heavy work when an unrelated piece of state (like a hover) changes.",
+    "followups": [
+      {
+        "q": "When is useMemo worth it?",
+        "a": "When the computation is genuinely expensive, or when you need a stable reference to pass to memoized children or dependency arrays. For cheap math, it's usually not worth the overhead."
+      },
+      {
+        "q": "Is useMemo a correctness tool or a performance tool?",
+        "a": "Primarily performance. React may discard memoized values, so don't rely on it for behavior — only for optimization."
+      },
+      {
+        "q": "How is useMemo different from useCallback?",
+        "a": "useMemo memoizes a computed value; useCallback memoizes a function. useCallback(fn, deps) is essentially useMemo(() => fn, deps)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// useMemo: cache an expensive filtered+sorted list across renders.\nimport React, { useMemo, useState } from \"react\";\n\nexport default function ProductList({ products }) {\n  const [query, setQuery] = useState(\"\");\n  const [hovered, setHovered] = useState(null); // unrelated state\n\n  // Recomputes only when products or query change — NOT when `hovered` changes.\n  const visible = useMemo(() => {\n    console.log(\"Filtering & sorting...\");\n    return products\n      .filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))\n      .sort((a, b) => a.price - b.price);\n  }, [products, query]);\n\n  return (\n    <div>\n      <input value={query} onChange={(e) => setQuery(e.target.value)} />\n      <ul>\n        {visible.map((p) => (\n          <li key={p.id} onMouseEnter={() => setHovered(p.id)}>\n            {p.name} — ${p.price}\n          </li>\n        ))}\n      </ul>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// useMemo — cache an expensive computation across renders by deps\nlet computeCalls = 0;\nfunction expensive(n){ computeCalls++; let s = 0; for (let i = 0; i <= n; i++) s += i; return s; }\n\nlet memo = { deps: null, value: undefined };\nfunction useMemo(fn, deps){\n  const same = memo.deps && deps.every((d, i) => d === memo.deps[i]);\n  if (!same){ memo = { deps, value: fn() }; }\n  return memo.value;\n}\nfunction render(n){ return useMemo(() => expensive(n), [n]); }\n\nconsole.log(\"render(100):\", render(100));\nconsole.log(\"render(100) again:\", render(100));   // same dep -> cached\nconsole.log(\"render(200):\", render(200));         // dep changed -> recompute\nconsole.log(\"expensive() called times:\", computeCalls);\nconsole.assert(computeCalls === 2, \"should compute only when deps change\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "render(100): 5050\nrender(100) again: 5050\nrender(200): 20100\nexpensive() called times: 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

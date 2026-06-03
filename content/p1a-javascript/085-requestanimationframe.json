@@ -1,0 +1,64 @@
+{
+  "id": "p1a-085",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 85,
+  "orderInPhase": 85,
+  "slug": "requestanimationframe",
+  "title": "requestAnimationFrame",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "requestanimationframe"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Animating a progress bar or a canvas game loop: rAF keeps motion smooth and synced to the screen, and pauses when the tab is hidden — far better than a fixed…"
+  },
+  "sections": {
+    "simple_en": "`requestAnimationFrame(callback)` (rAF) schedules a callback to run right before the browser's next repaint — typically about 60 times per second, matching the display's refresh rate. It's the correct tool for smooth animations, instead of `setInterval`.\n\nrAF gives your callback a high-resolution timestamp and automatically pauses in background tabs (saving battery and CPU). For continuous animation you call `requestAnimationFrame` again inside the callback, creating a render loop synced to the display.",
+    "hinglish": "`requestAnimationFrame(callback)` (rAF) ek callback ko browser ke agle repaint se thik pehle chalane ke liye schedule karta hai — aam taur par lagbhag 60 baar per second, display ke refresh rate se match karte hue. Smooth animations ke liye ye sahi tool hai, `setInterval` ke bajaye.\nrAF aapke callback ko ek high-resolution timestamp deta hai aur background tabs me automatically pause ho jaata hai (battery aur CPU bachata hai). Continuous animation ke liye callback ke andar dobara `requestAnimationFrame` call karte ho, jisse display se synced ek render loop banta hai.",
+    "keyPoints": [
+      "Runs the callback just before the next repaint (~60fps, display-synced).",
+      "Preferred over setInterval for animations (smoother, no tearing).",
+      "Callback receives a high-resolution timestamp (DOMHighResTimeStamp).",
+      "Auto-pauses in inactive/background tabs (saves resources).",
+      "Loop by calling rAF again inside the callback; cancel with cancelAnimationFrame."
+    ],
+    "real_world": "Animating a progress bar or a canvas game loop: rAF keeps motion smooth and synced to the screen, and pauses when the tab is hidden — far better than a fixed setInterval that can stutter or waste cycles.",
+    "followups": [
+      {
+        "q": "Why use requestAnimationFrame instead of setInterval for animation?",
+        "a": "rAF syncs to the display's refresh rate for smooth, tear-free motion, gives a precise timestamp, and pauses in background tabs — whereas setInterval can stutter, drift, and waste CPU when hidden."
+      },
+      {
+        "q": "How do you create a continuous animation loop with rAF?",
+        "a": "Call `requestAnimationFrame(step)` again from inside the `step` callback until the animation is done, and use `cancelAnimationFrame(id)` to stop it."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Browser code (runs in a browser):\n//\n//   let x = 0;\n//   function step(timestamp) {\n//     x += 2;\n//     box.style.transform = \"translateX(\" + x + \"px)\";\n//     if (x < 300) requestAnimationFrame(step); // loop until done\n//   }\n//   requestAnimationFrame(step);\n//\n// Node has no rAF, so we provide a tiny polyfill to DEMONSTRATE the loop logic.\n\nconst raf = (typeof requestAnimationFrame === \"function\")\n  ? requestAnimationFrame\n  : (cb) => setTimeout(() => cb(Date.now()), 16); // ~60fps fallback\n\nfunction animateTo(target, stepSize = 2) {\n  return new Promise((resolve) => {\n    let x = 0;\n    const frames = [];\n    function step() {\n      x += stepSize;\n      frames.push(x);\n      if (x < target) raf(step);\n      else resolve(frames);\n    }\n    raf(step);\n  });\n}\n\nmodule.exports = { animateTo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (uses a setTimeout-based rAF fallback) ---\nconst { animateTo } = require(\"./solution\");\n\nanimateTo(10, 2).then((frames) => {\n  console.log(\"frames:\", frames); // [2,4,6,8,10]\n  console.assert(frames[frames.length - 1] >= 10, \"animation reaches target\");\n  console.assert(frames.length === 5, \"5 frames of size 2 to reach 10\");\n  console.log(\"requestAnimationFrame assertions passed.\");\n  console.log(\"Note: in a real browser rAF syncs to the display refresh (~60fps).\");\n});",
+      "expectedOutput": "frames: [ 2, 4, 6, 8, 10 ]\nrequestAnimationFrame assertions passed.\nNote: in a real browser rAF syncs to the display refresh (~60fps).",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

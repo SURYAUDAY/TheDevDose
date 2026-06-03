@@ -1,0 +1,66 @@
+{
+  "id": "p1b-071",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 71,
+  "orderInPhase": 71,
+  "slug": "typing-react-props",
+  "title": "Typing React Props",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "typing",
+    "react",
+    "props"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A reusable `<Button label onClick disabled?>` defines a `ButtonProps` interface so every place that renders the button is checked for the right props, and th…"
+  },
+  "sections": {
+    "simple_en": "Component props are typed with an interface or type alias describing each prop's name and type, including optional (`?`) props and callback props. The component then receives a fully-typed `props` object, so the compiler checks every usage and every parent passing them.\n\nCommon patterns: a `Props` interface for a function component, `children: React.ReactNode` for wrapping content, and event/callback props like `onClick: () => void`. Typed props give autocomplete to consumers and catch missing or wrong props at compile time.",
+    "hinglish": "Component props ko ek interface ya type alias se type karte hain jo har prop ka naam aur type describe kare, including optional (`?`) props aur callback props. Phir component ko ek fully-typed `props` object milta hai, isliye compiler har usage aur har parent ke pass karne ko check karta hai.\nCommon patterns: function component ke liye ek `Props` interface, content wrap karne ke liye `children: React.ReactNode`, aur event/callback props jaise `onClick: () => void`. Typed props consumers ko autocomplete dete hain aur missing/galat props compile time par pakadte hain.",
+    "keyPoints": [
+      "Define a Props interface/type for each component.",
+      "Mark optional props with `?`; type callbacks like `onClick: () => void`.",
+      "Use `children: React.ReactNode` for wrapper components.",
+      "Consumers get autocomplete and compile-time prop checking.",
+      "Defaults via default parameters/destructuring or defaultProps."
+    ],
+    "real_world": "A reusable `<Button label onClick disabled?>` defines a `ButtonProps` interface so every place that renders the button is checked for the right props, and the editor autocompletes them.",
+    "followups": [
+      {
+        "q": "How do you type a component's props?",
+        "a": "Define an interface/type listing each prop with its type (optional ones marked `?`, callbacks as function types), then type the component's props parameter with it so usage is checked."
+      },
+      {
+        "q": "How do you type children?",
+        "a": "Use `children: React.ReactNode`, which accepts anything renderable (elements, strings, arrays, null) — the standard type for wrapper/container components."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// React usage (in a .tsx file):\n//\n//   interface ButtonProps {\n//     label: string;\n//     onClick: () => void;\n//     disabled?: boolean;\n//   }\n//   const Button: React.FC<ButtonProps> = ({ label, onClick, disabled = false }) => (\n//     <button onClick={onClick} disabled={disabled}>{label}</button>\n//   );\n//\n// Runnable stand-in (no React): the SAME props type + a render() that returns\n// the markup as a string so we can verify the typing/logic.\n\nexport interface ButtonProps {\n  label: string;\n  onClick: () => void;\n  disabled?: boolean;\n}\n\nexport function renderButton({ label, onClick, disabled = false }: ButtonProps): string {\n  return `<button disabled=${disabled}>${label}</button>`;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { renderButton } from \"./solution\";\n\nlet clicked = 0;\nconsole.log(renderButton({ label: \"Save\", onClick: () => clicked++ }));\nconsole.log(renderButton({ label: \"Delete\", onClick: () => {}, disabled: true }));\n\nconsole.assert(renderButton({ label: \"Save\", onClick: () => {} }) === \"<button disabled=false>Save</button>\", \"default disabled=false\");\nconsole.assert(renderButton({ label: \"X\", onClick: () => {}, disabled: true }).includes(\"disabled=true\"), \"disabled prop applied\");\nconsole.log(\"typing-react-props assertions passed.\");",
+      "expectedOutput": "<button disabled=false>Save</button>\n<button disabled=true>Delete</button>\ntyping-react-props assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

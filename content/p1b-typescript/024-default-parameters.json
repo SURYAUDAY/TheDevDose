@@ -1,0 +1,65 @@
+{
+  "id": "p1b-024",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 24,
+  "orderInPhase": 24,
+  "slug": "default-parameters",
+  "title": "Default Parameters",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "default",
+    "parameters"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A pagination helper `fetchPage(page: number = 1, pageSize: number = 20)` works with no arguments for the common case while still allowing overrides — cleaner…"
+  },
+  "sections": {
+    "simple_en": "A default parameter provides a value to use when the caller omits an argument (or passes `undefined`): `function greet(name: string = \"Guest\")`. TypeScript infers the parameter's type from the default, so you often don't need an explicit annotation.\n\nUnlike optional parameters (which can be `undefined`), a defaulted parameter always has a concrete value inside the function. A parameter with a default is implicitly optional for callers, and defaults can reference earlier parameters.",
+    "hinglish": "Default parameter ek value provide karta hai jo tab use hoti hai jab caller argument omit kare (ya `undefined` pass kare): `function greet(name: string = \"Guest\")`. TypeScript default se parameter ka type infer kar leta hai, isliye aksar explicit annotation ki zarurat nahi.\nOptional parameters (jo `undefined` ho sakte hain) ke विपरीत, defaulted parameter ke paas function ke andar hamesha ek concrete value hoti hai. Default wala parameter callers ke liye implicitly optional hota hai, aur defaults pehle ke parameters ko reference kar sakte hain.",
+    "keyPoints": [
+      "`param: Type = defaultValue` — used when the arg is omitted/undefined.",
+      "Type is inferred from the default (annotation often optional).",
+      "Always has a concrete value inside the function (unlike optional).",
+      "Callers may omit a defaulted parameter (implicitly optional).",
+      "Defaults can reference earlier parameters."
+    ],
+    "real_world": "A pagination helper `fetchPage(page: number = 1, pageSize: number = 20)` works with no arguments for the common case while still allowing overrides — cleaner than checking for undefined inside.",
+    "followups": [
+      {
+        "q": "Difference between optional and default parameters?",
+        "a": "An optional parameter (`x?`) may be undefined inside the function; a default parameter (`x = v`) always has a concrete value because the default fills in when the argument is omitted or undefined."
+      },
+      {
+        "q": "Do you need to annotate a default parameter's type?",
+        "a": "Usually not — TypeScript infers it from the default value. You can still annotate it explicitly when you want a broader or more specific type than the default implies."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — default parameters (incl. referencing earlier params).\n\nexport function greet(name: string = \"Guest\"): string {\n  return \"Hello, \" + name;\n}\n\nexport function range(start: number = 0, end: number = start + 5): number[] {\n  const out: number[] = [];\n  for (let i = start; i < end; i++) out.push(i);\n  return out;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { greet, range } from \"./solution\";\n\nconsole.log(greet());          // Hello, Guest\nconsole.log(greet(\"Asha\"));    // Hello, Asha\nconsole.log(range());          // [0,1,2,3,4]\nconsole.log(range(10));        // [10,11,12,13,14]\nconsole.log(range(1, 4));      // [1,2,3]\n\nconsole.assert(greet() === \"Hello, Guest\", \"default used\");\nconsole.assert(greet(\"Asha\") === \"Hello, Asha\", \"override used\");\nconsole.assert(JSON.stringify(range()) === \"[0,1,2,3,4]\", \"both defaults\");\nconsole.assert(JSON.stringify(range(10)) === \"[10,11,12,13,14]\", \"end defaults from start\");\nconsole.log(\"default-parameters assertions passed.\");",
+      "expectedOutput": "Hello, Guest\nHello, Asha\n[ 0, 1, 2, 3, 4 ]\n[ 10, 11, 12, 13, 14 ]\n[ 1, 2, 3 ]\ndefault-parameters assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

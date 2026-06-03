@@ -1,0 +1,69 @@
+{
+  "id": "p2-061",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 61,
+  "orderInPhase": 61,
+  "slug": "lighthouse-audits",
+  "title": "Lighthouse audits",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "lighthouse",
+    "audits"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Before launch, a team runs Lighthouse and scores 70 on performance."
+  },
+  "sections": {
+    "simple_en": "Lighthouse is an automated auditing tool (built into Chrome DevTools and available via CLI/CI) that scores a page across categories: Performance, Accessibility, Best Practices, SEO, and PWA. Each category is a weighted average of individual audits, scored 0–100 with green/orange/red ratings.\n\nBeyond the score, Lighthouse gives actionable suggestions — unused JavaScript, missing image dimensions, contrast issues, and so on. Running it in CI with score budgets prevents regressions by failing builds that drop below a threshold.",
+    "hinglish": "Lighthouse ek automated auditing tool hai (Chrome DevTools mein built-in, aur CLI/CI se bhi) jo page ko categories par score karta hai: Performance, Accessibility, Best Practices, SEO, PWA. Har category individual audits ka weighted average hai, 0–100 score aur green/orange/red rating ke saath.\n\nScore ke alawa Lighthouse actionable suggestions deta hai — unused JavaScript, missing image dimensions, contrast issues. CI mein score budgets ke saath chalana regressions rokta hai — threshold se neeche jaane par build fail ho jaati hai.",
+    "keyPoints": [
+      "Audits a page across Performance, Accessibility, Best Practices, SEO, PWA.",
+      "Each category score is a weighted average of individual audits (0–100).",
+      "Ratings: green (good), orange (needs improvement), red (poor).",
+      "Gives concrete fix suggestions, not just numbers.",
+      "Run in CI with budgets to fail builds that regress below a threshold."
+    ],
+    "real_world": "Before launch, a team runs Lighthouse and scores 70 on performance. The report flags render-blocking scripts and unsized images. After deferring scripts and adding image dimensions, the score jumps to 92 — and a CI budget keeps it there on future PRs.",
+    "followups": [
+      {
+        "q": "How is a Lighthouse category score calculated?",
+        "a": "As a weighted average of its individual audits. Heavier-weighted metrics (like certain performance metrics) influence the final 0–100 score more than lighter ones."
+      },
+      {
+        "q": "How do you prevent performance regressions over time?",
+        "a": "Run Lighthouse (or Lighthouse CI) in your pipeline with score/metric budgets so a PR that drops below the threshold fails the build."
+      },
+      {
+        "q": "Is the lab score the same as real-user performance?",
+        "a": "Not exactly. Lighthouse is a lab (simulated) measurement; real-user (field) data from Web Vitals can differ due to varied devices and networks."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Lighthouse tooling / CI configuration. The Node-runnable demo below illustrates how a weighted category score is computed.",
+      "source": "// Lighthouse audits — run via CLI/CI to score performance, a11y, SEO, etc.\n// (Tooling, not app code.)\n\n// package.json\n// \"scripts\": { \"audit\": \"lighthouse https://myapp.com --output=json --output-path=./report.json\" }\n\n// CI example: lighthouse-ci to enforce score budgets on every PR.\n// lighthouserc.js\nmodule.exports = {\n  ci: {\n    collect: { url: [\"http://localhost:3000/\"], numberOfRuns: 3 },\n    assert: {\n      assertions: {\n        \"categories:performance\": [\"error\", { minScore: 0.9 }],\n        \"categories:accessibility\": [\"error\", { minScore: 0.9 }],\n        \"categories:seo\": [\"warn\", { minScore: 0.9 }],\n      },\n    },\n  },\n};\n// A build fails if performance drops below 0.9 — preventing regressions.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Lighthouse audits — weighted category score from individual audits\nfunction lighthouseScore(audits){\n  // each audit: { score: 0..1, weight }\n  const total = audits.reduce((s, a) => s + a.weight, 0);\n  const earned = audits.reduce((s, a) => s + a.score * a.weight, 0);\n  return Math.round((earned / total) * 100);\n}\nconst performanceAudits = [\n  { name: \"LCP\", score: 0.9, weight: 25 },\n  { name: \"TBT\", score: 0.7, weight: 30 },\n  { name: \"CLS\", score: 1.0, weight: 15 },\n  { name: \"FCP\", score: 0.8, weight: 10 },\n  { name: \"SI\",  score: 0.6, weight: 10 },\n];\nconst score = lighthouseScore(performanceAudits);\nconst rating = score >= 90 ? \"Good (green)\" : score >= 50 ? \"Needs improvement (orange)\" : \"Poor (red)\";\nconsole.log(\"Performance score:\", score, \"/ 100 ->\", rating);\nconsole.assert(score >= 0 && score <= 100, \"score in range\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Performance score: 81 / 100 -> Needs improvement (orange)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

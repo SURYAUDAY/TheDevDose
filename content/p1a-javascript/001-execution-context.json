@@ -1,0 +1,65 @@
+{
+  "id": "p1a-001",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 1,
+  "orderInPhase": 1,
+  "slug": "execution-context",
+  "title": "Execution Context",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "execution",
+    "context"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "kitchen",
+    "seedText": "Think of a restaurant kitchen: the whole kitchen is the Global Context (shared equipment, always there)."
+  },
+  "sections": {
+    "simple_en": "An Execution Context is the environment in which a piece of JavaScript code is evaluated and run. Whenever code executes, the JS engine wraps it in a context that knows three things: what variables/functions are available, what `this` refers to, and a reference to the outer (parent) environment.\n\nThere are two main types: the Global Execution Context (created once when the script starts) and a Function Execution Context (created every time a function is called). Each context is built in two phases — a Memory Creation phase and an Execution phase.",
+    "hinglish": "Execution Context ka matlab hai woh 'environment' jisme aapka JavaScript code chalta hai. Jab bhi code run hota hai, engine ek dabba (context) banata hai jisme decide hota hai ki kaunse variables aur functions available hain, `this` kis cheez ko point kar raha hai, aur parent scope kaun hai.\nDo type hote hain: Global Context (poora script start hote hi ek baar banta hai) aur Function Context (har function call par naya banta hai). Har context do phase me banta hai — pehle memory allocate hoti hai, phir code line-by-line execute hota hai.",
+    "keyPoints": [
+      "Two types: Global Execution Context (one per program) and Function Execution Context (one per function call).",
+      "Every context is built in two phases: Memory Creation (allocation) then Execution (running code).",
+      "A context stores three things: the Variable Environment, the value of `this`, and a reference to the outer environment (scope chain).",
+      "Contexts are managed on the Call Stack — the currently running one sits on top.",
+      "Understanding contexts explains hoisting, scope, closures, and the `this` keyword."
+    ],
+    "real_world": "Think of a restaurant kitchen: the whole kitchen is the Global Context (shared equipment, always there). Each individual order ticket is a Function Context — it gets its own little prep space, runs, then is cleared away when the dish is done.",
+    "followups": [
+      {
+        "q": "What three things does an execution context contain?",
+        "a": "The variable environment (variables + functions), the value of `this`, and a reference to the outer (lexical) environment used to build the scope chain."
+      },
+      {
+        "q": "When is a new execution context created?",
+        "a": "The Global context is created once when the script loads; a new Function execution context is created on every function invocation (not on declaration)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrating that each function call gets its OWN execution context.\n// Each call has its own copy of local variables and its own 'this' binding.\n\nfunction makeCounter(label) {\n  // 'count' lives in THIS function's execution context only\n  let count = 0;\n  function increment() {\n    count += 1;\n    return label + \": \" + count;\n  }\n  return increment;\n}\n\nconst a = makeCounter(\"A\");\nconst b = makeCounter(\"B\");\n\n// 'a' and 'b' were created by two separate execution contexts,\n// so they each have an independent 'count'.\nmodule.exports = { makeCounter, a, b };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { a, b } = require(\"./solution\");\n\nconsole.log(a()); // A: 1\nconsole.log(a()); // A: 2\nconsole.log(b()); // B: 1  (independent context!)\nconsole.log(a()); // A: 3\n\nconsole.assert(a() === \"A: 4\", \"context A should keep its own count\");\nconsole.assert(b() === \"B: 2\", \"context B should be independent\");\nconsole.log(\"All execution-context assertions passed.\");",
+      "expectedOutput": "A: 1\nA: 2\nB: 1\nA: 3\nAll execution-context assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

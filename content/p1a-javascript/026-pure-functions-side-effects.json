@@ -1,0 +1,67 @@
+{
+  "id": "p1a-026",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 26,
+  "orderInPhase": 26,
+  "slug": "pure-functions-side-effects",
+  "title": "Pure Functions & Side Effects",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "pure",
+    "functions",
+    "side",
+    "effects"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Redux reducers must be pure: given the current state and an action they return a new state without mutating the old one."
+  },
+  "sections": {
+    "simple_en": "A pure function always returns the same output for the same input and causes no side effects — it doesn't modify anything outside itself (no changing global variables, no mutating its arguments, no I/O, no DOM updates). Given the same inputs, it is perfectly predictable.\n\nA side effect is any observable interaction with the outside world: mutating external state, logging, network calls, writing files, or changing the DOM. Pure functions are easier to test, cache (memoise), and reason about; impure code is sometimes necessary but should be isolated.",
+    "hinglish": "Pure function hamesha same input par same output deta hai aur koi side effect nahi karta — apne bahar ki kisi cheez ko change nahi karta (na global variable, na arguments ko mutate, na I/O, na DOM update). Same input do to result bilkul predictable.\nSide effect matlab bahar ki duniya se koi bhi observable interaction: external state badalna, logging, network call, file likhna, ya DOM change. Pure functions test karna, cache (memoise) karna aur samajhna aasaan hota hai; impure code kabhi-kabhi zaruri hota hai par use alag rakhna chahiye.",
+    "keyPoints": [
+      "Pure = same input → same output, AND no side effects.",
+      "Side effects: mutating external/argument state, I/O, logging, network, DOM changes.",
+      "Pure functions are deterministic, testable, and safe to memoise/parallelise.",
+      "Don't mutate arguments — return a new value instead.",
+      "Real apps need side effects; keep them at the edges and keep core logic pure."
+    ],
+    "real_world": "Redux reducers must be pure: given the current state and an action they return a new state without mutating the old one. This purity is what makes time-travel debugging and predictable state updates possible.",
+    "followups": [
+      {
+        "q": "What two conditions make a function pure?",
+        "a": "It returns the same output for the same input (deterministic), and it produces no side effects (doesn't mutate external state, arguments, or interact with the outside world)."
+      },
+      {
+        "q": "Why are pure functions valuable?",
+        "a": "They're easy to test, can be safely cached/memoised, are predictable for debugging, and can be reordered or parallelised without changing behaviour."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Pure vs impure versions of the same task.\n\n// IMPURE: mutates the input array (side effect)\nfunction addItemImpure(cart, item) {\n  cart.push(item);  // mutates caller's array\n  return cart;\n}\n\n// PURE: returns a new array, original untouched\nfunction addItemPure(cart, item) {\n  return [...cart, item];\n}\n\n// PURE: deterministic, no external dependency\nfunction add(a, b) { return a + b; }\n\nmodule.exports = { addItemImpure, addItemPure, add };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { addItemImpure, addItemPure, add } = require(\"./solution\");\n\nconst original = [1, 2];\nconst pureResult = addItemPure(original, 3);\nconsole.log(\"pure result:\", pureResult);     // [1,2,3]\nconsole.log(\"original after pure:\", original); // [1,2] unchanged\n\nconst original2 = [1, 2];\naddItemImpure(original2, 3);\nconsole.log(\"original after impure:\", original2); // [1,2,3] mutated!\n\nconsole.assert(JSON.stringify(original) === \"[1,2]\", \"pure leaves original untouched\");\nconsole.assert(JSON.stringify(original2) === \"[1,2,3]\", \"impure mutated original\");\nconsole.assert(add(2, 3) === 5 && add(2, 3) === 5, \"pure add is deterministic\");\nconsole.log(\"pure function assertions passed.\");",
+      "expectedOutput": "pure result: [ 1, 2, 3 ]\noriginal after pure: [ 1, 2 ]\noriginal after impure: [ 1, 2, 3 ]\npure function assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

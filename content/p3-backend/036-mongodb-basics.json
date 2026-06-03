@@ -1,0 +1,69 @@
+{
+  "id": "p3-036",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 36,
+  "orderInPhase": 36,
+  "slug": "mongodb-basics",
+  "title": "MongoDB basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "mongodb",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A user service stores profiles as documents and queries find({ age: { $gt: 20 }, city: 'Pune' }) to segment users."
+  },
+  "sections": {
+    "simple_en": "MongoDB is the most popular document database. It stores BSON (binary JSON) documents in collections, and queries use a rich operator language: equality filters, comparison operators ($gt, $lt, $in), logical operators ($or, $and), and update operators ($set, $inc, $push). There's no fixed table schema.\n\nFrom Node you use the official mongodb driver (or Mongoose). Core operations are insertOne/insertMany, find/findOne, updateOne/updateMany, and deleteOne/deleteMany. Its flexible documents and horizontal scaling (sharding) make it popular for rapidly evolving applications.",
+    "hinglish": "MongoDB sabse popular document database hai. Ye BSON (binary JSON) documents ko collections mein store karta hai, aur queries ek rich operator language use karti hain: equality filters, comparison operators ($gt, $lt, $in), logical operators ($or, $and), aur update operators ($set, $inc, $push). Koi fixed table schema nahi.\n\nNode se aap official mongodb driver (ya Mongoose) use karte ho. Core operations: insertOne/insertMany, find/findOne, updateOne/updateMany, aur deleteOne/deleteMany. Iske flexible documents aur horizontal scaling (sharding) ise tezi se badalne wali applications ke liye popular banate hain.",
+    "keyPoints": [
+      "Stores BSON documents in collections — no fixed schema.",
+      "Query operators: $gt/$lt/$in (comparison), $or/$and (logical).",
+      "Update operators: $set, $inc, $push modify documents in place.",
+      "Core ops: insertOne, find/findOne, updateOne, deleteOne (+ many variants).",
+      "Flexible docs + sharding suit fast-evolving, scalable apps."
+    ],
+    "real_world": "A user service stores profiles as documents and queries find({ age: { $gt: 20 }, city: 'Pune' }) to segment users. Adding a new optional field (say, 'preferences') needs no migration — new documents just include it.",
+    "followups": [
+      {
+        "q": "What's the difference between find and findOne?",
+        "a": "find returns a cursor over all matching documents (you iterate or .toArray() it); findOne returns just the first matching document (or null)."
+      },
+      {
+        "q": "What do $set and $inc do?",
+        "a": "$set assigns a field's value; $inc increments a numeric field by an amount. They're update operators applied within updateOne/updateMany without rewriting the whole document."
+      },
+      {
+        "q": "Is MongoDB schemaless?",
+        "a": "The database doesn't enforce a schema, but most apps define one at the application layer (e.g., with Mongoose) for validation and consistency."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real MongoDB driver code (runs against MongoDB). The Node-runnable demo below simulates insert/find/update with query operators so the output is verifiable here.",
+      "source": "// MongoDB basics — CRUD with the official Node driver.\nconst { MongoClient } = require(\"mongodb\");\nconst client = new MongoClient(process.env.MONGO_URL);\n\nasync function run() {\n  await client.connect();\n  const users = client.db(\"app\").collection(\"users\");\n\n  // CREATE\n  await users.insertOne({ name: \"Asha\", age: 25, city: \"Pune\" });\n\n  // READ — query operators: $gt, $lt, $in, $or, etc.\n  const adults = await users.find({ age: { $gt: 20 } }).toArray();\n  const one = await users.findOne({ name: \"Asha\" });\n\n  // UPDATE — $set, $inc, $push update operators\n  await users.updateOne({ name: \"Asha\" }, { $set: { city: \"Mumbai\" }, $inc: { age: 1 } });\n\n  // DELETE\n  await users.deleteOne({ name: \"Asha\" });\n\n  return { adults, one };\n}\nmodule.exports = { run };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// MongoDB basics — insertOne / find with a query operator ($gt)\nfunction createCollection(){\n  const docs = []; let seq = 0;\n  const test = (doc, q) => Object.entries(q).every(([k, cond]) => {\n    if (cond && typeof cond === \"object\" && \"$gt\" in cond) return doc[k] > cond.$gt;\n    if (cond && typeof cond === \"object\" && \"$in\" in cond) return cond.$in.includes(doc[k]);\n    return doc[k] === cond;\n  });\n  return {\n    insertOne: (doc) => { const d = { _id: ++seq, ...doc }; docs.push(d); return { insertedId: d._id }; },\n    find: (q = {}) => docs.filter(d => test(d, q)),\n    updateOne: (q, { $set }) => { const d = docs.find(x => test(x, q)); if (d) Object.assign(d, $set); return { modified: d ? 1 : 0 }; },\n  };\n}\nconst users = createCollection();\nusers.insertOne({ name: \"Asha\", age: 25, city: \"Pune\" });\nusers.insertOne({ name: \"Ravi\", age: 30, city: \"Delhi\" });\nusers.insertOne({ name: \"Mira\", age: 18, city: \"Pune\" });\nconsole.log(\"find age>20:\", JSON.stringify(users.find({ age: { $gt: 20 } }).map(d => d.name)));\nconsole.log(\"find city=Pune:\", JSON.stringify(users.find({ city: \"Pune\" }).map(d => d.name)));\nusers.updateOne({ name: \"Mira\" }, { $set: { age: 19 } });\nconsole.log(\"after update Mira:\", users.find({ name: \"Mira\" })[0].age);\nconsole.assert(users.find({ age: { $gt: 20 } }).length === 2, \"two users over 20\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "find age>20: [\"Asha\",\"Ravi\"]\nfind city=Pune: [\"Asha\",\"Mira\"]\nafter update Mira: 19\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

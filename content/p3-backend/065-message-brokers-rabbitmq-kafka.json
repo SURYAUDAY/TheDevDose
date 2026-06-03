@@ -1,0 +1,71 @@
+{
+  "id": "p3-065",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 65,
+  "orderInPhase": 65,
+  "slug": "message-brokers-rabbitmq-kafka",
+  "title": "Message brokers (RabbitMQ / Kafka)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "message",
+    "brokers",
+    "rabbitmq",
+    "kafka"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "When an order is placed, the service publishes an 'order.created' event to a broker."
+  },
+  "sections": {
+    "simple_en": "A message broker is dedicated infrastructure for passing messages between services reliably and asynchronously, enabling event-driven, loosely coupled architectures. Producers publish messages; the broker routes them to consumers. A key pattern is publish/subscribe, where one published event fans out to many independent subscribers.\n\nRabbitMQ is a traditional 'smart broker' with flexible routing (exchanges, queues, bindings) and per-message acknowledgements — great for task distribution and complex routing. Kafka is a distributed, durable commit log organized into topics and partitions, built for high-throughput event streaming and replay. You choose based on routing needs, throughput, durability, and whether you need to re-read history.",
+    "hinglish": "Message broker ek dedicated infrastructure hai jo services ke beech messages reliably aur asynchronously pass karta hai, event-driven, loosely coupled architectures enable karke. Producers messages publish karte hain; broker unhe consumers tak route karta hai. Key pattern publish/subscribe hai, jahan ek published event kai independent subscribers tak fan out hota hai.\n\nRabbitMQ ek traditional 'smart broker' hai flexible routing (exchanges, queues, bindings) aur per-message acknowledgements ke saath — task distribution aur complex routing ke liye accha. Kafka ek distributed, durable commit log hai jo topics aur partitions mein organized hai, high-throughput event streaming aur replay ke liye bana. Choice routing needs, throughput, durability aur history dobara padhne ki zaroorat par depend karti hai.",
+    "keyPoints": [
+      "Dedicated infra for reliable, async messaging between services.",
+      "Enables event-driven, loosely coupled architectures.",
+      "Pub/sub: one published event fans out to many subscribers.",
+      "RabbitMQ: smart broker, flexible routing, per-message acks (task queues).",
+      "Kafka: distributed durable log (topics/partitions) for high-throughput streaming + replay."
+    ],
+    "real_world": "When an order is placed, the service publishes an 'order.created' event to a broker. The email, inventory, and analytics services each subscribe and react independently. Adding a new consumer (say, fraud detection) requires no change to the order service — it just subscribes to the same event.",
+    "followups": [
+      {
+        "q": "What problem do message brokers solve?",
+        "a": "They decouple services so producers and consumers don't call each other directly. Communication becomes asynchronous and resilient, and you can add/remove consumers without changing producers."
+      },
+      {
+        "q": "RabbitMQ vs Kafka — when to use which?",
+        "a": "RabbitMQ excels at flexible routing and task queues with per-message acknowledgement. Kafka excels at high-throughput, durable, replayable event streams (a log you can re-read). Choose by routing complexity vs streaming/replay needs."
+      },
+      {
+        "q": "What is publish/subscribe?",
+        "a": "A messaging pattern where a publisher sends an event to a topic/exchange and every interested subscriber receives a copy — enabling fan-out to multiple independent consumers."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real RabbitMQ code (Node + amqplib). The Node-runnable demo below simulates pub/sub fan-out to multiple subscribers so the behavior is verifiable here.",
+      "source": "// Message brokers — publish/subscribe with RabbitMQ (amqplib).\nconst amqp = require(\"amqplib\");\n\n// PUBLISHER: send to a fanout exchange; every bound queue gets a copy.\nasync function publishOrderCreated(order) {\n  const conn = await amqp.connect(process.env.AMQP_URL);\n  const ch = await conn.createChannel();\n  await ch.assertExchange(\"orders\", \"fanout\", { durable: true });\n  ch.publish(\"orders\", \"\", Buffer.from(JSON.stringify(order)), { persistent: true });\n  await ch.close(); await conn.close();\n}\n\n// CONSUMER: each service binds its own queue to the exchange.\nasync function startEmailConsumer() {\n  const conn = await amqp.connect(process.env.AMQP_URL);\n  const ch = await conn.createChannel();\n  await ch.assertExchange(\"orders\", \"fanout\", { durable: true });\n  const { queue } = await ch.assertQueue(\"email-service\", { durable: true });\n  await ch.bindQueue(queue, \"orders\", \"\");\n  ch.consume(queue, (msg) => {\n    const order = JSON.parse(msg.content.toString());\n    sendEmail(order);\n    ch.ack(msg);                       // acknowledge so it isn't redelivered\n  });\n}\n\nfunction sendEmail(order) {}\n// RabbitMQ: smart broker, flexible routing. Kafka: durable, ordered log of\n// events with partitions for high-throughput streaming and replay.\nmodule.exports = { publishOrderCreated, startEmailConsumer };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Message brokers — pub/sub: one publish fans out to many subscribers (topics)\nfunction createBroker(){\n  const topics = {};\n  return {\n    subscribe(topic, handler){ (topics[topic] ||= []).push(handler); },\n    publish(topic, message){\n      const subs = topics[topic] || [];\n      subs.forEach(h => h(message));    // every subscriber gets a copy\n      return subs.length;\n    },\n  };\n}\nconst broker = createBroker();\nconst log = [];\n// Multiple independent services subscribe to \"order.created\"\nbroker.subscribe(\"order.created\", (m) => log.push(`email: order ${m.id}`));\nbroker.subscribe(\"order.created\", (m) => log.push(`inventory: reserve ${m.item}`));\nbroker.subscribe(\"order.created\", (m) => log.push(`analytics: ${m.id}`));\nconst delivered = broker.publish(\"order.created\", { id: 101, item: \"Phone\" });\nlog.forEach(l => console.log(l));\nconsole.log(\"Delivered to\", delivered, \"subscribers\");\nconsole.assert(delivered === 3 && log.length === 3, \"fan-out to all subscribers\");\nconsole.log(\"RabbitMQ (exchanges/queues) and Kafka (topics/partitions) enable async, decoupled systems.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "email: order 101\ninventory: reserve Phone\nanalytics: 101\nDelivered to 3 subscribers\nRabbitMQ (exchanges/queues) and Kafka (topics/partitions) enable async, decoupled systems.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

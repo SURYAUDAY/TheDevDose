@@ -1,0 +1,64 @@
+{
+  "id": "p1b-053",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 53,
+  "orderInPhase": 53,
+  "slug": "nonnullable-t",
+  "title": "NonNullable<T>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "nonnullable"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "pipeline",
+    "seedText": "After `items.filter((x): x is NonNullable<typeof x> => x != null)`, the resulting array's element type drops null/undefined, so the rest of the pipeline can…"
+  },
+  "sections": {
+    "simple_en": "`NonNullable<T>` removes `null` and `undefined` from a type. For example `NonNullable<string | null | undefined>` is just `string`. It's handy once you've checked/filtered out nullish values and want a type that guarantees their absence.\n\nIt's commonly used after a narrowing step (like a `filter(Boolean)` or a guard) to express that the result can no longer be null/undefined, keeping downstream code free of redundant null checks.",
+    "hinglish": "`NonNullable<T>` ek type se `null` aur `undefined` hata deta hai. Jaise `NonNullable<string | null | undefined>` sirf `string` hai. Ye tab useful hai jab aap nullish values check/filter kar chuke ho aur ek aisa type chahiye jo unki gairhaaziri guarantee kare.\nIse aksar ek narrowing step ke baad use karte hain (jaise `filter(Boolean)` ya ek guard) ye express karne ke liye ki result ab null/undefined nahi ho sakta, jisse downstream code redundant null checks se mukt rehta hai.",
+    "keyPoints": [
+      "Removes `null` and `undefined` from a type.",
+      "`NonNullable<string | null>` → `string`.",
+      "Use after narrowing/filtering out nullish values.",
+      "Keeps downstream code free of repeated null checks.",
+      "Built on a conditional type."
+    ],
+    "real_world": "After `items.filter((x): x is NonNullable<typeof x> => x != null)`, the resulting array's element type drops null/undefined, so the rest of the pipeline can use the values directly without optional chaining.",
+    "followups": [
+      {
+        "q": "What does NonNullable<T> do?",
+        "a": "It produces a type with `null` and `undefined` removed from T. For example `NonNullable<string | null | undefined>` becomes `string`."
+      },
+      {
+        "q": "When is NonNullable useful?",
+        "a": "After you've filtered or guarded out nullish values, to express that the remaining values are definitely present — avoiding redundant null checks downstream."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — NonNullable to express 'definitely present'.\n\ntype MaybeName = string | null | undefined;\nexport type DefiniteName = NonNullable<MaybeName>; // string\n\nexport function compact<T>(arr: (T | null | undefined)[]): NonNullable<T>[] {\n  return arr.filter((x): x is NonNullable<T> => x !== null && x !== undefined);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { compact } from \"./solution\";\n\nconsole.log(compact([\"a\", null, \"b\", undefined, \"c\"])); // ['a','b','c']\nconsole.log(compact([1, undefined, 2, null]));          // [1,2]\n\nconsole.assert(JSON.stringify(compact([\"a\", null, \"b\"])) === '[\"a\",\"b\"]', \"nullish removed\");\nconsole.assert(compact([1, null, 2]).length === 2, \"length after compact\");\nconsole.log(\"NonNullable assertions passed.\");",
+      "expectedOutput": "[ 'a', 'b', 'c' ]\n[ 1, 2 ]\nNonNullable assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

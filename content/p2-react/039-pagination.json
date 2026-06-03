@@ -1,0 +1,68 @@
+{
+  "id": "p2-039",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 39,
+  "orderInPhase": 39,
+  "slug": "pagination",
+  "title": "Pagination",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "pagination"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "An admin user table with 50,000 rows loads 25 at a time."
+  },
+  "sections": {
+    "simple_en": "Pagination splits a large dataset into pages so you fetch and render a manageable slice at a time. The client tracks the current page (and page size), requests just that page, and shows controls to move between pages — keeping payloads small and the UI responsive.\n\nWith React Query, each page is its own cached query (keyed by page number). Using keepPreviousData/placeholderData keeps the current page visible while the next one loads, avoiding a jarring empty flash between pages.",
+    "hinglish": "Pagination bade dataset ko pages mein tod deta hai taaki ek baar mein manageable slice fetch aur render ho. Client current page aur page size track karta hai, sirf wahi page maangta hai, aur pages ke beech move karne ke controls dikhata hai.\n\nReact Query mein har page apni cached query hoti hai (page number se keyed). keepPreviousData/placeholderData se current page dikhta rehta hai jab tak agla load ho, beech mein khaali flash nahi aata.",
+    "keyPoints": [
+      "Fetch and render one page (offset/limit or cursor) at a time, not the whole set.",
+      "Track current page + page size; request only that slice.",
+      "React Query keys each page separately, caching them independently.",
+      "keepPreviousData avoids an empty flash while the next page loads.",
+      "Two styles: offset-based (page numbers) and cursor-based (next-token)."
+    ],
+    "real_world": "An admin user table with 50,000 rows loads 25 at a time. The page number is part of the query key, so revisiting page 3 is instant from cache, and the table stays on screen while the next page fetches in the background.",
+    "followups": [
+      {
+        "q": "Offset vs cursor pagination — what's the difference?",
+        "a": "Offset uses page numbers/limit-offset (simple, but can skip/duplicate rows if data changes). Cursor uses a pointer to the last item (stable for live data, slightly more complex)."
+      },
+      {
+        "q": "How do you avoid a blank screen between pages?",
+        "a": "Use keepPreviousData (placeholderData) in React Query so the current page stays visible until the next page's data arrives."
+      },
+      {
+        "q": "Why cache each page separately?",
+        "a": "So navigating back to a previously viewed page is instant from cache instead of refetching."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Pagination: keep page state and request one page at a time.\nimport React, { useState } from \"react\";\nimport { useQuery, keepPreviousData } from \"@tanstack/react-query\";\n\nexport default function Products() {\n  const [page, setPage] = useState(1);\n  const { data } = useQuery({\n    queryKey: [\"products\", page],\n    queryFn: () => fetch(`/api/products?page=${page}`).then((r) => r.json()),\n    placeholderData: keepPreviousData, // keep old page visible while next loads\n  });\n\n  return (\n    <div>\n      <ul>{data?.items.map((p) => <li key={p.id}>{p.name}</li>)}</ul>\n      <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Prev</button>\n      <span> Page {page} of {data?.totalPages} </span>\n      <button disabled={page === data?.totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Pagination — slice a dataset into pages\nfunction paginate(items, page, pageSize){\n  const total = items.length;\n  const totalPages = Math.ceil(total / pageSize);\n  const start = (page - 1) * pageSize;\n  return { page, totalPages, data: items.slice(start, start + pageSize) };\n}\nconst items = Array.from({ length: 23 }, (_, i) => i + 1);\nconst p1 = paginate(items, 1, 10);\nconst p3 = paginate(items, 3, 10);\nconsole.log(\"Page 1:\", p1.data.join(\",\"), \"| totalPages:\", p1.totalPages);\nconsole.log(\"Page 3:\", p3.data.join(\",\"));\nconsole.assert(p1.data.length === 10 && p3.data.length === 3, \"page sizes correct\");\nconsole.assert(p1.totalPages === 3, \"23 items / 10 = 3 pages\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Page 1: 1,2,3,4,5,6,7,8,9,10 | totalPages: 3\nPage 3: 21,22,23\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

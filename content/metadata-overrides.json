@@ -1,0 +1,3 @@
+{
+  "_doc": "Per-topic overrides merged on top of auto-derived metadata at seed time. Key by topic id, e.g. \"p1a-001\": { \"difficulty\": \"intermediate\", \"tags\": [...], \"metaphor\": { \"templateId\": \"kitchen\" } }"
+}

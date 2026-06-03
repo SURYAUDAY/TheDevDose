@@ -1,0 +1,69 @@
+{
+  "id": "p3-091",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 91,
+  "orderInPhase": 91,
+  "slug": "pm2-basics",
+  "title": "PM2 basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "pm2",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A Node API on a 4-core server runs under PM2 in cluster mode with 4 instances, using every core."
+  },
+  "sections": {
+    "simple_en": "PM2 is a production process manager for Node.js. Its main jobs: keep your app running (automatically restarting it if it crashes), run it in cluster mode (one process per CPU core, with built-in load balancing across them), manage logs, and enable zero-downtime reloads when you deploy a new version.\n\nNode is single-threaded per process, so cluster mode is how you use all CPU cores on a machine. PM2 also supports memory-based restarts, startup scripts to relaunch on server boot, and live monitoring. It's a lightweight way to get resilience and multi-core utilization without a full orchestrator like Kubernetes.",
+    "hinglish": "PM2 Node.js ke liye ek production process manager hai. Iske main jobs: aapke app ko chalu rakhna (crash hone par automatically restart karke), cluster mode mein chalana (per CPU core ek process, unke across built-in load balancing ke saath), logs manage karna, aur naya version deploy karte waqt zero-downtime reloads enable karna.\n\nNode per process single-threaded hai, isliye cluster mode hi tarika hai machine ke saare CPU cores use karne ka. PM2 memory-based restarts, server boot par relaunch karne ke startup scripts, aur live monitoring bhi support karta hai. Ye resilience aur multi-core utilization paane ka ek lightweight tarika hai bina Kubernetes jaise poore orchestrator ke.",
+    "keyPoints": [
+      "Keeps Node apps alive — auto-restart on crash.",
+      "Cluster mode: one process per CPU core with load balancing.",
+      "Cluster mode is how single-threaded Node uses all cores.",
+      "Zero-downtime reloads on deploy; memory-based restarts; log management.",
+      "Lightweight resilience without a full orchestrator."
+    ],
+    "real_world": "A Node API on a 4-core server runs under PM2 in cluster mode with 4 instances, using every core. When one worker crashes from an unhandled error, PM2 restarts it within milliseconds, and deploys use pm2 reload for zero downtime — keeping the service continuously available.",
+    "followups": [
+      {
+        "q": "Why is PM2 cluster mode important for Node?",
+        "a": "A Node process is single-threaded, so it uses one CPU core. Cluster mode runs multiple processes (typically one per core) with load balancing, letting the app utilize the whole machine."
+      },
+      {
+        "q": "How does PM2 provide resilience?",
+        "a": "It monitors your processes and automatically restarts them if they crash or exceed a memory limit, and can relaunch the app on server reboot — keeping it running without manual intervention."
+      },
+      {
+        "q": "What is a zero-downtime reload?",
+        "a": "PM2 restarts cluster workers one at a time (reload), so some instances keep serving traffic while others update — deploying a new version without dropping requests."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real PM2 ecosystem configuration plus commands. The Node-runnable demo below simulates cluster mode and auto-restart on crash so the behavior is verifiable here.",
+      "source": "// PM2 basics — production process manager for Node apps.\n// Keeps apps alive (restart on crash), runs cluster mode across CPU cores,\n// manages logs, and supports zero-downtime reloads.\n\n// Ecosystem file: ecosystem.config.js\nconst ecosystem = `\nmodule.exports = {\n  apps: [{\n    name: \"api\",\n    script: \"dist/server.js\",\n    instances: \"max\",          // one process per CPU core (cluster mode)\n    exec_mode: \"cluster\",      // load-balance across instances\n    max_memory_restart: \"300M\",// restart if memory exceeds limit\n    env: { NODE_ENV: \"production\", PORT: 3000 },\n  }],\n};\n`;\n// Common commands:\n//   pm2 start ecosystem.config.js   # start in cluster mode\n//   pm2 reload api                  # zero-downtime reload\n//   pm2 restart / stop / delete api\n//   pm2 logs api ; pm2 monit        # logs & live monitoring\n//   pm2 startup ; pm2 save          # auto-start on server boot\n//\n// PM2 maximizes multi-core usage and resilience without an orchestrator.\nmodule.exports = ecosystem;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// PM2 basics — process manager: auto-restart on crash + cluster mode across CPUs\nfunction createPM2(cpuCount){\n  const procs = []; let restarts = 0;\n  return {\n    startCluster(name, instances){\n      const n = instances === \"max\" ? cpuCount : instances;\n      for (let i = 0; i < n; i++) procs.push({ name, id: i, online: true });\n      return procs.filter(p => p.online).length;\n    },\n    crash(id){ const p = procs.find(p => p.id === id && p.online); if (p){ p.online = false;\n      // PM2 auto-restarts the crashed process:\n      setTimeoutSim(() => { p.online = true; restarts++; }); } },\n    online: () => procs.filter(p => p.online).length,\n    restarts: () => restarts,\n  };\n}\nfunction setTimeoutSim(fn){ fn(); }   // run synchronously for a deterministic demo\nconst pm2 = createPM2(4);\nconsole.log(\"Cluster (max CPUs) online:\", pm2.startCluster(\"api\", \"max\"));\npm2.crash(1);                          // a worker crashes...\nconsole.log(\"After crash + auto-restart -> online:\", pm2.online(), \"| restarts:\", pm2.restarts());\nconsole.assert(pm2.online() === 4 && pm2.restarts() === 1, \"PM2 kept the app fully online\");\nconsole.log(\"PM2: keeps Node apps alive (restart on crash), cluster mode for multi-core, logs, zero-downtime reload.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Cluster (max CPUs) online: 4\nAfter crash + auto-restart -> online: 4 | restarts: 1\nPM2: keeps Node apps alive (restart on crash), cluster mode for multi-core, logs, zero-downtime reload.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

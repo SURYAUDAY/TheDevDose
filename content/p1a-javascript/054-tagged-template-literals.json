@@ -1,0 +1,66 @@
+{
+  "id": "p1a-054",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 54,
+  "orderInPhase": 54,
+  "slug": "tagged-template-literals",
+  "title": "Tagged Template Literals",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "tagged",
+    "template",
+    "literals"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Libraries like styled-components use tagged templates: `` styled.button`color: red;` `` parses the CSS via a tag function."
+  },
+  "sections": {
+    "simple_en": "A tagged template lets you process a template literal with a function (the 'tag'). You write `tag\\`text ${value}\\``, and the tag function receives the array of string parts as its first argument and the interpolated values as the remaining arguments.\n\nThis gives you full control over how the final string is assembled — enabling safe HTML escaping, internationalisation, SQL/CSS-in-JS libraries (like styled-components), and custom formatting. The tag can return anything, not just a string.",
+    "hinglish": "Tagged template aapko ek template literal ko ek function ('tag') se process karne deta hai. Aap `tag\\`text ${value}\\`` likhte ho, aur tag function ko pehle argument me string parts ka array aur baaki arguments me interpolated values milti hain.\nIsse aapko poora control milta hai ki final string kaise bane — jisse safe HTML escaping, internationalisation, SQL/CSS-in-JS libraries (jaise styled-components), aur custom formatting possible hote hain. Tag kuch bhi return kar sakta hai, sirf string nahi.",
+    "keyPoints": [
+      "Syntax: `tag\\`...\\`` — the function before the backticks is the tag.",
+      "Tag receives `(stringsArray, ...interpolatedValues)`.",
+      "`strings.raw` gives the raw (unescaped) string parts.",
+      "Used for HTML escaping, i18n, styled-components, SQL builders.",
+      "The tag can return any type, not only a string."
+    ],
+    "real_world": "Libraries like styled-components use tagged templates: `` styled.button`color: red;` `` parses the CSS via a tag function. Safe-HTML helpers use them to auto-escape user input and prevent XSS.",
+    "followups": [
+      {
+        "q": "What arguments does a tag function receive?",
+        "a": "An array of the literal string segments as the first argument, then each interpolated `${}` value as subsequent arguments. `strings.raw` also exposes the unescaped segments."
+      },
+      {
+        "q": "Name a real library that uses tagged templates.",
+        "a": "styled-components (CSS-in-JS) and many GraphQL clients (the `gql` tag) use tagged templates to parse and process the embedded content."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// A tag that escapes interpolated values for safe HTML.\n\nfunction safeHtml(strings, ...values) {\n  const escape = (s) => String(s)\n    .replace(/&/g, \"&amp;\")\n    .replace(/</g, \"&lt;\")\n    .replace(/>/g, \"&gt;\");\n  return strings.reduce((out, str, i) =>\n    out + str + (i < values.length ? escape(values[i]) : \"\"), \"\");\n}\n\n// A tag that upper-cases interpolated values\nfunction shout(strings, ...values) {\n  return strings.reduce((out, str, i) =>\n    out + str + (values[i] !== undefined ? String(values[i]).toUpperCase() : \"\"), \"\");\n}\n\nmodule.exports = { safeHtml, shout };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { safeHtml, shout } = require(\"./solution\");\n\nconst userInput = \"<script>\";\nconsole.log(safeHtml`Comment: ${userInput}`);\nconsole.log(shout`hello ${\"world\"}!`);\n\nconsole.assert(safeHtml`x ${\"<b>\"}` === \"x &lt;b&gt;\", \"escapes < and >\");\nconsole.assert(shout`a ${\"b\"} c` === \"a B c\", \"uppercases value\");\nconsole.log(\"tagged template assertions passed.\");",
+      "expectedOutput": "Comment: &lt;script&gt;\nhello WORLD!\ntagged template assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

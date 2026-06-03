@@ -1,0 +1,64 @@
+{
+  "id": "p1a-098",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 98,
+  "orderInPhase": 98,
+  "slug": "cookies",
+  "title": "Cookies",
+  "difficulty": "advanced",
+  "tags": [
+    "p1a",
+    "cookies"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A login session: the server sets an `HttpOnly; Secure; SameSite=Lax` session cookie that the browser sends on every request, keeping the user authenticated w…"
+  },
+  "sections": {
+    "simple_en": "Cookies are small pieces of data (max ~4 KB) stored by the browser and automatically sent to the server with every matching HTTP request. They're the traditional mechanism for sessions, authentication, and preferences — and crucially, the server can read them, unlike localStorage.\n\nImportant attributes: `Expires`/`Max-Age` (lifetime), `Secure` (HTTPS only), `HttpOnly` (inaccessible to JavaScript — protects against XSS theft), and `SameSite` (controls cross-site sending — protects against CSRF). In JS you read/write non-HttpOnly cookies via `document.cookie`.",
+    "hinglish": "Cookies chhote data ke tukde hain (max ~4 KB) jo browser store karta hai aur har matching HTTP request ke saath automatically server ko bhejta hai. Ye sessions, authentication, aur preferences ke liye traditional mechanism hain — aur important baat, server inhe padh sakta hai, localStorage ke विपरीत.\nImportant attributes: `Expires`/`Max-Age` (lifetime), `Secure` (sirf HTTPS), `HttpOnly` (JavaScript ko inaccessible — XSS theft se bachata hai), aur `SameSite` (cross-site sending control — CSRF se bachata hai). JS me non-HttpOnly cookies ko `document.cookie` se read/write karte ho.",
+    "keyPoints": [
+      "Small (~4 KB) data sent automatically to the server on each request.",
+      "Used for sessions, auth, and preferences; the server can read them.",
+      "`HttpOnly` cookies are hidden from JavaScript (XSS protection).",
+      "`Secure` (HTTPS only) and `SameSite` (CSRF protection) matter for safety.",
+      "Read/write non-HttpOnly cookies in JS via `document.cookie`."
+    ],
+    "real_world": "A login session: the server sets an `HttpOnly; Secure; SameSite=Lax` session cookie that the browser sends on every request, keeping the user authenticated while protecting the token from JavaScript-based theft.",
+    "followups": [
+      {
+        "q": "Why use an HttpOnly cookie for auth tokens?",
+        "a": "HttpOnly cookies can't be read by JavaScript, so even if the page has an XSS vulnerability, the token can't be stolen via `document.cookie`. The browser still sends it automatically on requests."
+      },
+      {
+        "q": "How do cookies differ from localStorage?",
+        "a": "Cookies are small, sent to the server automatically on each request, and can be HttpOnly; localStorage is larger, stays on the client only, and is always JS-accessible."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Browser: document.cookie is a single string of \"k=v; k2=v2\".\n//   document.cookie = \"theme=dark; Max-Age=3600; SameSite=Lax\";\n//\n// Node demo: parse and serialize cookies (the logic browsers/servers use).\n\nfunction parseCookies(cookieString) {\n  return cookieString\n    .split(\";\")\n    .map((p) => p.trim())\n    .filter(Boolean)\n    .reduce((acc, pair) => {\n      const i = pair.indexOf(\"=\");\n      acc[pair.slice(0, i)] = decodeURIComponent(pair.slice(i + 1));\n      return acc;\n    }, {});\n}\n\nfunction serializeCookie(name, value, opts = {}) {\n  let str = name + \"=\" + encodeURIComponent(value);\n  if (opts.maxAge != null) str += \"; Max-Age=\" + opts.maxAge;\n  if (opts.secure) str += \"; Secure\";\n  if (opts.httpOnly) str += \"; HttpOnly\";\n  if (opts.sameSite) str += \"; SameSite=\" + opts.sameSite;\n  return str;\n}\n\nmodule.exports = { parseCookies, serializeCookie };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { parseCookies, serializeCookie } = require(\"./solution\");\n\nconsole.log(parseCookies(\"theme=dark; sid=abc123\"));\nconsole.log(serializeCookie(\"sid\", \"abc123\", { httpOnly: true, secure: true, sameSite: \"Lax\", maxAge: 3600 }));\n\nconst parsed = parseCookies(\"theme=dark; sid=abc123\");\nconsole.assert(parsed.theme === \"dark\" && parsed.sid === \"abc123\", \"parses cookies\");\nconst s = serializeCookie(\"sid\", \"abc\", { httpOnly: true, secure: true, sameSite: \"Lax\" });\nconsole.assert(s.includes(\"HttpOnly\") && s.includes(\"Secure\") && s.includes(\"SameSite=Lax\"), \"serializes attributes\");\nconsole.log(\"cookies assertions passed.\");",
+      "expectedOutput": "{ theme: 'dark', sid: 'abc123' }\nsid=abc123; Max-Age=3600; Secure; HttpOnly; SameSite=Lax\ncookies assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "id": "p3-001",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 1,
+  "orderInPhase": 1,
+  "slug": "http-fundamentals-methods-status-codes-headers",
+  "title": "HTTP fundamentals (methods, status codes, headers)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "http",
+    "fundamentals",
+    "methods",
+    "status",
+    "codes"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "When you submit a signup form, the browser sends POST /users with a JSON body and a Content-Type header."
+  },
+  "sections": {
+    "simple_en": "HTTP is the request/response protocol the web runs on. A client sends a request with a method (GET, POST, PUT, PATCH, DELETE), a URL, headers (metadata like Content-Type and Authorization), and an optional body; the server replies with a status code, headers, and a body.\n\nMethods convey intent: GET reads, POST creates, PUT/PATCH update, DELETE removes. Status codes are grouped by first digit — 2xx success, 3xx redirect, 4xx client error, 5xx server error — and choosing the right one (200, 201, 204, 400, 401, 404, 500) makes an API predictable.",
+    "hinglish": "HTTP wo request/response protocol hai jis par web chalta hai. Client ek request bhejta hai — method (GET, POST, PUT, PATCH, DELETE), URL, headers (Content-Type, Authorization jaisi metadata) aur optional body ke saath; server status code, headers aur body se reply karta hai.\n\nMethods intent batate hain: GET read, POST create, PUT/PATCH update, DELETE remove. Status codes pehle digit se group hote hain — 2xx success, 3xx redirect, 4xx client error, 5xx server error — aur sahi code (200, 201, 204, 400, 401, 404, 500) API ko predictable banata hai.",
+    "keyPoints": [
+      "Request = method + URL + headers + optional body; response = status + headers + body.",
+      "Methods: GET (read), POST (create), PUT/PATCH (update), DELETE (remove).",
+      "Status families: 2xx success, 3xx redirect, 4xx client error, 5xx server error.",
+      "Common codes: 200 OK, 201 Created, 204 No Content, 400, 401, 403, 404, 500.",
+      "Headers carry metadata: Content-Type, Authorization, Cache-Control, Accept."
+    ],
+    "real_world": "When you submit a signup form, the browser sends POST /users with a JSON body and a Content-Type header. The server replies 201 Created with the new user, or 400 Bad Request with validation errors — the status code alone tells the frontend what happened.",
+    "followups": [
+      {
+        "q": "What's the difference between PUT and PATCH?",
+        "a": "PUT replaces the entire resource with the payload; PATCH applies a partial update to specific fields. PUT is idempotent by design; PATCH may or may not be."
+      },
+      {
+        "q": "When return 201 vs 200?",
+        "a": "201 Created signals a new resource was created (typically after POST), often with a Location header; 200 OK is the general success for reads and updates that return a body."
+      },
+      {
+        "q": "What does idempotent mean for HTTP methods?",
+        "a": "Calling the method multiple times has the same effect as once. GET, PUT, and DELETE are idempotent; POST generally is not, since repeating it can create duplicates."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Node HTTP server code (runs with Node). The Node-runnable demo below verifies the status-code logic.",
+      "source": "// HTTP fundamentals — a raw Node HTTP server showing methods, status, headers.\nconst http = require(\"http\");\n\nconst server = http.createServer((req, res) => {\n  // req.method (GET/POST/...), req.url, req.headers are the request line + headers\n  if (req.method === \"GET\" && req.url === \"/health\") {\n    res.writeHead(200, { \"Content-Type\": \"application/json\" }); // status + headers\n    return res.end(JSON.stringify({ status: \"ok\" }));\n  }\n  if (req.method === \"POST\" && req.url === \"/users\") {\n    res.writeHead(201, { \"Content-Type\": \"application/json\" }); // 201 Created\n    return res.end(JSON.stringify({ id: 1 }));\n  }\n  res.writeHead(404, { \"Content-Type\": \"application/json\" });    // 404 Not Found\n  res.end(JSON.stringify({ error: \"Not Found\" }));\n});\n\nserver.listen(3000, () => console.log(\"Listening on http://localhost:3000\"));\n// Status families: 1xx info, 2xx success, 3xx redirect, 4xx client error, 5xx server error",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// HTTP fundamentals — map methods+outcomes to correct status codes\nfunction handle(method, resourceExists, body){\n  if (method === \"GET\")    return resourceExists ? 200 : 404;\n  if (method === \"POST\")   return body ? 201 : 400;          // 201 Created\n  if (method === \"PUT\")    return resourceExists ? 200 : 404;\n  if (method === \"DELETE\") return resourceExists ? 204 : 404; // 204 No Content\n  return 405;                                                 // Method Not Allowed\n}\nconst category = (c) => ({2:\"Success\",3:\"Redirect\",4:\"Client Error\",5:\"Server Error\"}[Math.floor(c/100)] || \"Info\");\nconst cases = [\n  [\"GET\", true, null], [\"GET\", false, null], [\"POST\", false, {name:\"x\"}],\n  [\"POST\", false, null], [\"DELETE\", true, null], [\"PATCH\", true, null],\n];\ncases.forEach(([m,e,b]) => { const s = handle(m,e,b); console.log(`${m.padEnd(6)} -> ${s} (${category(s)})`); });\nconsole.assert(handle(\"POST\", false, {a:1}) === 201, \"create returns 201\");\nconsole.assert(handle(\"DELETE\", true) === 204, \"delete returns 204\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "GET    -> 200 (Success)\nGET    -> 404 (Client Error)\nPOST   -> 201 (Success)\nPOST   -> 400 (Client Error)\nDELETE -> 204 (Success)\nPATCH  -> 405 (Client Error)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

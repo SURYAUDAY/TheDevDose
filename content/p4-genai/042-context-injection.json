@@ -1,0 +1,69 @@
+{
+  "id": "p4-042",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 42,
+  "orderInPhase": 42,
+  "slug": "context-injection",
+  "title": "Context injection",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "context",
+    "injection"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "A RAG prompt template reads: 'Answer using only the context below."
+  },
+  "sections": {
+    "simple_en": "Context injection is the 'augment' step of RAG: the retrieved chunks are formatted into the prompt so the model answers from them. A typical template includes an instruction ('answer using only the context below'), the joined chunks, and the user's question, telling the model exactly where to ground its response.\n\nTwo things matter: clear instructions to use only the provided context (which curbs hallucination and can ask the model to say 'I don't know'), and respecting the token budget — you must select or trim chunks so the prompt plus the expected answer fit within the context window. How you order and format chunks can also affect answer quality.",
+    "hinglish": "Context injection RAG ka 'augment' step hai: retrieved chunks ko prompt mein format kiya jaata hai taaki model unse answer de. Ek typical template mein ek instruction hota hai ('neeche diye context se hi answer do'), joined chunks, aur user ka question, model ko exactly batate hue kahan apna response ground kare.\n\nDo cheezein matter karti hain: sirf provided context use karne ke clear instructions (jo hallucination ko rokte hain aur model se 'I don't know' kehne ko keh sakte hain), aur token budget respect karna — aap chunks select ya trim karo taaki prompt plus expected answer context window mein fit hon. Aap chunks ko kaise order aur format karte ho wo bhi answer quality ko affect kar sakta hai.",
+    "keyPoints": [
+      "The 'augment' step: format retrieved chunks into the prompt.",
+      "Template = instruction + joined context + the question.",
+      "Instruct the model to use ONLY the context (curbs hallucination).",
+      "Respect the token budget: select/trim chunks to fit the window.",
+      "Ordering and formatting of chunks can affect answer quality."
+    ],
+    "real_world": "A RAG prompt template reads: 'Answer using only the context below. If it's not there, say you don't know. Context: [chunks]. Question: [user question].' This grounding instruction stops the model from inventing answers when the retrieved context lacks the information.",
+    "followups": [
+      {
+        "q": "What is context injection in RAG?",
+        "a": "The step of inserting retrieved chunks into the prompt — usually with an instruction to answer only from that context — so the model generates a grounded response."
+      },
+      {
+        "q": "Why instruct the model to use only the context?",
+        "a": "It reduces hallucination by tying the answer to retrieved sources, and lets the model abstain ('I don't know') when the context lacks the answer instead of inventing one."
+      },
+      {
+        "q": "How do you handle the token budget when injecting context?",
+        "a": "Select or trim chunks (and reserve room for the answer) so the full prompt fits the context window — e.g., limit k, summarize, or drop the least relevant chunks."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain prompt + chain code. The Python-runnable demo below formats retrieved chunks into a prompt within a token budget so the injection step is verifiable here.",
+      "source": "# Context injection — put retrieved chunks into the prompt within the token budget.\nfrom langchain_core.prompts import ChatPromptTemplate\n\nRAG_PROMPT = ChatPromptTemplate.from_template(\n    \"Answer the question using ONLY the context below. \"\n    \"If the answer isn't there, say you don't know.\\n\\n\"\n    \"Context:\\n{context}\\n\\nQuestion: {question}\"\n)\n\ndef format_docs(docs):\n    # Join retrieved chunks; in production, cap total tokens and add source labels.\n    return \"\\n\\n\".join(f\"[{i+1}] {d.page_content}\" for i, d in enumerate(docs))\n\n# retrieved = retriever.invoke(question)\n# prompt = RAG_PROMPT.format(context=format_docs(retrieved), question=question)\n# answer = llm.invoke(prompt)\n\n# Key concerns: include only the most relevant chunks, stay within the context window\n# (leave room for the answer), and label sources so the model can cite them.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Context injection — insert retrieved chunks into the prompt within a token budget\ndef count_tokens(text): return max(1, len(text)//4)\n\ndef build_prompt(question, retrieved_chunks, token_budget=40):\n    # Add chunks until the budget is hit, then assemble the grounded prompt.\n    context, used = [], 0\n    for chunk in retrieved_chunks:\n        t = count_tokens(chunk)\n        if used + t > token_budget: break\n        context.append(chunk); used += t\n    context_block = \"\\n\".join(f\"- {c}\" for c in context)\n    prompt = (f\"Answer using ONLY this context:\\n{context_block}\\n\\nQuestion: {question}\")\n    return prompt, used\n\nchunks = [\"Return window is 30 days.\", \"Free shipping over $50.\",\n          \"Stores open 9 to 9.\", \"Loyalty points never expire.\"]\nprompt, used = build_prompt(\"What is the return window?\", chunks, token_budget=20)\nprint(prompt)\nprint(\"\\nTokens used by context:\", used)\nassert \"30 days\" in prompt and \"ONLY this context\" in prompt\nassert used <= 20, \"respects the token budget\"\nprint(\"\\nContext injection places retrieved chunks into the prompt so the model answers from them.\")\nprint(\"Manage the budget: include the most relevant chunks and leave room for the question + answer.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Answer using ONLY this context:\n- Return window is 30 days.\n- Free shipping over $50.\n- Stores open 9 to 9.\n\nQuestion: What is the return window?\n\nTokens used by context: 15\n\nContext injection places retrieved chunks into the prompt so the model answers from them.\nManage the budget: include the most relevant chunks and leave room for the question + answer.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

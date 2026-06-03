@@ -1,0 +1,67 @@
+{
+  "id": "p1a-002",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 2,
+  "orderInPhase": 2,
+  "slug": "global-execution-context-gec",
+  "title": "Global Execution Context (GEC)",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "global",
+    "execution",
+    "context",
+    "gec"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "It's like the lobby of an office building."
+  },
+  "sections": {
+    "simple_en": "The Global Execution Context is the base context created automatically when your JavaScript program starts — before any of your code runs. There is exactly one per program and it sits at the bottom of the call stack.\n\nIt does two special things during creation: it creates the global object (`window` in browsers, `globalThis`/`global` in Node) and sets `this` to point at that global object (in non-module, non-strict code). Top-level `var` declarations and function declarations become properties of the global object.",
+    "hinglish": "Global Execution Context woh sabse pehla context hai jo program start hote hi automatically ban jaata hai — aapka koi bhi code chalne se pehle. Poore program me ye sirf ek hi hota hai aur call stack ke bilkul neeche rehta hai.\nYe creation ke time do kaam karta hai: global object banata hai (browser me `window`, Node me `globalThis`/`global`) aur `this` ko us global object par set kar deta hai. Top-level `var` aur function declarations global object ki properties ban jaate hain.",
+    "keyPoints": [
+      "Created once, automatically, before any code runs; lives at the bottom of the call stack.",
+      "Creates the global object: `window` in browsers, `global`/`globalThis` in Node.",
+      "In non-strict, non-module top-level code, `this` === the global object.",
+      "Top-level `var` and function declarations attach to the global object; `let`/`const` do NOT.",
+      "In Node.js, each file is wrapped in a module, so top-level `this` is `module.exports` (an empty object), not `global`."
+    ],
+    "real_world": "It's like the lobby of an office building. It exists before anyone arrives, everyone shares it, and it provides the common facilities (reception, elevators) that every individual office (function) can access.",
+    "followups": [
+      {
+        "q": "What is `this` in the global context?",
+        "a": "In a browser script it is the `window` object. In a Node.js module, top-level `this` is `module.exports` (an empty object), because each file is wrapped as a module — not the `global` object."
+      },
+      {
+        "q": "Do `let` and `const` create global object properties?",
+        "a": "No. Only `var` and function declarations do (in true global scope). `let`/`const` live in a separate declarative environment, which is why `window.myLet` is undefined."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrating the global execution context and the global object.\n// NOTE: In Node, each file is a module, so top-level 'this' is module.exports.\n\nvar legacyVar = \"I attach to global in browsers\";\nlet modernLet = \"I do NOT attach to the global object\";\n\nfunction showGlobalBehaviour() {\n  // globalThis works in both Node and browsers (ES2020)\n  return {\n    hasGlobalThis: typeof globalThis === \"object\",\n    // In Node a top-level 'var' does NOT attach to global (module scope),\n    // but 'let'/'const' never attach to the global object anywhere.\n    letOnGlobal: typeof globalThis.modernLet, // \"undefined\"\n  };\n}\n\nmodule.exports = { showGlobalBehaviour };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { showGlobalBehaviour } = require(\"./solution\");\n\nconst r = showGlobalBehaviour();\nconsole.log(r);\n\nconsole.assert(r.hasGlobalThis === true, \"globalThis must exist\");\nconsole.assert(r.letOnGlobal === \"undefined\", \"let never attaches to global\");\nconsole.log(\"Global execution context assertions passed.\");",
+      "expectedOutput": "{ hasGlobalThis: true, letOnGlobal: 'undefined' }\nGlobal execution context assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

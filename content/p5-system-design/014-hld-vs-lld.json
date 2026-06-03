@@ -1,0 +1,69 @@
+{
+  "id": "p5-014",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 14,
+  "orderInPhase": 14,
+  "slug": "hld-vs-lld",
+  "title": "HLD vs LLD",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "hld",
+    "lld"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Designing a ride-hailing app, the HLD shows rider app → API gateway → matching service → database, plus how location updates flow."
+  },
+  "sections": {
+    "simple_en": "High-Level Design (HLD) describes the overall shape of a system: its major components, how data flows between them, which databases and APIs exist, and the scaling approach — the architecture diagram an architect or stakeholder reviews. It answers 'what are the pieces and how do they fit together?'\n\nLow-Level Design (LLD) zooms into a component: its classes, methods, data schemas, algorithms, and interfaces — the detail an implementing engineer needs. It answers 'how is this component built internally?' System-design interviews typically start at HLD, then drill into the LLD of a key component.",
+    "hinglish": "High-Level Design (HLD) ek system ki overall shape describe karta hai: uske major components, unke beech data kaise flow karta hai, kaun se databases aur APIs hain, aur scaling approach — wo architecture diagram jise ek architect ya stakeholder review karta hai. Ye answer karta hai 'pieces kya hain aur wo saath kaise fit hote hain?'\n\nLow-Level Design (LLD) ek component mein zoom karta hai: uske classes, methods, data schemas, algorithms, aur interfaces — wo detail jo ek implementing engineer ko chahiye. Ye answer karta hai 'ye component internally kaise bana hai?' System-design interviews aam taur par HLD par shuru hote hain, phir ek key component ke LLD mein drill karte hain.",
+    "keyPoints": [
+      "HLD: system-wide — components, data flow, databases, APIs, scaling.",
+      "LLD: component-internal — classes, methods, schemas, algorithms.",
+      "HLD audience: architects/stakeholders; LLD audience: implementers.",
+      "HLD answers 'what pieces and how they fit'; LLD 'how it's built inside'.",
+      "Interviews start at HLD, then drill into LLD of a key component."
+    ],
+    "real_world": "Designing a ride-hailing app, the HLD shows rider app → API gateway → matching service → database, plus how location updates flow. The LLD then specifies the Matching service's classes and the algorithm that pairs a rider to the nearest driver.",
+    "followups": [
+      {
+        "q": "What's the difference between HLD and LLD?",
+        "a": "HLD is the big-picture architecture — components, data flow, databases, scaling. LLD is the internal detail of a component — classes, methods, schemas, algorithms. HLD is for architects/stakeholders; LLD is for the engineers building it."
+      },
+      {
+        "q": "How does a system-design interview use both?",
+        "a": "It usually starts at HLD (sketch the components and data flow, discuss scaling), then drills into the LLD of one critical piece — e.g., the data model or a key algorithm — to test depth."
+      },
+      {
+        "q": "Can you skip HLD and go straight to LLD?",
+        "a": "Not advisably — without the high-level picture you risk designing components that don't fit together or scale. HLD frames the constraints (data flow, load, boundaries) that LLD decisions must respect."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript contrasting High-Level vs Low-Level Design and a classifier for which a question targets. The Node demo below verifies the classification.",
+      "source": "// HLD vs LLD — two levels of system design, used together in interviews.\n\n// HIGH-LEVEL DESIGN (HLD): the system's overall shape — components and how they interact.\n// Example (described, not code): a URL shortener's HLD —\n//   Client -> Load Balancer -> API Servers (stateless)\n//                                 |-> Cache (Redis)   [hot lookups]\n//                                 |-> Database         [id <-> URL mappings]\n//                                 |-> ID Generator     [unique short codes]\n// HLD decisions: which databases, sync vs async, caching, scaling, partitioning.\n\n// LOW-LEVEL DESIGN (LLD): the internals of a component — classes, methods, schemas.\nclass UrlShortener {\n  constructor(store) { this.store = store; this.counter = 0; }\n  // LLD specifies exact methods, signatures, and algorithms:\n  shorten(longUrl) {\n    const id = this.encode(this.counter++);\n    this.store.set(id, longUrl);\n    return `https://sho.rt/${id}`;\n  }\n  resolve(id) { return this.store.get(id); }\n  encode(num) {                                   // base62 encoding of an incrementing id\n    const chars = \"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\";\n    if (num === 0) return \"0\";\n    let s = \"\";\n    while (num > 0) { s = chars[num % 62] + s; num = Math.floor(num / 62); }\n    return s;\n  }\n}\n\n// Interview flow: start with HLD (boxes, data flow, scaling), then zoom into LLD for the\n// component the interviewer cares about (its classes, methods, data model, and edge cases).\nexport { UrlShortener };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// HLD vs LLD — High-Level Design (system shape) vs Low-Level Design (class/method detail)\nconst highLevelDesign = {\n  scope: \"system-wide\",\n  describes: [\"major components\", \"data flow\", \"databases\", \"APIs\", \"scaling approach\"],\n  example: \"Client -> Load Balancer -> API servers -> Cache -> Database\",\n  audience: \"architects, stakeholders\",\n};\nconst lowLevelDesign = {\n  scope: \"component-internal\",\n  describes: [\"classes\", \"methods\", \"schemas\", \"algorithms\", \"interfaces\"],\n  example: \"class RateLimiter { allow(userId): boolean }\",\n  audience: \"implementing engineers\",\n};\nfunction whichDesign(question) {\n  return /component|class|method|schema|algorithm/i.test(question) ? \"LLD\" : \"HLD\";\n}\nconsole.log(\"HLD describes:\", highLevelDesign.describes.join(\", \"));\nconsole.log(\"LLD describes:\", lowLevelDesign.describes.join(\", \"));\nconsole.log(\"'How do API servers talk to the DB?' ->\", whichDesign(\"how do servers talk to the DB\"));\nconsole.log(\"'Design the RateLimiter class methods' ->\", whichDesign(\"design the RateLimiter class methods\"));\nconsole.assert(whichDesign(\"design the RateLimiter class methods\") === \"LLD\");\nconsole.assert(whichDesign(\"overall system data flow\") === \"HLD\");\nconsole.log(\"HLD = the big picture (components, data flow, scaling). LLD = the internals (classes, schemas, algorithms).\");\nconsole.log(\"Interviews often start at HLD, then drill into LLD for a key component.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "HLD describes: major components, data flow, databases, APIs, scaling approach\nLLD describes: classes, methods, schemas, algorithms, interfaces\n'How do API servers talk to the DB?' -> HLD\n'Design the RateLimiter class methods' -> LLD\nHLD = the big picture (components, data flow, scaling). LLD = the internals (classes, schemas, algorithms).\nInterviews often start at HLD, then drill into LLD for a key component.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

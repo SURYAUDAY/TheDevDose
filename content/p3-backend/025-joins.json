@@ -1,0 +1,68 @@
+{
+  "id": "p3-025",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 25,
+  "orderInPhase": 25,
+  "slug": "joins",
+  "title": "JOINs",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "joins"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "To show every user with their order count — including users who've never ordered — you LEFT JOIN orders onto users and COUNT(orders.id) grouped by user."
+  },
+  "sections": {
+    "simple_en": "JOINs combine rows from two or more tables based on a related column — the heart of querying normalized data. An INNER JOIN returns only rows with matches in both tables. A LEFT JOIN returns all rows from the left table plus matches from the right (NULLs where there's no match); RIGHT and FULL joins are the mirror and union of those.\n\nChoosing the right join type answers different questions: INNER for 'records that have related data', LEFT for 'all records, with related data where it exists'. JOINs are often combined with GROUP BY and aggregates (e.g., counting orders per user).",
+    "hinglish": "JOINs do ya zyada tables ki rows ko ek related column par combine karte hain — normalized data query karne ka dil. INNER JOIN sirf wahi rows deta hai jinka match dono tables mein ho. LEFT JOIN left table ki saari rows aur right ke matches deta hai (match na ho to NULL); RIGHT aur FULL joins inke mirror aur union hain.\n\nSahi join type alag sawaalon ka jawab deta hai: INNER 'jinke paas related data hai', LEFT 'sabhi records, related data jahan ho'. JOINs aksar GROUP BY aur aggregates ke saath use hote hain (jaise per user orders count).",
+    "keyPoints": [
+      "JOIN combines rows from tables on a related column (usually a key).",
+      "INNER JOIN: only rows with matches in both tables.",
+      "LEFT JOIN: all left rows + matches (NULLs where no match).",
+      "RIGHT/FULL: mirror of LEFT / union of both sides.",
+      "Combine with GROUP BY + aggregates for counts and summaries."
+    ],
+    "real_world": "To show every user with their order count — including users who've never ordered — you LEFT JOIN orders onto users and COUNT(orders.id) grouped by user. An INNER JOIN would silently drop the users with zero orders.",
+    "followups": [
+      {
+        "q": "INNER JOIN vs LEFT JOIN — when does it matter?",
+        "a": "INNER returns only matched rows; LEFT keeps all left-table rows even without a match (filling NULLs). It matters whenever you need to include records that may have no related data."
+      },
+      {
+        "q": "Why might a LEFT JOIN with a WHERE on the right table act like an INNER JOIN?",
+        "a": "Because filtering a right-table column in WHERE removes the NULL (unmatched) rows. To keep them, put the condition in the ON clause or check IS NULL appropriately."
+      },
+      {
+        "q": "How do you count related rows per record?",
+        "a": "LEFT JOIN the related table, GROUP BY the main table's key, and use COUNT on the related id — LEFT JOIN ensures records with zero related rows still appear (count 0)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real SQL JOIN queries (PostgreSQL). The Node-runnable demo below implements INNER and LEFT joins in JS so the output is verifiable here.",
+      "source": "// JOINs — combine rows from related tables.\nconst queries = {\n  // INNER JOIN: only users who have at least one order.\n  inner: `\n    SELECT u.name, o.id AS order_id, o.total\n    FROM users u\n    INNER JOIN orders o ON o.user_id = u.id;\n  `,\n\n  // LEFT JOIN: ALL users; order columns are NULL for users with no orders.\n  left: `\n    SELECT u.name, o.id AS order_id\n    FROM users u\n    LEFT JOIN orders o ON o.user_id = u.id;\n  `,\n\n  // Aggregating across a join: order count per user.\n  countPerUser: `\n    SELECT u.name, COUNT(o.id) AS order_count\n    FROM users u\n    LEFT JOIN orders o ON o.user_id = u.id\n    GROUP BY u.id, u.name\n    ORDER BY order_count DESC;\n  `,\n};\n// INNER = intersection; LEFT/RIGHT keep all rows from one side; FULL keeps both.\nmodule.exports = queries;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// JOINs — implement INNER and LEFT joins on two row sets\nconst users  = [{ id: 1, name: \"Asha\" }, { id: 2, name: \"Ravi\" }, { id: 3, name: \"Mira\" }];\nconst orders = [{ id: 10, userId: 1, total: 100 }, { id: 11, userId: 1, total: 50 }, { id: 12, userId: 2, total: 80 }];\n\nfunction innerJoin(left, right, lKey, rKey){\n  const out = [];\n  for (const l of left) for (const r of right) if (l[lKey] === r[rKey]) out.push({ ...l, ...r });\n  return out;\n}\nfunction leftJoin(left, right, lKey, rKey){\n  return left.flatMap(l => {\n    const matches = right.filter(r => r[rKey] === l[lKey]);\n    return matches.length ? matches.map(r => ({ ...l, ...r })) : [{ ...l, order: null }];\n  });\n}\nconst inner = innerJoin(users, orders, \"id\", \"userId\");\nconst left = leftJoin(users, orders, \"id\", \"userId\");\nconsole.log(\"INNER JOIN rows:\", inner.length, \"(only users WITH orders)\");\nconsole.log(\"LEFT JOIN rows: \", left.length, \"(all users; Mira has no order)\");\nconsole.log(\"Mira in LEFT join:\", JSON.stringify(left.find(r => r.name === \"Mira\")));\nconsole.assert(inner.length === 3, \"3 matching order rows\");\nconsole.assert(left.some(r => r.name === \"Mira\" && r.order === null), \"LEFT keeps unmatched user\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "INNER JOIN rows: 3 (only users WITH orders)\nLEFT JOIN rows:  4 (all users; Mira has no order)\nMira in LEFT join: {\"id\":3,\"name\":\"Mira\",\"order\":null}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

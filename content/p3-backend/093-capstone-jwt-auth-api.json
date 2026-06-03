@@ -1,0 +1,71 @@
+{
+  "id": "p3-093",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 93,
+  "orderInPhase": 93,
+  "slug": "capstone-jwt-auth-api",
+  "title": "Capstone: JWT Auth API",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "capstone",
+    "jwt",
+    "auth",
+    "api"
+  ],
+  "estMinutes": 10,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Nearly every app needs this: a user signs up, logs in, and the frontend stores the returned JWT, attaching it to every API call."
+  },
+  "sections": {
+    "simple_en": "This capstone ties together the auth and security topics into a complete authentication API. The flow: a user registers (the password is hashed with bcrypt and stored, never in plaintext), logs in (the password is verified and a signed JWT is issued), and then accesses protected routes by sending the token as a Bearer header, which middleware verifies on each request.\n\nThe pieces you've learned combine here: password hashing for safe storage, JWTs for stateless authentication, middleware for route protection, and proper status codes (201 created, 401 unauthorized, 409 conflict). A production version adds refresh tokens, RBAC, rate limiting on login, input validation, and a real database — but this is the core skeleton every authenticated backend is built on.",
+    "hinglish": "Ye capstone auth aur security topics ko ek complete authentication API mein jodta hai. Flow: user register karta hai (password bcrypt se hash hokar store hota hai, kabhi plaintext mein nahi), login karta hai (password verify hota hai aur ek signed JWT issue hota hai), aur phir protected routes access karta hai token ko Bearer header mein bhej kar, jise middleware har request par verify karta hai.\n\nAapke seekhe pieces yahan combine hote hain: safe storage ke liye password hashing, stateless authentication ke liye JWTs, route protection ke liye middleware, aur proper status codes (201 created, 401 unauthorized, 409 conflict). Production version refresh tokens, RBAC, login par rate limiting, input validation, aur ek real database add karta hai — par ye core skeleton hai jispar har authenticated backend bana hota hai.",
+    "keyPoints": [
+      "Register: hash the password (bcrypt), store the user — never plaintext.",
+      "Login: verify the password, issue a signed JWT.",
+      "Protected routes: verify the Bearer token in middleware.",
+      "Correct status codes: 201 created, 401 unauthorized, 409 conflict.",
+      "Production extras: refresh tokens, RBAC, login rate limiting, validation, real DB."
+    ],
+    "real_world": "Nearly every app needs this: a user signs up, logs in, and the frontend stores the returned JWT, attaching it to every API call. The backend verifies the token to identify the user and authorize actions — the exact pattern behind dashboards, mobile apps, and SaaS products.",
+    "followups": [
+      {
+        "q": "Walk through the register -> login -> protected-route flow.",
+        "a": "Register hashes and stores the password. Login verifies the password and returns a signed JWT. The client sends that JWT as 'Authorization: Bearer <token>'; middleware verifies it and attaches the user, allowing access to protected routes."
+      },
+      {
+        "q": "How would you make this production-ready?",
+        "a": "Add refresh tokens (short access + long refresh), RBAC for permissions, rate limiting on login, input validation, secure cookie/storage handling, a real database, and proper secret management."
+      },
+      {
+        "q": "Why hash passwords and sign tokens rather than store/trust them directly?",
+        "a": "Hashing means a database leak doesn't expose passwords; signing means the server can verify a token wasn't forged or tampered with, enabling stateless authentication without storing sessions."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + bcrypt + jsonwebtoken API code. The Node-runnable demo below runs the full register / login / protected-route flow with real crypto, so token issuance and rejection are provably correct here.",
+      "source": "// CAPSTONE: JWT Auth API — Express + bcrypt + jsonwebtoken.\nconst express = require(\"express\");\nconst bcrypt = require(\"bcrypt\");\nconst jwt = require(\"jsonwebtoken\");\nconst app = express();\napp.use(express.json());\n\nconst JWT_SECRET = process.env.JWT_SECRET;\nconst users = []; // replace with a real DB (Postgres/Mongo)\n\n// POST /register — hash the password, store the user.\napp.post(\"/register\", async (req, res) => {\n  const { email, password } = req.body;\n  if (users.find((u) => u.email === email))\n    return res.status(409).json({ error: \"email taken\" });\n  const passwordHash = await bcrypt.hash(password, 12);\n  const user = { id: users.length + 1, email, passwordHash };\n  users.push(user);\n  res.status(201).json({ id: user.id, email });\n});\n\n// POST /login — verify password, issue a JWT.\napp.post(\"/login\", async (req, res) => {\n  const { email, password } = req.body;\n  const user = users.find((u) => u.email === email);\n  if (!user || !(await bcrypt.compare(password, user.passwordHash)))\n    return res.status(401).json({ error: \"invalid credentials\" });\n  const token = jwt.sign({ sub: user.id, email }, JWT_SECRET, { expiresIn: \"15m\" });\n  res.json({ token });\n});\n\n// Auth middleware — verify the Bearer token.\nfunction auth(req, res, next) {\n  const token = (req.headers.authorization || \"\").replace(\"Bearer \", \"\");\n  try { req.user = jwt.verify(token, JWT_SECRET); next(); }\n  catch { res.status(401).json({ error: \"invalid token\" }); }\n}\n\n// GET /me — protected route.\napp.get(\"/me\", auth, (req, res) => res.json({ id: req.user.sub, email: req.user.email }));\n\napp.listen(3000);\n// Flow: register -> login (get token) -> send \"Authorization: Bearer <token>\"\n// to access protected routes. Add refresh tokens + RBAC for a full system.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CAPSTONE: JWT Auth API — register, login, protected route (REAL crypto end-to-end)\nconst crypto = require(\"crypto\");\nconst SECRET = \"capstone-secret\";\n\n// --- password hashing (salted scrypt) ---\nfunction hashPassword(pw){ const salt = crypto.randomBytes(16).toString(\"hex\");\n  return salt + \":\" + crypto.scryptSync(pw, salt, 32).toString(\"hex\"); }\nfunction verifyPassword(pw, stored){ const [salt, hash] = stored.split(\":\");\n  const test = crypto.scryptSync(pw, salt, 32).toString(\"hex\");\n  return crypto.timingSafeEqual(Buffer.from(hash, \"hex\"), Buffer.from(test, \"hex\")); }\n\n// --- JWT (HMAC-SHA256) ---\nconst b64 = (o) => Buffer.from(JSON.stringify(o)).toString(\"base64url\");\nconst sign = (d) => crypto.createHmac(\"sha256\", SECRET).update(d).digest(\"base64url\");\nfunction makeToken(payload){ const h = b64({ alg: \"HS256\", typ: \"JWT\" }); const p = b64(payload);\n  return `${h}.${p}.${sign(`${h}.${p}`)}`; }\nfunction verifyToken(token){ const [h, p, s] = token.split(\".\");\n  if (sign(`${h}.${p}`) !== s) return null; return JSON.parse(Buffer.from(p, \"base64url\").toString()); }\n\n// --- the API (in-memory) ---\nconst users = new Map();\nconst api = {\n  register({ email, password }){\n    if (users.has(email)) return { status: 409, body: { error: \"email taken\" } };\n    users.set(email, { id: users.size + 1, email, passwordHash: hashPassword(password) });\n    return { status: 201, body: { id: users.get(email).id, email } };\n  },\n  login({ email, password }){\n    const u = users.get(email);\n    if (!u || !verifyPassword(password, u.passwordHash)) return { status: 401, body: { error: \"invalid credentials\" } };\n    return { status: 200, body: { token: makeToken({ sub: u.id, email }) } };\n  },\n  me(authHeader){\n    const token = (authHeader || \"\").replace(\"Bearer \", \"\");\n    const claims = verifyToken(token);\n    if (!claims) return { status: 401, body: { error: \"invalid token\" } };\n    return { status: 200, body: { id: claims.sub, email: claims.email } };\n  },\n};\n\nconsole.log(\"POST /register:\", JSON.stringify(api.register({ email: \"asha@x.com\", password: \"s3cret\" })));\nconsole.log(\"POST /register dup:\", JSON.stringify(api.register({ email: \"asha@x.com\", password: \"x\" })));\nconsole.log(\"POST /login wrong:\", JSON.stringify(api.login({ email: \"asha@x.com\", password: \"nope\" })));\nconst login = api.login({ email: \"asha@x.com\", password: \"s3cret\" });\nconsole.log(\"POST /login ok:\", login.body.token.slice(0, 30) + \"...\");\nconsole.log(\"GET /me (valid):\", JSON.stringify(api.me(`Bearer ${login.body.token}`)));\nconsole.log(\"GET /me (forged):\", JSON.stringify(api.me(\"Bearer forged.token.here\")));\nconsole.assert(api.register({ email: \"asha@x.com\", password: \"x\" }).status === 409, \"dup blocked\");\nconsole.assert(login.status === 200, \"login returns a token\");\nconsole.assert(api.me(`Bearer ${login.body.token}`).body.email === \"asha@x.com\", \"protected route reads identity\");\nconsole.assert(api.me(\"Bearer forged.token.here\").status === 401, \"forged token rejected\");\nconsole.log(\"Stack: Express + bcrypt + jsonwebtoken + a DB. Flow: register -> login -> Bearer token -> protected routes.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "POST /register: {\"status\":201,\"body\":{\"id\":1,\"email\":\"asha@x.com\"}}\nPOST /register dup: {\"status\":409,\"body\":{\"error\":\"email taken\"}}\nPOST /login wrong: {\"status\":401,\"body\":{\"error\":\"invalid credentials\"}}\nPOST /login ok: eyJhbGciOiJIUzI1NiIsInR5cCI6Ik...\nGET /me (valid): {\"status\":200,\"body\":{\"id\":1,\"email\":\"asha@x.com\"}}\nGET /me (forged): {\"status\":401,\"body\":{\"error\":\"invalid token\"}}\nStack: Express + bcrypt + jsonwebtoken + a DB. Flow: register -> login -> Bearer token -> protected routes.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "p1b-055",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 55,
+  "orderInPhase": 55,
+  "slug": "instancetype-t",
+  "title": "InstanceType<T>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "instancetype"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "pipeline",
+    "seedText": "A generic factory `create<C>(ctor: C): InstanceType<C>` builds and returns a typed instance from any class you pass in — common in dependency-injection conta…"
+  },
+  "sections": {
+    "simple_en": "`InstanceType<T>` extracts the instance type produced by a constructor function/class type `T`. Used with `typeof MyClass`, it gives the type of an instance of that class — useful when you have the class value but need its instance type.\n\nIt's handy for factories, dependency containers, or generic code that operates on class instances created from a constructor passed in as a value. It pairs with `ConstructorParameters<T>` (the constructor's argument tuple).",
+    "hinglish": "`InstanceType<T>` ek constructor function/class type `T` se bani instance ka type nikaalta hai. `typeof MyClass` ke saath, ye us class ki ek instance ka type deta hai — tab useful jab aapke paas class value ho par uska instance type chahiye.\nYe factories, dependency containers, ya us generic code ke liye useful hai jo value ke roop me pass kiye constructor se bani class instances par kaam karta hai. Ye `ConstructorParameters<T>` (constructor ka argument tuple) ke saath jodi banata hai.",
+    "keyPoints": [
+      "Extracts the instance type of a class/constructor type.",
+      "Use as `InstanceType<typeof MyClass>`.",
+      "Useful when you have the class value but need its instance type.",
+      "Pairs with `ConstructorParameters<T>`.",
+      "Built on a conditional type with `infer`."
+    ],
+    "real_world": "A generic factory `create<C>(ctor: C): InstanceType<C>` builds and returns a typed instance from any class you pass in — common in dependency-injection containers and plugin systems.",
+    "followups": [
+      {
+        "q": "What does InstanceType<typeof MyClass> give you?",
+        "a": "The type of an instance of MyClass — equivalent to writing `MyClass` as a type. It's useful when you only have the class value and need to refer to its instance type."
+      },
+      {
+        "q": "What's the companion utility for constructor arguments?",
+        "a": "`ConstructorParameters<T>`, which extracts the constructor's parameter types as a tuple — the constructor equivalent of `Parameters<T>`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — InstanceType from a class value.\n\nexport class Logger {\n  constructor(public prefix: string) {}\n  log(msg: string): string { return this.prefix + \": \" + msg; }\n}\n\ntype LoggerInstance = InstanceType<typeof Logger>; // Logger\n\nexport function useLogger(logger: LoggerInstance, msg: string): string {\n  return logger.log(msg);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { Logger, useLogger } from \"./solution\";\n\nconst logger = new Logger(\"APP\");\nconsole.log(useLogger(logger, \"started\")); // APP: started\n\nconsole.assert(useLogger(logger, \"started\") === \"APP: started\", \"InstanceType-typed instance works\");\nconsole.log(\"InstanceType assertions passed.\");",
+      "expectedOutput": "APP: started\nInstanceType assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

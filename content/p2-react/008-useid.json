@@ -1,0 +1,68 @@
+{
+  "id": "p2-008",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 8,
+  "orderInPhase": 8,
+  "slug": "useid",
+  "title": "useId",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "useid"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A reusable FormField component renders a label and input that must be linked by id."
+  },
+  "sections": {
+    "simple_en": "useId generates a stable, unique ID that is consistent between the server-rendered HTML and the client hydration. Its main purpose is to create IDs for accessibility attributes — linking a <label> to an <input>, or an element to its aria-describedby target — without risking mismatches.\n\nCrucially, useId is not for keys in lists. It produces one ID per call site that stays stable across renders, which is exactly what accessibility wiring needs but is wrong for list identity.",
+    "hinglish": "useId ek stable aur unique ID banata hai jo server-rendered HTML aur client hydration ke beech same rehti hai. Iska main use accessibility ke liye hota hai — label ko input se jodna ya aria attributes set karna.\n\nImportant baat: useId list ke keys ke liye nahi hai. Ye har call site par ek stable ID deta hai jo render ke beech same rehti hai — accessibility ke liye sahi, list identity ke liye galat.",
+    "keyPoints": [
+      "Generates a unique, stable ID consistent across SSR and client hydration.",
+      "Primary use: accessibility attributes (htmlFor/id pairs, aria-describedby, aria-labelledby).",
+      "Do NOT use it for list keys — it identifies a call site, not a data item.",
+      "One useId call can power multiple related IDs via string suffixes (e.g., `${id}-error`).",
+      "It avoids the hydration mismatch you'd get from Math.random() or a manual counter."
+    ],
+    "real_world": "A reusable FormField component renders a label and input that must be linked by id. If two instances appear on the same page, hardcoded ids collide. useId gives each instance a unique, hydration-safe id so screen readers announce the right label.",
+    "followups": [
+      {
+        "q": "Why not use Math.random() for accessibility IDs?",
+        "a": "Random values differ between server and client, causing hydration mismatches. useId is deterministic and stable across SSR and the client."
+      },
+      {
+        "q": "Can you use useId for list item keys?",
+        "a": "No. Keys must reflect data identity so React can match items across renders. useId reflects a call site, not the data, so it can't help reconcile a list."
+      },
+      {
+        "q": "How do you make several related IDs from one useId?",
+        "a": "Append suffixes: const id = useId(); then use `${id}-input` and `${id}-error`. They stay grouped and unique."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// useId: generate a stable, hydration-safe id linking label and input.\nimport React, { useId } from \"react\";\n\nexport default function FormField({ label, type = \"text\" }) {\n  const id = useId(); // stable across SSR + client\n\n  return (\n    <div className=\"field\">\n      <label htmlFor={id}>{label}</label>\n      <input id={id} type={type} aria-describedby={`${id}-hint`} />\n      <small id={`${id}-hint`}>Required field</small>\n    </div>\n  );\n}\n\n// Two instances on one page get unique ids automatically:\n// <FormField label=\"Email\" /> <FormField label=\"Password\" type=\"password\" />",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// useId — stable, unique, deterministic ids across a render tree\nfunction makeIdFactory(prefix = \":r\") {\n  let n = 0;\n  return () => `${prefix}${(n++).toString(36)}:`;\n}\nconst useId = makeIdFactory();\nconst id1 = useId();   // for an input\nconst id2 = useId();   // for another input\nconsole.log(\"id1:\", id1);\nconsole.log(\"id2:\", id2);\nconsole.log(\"Unique:\", id1 !== id2);\nconsole.assert(id1 !== id2, \"ids must be unique\");\nconsole.assert(id1.startsWith(\":r\") && id1.endsWith(\":\"), \"format check\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "id1: :r0:\nid2: :r1:\nUnique: true\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": "p1a-063",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 63,
+  "orderInPhase": 63,
+  "slug": "spread-operator-copy-behavior",
+  "title": "Spread Operator Copy Behavior",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "spread",
+    "operator",
+    "copy",
+    "behavior"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Redux/React nested-state updates: changing `state.user.address.city` immutably requires spreading at each level."
+  },
+  "sections": {
+    "simple_en": "Using spread to copy (`{...obj}` or `[...arr]`) creates a shallow copy. The new array/object is a distinct top-level container, but nested objects and arrays inside it are still shared by reference with the original.\n\nSo spread is perfect for flat data and for immutable updates of a single level, but for nested structures you must spread (or deep-copy) each level you intend to change. This is the single most common source of 'I copied it but the original still changed' confusion.",
+    "hinglish": "Spread se copy karna (`{...obj}` ya `[...arr]`) ek shallow copy banata hai. Naya array/object ek alag top-level container hota hai, par uske andar ke nested objects/arrays abhi bhi original ke saath reference se shared rehte hain.\nTo spread flat data aur ek single level ke immutable updates ke liye perfect hai, par nested structures ke liye aapko har woh level spread (ya deep-copy) karna padega jise change karna hai. Yahi 'maine copy kiya par original bhi badal gaya' confusion ka sabse common source hai.",
+    "keyPoints": [
+      "Spread copy is SHALLOW — top level new, nested shared.",
+      "Great for flat objects/arrays and single-level immutable updates.",
+      "For nested updates, spread each level: `{...s, addr: {...s.addr, city}}`.",
+      "Spreading doesn't clone Dates/Maps/class instances meaningfully.",
+      "Use `structuredClone`/deep copy when full independence is needed."
+    ],
+    "real_world": "Redux/React nested-state updates: changing `state.user.address.city` immutably requires spreading at each level. Forgetting one level mutates the original and breaks change detection.",
+    "followups": [
+      {
+        "q": "Is a spread copy deep or shallow?",
+        "a": "Shallow. Only the top-level container is new; nested objects/arrays are still shared by reference with the original."
+      },
+      {
+        "q": "How do you immutably update a nested property with spread?",
+        "a": "Spread every level down to the change: `{...state, address: {...state.address, city: 'X'}}`. Each spread creates a fresh object at that level."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Correct nested immutable update vs the shallow-only mistake.\n\nfunction shallowMistake(state) {\n  const copy = { ...state };           // only top level copied\n  copy.address.city = \"Mumbai\";        // mutates shared nested object!\n  return { copy, original: state };\n}\n\nfunction correctNestedUpdate(state, city) {\n  return {\n    ...state,\n    address: { ...state.address, city }, // spread the nested level too\n  };\n}\n\nmodule.exports = { shallowMistake, correctNestedUpdate };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { shallowMistake, correctNestedUpdate } = require(\"./solution\");\n\nconst state1 = { name: \"Asha\", address: { city: \"Pune\" } };\nconst m = shallowMistake(state1);\nconsole.log(\"after mistake, original city:\", state1.address.city); // Mumbai (leaked!)\n\nconst state2 = { name: \"Asha\", address: { city: \"Pune\" } };\nconst updated = correctNestedUpdate(state2, \"Mumbai\");\nconsole.log(\"updated city:\", updated.address.city);   // Mumbai\nconsole.log(\"original city:\", state2.address.city);   // Pune (safe)\n\nconsole.assert(state1.address.city === \"Mumbai\", \"shallow copy leaked nested change\");\nconsole.assert(updated.address.city === \"Mumbai\", \"correct update applied\");\nconsole.assert(state2.address.city === \"Pune\", \"original preserved\");\nconsole.assert(state2.address !== updated.address, \"nested object replaced, not shared\");\nconsole.log(\"spread copy behavior assertions passed.\");",
+      "expectedOutput": "after mistake, original city: Mumbai\nupdated city: Mumbai\noriginal city: Pune\nspread copy behavior assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

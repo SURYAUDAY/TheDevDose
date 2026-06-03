@@ -1,0 +1,65 @@
+{
+  "id": "p1a-051",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 51,
+  "orderInPhase": 51,
+  "slug": "optional-chaining",
+  "title": "Optional Chaining (?.)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "optional",
+    "chaining"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Reading nested API data like `response?.data?.user?.address?.city` — common when fields may be missing."
+  },
+  "sections": {
+    "simple_en": "Optional chaining `?.` lets you safely access deeply nested properties without manually checking each level for null/undefined. If any link in the chain is null or undefined, the whole expression short-circuits and evaluates to `undefined` instead of throwing a TypeError.\n\nIt works for property access (`a?.b`), dynamic keys (`a?.[key]`), and method calls (`a?.fn()`). It only guards against null/undefined — not against other falsy values — and pairs perfectly with the nullish coalescing operator `??` to supply a fallback.",
+    "hinglish": "Optional chaining `?.` aapko deeply nested properties safely access karne deta hai bina har level ko null/undefined ke liye manually check kiye. Agar chain me koi bhi link null ya undefined ho, to poora expression short-circuit ho kar `undefined` ban jaata hai, TypeError throw karne ke bajaye.\nYe property access (`a?.b`), dynamic keys (`a?.[key]`), aur method calls (`a?.fn()`) ke liye chalta hai. Ye sirf null/undefined se bachata hai — baaki falsy values se nahi — aur nullish coalescing `??` ke saath fallback dene ke liye perfect hai.",
+    "keyPoints": [
+      "`a?.b` returns undefined if `a` is null/undefined, instead of throwing.",
+      "Works for properties (`?.`), dynamic keys (`?.[k]`), and calls (`?.()`).",
+      "Short-circuits the rest of the chain on the first null/undefined.",
+      "Only guards null/undefined — 0, '', false still pass through.",
+      "Combine with `??` for a default: `user?.name ?? 'Guest'`."
+    ],
+    "real_world": "Reading nested API data like `response?.data?.user?.address?.city` — common when fields may be missing. Without optional chaining you'd write a long `&&` chain or risk a 'cannot read property of undefined' crash.",
+    "followups": [
+      {
+        "q": "Does optional chaining protect against all falsy values?",
+        "a": "No. It only short-circuits on null or undefined. Values like 0, '', and false are valid and the chain continues through them."
+      },
+      {
+        "q": "How does `?.` combine with `??`?",
+        "a": "Use them together for safe access with a default: `user?.profile?.name ?? 'Anonymous'` returns the name if the chain resolves, otherwise the fallback."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Safe deep access with optional chaining.\n\nfunction getCity(response) {\n  return response?.data?.user?.address?.city; // undefined if any link missing\n}\n\nfunction callMaybe(obj) {\n  return obj?.run?.(); // calls run() only if it exists\n}\n\nfunction dynamicAccess(obj, key) {\n  return obj?.[key];\n}\n\nmodule.exports = { getCity, callMaybe, dynamicAccess };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { getCity, callMaybe, dynamicAccess } = require(\"./solution\");\n\nconst full = { data: { user: { address: { city: \"Pune\" } } } };\nconsole.log(getCity(full));      // Pune\nconsole.log(getCity({}));        // undefined (no crash)\nconsole.log(getCity(null));      // undefined\nconsole.log(callMaybe({ run: () => \"ran\" })); // ran\nconsole.log(callMaybe({}));      // undefined\nconsole.log(dynamicAccess({ x: 5 }, \"x\")); // 5\n\nconsole.assert(getCity(full) === \"Pune\", \"deep access works\");\nconsole.assert(getCity({}) === undefined, \"missing link -> undefined\");\nconsole.assert(getCity(null) === undefined, \"null root -> undefined\");\nconsole.assert(callMaybe({}) === undefined, \"missing method -> undefined\");\nconsole.log(\"optional chaining assertions passed.\");",
+      "expectedOutput": "Pune\nundefined\nundefined\nran\nundefined\n5\noptional chaining assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

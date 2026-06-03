@@ -1,0 +1,65 @@
+{
+  "id": "p1a-004",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 4,
+  "orderInPhase": 4,
+  "slug": "call-stack",
+  "title": "Call Stack",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "call",
+    "stack"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "It's like a stack of plates in a cafeteria."
+  },
+  "sections": {
+    "simple_en": "The Call Stack is the data structure the JS engine uses to keep track of which function is currently running and what should run after it finishes. It works as a LIFO (Last-In, First-Out) stack: when a function is called its context is pushed on top; when it returns it is popped off.\n\nJavaScript is single-threaded, so there is exactly one call stack — only one thing runs at a time. If the stack grows too deep (e.g. infinite recursion), you get a 'Maximum call stack size exceeded' error (stack overflow).",
+    "hinglish": "Call Stack ek data structure hai jisse engine track karta hai ki abhi kaunsa function chal raha hai aur uske baad kya chalega. Ye LIFO (Last-In, First-Out) tarah kaam karta hai: function call hote hi uska context upar push hota hai, return hote hi pop ho jaata hai.\nJavaScript single-threaded hai, isliye sirf ek hi call stack hota hai — ek time par ek hi cheez chalti hai. Agar stack bahut gehra ho jaaye (jaise infinite recursion) to 'Maximum call stack size exceeded' error aata hai (stack overflow).",
+    "keyPoints": [
+      "LIFO structure: the last function pushed is the first to be popped.",
+      "Tracks execution order — where to return after a function finishes.",
+      "JS is single-threaded → exactly one call stack → one task at a time.",
+      "The Global Execution Context sits at the bottom of the stack.",
+      "Infinite/too-deep recursion causes a stack overflow ('Maximum call stack size exceeded')."
+    ],
+    "real_world": "It's like a stack of plates in a cafeteria. You add (push) a new plate on top and you always take (pop) the top one first. You can't grab the bottom plate without removing the ones above it.",
+    "followups": [
+      {
+        "q": "Why is JavaScript called single-threaded?",
+        "a": "Because it has one call stack and executes one statement at a time. Concurrency (timers, I/O, fetch) is handled by the runtime's event loop and queues, not by extra threads on the main stack."
+      },
+      {
+        "q": "What causes 'Maximum call stack size exceeded'?",
+        "a": "Pushing more frames than the stack can hold — usually infinite or unbounded recursion without a reachable base case."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// We simulate the call stack to show push/pop ordering.\n\nfunction buildCallStackTrace() {\n  const stack = [];\n  const trace = [];\n\n  function call(fn) { stack.push(fn); trace.push(\"push \" + fn + \" -> [\" + stack.join(\",\") + \"]\"); }\n  function ret()     { const f = stack.pop(); trace.push(\"pop  \" + f + \"  -> [\" + stack.join(\",\") + \"]\"); }\n\n  call(\"global\");\n  call(\"first\");\n  call(\"second\");\n  ret();   // second returns\n  ret();   // first returns\n  ret();   // global ends\n  return trace;\n}\n\n// A real (controlled) recursion that respects stack limits.\nfunction sumTo(n, acc = 0) {\n  if (n === 0) return acc;\n  return sumTo(n - 1, acc + n);\n}\n\nmodule.exports = { buildCallStackTrace, sumTo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { buildCallStackTrace, sumTo } = require(\"./solution\");\n\nbuildCallStackTrace().forEach(line => console.log(line));\nconsole.log(\"sumTo(100) =\", sumTo(100));\n\nconsole.assert(sumTo(100) === 5050, \"1..100 should sum to 5050\");\n\n// Demonstrate a stack overflow safely:\nlet overflowed = false;\nfunction boom(n){ return boom(n + 1); }\ntry { boom(1); } catch (e) { overflowed = e instanceof RangeError; }\nconsole.assert(overflowed, \"infinite recursion must throw RangeError\");\nconsole.log(\"Call stack assertions passed.\");",
+      "expectedOutput": "push global -> [global]\npush first -> [global,first]\npush second -> [global,first,second]\npop  second  -> [global,first]\npop  first  -> [global]\npop  global  -> []\nsumTo(100) = 5050\nCall stack assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

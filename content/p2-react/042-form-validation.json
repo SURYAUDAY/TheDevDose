@@ -1,0 +1,69 @@
+{
+  "id": "p2-042",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 42,
+  "orderInPhase": 42,
+  "slug": "form-validation",
+  "title": "Form validation",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "form",
+    "validation"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A signup form validates email format and password length as the user types, showing inline hints, and keeps the submit button disabled until everything passes."
+  },
+  "sections": {
+    "simple_en": "Form validation checks user input against rules — required fields, formats (email), length, ranges — and surfaces clear errors. You can validate on change, on blur, or on submit; live validation gives instant feedback, while submit validation avoids nagging users mid-typing.\n\nValidation can be hand-written per field or driven by a schema (e.g., Zod or Yup) that describes the whole form declaratively. Schemas are reusable, can be shared with the backend, and keep rules in one tidy place.",
+    "hinglish": "Form validation user input ko rules ke against check karta hai — required fields, format (email), length, range — aur clear errors dikhata hai. Aap change, blur ya submit par validate kar sakte ho; live validation instant feedback deta hai, submit validation typing ke beech tang nahi karta.\n\nValidation har field ke liye haath se likhi ja sakti hai ya schema (Zod/Yup) se driven ho sakti hai jo poore form ko declaratively describe karti hai. Schemas reusable hote hain aur rules ek jagah rakhte hain.",
+    "keyPoints": [
+      "Check input against rules (required, format, length, range) and show clear errors.",
+      "Timing options: on-change (live), on-blur, or on-submit — choose for good UX.",
+      "Schema validation (Zod/Yup) describes the whole form declaratively and reusably.",
+      "Disable submit until valid, and show one helpful message per field.",
+      "Always re-validate on the server — client validation is for UX, not security."
+    ],
+    "real_world": "A signup form validates email format and password length as the user types, showing inline hints, and keeps the submit button disabled until everything passes. The same Zod schema runs on the server to reject malformed requests defensively.",
+    "followups": [
+      {
+        "q": "When should validation run — on change or on submit?",
+        "a": "A common pattern is on-blur or on-change after first interaction for instant feedback, plus a final check on submit. Validating every keystroke from the start can feel naggy."
+      },
+      {
+        "q": "Why use a schema library like Zod?",
+        "a": "It centralizes rules declaratively, is reusable across client and server, infers types, and reduces ad-hoc per-field validation code."
+      },
+      {
+        "q": "Is client-side validation enough?",
+        "a": "No. It improves UX but can be bypassed. The server must validate every request independently."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Form validation: validate on change and show per-field errors.\nimport React, { useState } from \"react\";\n\nconst validators = {\n  email: (v) => (/^[^@]+@[^@]+\\.[^@]+$/.test(v) ? \"\" : \"Invalid email\"),\n  password: (v) => (v.length >= 8 ? \"\" : \"Min 8 characters\"),\n};\n\nexport default function SignupForm() {\n  const [values, setValues] = useState({ email: \"\", password: \"\" });\n  const [errors, setErrors] = useState({});\n\n  const handleChange = (e) => {\n    const { name, value } = e.target;\n    setValues((v) => ({ ...v, [name]: value }));\n    setErrors((err) => ({ ...err, [name]: validators[name](value) }));\n  };\n\n  const isValid = Object.values(errors).every((e) => !e) && values.email && values.password;\n\n  return (\n    <form>\n      <input name=\"email\" value={values.email} onChange={handleChange} />\n      {errors.email && <span>{errors.email}</span>}\n      <input name=\"password\" type=\"password\" value={values.password} onChange={handleChange} />\n      {errors.password && <span>{errors.password}</span>}\n      <button disabled={!isValid}>Sign up</button>\n    </form>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Form validation — a schema-style validator returning field errors\nfunction validate(values, rules){\n  const errors = {};\n  for (const field in rules){\n    for (const rule of rules[field]){\n      const msg = rule(values[field], values);\n      if (msg){ errors[field] = msg; break; }   // first error per field\n    }\n  }\n  return { valid: Object.keys(errors).length === 0, errors };\n}\nconst required = (v) => (v ? null : \"Required\");\nconst email    = (v) => (/^[^@]+@[^@]+\\.[^@]+$/.test(v) ? null : \"Invalid email\");\nconst min = (n) => (v) => (v && v.length >= n ? null : `Min ${n} chars`);\n\nconst rules = { email: [required, email], password: [required, min(8)] };\nconsole.log(JSON.stringify(validate({ email: \"bad\", password: \"123\" }, rules)));\nconsole.log(JSON.stringify(validate({ email: \"a@b.com\", password: \"longenough\" }, rules)));\nconst bad = validate({ email: \"bad\", password: \"123\" }, rules);\nconsole.assert(!bad.valid && bad.errors.email === \"Invalid email\", \"email error reported\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "{\"valid\":false,\"errors\":{\"email\":\"Invalid email\",\"password\":\"Min 8 chars\"}}\n{\"valid\":true,\"errors\":{}}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

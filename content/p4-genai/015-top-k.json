@@ -1,0 +1,68 @@
+{
+  "id": "p4-015",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 15,
+  "orderInPhase": 15,
+  "slug": "top-k",
+  "title": "top_k",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "top"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Running a local Llama model with Ollama, a developer sets top_k=1 for a deterministic extraction task (always the top token) and raises it to 40 for a chatbo…"
+  },
+  "sections": {
+    "simple_en": "Top-k sampling restricts the model to choosing from only the k highest-probability next tokens, ignoring everything else, then renormalizes and samples among them. With top_k=1 the model is greedy — it always takes the single most likely token (deterministic); larger k allows more variety.\n\nTop-k is a fixed-count cutoff, in contrast to top_p's dynamic, probability-based cutoff. It's exposed by many runtimes (Hugging Face, Ollama, Google/Anthropic SDKs); the OpenAI Chat API instead exposes temperature and top_p. All three are ways to control the randomness/diversity of generation.",
+    "hinglish": "Top-k sampling model ko sirf k highest-probability next tokens mein se choose karne tak restrict karta hai, baaki sab ignore karke, phir renormalize karke unmein se sample karta hai. top_k=1 par model greedy hota hai — hamesha single sabse likely token leta hai (deterministic); bada k zyada variety deta hai.\n\nTop-k ek fixed-count cutoff hai, top_p ke dynamic, probability-based cutoff ke ulta. Ye kai runtimes expose karte hain (Hugging Face, Ollama, Google/Anthropic SDKs); OpenAI Chat API iske bajaye temperature aur top_p expose karta hai. Teeno generation ki randomness/diversity control karne ke tarike hain.",
+    "keyPoints": [
+      "Restricts sampling to the k most-likely tokens, then renormalizes.",
+      "top_k=1 is greedy/deterministic; larger k adds variety.",
+      "A fixed-count cutoff (vs top_p's dynamic, probability-based cutoff).",
+      "Exposed by many runtimes (Hugging Face, Ollama, etc.).",
+      "One of three randomness controls alongside temperature and top_p."
+    ],
+    "real_world": "Running a local Llama model with Ollama, a developer sets top_k=1 for a deterministic extraction task (always the top token) and raises it to 40 for a chatbot so replies feel natural and varied rather than robotic.",
+    "followups": [
+      {
+        "q": "What does top_k=1 do?",
+        "a": "It makes generation greedy — the model always picks the single highest-probability token, producing deterministic output (the same input gives the same result)."
+      },
+      {
+        "q": "Top_k vs top_p — the key difference?",
+        "a": "Top_k keeps a fixed number of top tokens; top_p keeps a variable number that together cover probability mass p. Top_p adapts to the model's confidence; top_k does not."
+      },
+      {
+        "q": "Why doesn't the OpenAI Chat API expose top_k?",
+        "a": "It exposes temperature and top_p as its randomness controls. Top_k is common in other runtimes (Hugging Face, Ollama, some other vendor SDKs), but the concept — limiting candidate tokens — is the same idea."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real Ollama top_k code (the OpenAI Chat API exposes temperature/top_p; top_k is common in other runtimes). The Python-runnable demo below implements top-k filtering so the selection is verifiable here.",
+      "source": "# top_k — restrict sampling to the k most likely tokens.\n# Note: the OpenAI Chat API exposes temperature/top_p; top_k is common in other\n# runtimes (Hugging Face, Ollama, Google/Anthropic SDKs). Example with Ollama:\nimport ollama\n\ndef generate(prompt: str, top_k: int) -> str:\n    response = ollama.chat(\n        model=\"llama3\",\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n        options={\"top_k\": top_k},   # only the k highest-probability tokens are eligible\n    )\n    return response[\"message\"][\"content\"]\n\n# top_k=1 -> greedy/deterministic (always the single most likely token).\n# Larger k -> more diversity. top_k is a FIXED count; top_p is a dynamic cutoff.\n# focused = generate(\"Name a color.\", top_k=1)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# top_k — keep only the k highest-probability tokens, then renormalize and sample from them\nprobs = {\"cat\": 0.40, \"dog\": 0.30, \"bird\": 0.15, \"fish\": 0.10, \"ant\": 0.05}\n\ndef top_k(probs, k):\n    ordered = sorted(probs.items(), key=lambda kv: kv[1], reverse=True)[:k]\n    total = sum(pr for _, pr in ordered)\n    return {t: pr / total for t, pr in ordered}\n\nfor k in (1, 3):\n    tk = top_k(probs, k)\n    print(f\"top_k={k}: \" + \", \".join(f\"{t}={p:.2f}\" for t, p in tk.items()))\n\nt1 = top_k(probs, 1)\nt3 = top_k(probs, 3)\nassert list(t1) == [\"cat\"] and t1[\"cat\"] == 1.0, \"top_k=1 is greedy (argmax)\"\nassert len(t3) == 3, \"top_k=3 keeps three tokens\"\nprint(\"\\nTop-k restricts sampling to the k most likely tokens (a fixed count).\")\nprint(\"top_k=1 is greedy/deterministic; larger k allows more variety. Contrast: top_p is a dynamic count.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "top_k=1: cat=1.00\ntop_k=3: cat=0.47, dog=0.35, bird=0.18\n\nTop-k restricts sampling to the k most likely tokens (a fixed count).\ntop_k=1 is greedy/deterministic; larger k allows more variety. Contrast: top_p is a dynamic count.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

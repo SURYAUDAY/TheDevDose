@@ -1,0 +1,69 @@
+{
+  "id": "p3-053",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 53,
+  "orderInPhase": 53,
+  "slug": "xss-basics",
+  "title": "XSS basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "xss",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "container",
+    "seedText": "A comment box lets users post text."
+  },
+  "sections": {
+    "simple_en": "XSS (Cross-Site Scripting) is an attack where malicious JavaScript is injected into a page and runs in other users' browsers — stealing cookies/tokens, hijacking sessions, or defacing the page. It happens when user-supplied data is rendered into HTML without proper escaping (e.g., a comment containing a script tag).\n\nThe primary defense is to escape (encode) all user-provided data when inserting it into HTML so it's treated as text, not markup. Modern frameworks (React, Vue) auto-escape by default; the danger is APIs like dangerouslySetInnerHTML (sanitize with DOMPurify). A Content-Security-Policy adds defense-in-depth by blocking inline/injected scripts.",
+    "hinglish": "XSS (Cross-Site Scripting) ek attack hai jisme malicious JavaScript page mein inject hota hai aur doosre users ke browsers mein chalta hai — cookies/tokens chura kar, sessions hijack karke, ya page deface karke. Ye tab hota hai jab user data bina proper escaping ke HTML mein render hota hai (jaise script tag waala comment).\n\nPrimary defense hai user data ko HTML mein daalte waqt escape (encode) karna taaki wo text samjha jaaye, markup nahi. Modern frameworks (React, Vue) by default auto-escape karte hain; khatra dangerouslySetInnerHTML jaise APIs hain (DOMPurify se sanitize karo). Content-Security-Policy defense-in-depth deta hai inline/injected scripts block karke.",
+    "keyPoints": [
+      "Injected JS runs in victims' browsers — can steal cookies/tokens, hijack sessions.",
+      "Caused by rendering user data into HTML without escaping.",
+      "Defense: escape/encode all user-provided data on output.",
+      "React/Vue auto-escape; beware dangerouslySetInnerHTML (sanitize with DOMPurify).",
+      "Content-Security-Policy blocks inline/injected scripts (defense in depth)."
+    ],
+    "real_world": "A comment box lets users post text. An attacker posts <script>steal(document.cookie)</script>. If the app renders it raw, the script runs for everyone who views the comment. Escaping turns it into harmless text (&lt;script&gt;...), and a CSP prevents inline scripts from executing at all.",
+    "followups": [
+      {
+        "q": "What's the main defense against XSS?",
+        "a": "Escape/encode user-supplied data when outputting it into HTML so it's rendered as text, not executable markup. Frameworks that auto-escape handle most cases by default."
+      },
+      {
+        "q": "Does React make you immune to XSS?",
+        "a": "Mostly — it escapes text by default. But dangerouslySetInnerHTML, injecting into href/src, or rendering unsanitized HTML can reintroduce XSS. Sanitize with a library like DOMPurify when rendering user HTML."
+      },
+      {
+        "q": "How does a Content-Security-Policy help?",
+        "a": "It restricts which scripts can run (e.g., only same-origin, no inline scripts), so even if malicious markup is injected, the browser refuses to execute it — a strong secondary layer."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express code (helmet CSP + output escaping). The Node-runnable demo below proves the escaping neutralizes a script payload, so the protection is verifiable here.",
+      "source": "// XSS prevention — escape output and lock down with a Content-Security-Policy.\nconst express = require(\"express\");\nconst helmet = require(\"helmet\");\nconst app = express();\n\n// 1) A strict CSP blocks inline and injected scripts (defense in depth).\napp.use(helmet.contentSecurityPolicy({\n  directives: { defaultSrc: [\"'self'\"], scriptSrc: [\"'self'\"] },\n}));\n\n// 2) Escape any user-provided data before inserting it into HTML.\nfunction escapeHtml(str) {\n  return String(str)\n    .replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\")\n    .replace(/\"/g, \"&quot;\").replace(/'/g, \"&#39;\");\n}\n\napp.get(\"/profile\", (req, res) => {\n  const name = escapeHtml(req.query.name || \"\");\n  // <script> in the input becomes harmless &lt;script&gt; text.\n  res.send(`<h1>Hello, ${name}</h1>`);\n});\n\n// In React/Vue, text is auto-escaped; the danger is dangerouslySetInnerHTML\n// (sanitize with DOMPurify if you must render user HTML).\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// XSS — escape user input before putting it in HTML\nfunction escapeHtml(str){\n  return String(str)\n    .replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\")\n    .replace(/\"/g, \"&quot;\").replace(/'/g, \"&#39;\");\n}\nfunction renderComment(comment){ return `<div class=\"comment\">${escapeHtml(comment)}</div>`; }\n\nconst malicious = `<script>steal(document.cookie)</script>`;\nconst safeOutput = renderComment(malicious);\nconsole.log(\"Raw (DANGEROUS):\", `<div>${malicious}</div>`);\nconsole.log(\"Escaped (SAFE): \", safeOutput);\nconsole.assert(!safeOutput.includes(\"<script>\"), \"script tag neutralized\");\nconsole.assert(safeOutput.includes(\"&lt;script&gt;\"), \"angle brackets escaped\");\nconsole.log(\"Also: a Content-Security-Policy blocks inline/injected scripts as defense-in-depth.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Raw (DANGEROUS): <div><script>steal(document.cookie)</script></div>\nEscaped (SAFE):  <div class=\"comment\">&lt;script&gt;steal(document.cookie)&lt;/script&gt;</div>\nAlso: a Content-Security-Policy blocks inline/injected scripts as defense-in-depth.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

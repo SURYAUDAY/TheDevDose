@@ -1,0 +1,64 @@
+{
+  "id": "p1a-064",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 64,
+  "orderInPhase": 64,
+  "slug": "structuredclone",
+  "title": "structuredClone()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "structuredclone"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "Cloning application state that contains Dates and a Map before persisting or comparing — `structuredClone` keeps the Date as a Date and the Map as a Map, whe…"
+  },
+  "sections": {
+    "simple_en": "`structuredClone(value)` is a built-in function that creates a deep copy of a value. It's available in modern browsers and Node.js 17+. Unlike the JSON trick, it correctly handles many built-in types and even circular references.\n\nIt can clone nested objects/arrays, Dates, Maps, Sets, ArrayBuffers, and typed arrays, and preserves circular structures. Its main limitation: it cannot clone functions, DOM nodes, or class-specific prototypes/behaviour (the result is a plain structured clone of the data).",
+    "hinglish": "`structuredClone(value)` ek built-in function hai jo kisi value ki deep copy banata hai. Ye modern browsers aur Node.js 17+ me available hai. JSON trick ke विपरीत, ye bohot saare built-in types aur circular references ko bhi sahi handle karta hai.\nYe nested objects/arrays, Dates, Maps, Sets, ArrayBuffers, aur typed arrays clone kar sakta hai, aur circular structures preserve karta hai. Iski main limitation: functions, DOM nodes, ya class-specific prototypes/behaviour clone nahi kar sakta (result data ka plain structured clone hota hai).",
+    "keyPoints": [
+      "Built-in deep clone: `structuredClone(value)` (browsers + Node 17+).",
+      "Handles nested data, Dates, Maps, Sets, typed arrays, and circular refs.",
+      "Does NOT clone functions, DOM nodes, or restore class prototypes.",
+      "Throws a DataCloneError on non-cloneable values (e.g. functions).",
+      "Preferred over `JSON.parse(JSON.stringify())` for most deep-copy needs."
+    ],
+    "real_world": "Cloning application state that contains Dates and a Map before persisting or comparing — `structuredClone` keeps the Date as a Date and the Map as a Map, whereas the JSON trick would corrupt both.",
+    "followups": [
+      {
+        "q": "What can structuredClone do that the JSON trick can't?",
+        "a": "It preserves Dates, Maps, Sets, typed arrays, and circular references, all of which the `JSON.parse(JSON.stringify())` approach loses or breaks."
+      },
+      {
+        "q": "What can't structuredClone clone?",
+        "a": "Functions, DOM nodes, and class prototype behaviour — it throws a DataCloneError on functions and returns plain structured data without restoring custom class methods."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// structuredClone handles Dates, Maps, and circular refs.\n\nfunction cloneRich() {\n  const original = {\n    when: new Date(\"2025-01-01T00:00:00Z\"),\n    lookup: new Map([[\"a\", 1]]),\n    nested: { list: [1, 2, 3] },\n  };\n  original.self = original; // circular reference\n\n  const copy = structuredClone(original);\n  copy.nested.list.push(4); // independent\n\n  return {\n    dateIsDate: copy.when instanceof Date,\n    mapIsMap: copy.lookup instanceof Map,\n    circularKept: copy.self === copy,\n    originalListLen: original.nested.list.length, // 3 (unchanged)\n    copyListLen: copy.nested.list.length,         // 4\n  };\n}\n\nmodule.exports = { cloneRich };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { cloneRich } = require(\"./solution\");\n\nconsole.log(cloneRich());\n\nconst r = cloneRich();\nconsole.assert(r.dateIsDate === true, \"Date preserved as Date\");\nconsole.assert(r.mapIsMap === true, \"Map preserved as Map\");\nconsole.assert(r.circularKept === true, \"circular reference handled\");\nconsole.assert(r.originalListLen === 3, \"original independent\");\nconsole.assert(r.copyListLen === 4, \"copy mutated independently\");\nconsole.log(\"structuredClone assertions passed.\");",
+      "expectedOutput": "{\n  dateIsDate: true,\n  mapIsMap: true,\n  circularKept: true,\n  originalListLen: 3,\n  copyListLen: 4\n}\nstructuredClone assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

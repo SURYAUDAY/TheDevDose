@@ -1,0 +1,65 @@
+{
+  "id": "p1b-026",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 26,
+  "orderInPhase": 26,
+  "slug": "function-overloading",
+  "title": "Function Overloading",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "function",
+    "overloading"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `parse` helper that returns a `Date` when given a string and a `number[]` when given a CSV-like input — overloads let each call site get the precise return…"
+  },
+  "sections": {
+    "simple_en": "Function overloading lets one function have multiple type signatures so it can be called in different ways with accurate types for each. You write several overload SIGNATURES (no body) followed by ONE implementation signature (with the body) that must be compatible with all of them.\n\nCallers see only the overload signatures, so TypeScript picks the matching one and infers the right return type. The implementation signature is internal and usually broader (often using unions). It's useful when a function's return type depends on its argument types.",
+    "hinglish": "Function overloading ek function ko multiple type signatures dene deta hai taaki use alag-alag tarah se call kiya ja sake har ek ke accurate types ke saath. Aap kai overload SIGNATURES (bina body) likhte ho phir EK implementation signature (body ke saath) jo un sabse compatible ho.\nCallers ko sirf overload signatures dikhte hain, isliye TypeScript matching wala chunta hai aur sahi return type infer karta hai. Implementation signature internal aur aam taur par broader hota hai (aksar unions use karke). Ye tab useful hai jab function ka return type uske argument types par depend kare.",
+    "keyPoints": [
+      "Multiple overload signatures + one compatible implementation signature.",
+      "Callers only see the overloads; the implementation is hidden.",
+      "TypeScript selects the matching overload and infers its return type.",
+      "Implementation signature is usually broader (unions/any-ish).",
+      "Use when the return type depends on argument types."
+    ],
+    "real_world": "A `parse` helper that returns a `Date` when given a string and a `number[]` when given a CSV-like input — overloads let each call site get the precise return type instead of a vague union.",
+    "followups": [
+      {
+        "q": "How many implementation signatures can an overloaded function have?",
+        "a": "Exactly one. You write multiple overload signatures (no body) and a single implementation signature with the body that must be compatible with all overloads. The implementation signature isn't visible to callers."
+      },
+      {
+        "q": "When is overloading preferable to a union return type?",
+        "a": "When the return type depends on which argument type was passed, so each call site gets a precise type instead of a broad union it would have to narrow afterward."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — overload signatures + one implementation.\n\nexport function makeArray(value: string): string[];\nexport function makeArray(value: number): number[];\nexport function makeArray(value: string | number): string[] | number[] {\n  // implementation handles all overloads\n  return [value] as string[] | number[];\n}\n\nexport function len(value: string): number;\nexport function len(value: unknown[]): number;\nexport function len(value: string | unknown[]): number {\n  return value.length;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { makeArray, len } from \"./solution\";\n\nconsole.log(makeArray(\"x\"));   // ['x'] (typed as string[])\nconsole.log(makeArray(5));     // [5]  (typed as number[])\nconsole.log(len(\"hello\"));     // 5\nconsole.log(len([1, 2, 3]));   // 3\n\nconsole.assert(JSON.stringify(makeArray(\"x\")) === '[\"x\"]', \"string overload\");\nconsole.assert(JSON.stringify(makeArray(5)) === \"[5]\", \"number overload\");\nconsole.assert(len(\"hello\") === 5, \"string length overload\");\nconsole.assert(len([1, 2, 3]) === 3, \"array length overload\");\nconsole.log(\"function-overloading assertions passed.\");",
+      "expectedOutput": "[ 'x' ]\n[ 5 ]\n5\n3\nfunction-overloading assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

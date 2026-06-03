@@ -1,0 +1,68 @@
+{
+  "id": "p4-049",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 49,
+  "orderInPhase": 49,
+  "slug": "chains",
+  "title": "Chains",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "chains"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A content pipeline chains three steps: extract key points from a transcript, summarize them into a paragraph, then rewrite the paragraph in a brand voice."
+  },
+  "sections": {
+    "simple_en": "A chain links multiple steps so each step's output becomes the next step's input — turning single LLM calls into multi-stage workflows. A sequential chain might summarize text, then translate the summary, then format it; each stage builds on the last. Steps can be prompts, model calls, tools, parsers, or plain functions.\n\nChains make complex tasks manageable by decomposing them into focused pieces, each easier to build, test, and reason about. Beyond simple sequences, chains can branch and route based on input. In LangChain, you compose them with the pipe operator (LCEL), and the resulting chain behaves like a single callable.",
+    "hinglish": "Ek chain kai steps ko link karti hai taaki har step ka output agle step ka input ban jaaye — single LLM calls ko multi-stage workflows mein badalkar. Ek sequential chain text summarize kar sakti hai, phir summary translate, phir use format; har stage pichhle par build karti hai. Steps prompts, model calls, tools, parsers, ya plain functions ho sakte hain.\n\nChains complex tasks ko manageable banati hain unhe focused pieces mein todhkar, har ek build, test, aur reason karna aasaan. Simple sequences ke alawa, chains input ke aadhaar par branch aur route kar sakti hain. LangChain mein, aap unhe pipe operator (LCEL) se compose karte ho, aur resulting chain ek single callable ki tarah behave karti hai.",
+    "keyPoints": [
+      "Link steps so each output feeds the next — multi-stage workflows.",
+      "Steps can be prompts, model calls, tools, parsers, or functions.",
+      "Decompose complex tasks into focused, testable pieces.",
+      "Can branch and route, not just run in sequence.",
+      "Composed with the pipe (LCEL); the chain acts as one callable."
+    ],
+    "real_world": "A content pipeline chains three steps: extract key points from a transcript, summarize them into a paragraph, then rewrite the paragraph in a brand voice. Each LLM call is simple and testable, and the chain runs them in order to produce the final polished output.",
+    "followups": [
+      {
+        "q": "What is a chain?",
+        "a": "A composition of steps where each step's output is the next step's input, turning multiple LLM/tool calls into a coherent multi-stage workflow."
+      },
+      {
+        "q": "Why break a task into a chain instead of one big prompt?",
+        "a": "Smaller, focused steps are easier to build, test, debug, and reason about, and often more reliable than asking the model to do everything in a single complex prompt."
+      },
+      {
+        "q": "Can chains do more than run steps in sequence?",
+        "a": "Yes — they can branch and route based on inputs or intermediate results, enabling conditional and more complex workflows beyond a simple linear sequence."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain sequential-chain code. The Python-runnable demo below pipes one step's output into the next so multi-step composition is verifiable here.",
+      "source": "# Chains — connect multiple steps so each output feeds the next (LCEL).\nfrom langchain_openai import ChatOpenAI\nfrom langchain_core.prompts import ChatPromptTemplate\nfrom langchain_core.output_parsers import StrOutputParser\n\nllm = ChatOpenAI(model=\"gpt-4o-mini\")\nparser = StrOutputParser()\n\noutline_chain = ChatPromptTemplate.from_template(\"Create a 3-point outline on {topic}.\") | llm | parser\nwrite_chain   = ChatPromptTemplate.from_template(\"Write a short paragraph from this outline:\\n{outline}\") | llm | parser\n\n# Sequential composition: feed the first chain's output into the second.\nfull_chain = {\"outline\": outline_chain} | write_chain\n# article = full_chain.invoke({\"topic\": \"vector databases\"})\n\n# Chains break a complex task into reliable stages (outline -> write -> edit).\n# You can branch (RunnableParallel), route, and add retrieval/memory steps similarly.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Chains — connect steps so each output feeds the next (incl. sequential chains)\ndef make_step(fn): return fn\n\n# A simple sequential chain: outline -> draft -> shorten.\ndef outline(topic): return f\"Outline: intro, {topic} basics, summary\"\ndef draft(outline_text): return f\"Draft based on [{outline_text}]\"\ndef shorten(draft_text): return draft_text.replace(\"Draft based on \", \"Summary of \")\n\ndef run_chain(steps, initial):\n    data = initial\n    history = [(\"input\", initial)]\n    for step in steps:\n        data = step(data)\n        history.append((step.__name__, data))\n    return data, history\n\nresult, history = run_chain([outline, draft, shorten], \"RAG\")\nfor name, val in history:\n    print(f\"{name:8}: {val}\")\nassert result.startswith(\"Summary of [Outline: intro, RAG basics\")\nprint(\"\\nChains link multiple steps/LLM calls; each step's output is the next step's input.\")\nprint(\"Sequential chains break complex tasks into reliable stages (e.g., outline then write then edit).\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "input   : RAG\noutline : Outline: intro, RAG basics, summary\ndraft   : Draft based on [Outline: intro, RAG basics, summary]\nshorten : Summary of [Outline: intro, RAG basics, summary]\n\nChains link multiple steps/LLM calls; each step's output is the next step's input.\nSequential chains break complex tasks into reliable stages (e.g., outline then write then edit).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

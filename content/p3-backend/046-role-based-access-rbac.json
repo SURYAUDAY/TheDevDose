@@ -1,0 +1,70 @@
+{
+  "id": "p3-046",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 46,
+  "orderInPhase": 46,
+  "slug": "role-based-access-rbac",
+  "title": "Role-based access (RBAC)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "role-based",
+    "access",
+    "rbac"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A CMS gives editors read+write but not delete, and admins everything."
+  },
+  "sections": {
+    "simple_en": "Authentication answers 'who are you?'; authorization answers 'what are you allowed to do?'. Role-Based Access Control (RBAC) handles authorization by assigning users roles (admin, editor, viewer) and granting each role a set of permissions. Routes then check whether the user's role includes the required permission.\n\nRBAC centralizes access rules so you manage 'who can do what' by role instead of scattering per-user checks. In Express it's typically a middleware that, after authentication sets req.user, verifies the role's permissions and returns 403 Forbidden if not allowed. For finer control there's ABAC (attribute-based) and per-resource ownership checks.",
+    "hinglish": "Authentication batata hai 'tum kaun ho?'; authorization batata hai 'tum kya kar sakte ho?'. Role-Based Access Control (RBAC) authorization handle karta hai users ko roles (admin, editor, viewer) de kar aur har role ko permissions ka set de kar. Routes phir check karte hain ki user ke role mein required permission hai ya nahi.\n\nRBAC access rules centralize karta hai taaki aap 'kaun kya kar sakta hai' role se manage karo, har user par alag checks bina. Express mein ye aksar ek middleware hota hai jo authentication ke baad (req.user set hone par) role ki permissions verify karta hai aur na hone par 403 Forbidden deta hai. Finer control ke liye ABAC (attribute-based) aur per-resource ownership checks hain.",
+    "keyPoints": [
+      "AuthZ ('what can you do') vs authN ('who are you').",
+      "Assign users roles; grant each role a set of permissions.",
+      "Routes check the role's permissions; deny with 403 Forbidden.",
+      "Centralizes rules — manage access by role, not per user.",
+      "Finer-grained options: ABAC and per-resource ownership checks."
+    ],
+    "real_world": "A CMS gives editors read+write but not delete, and admins everything. A requirePermission('delete') middleware lets an admin remove an article but returns 403 for an editor — the rule lives in one place, applied consistently across routes.",
+    "followups": [
+      {
+        "q": "Difference between authentication and authorization?",
+        "a": "Authentication verifies identity (login); authorization decides what that identity may do. RBAC is an authorization mechanism applied after authentication."
+      },
+      {
+        "q": "RBAC vs ABAC?",
+        "a": "RBAC grants permissions via roles; ABAC (attribute-based) decides access from attributes of the user, resource, and context (e.g., department, time, ownership) for finer-grained control."
+      },
+      {
+        "q": "How do you handle 'users can edit only their own posts'?",
+        "a": "That's resource ownership, beyond plain RBAC — add a check comparing req.user.id to the resource's owner id, often combined with role checks."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express RBAC middleware code. The Node-runnable demo below verifies role-to-permission checks so the authorization logic is verifiable here.",
+      "source": "// Role-based access control (RBAC) — authorize actions by role.\nconst express = require(\"express\");\nconst app = express();\n\nconst permissions = {\n  admin: [\"read\", \"write\", \"delete\", \"manage_users\"],\n  editor: [\"read\", \"write\"],\n  viewer: [\"read\"],\n};\n\n// Middleware factory: require a specific permission for a route.\nfunction requirePermission(action) {\n  return (req, res, next) => {\n    const role = req.user?.role;                 // set by your auth middleware\n    if (!permissions[role]?.includes(action)) {\n      return res.status(403).json({ error: \"Forbidden\" });\n    }\n    next();\n  };\n}\n\n// Example protected routes (assume authenticate ran earlier and set req.user):\napp.get(\"/articles\", requirePermission(\"read\"), (req, res) => res.json([]));\napp.post(\"/articles\", requirePermission(\"write\"), (req, res) => res.status(201).json({}));\napp.delete(\"/articles/:id\", requirePermission(\"delete\"), (req, res) => res.status(204).end());\n\napp.listen(3000);\n// RBAC centralizes \"who can do what.\" For finer control, see ABAC\n// (attribute-based) or per-resource ownership checks.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Role-based access (RBAC) — map roles to permissions; guard actions\nconst rolePermissions = {\n  admin:  [\"read\", \"write\", \"delete\", \"manage_users\"],\n  editor: [\"read\", \"write\"],\n  viewer: [\"read\"],\n};\nfunction can(user, action){ return (rolePermissions[user.role] || []).includes(action); }\nfunction guard(user, action){ if (!can(user, action)) throw new Error(`403 Forbidden: ${user.role} cannot ${action}`); return \"OK\"; }\n\nconst admin  = { id: 1, role: \"admin\" };\nconst viewer = { id: 2, role: \"viewer\" };\nconsole.log(\"admin delete:\", can(admin, \"delete\"));\nconsole.log(\"viewer delete:\", can(viewer, \"delete\"));\nconsole.log(\"viewer read:\", guard(viewer, \"read\"));\ntry { guard(viewer, \"write\"); } catch (e) { console.log(e.message); }\nconsole.assert(can(admin, \"manage_users\") && !can(viewer, \"write\"), \"RBAC enforced\");\nconsole.log(\"RBAC centralizes 'who can do what' by role, not per-user checks.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "admin delete: true\nviewer delete: false\nviewer read: OK\n403 Forbidden: viewer cannot write\nRBAC centralizes 'who can do what' by role, not per-user checks.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

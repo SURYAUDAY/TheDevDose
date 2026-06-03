@@ -1,0 +1,70 @@
+{
+  "id": "p5-037",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 37,
+  "orderInPhase": 37,
+  "slug": "explain-ai-agents",
+  "title": "Explain AI agents",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "explain",
+    "ai",
+    "agents"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Asked 'what's the population of France divided by its number of regions?', an agent searches for the population, searches for the region count, calls a calcu…"
+  },
+  "sections": {
+    "simple_en": "An AI agent uses an LLM as a reasoning engine that chooses and calls tools in a loop to accomplish a goal, rather than answering in a single shot. It reasons about what to do, takes an action (calls a tool), observes the result, and repeats — deciding each next step itself until the task is done.\n\nThis loop (often a ReAct-style Thought → Action → Observation cycle) lets agents solve multi-step problems: look something up, compute on the result, then format an answer. The defining traits are autonomy, tool use, and iteration; memory and planning extend them. The interview caveat: agents are powerful but less predictable, so they need guardrails like step limits.",
+    "hinglish": "Ek AI agent ek LLM ko ek reasoning engine ki tarah use karta hai jo ek goal poora karne ke liye tools ko loop mein choose aur call karta hai, single shot mein answer dene ke bajaye. Wo reason karta hai ki kya karna hai, ek action leta hai (tool call karta hai), result observe karta hai, aur repeat karta hai — har agla step khud decide karke jab tak task ho na jaaye.\n\nYe loop (aksar ReAct-style Thought → Action → Observation cycle) agents ko multi-step problems solve karne deta hai: kuch look up karo, result par compute karo, phir answer format karo. Defining traits hain autonomy, tool use, aur iteration; memory aur planning unhe extend karte hain. Interview caveat: agents powerful hain par kam predictable, isliye unhe step limits jaise guardrails chahiye.",
+    "keyPoints": [
+      "An LLM that uses tools in a loop toward a goal (not single-shot).",
+      "Reason -> act (call a tool) -> observe -> repeat until done.",
+      "Often a ReAct-style Thought -> Action -> Observation cycle.",
+      "Defining traits: autonomy, tool use, iteration (plus memory/planning).",
+      "Powerful but less predictable — add guardrails like step limits."
+    ],
+    "real_world": "Asked 'what's the population of France divided by its number of regions?', an agent searches for the population, searches for the region count, calls a calculator on the two results, and returns the answer — chaining tools across steps instead of guessing in one shot.",
+    "followups": [
+      {
+        "q": "What makes an LLM system an 'agent'?",
+        "a": "Autonomy and iteration: it decides its own next actions (including which tools to call), observes results, and loops toward a goal — rather than producing a single fixed response to one prompt."
+      },
+      {
+        "q": "What is the ReAct loop?",
+        "a": "Reason + Act: the model alternates Thought (reasoning), Action (a tool call), and Observation (the result), repeating until it can give a final answer — interleaving reasoning with tool use."
+      },
+      {
+        "q": "What are the risks of agents?",
+        "a": "Unpredictable paths, looping, cost overruns, and unsafe tool actions. Mitigate with step/budget limits, least-privilege tools, output validation, and observability — they need guardrails that single prompts don't."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo of an LLM-style reason-act-observe loop calling tools (search, calc) to solve a multi-step task, verifiable here.",
+      "source": "# Explain AI agents — an LLM that uses tools in a loop (LangChain tool-calling agent).\nfrom langchain_openai import ChatOpenAI\nfrom langchain.agents import create_tool_calling_agent, AgentExecutor\nfrom langchain_core.tools import tool\nfrom langchain_core.prompts import ChatPromptTemplate\n\n@tool\ndef search(query: str) -> str:\n    \"\"\"Look up information.\"\"\"\n    return \"Mount Everest is 8849 meters.\"\n\n@tool\ndef calculator(expression: str) -> str:\n    \"\"\"Evaluate arithmetic.\"\"\"\n    return str(eval(expression, {\"__builtins__\": {}}))\n\nllm = ChatOpenAI(model=\"gpt-4o-mini\", temperature=0)\nprompt = ChatPromptTemplate.from_messages([\n    (\"system\", \"Use tools as needed to answer.\"),\n    (\"human\", \"{input}\"), (\"placeholder\", \"{agent_scratchpad}\"),\n])\nagent = AgentExecutor(agent=create_tool_calling_agent(llm, [search, calculator], prompt),\n                      tools=[search, calculator])\n# agent.invoke({\"input\": \"How tall is Everest in feet?\"})\n\n# Interview definition: an AI agent uses an LLM as a reasoning engine that chooses and calls\n# tools in a loop (reason -> act -> observe), solving multi-step tasks autonomously. Key traits:\n# autonomy, tool use, memory, and iteration — plus guardrails (step/cost limits) for safety.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Explain AI agents — an LLM that uses tools in a reason-act-observe loop toward a goal\nTOOLS = {\"search\": lambda q: \"Everest is 8849 m\", \"calc\": lambda e: str(eval(e, {\"__builtins__\": {}}))}\ndef agent(plan):\n    trace = []\n    for thought, action, arg in plan:        # simulates the LLM's tool choices\n        obs = TOOLS[action](arg)\n        trace.append(f\"Thought: {thought} | Action: {action}({arg!r}) -> {obs}\")\n    return trace\nsteps = agent([\n    (\"look up the height\", \"search\", \"height of Everest\"),\n    (\"convert to feet\", \"calc\", \"8849*3.281\"),\n])\nfor s in steps: print(s)\nassert any(\"8849\" in s for s in steps) and any(\"29033\" in s for s in steps)\nprint(\"\\nInterview answer: an AI agent uses an LLM as a reasoning engine to choose and call tools in a\")\nprint(\"loop (reason -> act -> observe), solving multi-step tasks autonomously — unlike a single-shot prompt. Add memory + guardrails.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Thought: look up the height | Action: search('height of Everest') -> Everest is 8849 m\nThought: convert to feet | Action: calc('8849*3.281') -> 29033.569\n\nInterview answer: an AI agent uses an LLM as a reasoning engine to choose and call tools in a\nloop (reason -> act -> observe), solving multi-step tasks autonomously — unlike a single-shot prompt. Add memory + guardrails.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "p1b-056",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 56,
+  "orderInPhase": 56,
+  "slug": "awaited-t",
+  "title": "Awaited<T>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "awaited"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Typing the data from an async fetcher: `type User = Awaited<ReturnType<typeof fetchUser>>` gives the resolved user shape, so consumers work with the value ty…"
+  },
+  "sections": {
+    "simple_en": "`Awaited<T>` unwraps the value type that a Promise resolves to — and it does so recursively for nested promises. `Awaited<Promise<string>>` is `string`, and `Awaited<Promise<Promise<number>>>` is `number`.\n\nIt models exactly what `await` does at the type level, so it's perfect for typing the result of awaiting an async function: `Awaited<ReturnType<typeof fetchUser>>` gives the resolved value type, not the Promise.",
+    "hinglish": "`Awaited<T>` woh value type unwrap karta hai jisme ek Promise resolve hota hai — aur ye nested promises ke liye recursively karta hai. `Awaited<Promise<string>>` `string` hai, aur `Awaited<Promise<Promise<number>>>` `number` hai.\nYe type level par bilkul wahi model karta hai jo `await` karta hai, isliye ek async function ko await karne ke result ko type karne ke liye perfect hai: `Awaited<ReturnType<typeof fetchUser>>` resolved value type deta hai, Promise nahi.",
+    "keyPoints": [
+      "Unwraps a Promise's resolved value type (recursively).",
+      "`Awaited<Promise<T>>` → `T`.",
+      "Mirrors `await` at the type level.",
+      "Combine with ReturnType for async function results.",
+      "Handles nested promises automatically."
+    ],
+    "real_world": "Typing the data from an async fetcher: `type User = Awaited<ReturnType<typeof fetchUser>>` gives the resolved user shape, so consumers work with the value type instead of `Promise<User>`.",
+    "followups": [
+      {
+        "q": "What does Awaited<T> do?",
+        "a": "It unwraps the value a Promise resolves to (recursively for nested promises), mirroring what `await` produces — `Awaited<Promise<string>>` is `string`."
+      },
+      {
+        "q": "How do you type the resolved result of an async function?",
+        "a": "Combine utilities: `Awaited<ReturnType<typeof asyncFn>>` gives the value type after awaiting, rather than the `Promise<...>` wrapper."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Awaited unwraps a promise's value type.\n\nexport async function fetchCount(): Promise<number> {\n  return 42;\n}\n\nexport type Count = Awaited<ReturnType<typeof fetchCount>>; // number\n\nexport async function useCount(): Promise<Count> {\n  const count: Count = await fetchCount();\n  return count;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { useCount } from \"./solution\";\n\n(async () => {\n  const c = await useCount();\n  console.log(c); // 42\n  console.assert(c === 42, \"Awaited-typed resolved value\");\n  console.log(\"Awaited assertions passed.\");\n})();",
+      "expectedOutput": "42\nAwaited assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

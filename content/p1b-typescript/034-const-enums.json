@@ -1,0 +1,65 @@
+{
+  "id": "p1b-034",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 34,
+  "orderInPhase": 34,
+  "slug": "const-enums",
+  "title": "const enums",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "const",
+    "enums"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A performance-sensitive internal module compiled only by `tsc` uses const enums so the constants vanish into inlined values, but a library shipped to many co…"
+  },
+  "sections": {
+    "simple_en": "A `const enum` is an enum that the compiler INLINES at every usage site instead of emitting a runtime object. So `const enum Color { Red }` produces no enum object in the output — `Color.Red` is replaced directly with its value, giving smaller, faster output.\n\nThe trade-off: because nothing exists at runtime, you lose reverse mapping and dynamic access, and const enums interact poorly with isolated-module build tools (like Babel/esbuild/ts-node with `isolatedModules`), which often can't inline them. For library code or those toolchains, prefer regular enums or `as const` objects.",
+    "hinglish": "`const enum` woh enum hai jise compiler har usage site par INLINE kar deta hai bajaye runtime object emit karne ke. To `const enum Color { Red }` output me koi enum object nahi banata — `Color.Red` seedhe apni value se replace ho jaata hai, jisse chhota, fast output milta hai.\nTrade-off: kyunki runtime par kuch exist nahi karta, aap reverse mapping aur dynamic access kho dete ho, aur const enums isolated-module build tools (jaise Babel/esbuild/ts-node with `isolatedModules`) ke saath theek se kaam nahi karte, jo aksar inhe inline nahi kar paate. Library code ya un toolchains ke liye regular enums ya `as const` objects prefer karo.",
+    "keyPoints": [
+      "`const enum` is inlined at each use — no runtime enum object emitted.",
+      "Smaller/faster output than a regular enum.",
+      "No reverse mapping and no dynamic/runtime access.",
+      "Problematic with isolatedModules (Babel/esbuild/ts-node).",
+      "For libraries or those toolchains, prefer regular enums or `as const`."
+    ],
+    "real_world": "A performance-sensitive internal module compiled only by `tsc` uses const enums so the constants vanish into inlined values, but a library shipped to many consumers avoids them to stay compatible with every build tool.",
+    "followups": [
+      {
+        "q": "What's the benefit of a const enum?",
+        "a": "It's inlined at each usage, so no enum object is emitted — producing smaller and slightly faster output than a regular enum."
+      },
+      {
+        "q": "Why can const enums be problematic?",
+        "a": "They have no runtime representation (no reverse mapping, no dynamic access) and many isolated-module build tools (Babel, esbuild, ts-node) can't inline them, breaking the build — so libraries usually avoid them."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// const enum (inlined by tsc). NOTE: isolatedModules tools (esbuild/tsx)\n// can't inline const enums, so for a runnable demo we use the recommended\n// modern alternative: an 'as const' object that yields a literal union.\n\nexport const Color = { Red: \"RED\", Green: \"GREEN\", Blue: \"BLUE\" } as const;\nexport type Color = typeof Color[keyof typeof Color]; // \"RED\" | \"GREEN\" | \"BLUE\"\n\nexport function hex(color: Color): string {\n  const map: Record<Color, string> = { RED: \"#f00\", GREEN: \"#0f0\", BLUE: \"#00f\" };\n  return map[color];\n}\n\n// Equivalent const enum (compiled by tsc only):\n//   const enum ColorEnum { Red, Green, Blue }\n//   const c = ColorEnum.Red;   // inlined to: const c = 0;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { Color, hex } from \"./solution\";\n\nconsole.log(Color.Red);          // RED\nconsole.log(hex(Color.Green));   // #0f0\nconsole.log(hex(\"BLUE\"));        // #00f\n\nconsole.assert(Color.Red === \"RED\", \"as-const literal value\");\nconsole.assert(hex(Color.Green) === \"#0f0\", \"lookup via Record\");\nconsole.log(\"const-enum assertions passed.\");\nconsole.log(\"Note: a true 'const enum' is inlined by tsc and emits no runtime object.\");",
+      "expectedOutput": "RED\n#0f0\n#00f\nconst-enum assertions passed.\nNote: a true 'const enum' is inlined by tsc and emits no runtime object.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

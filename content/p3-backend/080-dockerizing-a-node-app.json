@@ -1,0 +1,70 @@
+{
+  "id": "p3-080",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 80,
+  "orderInPhase": 80,
+  "slug": "dockerizing-a-node-app",
+  "title": "Dockerizing a Node app",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "dockerizing",
+    "node",
+    "app"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "pipeline",
+    "seedText": "A TypeScript service's single-stage image was ~550MB carrying the compiler and dev deps."
+  },
+  "sections": {
+    "simple_en": "Dockerizing a Node app means writing a Dockerfile that installs dependencies, includes the build output, and defines how to start the server. The professional approach uses a multi-stage build: a 'builder' stage installs all dependencies and compiles/bundles, then a lean final stage copies only the build artifacts and production dependencies.\n\nThis produces a much smaller, more secure image because build tools and dev dependencies are discarded. Other best practices: use a small base (alpine/slim), copy package.json first for cache-friendly dependency installs, add a .dockerignore (node_modules, .git, .env), run as a non-root user, and set NODE_ENV=production.",
+    "hinglish": "Node app ko Dockerize karne ka matlab hai ek Dockerfile likhna jo dependencies install kare, build output include kare, aur server start karne ka tarika define kare. Professional approach multi-stage build use karta hai: ek 'builder' stage saari dependencies install karke compile/bundle karta hai, phir ek lean final stage sirf build artifacts aur production dependencies copy karta hai.\n\nIsse ek bahut chhoti, zyada secure image banti hai kyunki build tools aur dev dependencies discard ho jaate hain. Doosri best practices: chhota base (alpine/slim), cache-friendly dependency install ke liye package.json pehle copy karo, .dockerignore add karo (node_modules, .git, .env), non-root user ke roop mein chalao, aur NODE_ENV=production set karo.",
+    "keyPoints": [
+      "Multi-stage build: a builder stage compiles; a lean final stage ships artifacts.",
+      "Discards build tools/dev deps — smaller, more secure final image.",
+      "Use a small base (alpine/slim); copy package.json first for cache.",
+      "Add .dockerignore (node_modules, .git, .env); run as non-root.",
+      "Set NODE_ENV=production; install only prod deps in the final stage."
+    ],
+    "real_world": "A TypeScript service's single-stage image was ~550MB carrying the compiler and dev deps. Switching to a multi-stage Dockerfile — build in stage one, copy only dist/ and production deps into a slim runtime — cut it to ~250MB, speeding pulls and shrinking the attack surface in production.",
+    "followups": [
+      {
+        "q": "What's the benefit of a multi-stage build?",
+        "a": "The final image contains only what's needed to run (artifacts + production deps), not the compilers and dev dependencies used to build. That makes it smaller, faster to deploy, and more secure."
+      },
+      {
+        "q": "Why copy package.json before the rest of the source?",
+        "a": "So the dependency-install layer is cached and reused unless dependencies change. Copying all source first would invalidate that cache on every code change."
+      },
+      {
+        "q": "Why run the container as a non-root user?",
+        "a": "To limit damage if the app is compromised — a non-root process can't modify system files or escalate as easily, reducing the blast radius of a vulnerability."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "A real multi-stage Dockerfile (configuration, not Node code). The Node-runnable demo below compares single-stage and multi-stage image sizes so the benefit is verifiable here.",
+      "source": "// Dockerizing a Node app — multi-stage build for a small, production-ready image.\n// File: Dockerfile\nconst dockerfile = `\n# ---- Stage 1: build ----\nFROM node:20-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci                 # full deps incl. dev for building\nCOPY . .\nRUN npm run build          # produce dist/ (TypeScript, bundling, etc.)\n\n# ---- Stage 2: runtime (lean) ----\nFROM node:20-alpine\nWORKDIR /app\nENV NODE_ENV=production\nCOPY package*.json ./\nRUN npm ci --omit=dev      # only production deps\nCOPY --from=builder /app/dist ./dist   # copy just the build output\n\nUSER node                  # run as non-root for security\nEXPOSE 3000\nCMD [\"node\", \"dist/server.js\"]\n`;\n// .dockerignore: node_modules, .git, .env, dist, *.log\n//\n// Multi-stage builds discard build tooling/dev deps from the final image,\n// yielding a much smaller, more secure runtime image.\nmodule.exports = dockerfile;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Dockerizing a Node app — multi-stage build yields a smaller final image\n// Simulate image sizes: a single-stage image carries build tooling; multi-stage doesn't.\nconst sizes = { base: 180, devDeps: 250, buildTools: 120, prodDeps: 60, appCode: 10 };\nfunction singleStage(){ return sizes.base + sizes.devDeps + sizes.buildTools + sizes.appCode; }\nfunction multiStage(){\n  // builder stage installs everything & builds; final stage copies only artifacts + prod deps\n  const builder = sizes.base + sizes.devDeps + sizes.buildTools + sizes.appCode; // thrown away\n  const final = sizes.base + sizes.prodDeps + sizes.appCode;                      // shipped\n  return { builderMB: builder, finalMB: final };\n}\nconst single = singleStage();\nconst multi = multiStage();\nconsole.log(\"Single-stage final image:\", single, \"MB\");\nconsole.log(\"Multi-stage final image: \", multi.finalMB, \"MB (builder\", multi.builderMB, \"MB discarded)\");\nconsole.log(\"Savings:\", single - multi.finalMB, \"MB\");\nconsole.assert(multi.finalMB < single, \"multi-stage ships a leaner image\");\nconsole.log(\"Best practices: small base (alpine/slim), .dockerignore, copy package.json first,\");\nconsole.log(\"multi-stage build, run as non-root, expose only what's needed.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Single-stage final image: 560 MB\nMulti-stage final image:  250 MB (builder 560 MB discarded)\nSavings: 310 MB\nBest practices: small base (alpine/slim), .dockerignore, copy package.json first,\nmulti-stage build, run as non-root, expose only what's needed.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

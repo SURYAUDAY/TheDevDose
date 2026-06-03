@@ -1,0 +1,65 @@
+{
+  "id": "p1b-067",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 67,
+  "orderInPhase": 67,
+  "slug": "discriminated-unions",
+  "title": "Discriminated Unions",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "discriminated",
+    "unions"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An async result modeled as `{ status: \"loading\" } | { status: \"success\"; data: T } | { status: \"error\"; error: string }` forces UI code to handle every state…"
+  },
+  "sections": {
+    "simple_en": "A discriminated (or 'tagged') union is a union of object types that all share a common literal property — the discriminant (e.g. `kind` or `type`). Checking that property narrows the union to exactly one member, giving precise, safe access to its fields.\n\nThis pattern is the idiomatic way to model values with several distinct shapes (a result that's success or error, a shape that's circle or square). Combined with a `never` default in a switch, it enables exhaustiveness checking so missing a case is a compile error.",
+    "hinglish": "Discriminated (ya 'tagged') union object types ka ek union hai jo sab ek common literal property share karte hain — discriminant (jaise `kind` ya `type`). Us property ko check karne par union bilkul ek member tak narrow ho jaata hai, jisse uske fields tak precise, safe access milti hai.\nYe pattern kai distinct shapes wali values model karne ka idiomatic tarika hai (ek result jo success ya error ho, ek shape jo circle ya square ho). Switch me `never` default ke saath, ye exhaustiveness checking enable karta hai taaki koi case chhutne par compile error aaye.",
+    "keyPoints": [
+      "A union of object types sharing a literal discriminant field.",
+      "Checking the discriminant narrows to one exact member.",
+      "Ideal for results (ok/error) and shape variants.",
+      "Enables exhaustiveness checks with a `never` default.",
+      "Safer and clearer than checking many optional fields."
+    ],
+    "real_world": "An async result modeled as `{ status: \"loading\" } | { status: \"success\"; data: T } | { status: \"error\"; error: string }` forces UI code to handle every state and only access `data` after confirming success.",
+    "followups": [
+      {
+        "q": "What makes a union 'discriminated'?",
+        "a": "A shared literal property (the discriminant, like `kind`) present on every member with a distinct value. Checking it lets TypeScript narrow the union to a single member safely."
+      },
+      {
+        "q": "How do discriminated unions enable exhaustiveness checks?",
+        "a": "After handling all members in a switch, the value narrows to `never` in the default case. Assigning it to a `never` variable causes a compile error if any case was forgotten."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — discriminated union with exhaustive handling.\n\ntype Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"rectangle\"; width: number; height: number };\n\nexport function area(shape: Shape): number {\n  switch (shape.kind) {\n    case \"circle\": return Math.PI * shape.radius ** 2;\n    case \"rectangle\": return shape.width * shape.height;\n    default: {\n      const _exhaustive: never = shape; // compile error if a case is missing\n      return _exhaustive;\n    }\n  }\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { area } from \"./solution\";\n\nconsole.log(Math.round(area({ kind: \"circle\", radius: 2 })));      // 13\nconsole.log(area({ kind: \"rectangle\", width: 3, height: 4 }));     // 12\n\nconsole.assert(Math.round(area({ kind: \"circle\", radius: 2 })) === 13, \"circle area via discriminant\");\nconsole.assert(area({ kind: \"rectangle\", width: 3, height: 4 }) === 12, \"rectangle area\");\nconsole.log(\"discriminated-unions assertions passed.\");",
+      "expectedOutput": "13\n12\ndiscriminated-unions assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

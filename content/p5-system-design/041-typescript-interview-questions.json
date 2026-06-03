@@ -1,0 +1,70 @@
+{
+  "id": "p5-041",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 41,
+  "orderInPhase": 41,
+  "slug": "typescript-interview-questions",
+  "title": "TypeScript interview questions",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "typescript",
+    "interview",
+    "questions"
+  ],
+  "estMinutes": 9,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Modeling an API response as a discriminated union { ok: true; data } | { ok: false; error } lets the compiler force you to handle both cases — so you can't a…"
+  },
+  "sections": {
+    "simple_en": "TypeScript interviews test how you add type safety to JavaScript. Core topics: the difference between type and interface (both describe shapes; interface is extendable/mergeable, type also expresses unions, intersections, and primitives), generics (reusable, type-safe code parameterized over types), and union types with narrowing — especially discriminated unions where a tag field lets the compiler narrow the type in each branch.\n\nAlso expect utility types (Partial, Pick, Omit, Record) that derive new types from existing ones, the difference between unknown and any (unknown forces a type check before use, any disables checking), and structural typing. The key point is that TypeScript catches type errors at compile time, before code runs — explain how each feature helps prevent bugs.",
+    "hinglish": "TypeScript interviews test karte hain ki aap JavaScript mein type safety kaise add karte ho. Core topics: type aur interface ka difference (dono shapes describe karte hain; interface extendable/mergeable hai, type unions, intersections, aur primitives bhi express karta hai), generics (reusable, type-safe code types ke upar parameterized), aur union types narrowing ke saath — khaaskar discriminated unions jahan ek tag field compiler ko har branch mein type narrow karne deta hai.\n\nUtility types (Partial, Pick, Omit, Record) bhi expect karo jo existing types se naye types derive karte hain, unknown aur any ka difference (unknown use se pehle ek type check force karta hai, any checking disable karta hai), aur structural typing. Key point ye hai ki TypeScript type errors ko compile time par pakadta hai, code run hone se pehle — explain karo ki har feature bugs prevent karne mein kaise help karta hai.",
+    "keyPoints": [
+      "type vs interface: interface extends/merges; type does unions/intersections/primitives.",
+      "Generics: reusable, type-safe code parameterized over a type T.",
+      "Discriminated unions: a tag field lets the compiler narrow types per branch.",
+      "Utility types: Partial, Pick, Omit, Record derive types from existing ones.",
+      "unknown forces a type check before use; any disables type checking — prefer unknown."
+    ],
+    "real_world": "Modeling an API response as a discriminated union { ok: true; data } | { ok: false; error } lets the compiler force you to handle both cases — so you can't accidentally read .data on an error response. The bug is caught at compile time, before it ever ships.",
+    "followups": [
+      {
+        "q": "type vs interface — when to use each?",
+        "a": "Both describe object shapes and are often interchangeable. Use interface when you want extension/declaration merging (e.g., public API shapes); use type for unions, intersections, tuples, and primitive aliases that interface can't express."
+      },
+      {
+        "q": "What are generics for?",
+        "a": "Writing reusable code that works over many types while preserving type safety — e.g., a function that returns the same type it's given, or a container typed by its contents — instead of resorting to any."
+      },
+      {
+        "q": "unknown vs any?",
+        "a": "any opts out of type checking entirely (unsafe). unknown is the type-safe counterpart: you can hold any value but must narrow it (via a type guard) before using it, so the compiler still protects you."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": "Runnable TypeScript covering generics, discriminated-union narrowing, utility types, and unknown vs any. Run it with tsx or ts-node; the demo asserts each behavior.",
+      "source": "// TypeScript interview questions — the concepts interviewers probe most.\n\n// type vs interface: both describe object shapes; interface is extendable/mergeable,\n// type can also express unions, intersections, primitives, and tuples.\ninterface Animal { name: string; }\ninterface Dog extends Animal { breed: string; }     // interfaces extend\ntype ID = string | number;                           // type does unions (interface can't)\n\n// Generics: reusable, type-safe code parameterized over types.\nfunction identity<T>(value: T): T { return value; }\nfunction wrap<T>(value: T): { value: T } { return { value }; }\n\n// Discriminated unions + exhaustive narrowing (the `never` check catches missed cases).\ntype Result<T> = { ok: true; data: T } | { ok: false; error: string };\nfunction handle<T>(r: Result<T>): T | null {\n  if (r.ok) return r.data;        // narrowed to the success variant\n  console.error(r.error);          // narrowed to the error variant\n  return null;\n}\n\n// Utility types derive types from others:\ninterface User { id: number; name: string; email: string; }\ntype PartialUser = Partial<User>;        // all optional\ntype UserPreview = Pick<User, \"id\" | \"name\">;\ntype WithoutEmail = Omit<User, \"email\">;\ntype UsersById = Record<number, User>;   // map type\n\n// unknown vs any: prefer unknown for external input — it forces a check before use,\n// whereas any opts out of type checking entirely (and hides bugs).\nfunction safeParse(input: unknown): number {\n  if (typeof input === \"number\") return input;\n  if (typeof input === \"string\") return Number(input);\n  return NaN;\n}\n\nexport { identity, wrap, handle, safeParse };\nexport type { ID, Result, PartialUser, UserPreview, WithoutEmail, UsersById };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// TypeScript interview questions — types vs interfaces, generics, narrowing, utility types\n// 1) Generics: one function, many types, with type safety preserved.\nfunction first<T>(arr: T[]): T | undefined { return arr[0]; }\nconst n: number | undefined = first([10, 20, 30]);\nconst s: string | undefined = first([\"a\", \"b\"]);\n\n// 2) Discriminated union + narrowing: the `kind` tag lets TS narrow the type in each branch.\ntype Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; side: number };\nfunction area(shape: Shape): number {\n  switch (shape.kind) {\n    case \"circle\": return Math.PI * shape.radius ** 2;   // TS knows .radius exists here\n    case \"square\": return shape.side ** 2;               // and .side here\n  }\n}\n\n// 3) Utility types: derive new types from existing ones (Partial makes all fields optional).\ninterface User { id: number; name: string; email: string; }\ntype UserUpdate = Partial<User>;                          // { id?, name?, email? }\nfunction applyUpdate(user: User, update: UserUpdate): User { return { ...user, ...update }; }\n\n// 4) unknown vs any: unknown forces a type check before use (safe); any disables checking.\nfunction parseLen(input: unknown): number {\n  if (typeof input === \"string\") return input.length;     // must narrow before using\n  return 0;\n}\n\nconst circleArea = area({ kind: \"circle\", radius: 2 });\nconst updated = applyUpdate({ id: 1, name: \"Asha\", email: \"a@x.com\" }, { name: \"Asha R.\" });\nconsole.log(\"first([10,20,30]):\", n, \"| first(['a','b']):\", s);\nconsole.log(\"area(circle r=2):\", +circleArea.toFixed(2));\nconsole.log(\"area(square s=3):\", area({ kind: \"square\", side: 3 }));\nconsole.log(\"applyUpdate ->\", updated);\nconsole.log(\"parseLen('hello'):\", parseLen(\"hello\"), \"| parseLen(42):\", parseLen(42));\n\nconsole.assert(n === 10 && s === \"a\", \"generics preserve element types\");\nconsole.assert(Math.abs(circleArea - Math.PI * 4) < 1e-9, \"discriminated union narrows correctly\");\nconsole.assert(updated.name === \"Asha R.\" && updated.id === 1, \"Partial update merges fields\");\nconsole.assert(parseLen(\"hello\") === 5 && parseLen(42) === 0, \"unknown forces a type guard\");\nconsole.log(\"Key TS topics: type vs interface, generics, union/intersection & narrowing, utility types\");\nconsole.log(\"(Partial/Pick/Omit/Record), unknown vs any, and structural typing. Explain how TS catches errors at compile time.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "first([10,20,30]): 10 | first(['a','b']): a\narea(circle r=2): 12.57\narea(square s=3): 9\napplyUpdate -> { id: 1, name: 'Asha R.', email: 'a@x.com' }\nparseLen('hello'): 5 | parseLen(42): 0\nKey TS topics: type vs interface, generics, union/intersection & narrowing, utility types\n(Partial/Pick/Omit/Record), unknown vs any, and structural typing. Explain how TS catches errors at compile time.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

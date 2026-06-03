@@ -1,0 +1,65 @@
+{
+  "id": "p1a-079",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 79,
+  "orderInPhase": 79,
+  "slug": "async-await",
+  "title": "async / await",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "async",
+    "await"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Loading a user then their orders sequentially: `const user = await getUser(id); const orders = await getOrders(user.id);` — two clean lines instead of a nest…"
+  },
+  "sections": {
+    "simple_en": "`async`/`await` is syntactic sugar over promises that lets you write asynchronous code that reads like synchronous, top-to-bottom code. An `async` function always returns a promise, and `await` pauses the function until the awaited promise settles, then resumes with its value.\n\nIt eliminates `.then` chains and callback nesting, making async logic clearer. `await` only works inside `async` functions (or at the top level of an ES module). Under the hood it's still promises — `await` just suspends and resumes the function.",
+    "hinglish": "`async`/`await` promises ke upar syntactic sugar hai jo aapko asynchronous code synchronous, upar-se-neeche code ki tarah likhne deta hai. Ek `async` function hamesha ek promise return karta hai, aur `await` function ko tab tak pause karta hai jab tak awaited promise settle na ho, phir uski value ke saath resume hota hai.\nYe `.then` chains aur callback nesting hata deta hai, jisse async logic clear ho jaata hai. `await` sirf `async` functions ke andar (ya ES module ke top level par) chalta hai. Andar se ye abhi bhi promises hi hai — `await` bas function ko suspend aur resume karta hai.",
+    "keyPoints": [
+      "`async` functions always return a promise.",
+      "`await` pauses until the promise settles, then yields its value.",
+      "Reads like synchronous code; removes `.then` nesting.",
+      "`await` is only valid inside `async` (or ESM top level).",
+      "Still promises underneath — `await` suspends/resumes the function."
+    ],
+    "real_world": "Loading a user then their orders sequentially: `const user = await getUser(id); const orders = await getOrders(user.id);` — two clean lines instead of a nested `.then` chain.",
+    "followups": [
+      {
+        "q": "What does an async function return?",
+        "a": "Always a promise. A returned value becomes the resolved value; a thrown error becomes a rejection. Even `return 42` resolves to a promise of 42."
+      },
+      {
+        "q": "How do you run independent awaits in parallel?",
+        "a": "Start them first (or wrap in `Promise.all`) rather than awaiting one before starting the next. `await Promise.all([a(), b()])` runs them concurrently instead of sequentially."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// async/await over promises, sequential and parallel.\n\nconst get = (v, ms = 0) => new Promise((r) => setTimeout(() => r(v), ms));\n\nasync function sequential() {\n  const a = await get(\"a\", 5);\n  const b = await get(a + \"b\", 5);\n  return b; // \"ab\"\n}\n\nasync function parallel() {\n  // start both, then await together (faster than sequential awaits)\n  const [x, y] = await Promise.all([get(\"x\", 5), get(\"y\", 5)]);\n  return x + y; // \"xy\"\n}\n\nasync function returnsPromise() { return 42; } // wraps in a promise\n\nmodule.exports = { sequential, parallel, returnsPromise };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { sequential, parallel, returnsPromise } = require(\"./solution\");\n\n(async () => {\n  console.log(await sequential()); // ab\n  console.log(await parallel());   // xy\n  const p = returnsPromise();\n  console.log(p instanceof Promise, await p); // true 42\n\n  console.assert(await sequential() === \"ab\", \"sequential awaits\");\n  console.assert(await parallel() === \"xy\", \"parallel with Promise.all\");\n  console.assert(returnsPromise() instanceof Promise, \"async returns a promise\");\n  console.log(\"async/await assertions passed.\");\n})();",
+      "expectedOutput": "ab\nxy\ntrue 42\nasync/await assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

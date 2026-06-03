@@ -1,0 +1,65 @@
+{
+  "id": "p1b-065",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 65,
+  "orderInPhase": 65,
+  "slug": "type-narrowing",
+  "title": "Type Narrowing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "type",
+    "narrowing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Handling a value that's `string | string[]`: `if (Array.isArray(x)) x.join(',') else x.trim()` — each branch safely uses the methods of the narrowed type wit…"
+  },
+  "sections": {
+    "simple_en": "Type narrowing is how TypeScript refines a broad type (like a union) to a more specific one based on control-flow checks. After a check, within that branch, the compiler treats the value as the narrowed type so you can safely access its members.\n\nCommon narrowing techniques: `typeof` (for primitives), `instanceof` (for classes), truthiness checks, equality checks against literals, the `in` operator (property presence), and discriminated-union checks. Narrowing is what makes unions practical to work with.",
+    "hinglish": "Type narrowing woh tarika hai jisse TypeScript ek broad type (jaise union) ko control-flow checks ke aadhaar par ek zyada specific type me refine karta hai. Check ke baad, us branch ke andar, compiler value ko narrowed type ki tarah treat karta hai taaki aap uske members safely access kar sako.\nCommon narrowing techniques: `typeof` (primitives ke liye), `instanceof` (classes ke liye), truthiness checks, literals ke against equality checks, `in` operator (property presence), aur discriminated-union checks. Narrowing hi unions ke saath kaam karna practical banata hai.",
+    "keyPoints": [
+      "Refines a broad/union type to a specific one via control-flow checks.",
+      "Techniques: typeof, instanceof, truthiness, equality, `in`, discriminants.",
+      "Within a checked branch, the value has the narrowed type.",
+      "Makes union types safe and practical to use.",
+      "The compiler tracks narrowing across if/switch/early returns."
+    ],
+    "real_world": "Handling a value that's `string | string[]`: `if (Array.isArray(x)) x.join(',') else x.trim()` — each branch safely uses the methods of the narrowed type without casts.",
+    "followups": [
+      {
+        "q": "What is type narrowing?",
+        "a": "The compiler refining a broad type (like a union) into a more specific one inside a branch, based on runtime checks (typeof, instanceof, equality, `in`, etc.), so member access is type-safe."
+      },
+      {
+        "q": "List a few narrowing techniques.",
+        "a": "`typeof` for primitives, `instanceof` for class instances, truthiness and literal-equality checks, the `in` operator for property presence, and discriminant-field checks on discriminated unions."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — several narrowing techniques.\n\nexport function lengthOf(value: string | string[] | null): number {\n  if (value === null) return 0;               // equality narrowing\n  if (typeof value === \"string\") return value.length; // typeof narrowing\n  return value.length;                         // narrowed to string[]\n}\n\nexport class Cat { meow() { return \"meow\"; } }\nexport class Dog { bark() { return \"woof\"; } }\nexport function speak(animal: Cat | Dog): string {\n  if (animal instanceof Cat) return animal.meow(); // instanceof narrowing\n  return animal.bark();\n}\n\nexport function hasName(obj: { name?: string } | { id: number }): boolean {\n  return \"name\" in obj; // 'in' operator narrowing\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { lengthOf, speak, Cat, Dog } from \"./solution\";\n\nconsole.log(lengthOf(\"hello\"));      // 5\nconsole.log(lengthOf([\"a\", \"b\"]));   // 2\nconsole.log(lengthOf(null));         // 0\nconsole.log(speak(new Cat()));       // meow\nconsole.log(speak(new Dog()));       // woof\n\nconsole.assert(lengthOf(\"hello\") === 5, \"typeof narrowing\");\nconsole.assert(lengthOf([\"a\", \"b\"]) === 2, \"array branch\");\nconsole.assert(lengthOf(null) === 0, \"null narrowing\");\nconsole.assert(speak(new Cat()) === \"meow\", \"instanceof narrowing\");\nconsole.log(\"type-narrowing assertions passed.\");",
+      "expectedOutput": "5\n2\n0\nmeow\nwoof\ntype-narrowing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

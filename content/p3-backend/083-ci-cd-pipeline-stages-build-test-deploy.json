@@ -1,0 +1,72 @@
+{
+  "id": "p3-083",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 83,
+  "orderInPhase": 83,
+  "slug": "ci-cd-pipeline-stages-build-test-deploy",
+  "title": "CI/CD pipeline stages (build → test → deploy)",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "ci",
+    "cd",
+    "pipeline",
+    "stages",
+    "build"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "pipeline",
+    "seedText": "A commit builds an artifact, then the test stage requires 80% coverage."
+  },
+  "sections": {
+    "simple_en": "A typical pipeline flows through ordered stages: source (a commit triggers it), build (compile/bundle into an artifact), test (run unit/integration tests, often with a coverage gate), deploy (push the artifact to staging or production), and monitor. Each stage must pass for the next to run.\n\nThe test stage acts as a quality gate — deploy is only reached when tests pass and any thresholds (coverage, security scans) are met, so low-quality commits never reach production. The artifact built once is the same one promoted through environments, ensuring you test and ship exactly what was built.",
+    "hinglish": "Ek typical pipeline ordered stages se flow karta hai: source (commit trigger karta hai), build (compile/bundle into artifact), test (unit/integration tests, aksar coverage gate ke saath), deploy (artifact ko staging ya production par push), aur monitor. Har stage pass hona chahiye agle ke chalne ke liye.\n\nTest stage ek quality gate ka kaam karta hai — deploy tabhi reach hota hai jab tests pass hon aur koi thresholds (coverage, security scans) meet hon, taaki low-quality commits production tak na pahuchein. Ek baar build kiya artifact wahi hai jo environments ke through promote hota hai, ensure karke ki aap exactly wahi test aur ship karo jo build hua tha.",
+    "keyPoints": [
+      "Ordered stages: source -> build -> test -> deploy -> monitor.",
+      "Each stage must pass for the next to run.",
+      "Test stage is a quality gate (tests + coverage/security thresholds).",
+      "Low-quality commits are blocked before deploy.",
+      "Build the artifact once; promote the same artifact across environments."
+    ],
+    "real_world": "A commit builds an artifact, then the test stage requires 80% coverage. A change that drops coverage to 40% fails the gate, so the deploy stage never runs — production is protected automatically. A healthy commit sails through and the exact built artifact is deployed.",
+    "followups": [
+      {
+        "q": "What are the typical CI/CD stages?",
+        "a": "Source (trigger), build (produce an artifact), test (validate, with gates), deploy (to staging/production), and monitor. Stages run in order and a failure halts progression."
+      },
+      {
+        "q": "What is a quality gate?",
+        "a": "A pass/fail check — like requiring all tests to pass or coverage above a threshold — that must succeed before the pipeline proceeds to deploy, keeping substandard code out of production."
+      },
+      {
+        "q": "Why build the artifact once and promote it?",
+        "a": "So the exact thing you tested is what you deploy. Rebuilding per environment risks subtle differences; promoting one immutable artifact guarantees consistency from test to production."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "A real GitHub Actions pipeline with a gate (configuration, not Node code). The Node-runnable demo below simulates build → test → deploy with a quality gate so the behavior is verifiable here.",
+      "source": "// CI/CD pipeline stages — source -> build -> test -> deploy, with a gate.\n// GitHub Actions: deploy depends on tests passing (needs:).\nconst pipeline = `\nname: Pipeline\non:\n  push:\n    branches: [main]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with: { node-version: 20 }\n      - run: npm ci\n      - run: npm test -- --coverage      # quality gate (e.g., fail under threshold)\n\n  deploy:\n    needs: [test]                        # GATE: only runs if 'test' succeeds\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: ./scripts/build.sh          # produce the artifact\n      - run: ./scripts/deploy.sh         # deploy to production\n`;\n// Typical stages: source (trigger) -> build (artifact) -> test (gate) ->\n// deploy (staging/prod) -> monitor. Bad commits never reach production.\nmodule.exports = pipeline;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CI/CD pipeline stages — build -> test -> deploy with a quality gate\nasync function pipeline(commit){\n  const stages = {};\n  // Build\n  stages.build = { artifact: `app-${commit}.tar.gz`, ok: true };\n  // Test (gate): coverage + passing tests required to proceed\n  const coverage = commit === \"bad\" ? 40 : 92;\n  stages.test = { coverage, passed: coverage >= 80 };\n  if (!stages.test.passed) return { deployed: false, stages, reason: `coverage ${coverage}% < 80% gate` };\n  // Deploy only reached if the gate passes\n  stages.deploy = { env: \"production\", artifact: stages.build.artifact, ok: true };\n  return { deployed: true, stages };\n}\n(async () => {\n  const good = await pipeline(\"abc123\");\n  console.log(\"Build artifact:\", good.stages.build.artifact);\n  console.log(\"Test gate:\", good.stages.test.coverage + \"% coverage -> passed:\", good.stages.test.passed);\n  console.log(\"Deployed to:\", good.stages.deploy.env);\n  const bad = await pipeline(\"bad\");\n  console.log(\"\\nLow-quality commit deployed?\", bad.deployed, \"|\", bad.reason);\n  console.assert(good.deployed && !bad.deployed, \"quality gate blocks bad commits\");\n  console.log(\"Typical stages: source -> build -> test -> (gate) -> deploy -> monitor.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Build artifact: app-abc123.tar.gz\nTest gate: 92% coverage -> passed: true\nDeployed to: production\n\nLow-quality commit deployed? false | coverage 40% < 80% gate\nTypical stages: source -> build -> test -> (gate) -> deploy -> monitor.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p5-018",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 18,
+  "orderInPhase": 18,
+  "slug": "database-selection",
+  "title": "Database selection",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "database",
+    "selection"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An e-commerce platform uses PostgreSQL for orders (transactions), Redis to cache product pages and sessions, and a graph database for 'customers who bought t…"
+  },
+  "sections": {
+    "simple_en": "Database selection means matching your data model and access patterns to the right type of database. Relational databases (PostgreSQL, MySQL) suit structured data, ACID transactions, and complex joins. Document databases (MongoDB) fit flexible or nested schemas and rapid iteration. Key-value stores (Redis) excel at caching, sessions, and ultra-low latency.\n\nWide-column stores (Cassandra) handle massive write throughput and time-series at scale; graph databases (Neo4j) shine on relationship-heavy queries like social networks and recommendations. There's no universally best database — you choose by the shape of your data and how you read and write it, and large systems often combine several (polyglot persistence).",
+    "hinglish": "Database selection ka matlab hai apne data model aur access patterns ko sahi type ke database se match karna. Relational databases (PostgreSQL, MySQL) structured data, ACID transactions, aur complex joins ke liye suit karte hain. Document databases (MongoDB) flexible ya nested schemas aur rapid iteration ke liye fit hote hain. Key-value stores (Redis) caching, sessions, aur ultra-low latency par excel karte hain.\n\nWide-column stores (Cassandra) massive write throughput aur time-series ko scale par handle karte hain; graph databases (Neo4j) relationship-heavy queries jaise social networks aur recommendations par shine karte hain. Koi universally best database nahi hai — aap apne data ki shape aur use kaise read/write karte ho uske hisaab se choose karte ho, aur bade systems aksar kai combine karte hain (polyglot persistence).",
+    "keyPoints": [
+      "Relational (Postgres/MySQL): structured data, ACID, complex joins.",
+      "Document (MongoDB): flexible/nested schemas, rapid iteration.",
+      "Key-value (Redis): caching, sessions, ultra-low latency.",
+      "Wide-column (Cassandra): write-heavy scale, time-series.",
+      "Graph (Neo4j): relationship queries; large systems mix types (polyglot)."
+    ],
+    "real_world": "An e-commerce platform uses PostgreSQL for orders (transactions), Redis to cache product pages and sessions, and a graph database for 'customers who bought this also bought' recommendations — each store chosen for what it does best, rather than forcing one database to do everything.",
+    "followups": [
+      {
+        "q": "How do you choose a database?",
+        "a": "By data model and access patterns: relational for structured/transactional data with joins, document for flexible schemas, key-value for caching/low latency, wide-column for write-heavy scale, graph for relationship queries. Match the tool to the workload."
+      },
+      {
+        "q": "What is polyglot persistence?",
+        "a": "Using multiple database types within one system, each for the workload it suits best — e.g., a relational DB for orders plus Redis for caching plus a search engine for full-text. It optimizes per-use-case at the cost of more operational complexity."
+      },
+      {
+        "q": "SQL vs NoSQL in one sentence?",
+        "a": "SQL (relational) offers structured schemas, joins, and ACID transactions; NoSQL covers a family of stores (document, key-value, wide-column, graph) optimized for flexibility, scale, or specific access patterns — choose by your data and consistency needs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript mapping requirements to database types and a picker function. The Node demo below verifies the recommendations for transactions, caching, and relationships.",
+      "source": "// Database selection — match the data model and access patterns to the database type.\n\n// Relational (PostgreSQL/MySQL): structured data, relationships, ACID transactions, JOINs.\n//   CREATE TABLE orders (id serial PRIMARY KEY, user_id int REFERENCES users(id), total numeric);\n//   -- strong consistency, great for financial/transactional data.\n\n// Document (MongoDB): flexible/nested schemas, fast iteration, denormalized aggregates.\n//   db.products.insertOne({ name: \"Pen\", specs: { color: \"blue\", qty: 100 } });\n\n// Key-Value (Redis): caching, sessions, counters, rate limits — ultra-low latency, TTLs.\n//   SET session:abc \"{...}\" EX 3600\n\n// Wide-Column (Cassandra): huge write throughput, time-series, horizontal scale, AP.\n//   -- partitioned by key, tunable consistency, no JOINs.\n\n// Graph (Neo4j): relationship-heavy queries — social graphs, recommendations, fraud.\n//   MATCH (a)-[:FOLLOWS]->(b)-[:FOLLOWS]->(c) RETURN c\n\n// Choose by: data structure, query/access patterns, consistency needs, and scale. Large\n// systems often use several (polyglot persistence): Postgres for core data + Redis for cache.\nexport {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Database selection — match the data model and access patterns to the right database type\nconst databases = {\n  \"PostgreSQL (relational)\": { good: [\"structured data\", \"transactions/ACID\", \"complex JOINs\"] },\n  \"MongoDB (document)\":      { good: [\"flexible/nested schemas\", \"rapid iteration\", \"varied shapes\"] },\n  \"Redis (key-value)\":       { good: [\"caching\", \"sessions\", \"ultra-low latency\", \"rate limits\"] },\n  \"Cassandra (wide-column)\": { good: [\"massive write throughput\", \"time-series\", \"horizontal scale\"] },\n  \"Neo4j (graph)\":           { good: [\"relationships\", \"social networks\", \"recommendations\"] },\n};\nfunction pick(requirement) {\n  const map = {\n    transactions: \"PostgreSQL (relational)\",\n    caching: \"Redis (key-value)\",\n    relationships: \"Neo4j (graph)\",\n    \"flexible schema\": \"MongoDB (document)\",\n    \"write heavy\": \"Cassandra (wide-column)\",\n  };\n  return map[requirement];\n}\nfor (const [db, info] of Object.entries(databases)) console.log(`${db}: ${info.good.join(\", \")}`);\nconsole.log(\"Need ACID transactions ->\", pick(\"transactions\"));\nconsole.log(\"Need caching ->\", pick(\"caching\"));\nconsole.assert(pick(\"transactions\") === \"PostgreSQL (relational)\");\nconsole.assert(pick(\"relationships\") === \"Neo4j (graph)\");\nconsole.log(\"Choose by data model + access patterns: relational for structured/ACID, document for flexible, KV for cache,\");\nconsole.log(\"wide-column for write-heavy scale, graph for relationship queries. Many systems mix several (polyglot persistence).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "PostgreSQL (relational): structured data, transactions/ACID, complex JOINs\nMongoDB (document): flexible/nested schemas, rapid iteration, varied shapes\nRedis (key-value): caching, sessions, ultra-low latency, rate limits\nCassandra (wide-column): massive write throughput, time-series, horizontal scale\nNeo4j (graph): relationships, social networks, recommendations\nNeed ACID transactions -> PostgreSQL (relational)\nNeed caching -> Redis (key-value)\nChoose by data model + access patterns: relational for structured/ACID, document for flexible, KV for cache,\nwide-column for write-heavy scale, graph for relationship queries. Many systems mix several (polyglot persistence).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

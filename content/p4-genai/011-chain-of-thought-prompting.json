@@ -1,0 +1,69 @@
+{
+  "id": "p4-011",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 11,
+  "orderInPhase": 11,
+  "slug": "chain-of-thought-prompting",
+  "title": "Chain-of-thought prompting",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "chain-of-thought",
+    "prompting"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "For a multi-step word problem, prompting 'think step by step' makes the model show each calculation — start, add, subtract — and arrive at the correct total,…"
+  },
+  "sections": {
+    "simple_en": "Chain-of-thought (CoT) prompting asks the model to reason step by step before giving a final answer (e.g., 'Let's think step by step'). By generating intermediate reasoning, the model handles multi-step math, logic, and complex problems far more accurately than when it jumps straight to an answer.\n\nCoT works because each reasoning step conditions the next, letting the model break a hard problem into manageable parts. The trade-off is more tokens and latency. In production you can let the model reason and then extract just the final answer, or use it selectively for problems that genuinely need multi-step reasoning.",
+    "hinglish": "Chain-of-thought (CoT) prompting model ko final answer dene se pehle step by step reason karne ko kehta hai (jaise 'Let's think step by step'). Intermediate reasoning generate karke, model multi-step math, logic aur complex problems ko seedhe answer par jump karne se kahin zyada accurately handle karta hai.\n\nCoT isliye kaam karta hai kyunki har reasoning step agle ko condition karta hai, jisse model ek hard problem ko manageable parts mein todh sake. Trade-off zyada tokens aur latency hai. Production mein aap model ko reason karne de sakte ho aur phir sirf final answer extract kar sakte ho, ya use selectively un problems ke liye use kar sakte ho jinhe sach mein multi-step reasoning chahiye.",
+    "keyPoints": [
+      "Prompt the model to reason step by step before answering.",
+      "Greatly improves accuracy on math, logic, and multi-step problems.",
+      "Each intermediate step conditions the next, decomposing hard problems.",
+      "Trade-off: more tokens and latency.",
+      "In production, reason then extract the final answer, or use selectively."
+    ],
+    "real_world": "For a multi-step word problem, prompting 'think step by step' makes the model show each calculation — start, add, subtract — and arrive at the correct total, whereas a direct ask often skips a step and gives a wrong number.",
+    "followups": [
+      {
+        "q": "Why does chain-of-thought improve accuracy?",
+        "a": "Generating intermediate steps lets the model decompose a complex problem and condition each step on the previous reasoning, reducing the errors that come from leaping straight to an answer."
+      },
+      {
+        "q": "What's the downside of chain-of-thought?",
+        "a": "It uses more tokens and adds latency, and the verbose reasoning may not be wanted in the final output — so you often extract just the conclusion or reserve CoT for genuinely hard tasks."
+      },
+      {
+        "q": "How is CoT related to the ReAct pattern?",
+        "a": "ReAct extends chain-of-thought by interleaving reasoning with actions (tool calls) and observations, so the model can ground its step-by-step thinking in real external results."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI chain-of-thought prompting code (needs an API key). The Python-runnable demo below shows step-by-step reasoning fixing a multi-step error, verifiable here.",
+      "source": "# Chain-of-thought prompting — ask the model to reason step by step.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef solve_with_cot(problem: str) -> str:\n    # Encouraging explicit reasoning improves multi-step math/logic accuracy.\n    prompt = f\"{problem}\\n\\nLet's think step by step, then give the final answer.\"\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        temperature=0,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return response.choices[0].message.content\n\n# For production where you only want the final answer, you can ask the model to\n# reason internally and return just the result, or parse the last line.\n# Chain-of-thought trades extra tokens for better reasoning on complex problems.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Chain-of-thought — reasoning step by step beats jumping to an answer\nproblem = {\"start\": 23, \"buy\": 7, \"give_per_friend\": 3, \"friends\": 5}\n\ndef no_cot(p):\n    # \"Guess\" the final number without showing work (error-prone for multi-step)\n    return p[\"start\"] + p[\"buy\"]   # forgets to subtract what was given away\n\ndef with_cot(p):\n    steps = []\n    total = p[\"start\"]; steps.append(f\"Start with {total} apples\")\n    total += p[\"buy\"]; steps.append(f\"Buy {p['buy']} -> {total}\")\n    given = p[\"give_per_friend\"] * p[\"friends\"]\n    total -= given; steps.append(f\"Give {p['give_per_friend']} to each of {p['friends']} friends = {given} -> {total}\")\n    return total, steps\n\nanswer, steps = with_cot(problem)\nprint(\"Without chain-of-thought:\", no_cot(problem), \"(wrong)\")\nprint(\"With chain-of-thought:\")\nfor s in steps: print(\"  -\", s)\nprint(\"Final answer:\", answer)\nassert no_cot(problem) == 30 and answer == 15\nprint(\"Chain-of-thought = prompting the model to reason step by step ('think step by step').\")\nprint(\"It improves accuracy on math, logic, and multi-step problems.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Without chain-of-thought: 30 (wrong)\nWith chain-of-thought:\n  - Start with 23 apples\n  - Buy 7 -> 30\n  - Give 3 to each of 5 friends = 15 -> 15\nFinal answer: 15\nChain-of-thought = prompting the model to reason step by step ('think step by step').\nIt improves accuracy on math, logic, and multi-step problems.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

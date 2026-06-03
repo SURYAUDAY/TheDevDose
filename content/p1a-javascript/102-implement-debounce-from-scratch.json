@@ -1,0 +1,66 @@
+{
+  "id": "p1a-102",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 102,
+  "orderInPhase": 102,
+  "slug": "implement-debounce-from-scratch",
+  "title": "Implement debounce (from scratch)",
+  "difficulty": "advanced",
+  "tags": [
+    "p1a",
+    "implement",
+    "debounce",
+    "scratch"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Building your own debounce for a search input when you can't add a dependency: it cuts API calls to one per typing pause, and a `cancel()` lets you abort the…"
+  },
+  "sections": {
+    "simple_en": "Implementing debounce yourself is a top interview question. The core uses a closure to hold a timer id: each call clears the previous timer and sets a new one, so the wrapped function only runs after calls stop for `wait` ms. Preserve `this` and arguments with `apply`.\n\nA robust version adds options: an `immediate`/leading flag (run on the first call instead of the last), and a `cancel` method to clear a pending invocation. These edge cases (leading vs trailing, cancellation, correct `this`) are what interviewers probe for.",
+    "hinglish": "Debounce khud implement karna ek top interview question hai. Core ek closure use karta hai timer id rakhne ke liye: har call pichla timer clear karke naya set karta hai, taaki wrapped function tabhi chale jab calls `wait` ms ke liye ruk jaayein. `this` aur arguments ko `apply` se preserve karo.\nRobust version options add karta hai: ek `immediate`/leading flag (pehle call par chalao, last par nahi), aur ek `cancel` method pending invocation clear karne ko. Ye edge cases (leading vs trailing, cancellation, sahi `this`) hi interviewers test karte hain.",
+    "keyPoints": [
+      "Closure holds the timer id across calls.",
+      "Each call clears the old timer and sets a new one (trailing edge).",
+      "Use `fn.apply(this, args)` to preserve context and arguments.",
+      "Add `immediate` (leading) and a `cancel()` method for completeness.",
+      "Trailing = run after it stops; leading = run on the first call."
+    ],
+    "real_world": "Building your own debounce for a search input when you can't add a dependency: it cuts API calls to one per typing pause, and a `cancel()` lets you abort the pending call on unmount.",
+    "followups": [
+      {
+        "q": "How do you preserve `this` and arguments in a debounce?",
+        "a": "Capture them in the wrapper and invoke with `fn.apply(this, args)` (or use an arrow capturing the outer `this`), so the debounced call behaves like a direct call."
+      },
+      {
+        "q": "What's the difference between leading and trailing debounce?",
+        "a": "Trailing (default) runs the function after calls stop for the wait period; leading runs it on the first call and ignores the rest until the quiet period passes."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Debounce with leading option and cancel().\n\nfunction debounce(fn, wait, immediate = false) {\n  let timer = null;\n  function debounced(...args) {\n    const callNow = immediate && timer === null;\n    clearTimeout(timer);\n    timer = setTimeout(() => {\n      timer = null;\n      if (!immediate) fn.apply(this, args); // trailing call\n    }, wait);\n    if (callNow) fn.apply(this, args);       // leading call\n  }\n  debounced.cancel = () => { clearTimeout(timer); timer = null; };\n  return debounced;\n}\n\nmodule.exports = { debounce };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { debounce } = require(\"./solution\");\n\n(async () => {\n  // trailing (default)\n  let trailing = 0;\n  const t = debounce(() => trailing++, 30);\n  t(); t(); t();\n  await new Promise((r) => setTimeout(r, 50));\n  console.log(\"trailing calls:\", trailing); // 1\n\n  // leading (immediate)\n  let leading = 0;\n  const l = debounce(() => leading++, 30, true);\n  l(); l(); l(); // only first runs immediately\n  console.log(\"leading calls (immediate):\", leading); // 1\n  await new Promise((r) => setTimeout(r, 50));\n  console.log(\"leading calls (after wait):\", leading); // still 1\n\n  // cancel\n  let cancelled = 0;\n  const c = debounce(() => cancelled++, 30);\n  c(); c.cancel();\n  await new Promise((r) => setTimeout(r, 50));\n  console.log(\"cancelled calls:\", cancelled); // 0\n\n  console.assert(trailing === 1, \"trailing fires once\");\n  console.assert(leading === 1, \"leading fires once on first call\");\n  console.assert(cancelled === 0, \"cancel prevents the pending call\");\n  console.log(\"debounce implementation assertions passed.\");\n})();",
+      "expectedOutput": "trailing calls: 1\nleading calls (immediate): 1\nleading calls (after wait): 1\ncancelled calls: 0\ndebounce implementation assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "p3-004",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 4,
+  "orderInPhase": 4,
+  "slug": "express-js",
+  "title": "Express.js",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "express.js"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A startup builds its REST API with Express: app.use(express.json()) for parsing, a logger and auth middleware, and routers for /users and /orders."
+  },
+  "sections": {
+    "simple_en": "Express is the most popular minimal web framework for Node. It provides a thin, unopinionated layer over Node's HTTP module: routing (mapping method + path to handlers), middleware (functions that process requests in sequence), and helpers like res.json() and req.body parsing.\n\nIts simplicity and huge ecosystem make it the default choice for REST APIs. You define routes, plug in middleware (logging, auth, body parsing, error handling), and Express handles the request/response plumbing so you focus on application logic.",
+    "hinglish": "Express Node ke liye sabse popular minimal web framework hai. Ye Node ke HTTP module ke upar ek patli, unopinionated layer deta hai: routing (method + path ko handlers se map karna), middleware (sequence mein requests process karne wale functions), aur res.json(), req.body parsing jaise helpers.\n\nIski simplicity aur bada ecosystem ise REST APIs ke liye default banate hain. Aap routes define karte ho, middleware (logging, auth, body parsing, error handling) plug karte ho, aur Express request/response plumbing handle karta hai taaki aap logic par focus karo.",
+    "keyPoints": [
+      "Minimal, unopinionated web framework on top of Node's HTTP module.",
+      "Core concepts: routing, middleware, and request/response helpers.",
+      "express.json() parses JSON bodies; res.json()/res.status() shape responses.",
+      "Routers (express.Router) modularize routes by feature.",
+      "Huge middleware ecosystem (auth, CORS, helmet, rate limiting, etc.)."
+    ],
+    "real_world": "A startup builds its REST API with Express: app.use(express.json()) for parsing, a logger and auth middleware, and routers for /users and /orders. In a few dozen lines they have a working API, then bolt on community middleware for CORS and security headers.",
+    "followups": [
+      {
+        "q": "What does express.json() do?",
+        "a": "It's built-in middleware that parses incoming JSON request bodies and populates req.body, so handlers can read the parsed object instead of a raw stream."
+      },
+      {
+        "q": "Why use express.Router()?",
+        "a": "To split routes into modular files by feature (e.g., userRoutes, orderRoutes) and mount them under a base path, keeping the app organized as it grows."
+      },
+      {
+        "q": "Is Express opinionated?",
+        "a": "No — it's intentionally minimal, leaving structure and choices to you. Frameworks like NestJS add opinions/structure on top of Node (and can use Express under the hood)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express server code (Node + Express). The Node-runnable demo below exercises the same routing logic without binding a port.",
+      "source": "// Express.js — a basic REST server with JSON handling.\nconst express = require(\"express\");\nconst app = express();\n\napp.use(express.json()); // parse JSON request bodies into req.body\n\nconst users = [{ id: 1, name: \"Asha\" }];\n\napp.get(\"/users\", (req, res) => {\n  res.json(users);\n});\n\napp.post(\"/users\", (req, res) => {\n  const user = { id: users.length + 1, name: req.body.name };\n  users.push(user);\n  res.status(201).json(user); // 201 Created\n});\n\napp.get(\"/users/:id\", (req, res) => {\n  const user = users.find((u) => u.id === Number(req.params.id));\n  if (!user) return res.status(404).json({ error: \"Not Found\" });\n  res.json(user);\n});\n\napp.listen(3000, () => console.log(\"API on http://localhost:3000\"));",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Express.js — minimal express-like router + dispatch\nfunction createApp(){\n  const routes = [];\n  const app = {\n    get:  (path, h) => routes.push({ method: \"GET\", path, h }),\n    post: (path, h) => routes.push({ method: \"POST\", path, h }),\n    handle(method, path){\n      const route = routes.find(r => r.method === method && r.path === path);\n      const res = { statusCode: 200, body: null,\n        status(c){ this.statusCode = c; return this; },\n        json(d){ this.body = d; return this; } };\n      if (!route){ res.status(404).json({ error: \"Not Found\" }); return res; }\n      route.h({ method, path }, res);\n      return res;\n    },\n  };\n  return app;\n}\nconst app = createApp();\napp.get(\"/users\", (req, res) => res.json([{ id: 1, name: \"Asha\" }]));\napp.post(\"/users\", (req, res) => res.status(201).json({ id: 2 }));\n\nconsole.log(\"GET /users  ->\", JSON.stringify(app.handle(\"GET\", \"/users\")));\nconsole.log(\"POST /users ->\", JSON.stringify(app.handle(\"POST\", \"/users\")));\nconsole.log(\"GET /nope   ->\", JSON.stringify(app.handle(\"GET\", \"/nope\")));\nconsole.assert(app.handle(\"POST\", \"/users\").statusCode === 201, \"post creates\");\nconsole.assert(app.handle(\"GET\", \"/nope\").statusCode === 404, \"unknown route 404\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "GET /users  -> {\"statusCode\":200,\"body\":[{\"id\":1,\"name\":\"Asha\"}]}\nPOST /users -> {\"statusCode\":201,\"body\":{\"id\":2}}\nGET /nope   -> {\"statusCode\":404,\"body\":{\"error\":\"Not Found\"}}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

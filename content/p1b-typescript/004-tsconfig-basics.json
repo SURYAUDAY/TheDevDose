@@ -1,0 +1,65 @@
+{
+  "id": "p1b-004",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 4,
+  "orderInPhase": 4,
+  "slug": "tsconfig-basics",
+  "title": "tsconfig basics",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "tsconfig",
+    "basics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Every real TypeScript project ships a tsconfig.json; turning on `\"strict\": true` is the single most impactful setting teams add to catch null bugs and implic…"
+  },
+  "sections": {
+    "simple_en": "`tsconfig.json` is the configuration file that tells the TypeScript compiler how to compile a project: which files to include, what JavaScript version to target, which module system to use, where to output files, and how strict the type checking should be.\n\nRunning `tsc` with no arguments uses this file. Key options live under `compilerOptions`: `target` (output JS version), `module`, `outDir`/`rootDir`, `strict`, `esModuleInterop`, and `lib`. A good config is the foundation of a maintainable TypeScript project.",
+    "hinglish": "`tsconfig.json` woh configuration file hai jo TypeScript compiler ko batati hai ki project kaise compile karna hai: kaunsi files include karni hain, kaunsa JavaScript version target karna hai, kaunsa module system use karna hai, output kahan jaaye, aur type checking kitni strict ho.\nBina arguments ke `tsc` chalane par yahi file use hoti hai. Key options `compilerOptions` ke andar hoti hain: `target` (output JS version), `module`, `outDir`/`rootDir`, `strict`, `esModuleInterop`, aur `lib`. Achhi config ek maintainable TypeScript project ki neev hai.",
+    "keyPoints": [
+      "`tsconfig.json` configures how `tsc` compiles the project.",
+      "`target`: which JS version to emit (e.g. ES2020).",
+      "`module`: module system (CommonJS, ESNext).",
+      "`outDir`/`rootDir`: output and source roots.",
+      "`strict`: enables the full set of strict type-checking flags (recommended)."
+    ],
+    "real_world": "Every real TypeScript project ships a tsconfig.json; turning on `\"strict\": true` is the single most impactful setting teams add to catch null bugs and implicit `any` early.",
+    "followups": [
+      {
+        "q": "What does the `target` option control?",
+        "a": "The JavaScript language version the compiler emits (e.g. ES2020 vs ES5). It affects which features are down-leveled and what syntax appears in the output JS."
+      },
+      {
+        "q": "Why enable `strict` in tsconfig?",
+        "a": "It turns on the full suite of strict checks (strictNullChecks, noImplicitAny, etc.), catching far more bugs at compile time. It's the recommended default for new projects."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// A typical tsconfig.json:\n//\n// {\n//   \"compilerOptions\": {\n//     \"target\": \"ES2020\",\n//     \"module\": \"CommonJS\",\n//     \"rootDir\": \"src\",\n//     \"outDir\": \"dist\",\n//     \"strict\": true,\n//     \"esModuleInterop\": true,\n//     \"skipLibCheck\": true,\n//     \"forceConsistentCasingInFileNames\": true\n//   },\n//   \"include\": [\"src/**/*\"],\n//   \"exclude\": [\"node_modules\", \"dist\"]\n// }\n//\n// solution.ts — code that this config would compile.\n\nexport const config = {\n  target: \"ES2020\",\n  strict: true,\n} as const;\n\nexport function describeConfig(): string {\n  return \"target=\" + config.target + \", strict=\" + config.strict;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { describeConfig } from \"./solution\";\n\nconsole.log(describeConfig()); // target=ES2020, strict=true\nconsole.assert(describeConfig() === \"target=ES2020, strict=true\", \"config described\");\nconsole.log(\"tsconfig-basics assertions passed.\");",
+      "expectedOutput": "target=ES2020, strict=true\ntsconfig-basics assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

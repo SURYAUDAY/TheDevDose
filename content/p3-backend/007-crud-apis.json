@@ -1,0 +1,69 @@
+{
+  "id": "p3-007",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 7,
+  "orderInPhase": 7,
+  "slug": "crud-apis",
+  "title": "CRUD APIs",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "crud",
+    "apis"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A task manager's API: POST /tasks creates, GET /tasks lists, GET /tasks/:id reads one, PATCH /tasks/:id toggles completion, and DELETE /tasks/:id removes."
+  },
+  "sections": {
+    "simple_en": "CRUD covers the four basic operations on persistent data: Create, Read, Update, Delete. In a REST API these map cleanly to HTTP methods — POST to create, GET to read, PUT/PATCH to update, DELETE to remove — over a resource collection and its items.\n\nBuilding a CRUD API means defining routes for each operation, connecting them to a data layer (database or ORM), validating input, and returning appropriate status codes. It's the backbone of most backend work and a staple interview exercise.",
+    "hinglish": "CRUD persistent data par chaar basic operations cover karta hai: Create, Read, Update, Delete. REST API mein ye HTTP methods se saaf map hote hain — POST create, GET read, PUT/PATCH update, DELETE remove — ek resource collection aur uske items par.\n\nCRUD API banane ka matlab hai har operation ke liye routes define karna, unhe data layer (database/ORM) se jodna, input validate karna, aur sahi status codes return karna. Ye zyadatar backend kaam ki reedh hai aur common interview exercise hai.",
+    "keyPoints": [
+      "Create=POST, Read=GET, Update=PUT/PATCH, Delete=DELETE.",
+      "Wire each route to a data layer (DB/ORM) and validate input.",
+      "Return correct codes: 201 created, 200 read/updated, 204 deleted, 404 missing.",
+      "PUT replaces; PATCH partially updates — pick deliberately.",
+      "Handle not-found and validation errors consistently."
+    ],
+    "real_world": "A task manager's API: POST /tasks creates, GET /tasks lists, GET /tasks/:id reads one, PATCH /tasks/:id toggles completion, and DELETE /tasks/:id removes. The frontend's every action maps to one of these five endpoints.",
+    "followups": [
+      {
+        "q": "Which status code for a successful DELETE?",
+        "a": "204 No Content when there's nothing to return, or 200 with a body if you return the deleted resource or a confirmation."
+      },
+      {
+        "q": "PUT vs PATCH for updates in CRUD?",
+        "a": "PUT replaces the whole resource (send all fields); PATCH updates only the provided fields. Use PATCH for partial edits, PUT for full replacement."
+      },
+      {
+        "q": "Where does validation fit in a CRUD endpoint?",
+        "a": "Before touching the data layer — typically as middleware that checks the request body against a schema and returns 400 with errors if invalid."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express CRUD code (Node + Express). The Node-runnable demo below verifies create/read/update/delete against an in-memory store.",
+      "source": "// CRUD APIs — controller wired to a data model (here, an in-memory store).\nconst express = require(\"express\");\nconst app = express();\napp.use(express.json());\n\nconst db = new Map();\nlet seq = 0;\n\napp.post(\"/products\", (req, res) => {                 // CREATE\n  const product = { id: ++seq, ...req.body };\n  db.set(product.id, product);\n  res.status(201).json(product);\n});\napp.get(\"/products\", (req, res) => res.json([...db.values()])); // READ all\napp.get(\"/products/:id\", (req, res) => {              // READ one\n  const p = db.get(Number(req.params.id));\n  p ? res.json(p) : res.status(404).json({ error: \"Not Found\" });\n});\napp.patch(\"/products/:id\", (req, res) => {            // UPDATE\n  const id = Number(req.params.id);\n  if (!db.has(id)) return res.status(404).json({ error: \"Not Found\" });\n  const updated = { ...db.get(id), ...req.body };\n  db.set(id, updated);\n  res.json(updated);\n});\napp.delete(\"/products/:id\", (req, res) => {           // DELETE\n  db.delete(Number(req.params.id));\n  res.status(204).end();\n});\n\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CRUD APIs — in-memory store with create/read/update/delete\nfunction createResource(){\n  const store = new Map(); let seq = 0;\n  return {\n    create: (data) => { const id = ++seq; const rec = { id, ...data }; store.set(id, rec); return rec; },\n    read:   (id) => store.get(id) || null,\n    list:   () => [...store.values()],\n    update: (id, patch) => { if (!store.has(id)) return null; const rec = { ...store.get(id), ...patch }; store.set(id, rec); return rec; },\n    remove: (id) => store.delete(id),\n  };\n}\nconst users = createResource();\nconst a = users.create({ name: \"Asha\" });\nconst b = users.create({ name: \"Ravi\" });\nconsole.log(\"Created:\", JSON.stringify([a, b]));\nconsole.log(\"Updated:\", JSON.stringify(users.update(a.id, { name: \"Asha K\" })));\nusers.remove(b.id);\nconsole.log(\"List after delete:\", JSON.stringify(users.list()));\nconsole.assert(users.list().length === 1, \"one user remains\");\nconsole.assert(users.read(a.id).name === \"Asha K\", \"update applied\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Created: [{\"id\":1,\"name\":\"Asha\"},{\"id\":2,\"name\":\"Ravi\"}]\nUpdated: {\"id\":1,\"name\":\"Asha K\"}\nList after delete: [{\"id\":1,\"name\":\"Asha K\"}]\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

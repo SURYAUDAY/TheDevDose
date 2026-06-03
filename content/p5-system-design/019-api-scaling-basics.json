@@ -1,0 +1,70 @@
+{
+  "id": "p5-019",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 19,
+  "orderInPhase": 19,
+  "slug": "api-scaling-basics",
+  "title": "API scaling basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "api",
+    "scaling",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "queue",
+    "seedText": "A flash-sale API survives a traffic spike because its servers are stateless: the platform spins up dozens of identical instances behind a load balancer, cach…"
+  },
+  "sections": {
+    "simple_en": "Scaling an API means handling more load without slowing down or failing. The foundation is statelessness: if servers keep no per-request session in local memory, any server can handle any request, so you can run many identical instances behind a load balancer and add more as traffic grows.\n\nOn top of that, you cache hot responses to avoid recomputation, offload slow work to background queues, add read replicas and CDNs to spread reads, and scale horizontally. The recurring theme is to remove single bottlenecks and shared state so capacity grows by adding machines.",
+    "hinglish": "Ek API ko scale karne ka matlab hai zyada load handle karna bina slow ya fail hue. Foundation statelessness hai: agar servers local memory mein koi per-request session nahi rakhte, to koi bhi server koi bhi request handle kar sakta hai, isliye aap ek load balancer ke peeche kai identical instances chala sakte ho aur traffic badhne par aur add kar sakte ho.\n\nIske upar, aap hot responses cache karte ho recomputation se bachne ke liye, slow work ko background queues par offload karte ho, reads spread karne ke liye read replicas aur CDNs add karte ho, aur horizontally scale karte ho. Recurring theme hai single bottlenecks aur shared state ko hatana taaki capacity machines add karke badhe.",
+    "keyPoints": [
+      "Statelessness lets any server handle any request (key to scaling).",
+      "Run many instances behind a load balancer; add more as traffic grows.",
+      "Cache hot responses to avoid recomputation.",
+      "Offload slow work to async queues; add read replicas and CDNs.",
+      "Remove single bottlenecks and shared local state."
+    ],
+    "real_world": "A flash-sale API survives a traffic spike because its servers are stateless: the platform spins up dozens of identical instances behind a load balancer, caches the product catalog, and pushes order processing to a queue — so adding machines directly adds capacity.",
+    "followups": [
+      {
+        "q": "Why is statelessness key to scaling an API?",
+        "a": "If servers store no per-request state locally, any instance can serve any request. That lets you run many interchangeable instances behind a load balancer and scale out simply by adding more — no sticky sessions or shared local memory to coordinate."
+      },
+      {
+        "q": "What are the main API scaling levers?",
+        "a": "Stateless horizontal scaling behind a load balancer, caching hot responses, async/background queues for slow work, read replicas for read-heavy loads, CDNs for static content, and database scaling (sharding/replication)."
+      },
+      {
+        "q": "Where does session state go if servers are stateless?",
+        "a": "In a shared store — a token carried by the client (JWT) or a central session store like Redis — so no single server owns it and any instance can handle the request."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript modeling a stateless cluster with caching and round-robin routing. The Node demo below shows cache hits and load spread, verifying the behavior.",
+      "source": "// API scaling basics — statelessness + caching + horizontal scaling behind a load balancer.\nimport express from \"express\";\nimport Redis from \"ioredis\";\nconst app = express();\nconst redis = new Redis();\n\n// 1) Stateless servers: keep session/state in a shared store (Redis/DB), not in memory,\n//    so ANY instance can serve ANY request and you can add instances freely.\n\n// 2) Cache hot/expensive responses to cut DB load and latency.\napp.get(\"/api/products\", async (req, res) => {\n  const cached = await redis.get(\"products:all\");\n  if (cached) return res.json(JSON.parse(cached));\n  const products = await loadProductsFromDb();\n  await redis.set(\"products:all\", JSON.stringify(products), \"EX\", 60);\n  res.json(products);\n});\n\n// 3) Offload slow work to a queue/worker instead of blocking the request.\n// await queue.add(\"send-email\", { to: user.email });\n\n// 4) Add read replicas for read-heavy load; put a CDN in front of static assets.\n\nasync function loadProductsFromDb() { return []; }\n\n// To scale an API: make it stateless, cache aggressively, run many instances behind a load\n// balancer, use async processing for heavy tasks, and scale the data layer (replicas/sharding).\nexport default app;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// API scaling basics — handle more load via statelessness, caching, and horizontal scaling\nclass APICluster {\n  constructor(servers) { this.servers = servers; this.cache = new Map(); this.next = 0; }\n  route(request) {\n    if (this.cache.has(request)) return { served: \"cache\", server: null };  // cache first\n    const server = this.servers[this.next % this.servers.length];           // round-robin\n    this.next++;\n    this.cache.set(request, true);\n    return { served: \"compute\", server };\n  }\n}\nconst cluster = new APICluster([\"s1\", \"s2\", \"s3\"]);\nconsole.log(\"req A:\", cluster.route(\"GET /products\"));   // compute on s1\nconsole.log(\"req B:\", cluster.route(\"GET /orders\"));     // compute on s2\nconsole.log(\"req A again:\", cluster.route(\"GET /products\")); // served from cache\nconst a2 = cluster.route(\"GET /products\");\nconsole.assert(a2.served === \"cache\", \"repeat request served from cache\");\nconsole.assert(cluster.servers.length === 3, \"load spread across stateless servers\");\nconsole.log(\"Scale an API by: keeping servers stateless (so any can handle any request), caching hot responses,\");\nconsole.log(\"load balancing across instances, using async/queues for slow work, and adding read replicas/CDNs.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "req A: { served: 'compute', server: 's1' }\nreq B: { served: 'compute', server: 's2' }\nreq A again: { served: 'cache', server: null }\nScale an API by: keeping servers stateless (so any can handle any request), caching hot responses,\nload balancing across instances, using async/queues for slow work, and adding read replicas/CDNs.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

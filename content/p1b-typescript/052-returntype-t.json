@@ -1,0 +1,64 @@
+{
+  "id": "p1b-052",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 52,
+  "orderInPhase": 52,
+  "slug": "returntype-t",
+  "title": "ReturnType<T>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "returntype"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Typing a Redux selector's result as `ReturnType<typeof selectUser>` means components automatically get the right type, and any change to the selector's retur…"
+  },
+  "sections": {
+    "simple_en": "`ReturnType<T>` extracts the return type of a function type `T`. You typically combine it with `typeof` to get the return type of an existing function: `ReturnType<typeof getUser>`.\n\nThis keeps derived types in sync with their source function — if you change what `getUser` returns, every type derived via `ReturnType<typeof getUser>` updates automatically. It's invaluable for typing the output of factories, selectors, and configuration functions.",
+    "hinglish": "`ReturnType<T>` ek function type `T` ka return type nikaalta hai. Aap ise aam taur par `typeof` ke saath mila kar kisi existing function ka return type lete ho: `ReturnType<typeof getUser>`.\nYe derived types ko unke source function ke saath sync me rakhta hai — agar aap `getUser` ka return change karo, to `ReturnType<typeof getUser>` se derive har type automatically update ho jaata hai. Factories, selectors, aur configuration functions ke output ko type karne ke liye ye bohot useful hai.",
+    "keyPoints": [
+      "Extracts a function type's return type.",
+      "Usually used as `ReturnType<typeof fn>`.",
+      "Keeps derived types in sync with the source function.",
+      "Great for typing factory/selector/config outputs.",
+      "Built on a conditional type with `infer`."
+    ],
+    "real_world": "Typing a Redux selector's result as `ReturnType<typeof selectUser>` means components automatically get the right type, and any change to the selector's return shape flows through everywhere it's used.",
+    "followups": [
+      {
+        "q": "How do you get the return type of an existing function?",
+        "a": "Combine `typeof` and `ReturnType`: `ReturnType<typeof myFunction>`. `typeof` gets the function's type, and `ReturnType` extracts what it returns."
+      },
+      {
+        "q": "Why derive a type with ReturnType instead of writing it out?",
+        "a": "It stays automatically in sync with the function. If the function's return shape changes, the derived type updates everywhere, eliminating drift between the function and its consumers."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — ReturnType derived from an existing function.\n\nexport function createUser(name: string) {\n  return { id: Date.now(), name, active: true };\n}\n\nexport type User = ReturnType<typeof createUser>; // { id:number; name:string; active:boolean }\n\nexport function describe(user: User): string {\n  return user.name + (user.active ? \" (active)\" : \" (inactive)\");\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { createUser, describe } from \"./solution\";\n\nconst u = createUser(\"Asha\");\nconsole.log(describe(u)); // Asha (active)\n\nconsole.assert(describe(u) === \"Asha (active)\", \"ReturnType-derived shape works\");\nconsole.assert(typeof u.id === \"number\" && u.name === \"Asha\", \"shape matches function return\");\nconsole.log(\"ReturnType assertions passed.\");",
+      "expectedOutput": "Asha (active)\nReturnType assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

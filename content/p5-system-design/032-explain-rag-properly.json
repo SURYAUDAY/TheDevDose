@@ -1,0 +1,70 @@
+{
+  "id": "p5-032",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 32,
+  "orderInPhase": 32,
+  "slug": "explain-rag-properly",
+  "title": "Explain RAG properly",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "explain",
+    "rag",
+    "properly"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Asked 'how would you build a bot that answers questions about our internal docs?', a strong candidate says: embed and index the docs, retrieve the most relev…"
+  },
+  "sections": {
+    "simple_en": "When asked to explain RAG in an interview, give the three-step definition crisply: Retrieve relevant chunks from your data (usually by embedding the question and doing similarity search), Augment the prompt by injecting those chunks as context, and Generate an answer grounded in that context.\n\nThen state why it matters: RAG lets an LLM use fresh, private, or domain-specific knowledge it wasn't trained on, and it sharply reduces hallucinations because answers are tied to real, citable sources. It's the dominant pattern for building accurate, knowledge-grounded AI applications, and it updates instantly when your data changes — unlike retraining.",
+    "hinglish": "Jab interview mein RAG explain karne ko kaha jaaye, teen-step definition crisply do: apne data se relevant chunks Retrieve karo (aksar question ko embed karke similarity search se), un chunks ko context ke roop mein inject karke prompt ko Augment karo, aur us context mein grounded ek answer Generate karo.\n\nPhir batao ki ye kyun matter karta hai: RAG ek LLM ko fresh, private, ya domain-specific knowledge use karne deta hai jispar wo train nahi hua, aur ye hallucinations ko sharply kam karta hai kyunki answers real, citable sources se tied hote hain. Ye accurate, knowledge-grounded AI applications banane ka dominant pattern hai, aur ye instantly update hota hai jab aapka data badle — retraining ke ulat.",
+    "keyPoints": [
+      "Three steps: Retrieve relevant chunks -> Augment the prompt -> Generate.",
+      "Retrieval is usually embedding-based similarity search over your data.",
+      "Grounds the LLM in fresh, private, or domain-specific knowledge.",
+      "Sharply reduces hallucinations; answers tie to citable sources.",
+      "Updates instantly when data changes — no retraining needed."
+    ],
+    "real_world": "Asked 'how would you build a bot that answers questions about our internal docs?', a strong candidate says: embed and index the docs, retrieve the most relevant chunks for each question, inject them into the prompt, and have the LLM answer from them — i.e., RAG — then mentions citations and evaluation.",
+    "followups": [
+      {
+        "q": "What's the one-sentence definition of RAG?",
+        "a": "Retrieval-Augmented Generation: retrieve relevant context from your data, inject it into the prompt, and have the LLM generate an answer grounded in that context."
+      },
+      {
+        "q": "Why use RAG instead of fine-tuning?",
+        "a": "RAG injects knowledge at query time — easy to update, supports citations, no training. Fine-tuning bakes behavior into weights and is costly to update. For changing or factual knowledge, RAG is usually the first choice."
+      },
+      {
+        "q": "How does RAG reduce hallucinations?",
+        "a": "By instructing the model to answer only from the retrieved context (and ideally cite it), responses are anchored to real documents rather than the model's unreliable internal recall."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo that retrieves the relevant document by similarity and builds a grounded prompt, so the retrieve-augment-generate flow is verifiable.",
+      "source": "# Explain RAG properly — the interview-ready version, with real LangChain wiring.\nfrom langchain_openai import ChatOpenAI, OpenAIEmbeddings\nfrom langchain_community.vectorstores import FAISS\nfrom langchain_core.prompts import ChatPromptTemplate\nfrom langchain_core.output_parsers import StrOutputParser\nfrom langchain_core.runnables import RunnablePassthrough\n\n# 1) RETRIEVE: embed the corpus once, store in a vector DB, fetch top-k per query.\n# retriever = FAISS.from_documents(chunks, OpenAIEmbeddings()).as_retriever(search_kwargs={\"k\": 4})\n\n# 2) AUGMENT: inject retrieved chunks into the prompt with an instruction to use only them.\nprompt = ChatPromptTemplate.from_template(\n    \"Answer using ONLY the context.\\n\\nContext:\\n{context}\\n\\nQuestion: {question}\")\n\n# 3) GENERATE: the LLM answers grounded in that context.\nllm = ChatOpenAI(model=\"gpt-4o-mini\", temperature=0)\ndef format_docs(docs): return \"\\n\\n\".join(d.page_content for d in docs)\n# rag = ({\"context\": retriever | format_docs, \"question\": RunnablePassthrough()}\n#        | prompt | llm | StrOutputParser())\n\n# Crisp interview definition: RAG = Retrieve relevant external knowledge, Augment the prompt\n# with it, Generate a grounded answer. It reduces hallucinations and adds fresh/private data\n# without retraining the model, and lets answers cite real sources.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Explain RAG properly — Retrieve relevant context, Augment the prompt, Generate the answer\nimport math\ndef cosine(a, b):\n    d = sum(x*y for x, y in zip(a, b)); na = math.sqrt(sum(x*x for x in a)); nb = math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\ndef embed(text):\n    vocab = [\"refund\", \"days\", \"shipping\", \"warranty\"]\n    return [text.lower().count(w) for w in vocab]\n\nkb = [\"Refunds are available within 30 days.\", \"Shipping takes 5 business days.\", \"Warranty lasts one year.\"]\nkb_vecs = [embed(d) for d in kb]\ndef rag(question):\n    qv = embed(question)\n    best = max(range(len(kb)), key=lambda i: cosine(qv, kb_vecs[i]))   # 1) RETRIEVE\n    context = kb[best]\n    prompt = f\"Answer from context only.\\nContext: {context}\\nQ: {question}\"  # 2) AUGMENT\n    return context, prompt                                            # 3) GENERATE (from context)\n\nctx, prompt = rag(\"how many days for a refund?\")\nprint(\"Retrieved context:\", ctx)\nprint(\"Augmented prompt:\", repr(prompt[:60]) + \"...\")\nassert \"30 days\" in ctx, \"retrieved the relevant refund document\"\nprint(\"\\nInterview answer: RAG grounds an LLM in external data — Retrieve relevant chunks, Augment the\")\nprint(\"prompt with them, Generate an answer from that context. It cuts hallucinations and adds fresh/private knowledge.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Retrieved context: Refunds are available within 30 days.\nAugmented prompt: 'Answer from context only.\\nContext: Refunds are available wit'...\n\nInterview answer: RAG grounds an LLM in external data — Retrieve relevant chunks, Augment the\nprompt with them, Generate an answer from that context. It cuts hallucinations and adds fresh/private knowledge.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

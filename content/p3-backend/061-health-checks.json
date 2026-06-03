@@ -1,0 +1,69 @@
+{
+  "id": "p3-061",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 61,
+  "orderInPhase": 61,
+  "slug": "health-checks",
+  "title": "Health checks",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "health",
+    "checks"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Kubernetes hits /livez to know if the app should be restarted and /readyz to decide if it should receive traffic."
+  },
+  "sections": {
+    "simple_en": "Health checks are endpoints that report whether a service is functioning, used by load balancers and orchestrators (like Kubernetes) to make routing and restart decisions. There are two distinct kinds: liveness (is the process alive at all?) and readiness (can it currently serve traffic?).\n\nA liveness probe failing means the process is stuck or dead, so the orchestrator restarts it. A readiness probe checks critical dependencies (database, cache) and, if any are down, returns a non-200 (e.g., 503) so traffic is temporarily routed away without killing the pod. Keep checks lightweight and meaningful.",
+    "hinglish": "Health checks aise endpoints hain jo batate hain ki service functioning kar rahi hai ya nahi, jise load balancers aur orchestrators (jaise Kubernetes) routing aur restart decisions ke liye use karte hain. Do alag tarah ke hote hain: liveness (process zinda hai bhi?) aur readiness (abhi traffic serve kar sakta hai?).\n\nLiveness probe fail hone ka matlab process stuck ya dead hai, isliye orchestrator use restart karta hai. Readiness probe critical dependencies (database, cache) check karta hai aur koi down ho to non-200 (jaise 503) deta hai taaki traffic temporarily hata diya jaaye bina pod maare. Checks lightweight aur meaningful rakho.",
+    "keyPoints": [
+      "Endpoints reporting service health for LBs and orchestrators.",
+      "Liveness: is the process alive? Failure -> restart the instance.",
+      "Readiness: can it serve traffic now? Checks deps; failure -> route away.",
+      "Readiness returns 503 when a dependency is down (without killing the pod).",
+      "Keep checks fast and meaningful; avoid heavy work on every probe."
+    ],
+    "real_world": "Kubernetes hits /livez to know if the app should be restarted and /readyz to decide if it should receive traffic. When the database briefly goes down, /readyz returns 503, so the pod stops getting requests until the DB recovers — instead of serving errors to users.",
+    "followups": [
+      {
+        "q": "Difference between liveness and readiness probes?",
+        "a": "Liveness checks whether the process is alive (failure triggers a restart); readiness checks whether it can serve traffic right now (failure routes traffic away without restarting)."
+      },
+      {
+        "q": "What should a readiness check verify?",
+        "a": "Critical dependencies needed to serve requests — database connectivity, cache, required downstream services — returning non-200 if any are unavailable."
+      },
+      {
+        "q": "Why not make liveness check the database too?",
+        "a": "If liveness depended on the DB, a brief DB outage would cause constant restarts of healthy app processes. Liveness should reflect the process itself; dependency checks belong in readiness."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express health-check code. The Node-runnable demo below verifies liveness vs readiness probe behavior so the logic is verifiable here.",
+      "source": "// Health checks — liveness and readiness endpoints for orchestrators.\nconst express = require(\"express\");\nconst app = express();\n\n// Liveness: is the process alive? (k8s restarts the pod if this fails)\napp.get(\"/livez\", (req, res) => res.status(200).json({ status: \"alive\" }));\n\n// Readiness: can it serve traffic? Check critical dependencies.\napp.get(\"/readyz\", async (req, res) => {\n  const checks = await Promise.all([\n    pingPostgres().then(ok => ({ name: \"postgres\", ok })).catch(() => ({ name: \"postgres\", ok: false })),\n    pingRedis().then(ok => ({ name: \"redis\", ok })).catch(() => ({ name: \"redis\", ok: false })),\n  ]);\n  const healthy = checks.every(c => c.ok);\n  res.status(healthy ? 200 : 503).json({ status: healthy ? \"ready\" : \"not-ready\", checks });\n});\n\nasync function pingPostgres() { /* SELECT 1 */ return true; }\nasync function pingRedis() { /* PING */ return true; }\napp.listen(3000);\n// Kubernetes uses livenessProbe to restart and readinessProbe to route traffic.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Health checks — liveness (is it up?) vs readiness (can it serve traffic?)\nasync function checkDependency(name, ok){ return { name, ok, ms: 5 }; }\nasync function readiness(deps){\n  const results = await Promise.all(deps.map(d => checkDependency(d.name, d.ok)));\n  const healthy = results.every(r => r.ok);\n  return { status: healthy ? \"ready\" : \"not-ready\", checks: results, httpCode: healthy ? 200 : 503 };\n}\nfunction liveness(){ return { status: \"alive\", httpCode: 200 }; } // process is running\n\n(async () => {\n  console.log(\"Liveness:\", JSON.stringify(liveness()));\n  const good = await readiness([{ name: \"postgres\", ok: true }, { name: \"redis\", ok: true }]);\n  console.log(\"Readiness (all up):\", JSON.stringify(good));\n  const bad = await readiness([{ name: \"postgres\", ok: true }, { name: \"redis\", ok: false }]);\n  console.log(\"Readiness (redis down):\", JSON.stringify(bad));\n  console.assert(good.httpCode === 200 && bad.httpCode === 503, \"readiness reflects dependencies\");\n  console.log(\"Orchestrators (k8s) use /livez to restart and /readyz to route traffic.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Liveness: {\"status\":\"alive\",\"httpCode\":200}\nReadiness (all up): {\"status\":\"ready\",\"checks\":[{\"name\":\"postgres\",\"ok\":true,\"ms\":5},{\"name\":\"redis\",\"ok\":true,\"ms\":5}],\"httpCode\":200}\nReadiness (redis down): {\"status\":\"not-ready\",\"checks\":[{\"name\":\"postgres\",\"ok\":true,\"ms\":5},{\"name\":\"redis\",\"ok\":false,\"ms\":5}],\"httpCode\":503}\nOrchestrators (k8s) use /livez to restart and /readyz to route traffic.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

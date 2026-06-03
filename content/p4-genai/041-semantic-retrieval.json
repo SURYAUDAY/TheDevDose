@@ -1,0 +1,69 @@
+{
+  "id": "p4-041",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 41,
+  "orderInPhase": 41,
+  "slug": "semantic-retrieval",
+  "title": "Semantic retrieval",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "semantic",
+    "retrieval"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A knowledge-base assistant retrieves the right onboarding doc when an employee asks 'how do I get set up on day one?' even though the doc is titled 'New Hire…"
+  },
+  "sections": {
+    "simple_en": "Semantic retrieval is the embedding-based retrieval at the heart of RAG: documents and the query live in the same vector space, so the system finds chunks by meaning rather than literal keyword overlap. A query like 'inexpensive trips' can retrieve 'affordable vacation ideas' with no shared words.\n\nIt's the default retrieval mode because it handles synonyms, paraphrases, and natural-language questions that keyword search fumbles. Its limitation is exact-term queries (specific codes, names, IDs), where literal matching is better — which is why production systems often combine semantic retrieval with keyword search (hybrid).",
+    "hinglish": "Semantic retrieval embedding-based retrieval hai jo RAG ke dil mein hai: documents aur query same vector space mein hote hain, to system chunks ko meaning se dhoondhta hai, literal keyword overlap se nahi. 'inexpensive trips' jaisi query 'affordable vacation ideas' retrieve kar sakti hai bina kisi shared word ke.\n\nYe default retrieval mode hai kyunki ye synonyms, paraphrases, aur natural-language questions handle karta hai jinhe keyword search fumble karti hai. Iski limitation exact-term queries hai (specific codes, names, IDs), jahan literal matching behtar hai — isiliye production systems aksar semantic retrieval ko keyword search ke saath combine karte hain (hybrid).",
+    "keyPoints": [
+      "Embedding-based retrieval — finds chunks by meaning, not keywords.",
+      "Documents and query share the same vector space.",
+      "Handles synonyms, paraphrases, and natural-language questions.",
+      "The default retrieval mode in RAG.",
+      "Weaker on exact terms (codes/names) — combine with keyword (hybrid)."
+    ],
+    "real_world": "A knowledge-base assistant retrieves the right onboarding doc when an employee asks 'how do I get set up on day one?' even though the doc is titled 'New Hire Provisioning Checklist' — semantic retrieval matches the intent despite zero keyword overlap.",
+    "followups": [
+      {
+        "q": "What makes retrieval 'semantic'?",
+        "a": "It compares the query and documents as embeddings in a shared vector space, so relevance is based on meaning. Synonyms and paraphrases match even without shared keywords."
+      },
+      {
+        "q": "Where does semantic retrieval struggle?",
+        "a": "On exact-term lookups — specific identifiers, codes, names — where literal keyword matching is more precise. Hybrid search adds keyword matching to cover those cases."
+      },
+      {
+        "q": "Is semantic retrieval the same as semantic search?",
+        "a": "Essentially yes — 'semantic retrieval' usually refers to the retrieval step inside RAG, while 'semantic search' is the general capability. Both rank by embedding similarity."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain/Chroma retriever code. The Python-runnable demo below retrieves docs that share no keywords with the query so meaning-based retrieval is verifiable here.",
+      "source": "# Semantic retrieval — retrieve by meaning; optionally use MMR for diverse results.\nfrom langchain_openai import OpenAIEmbeddings\nfrom langchain_community.vectorstores import FAISS\n\n# store = FAISS.from_documents(chunks, OpenAIEmbeddings())\n\n# Plain semantic similarity (top-k by cosine):\n# retriever = store.as_retriever(search_kwargs={\"k\": 5})\n\n# Maximal Marginal Relevance: relevant AND diverse (reduces near-duplicate chunks):\n# retriever = store.as_retriever(\n#     search_type=\"mmr\", search_kwargs={\"k\": 5, \"fetch_k\": 20, \"lambda_mult\": 0.5})\n\n# results = retriever.invoke(\"how do I cancel my subscription?\")\n\n# Semantic retrieval embeds query and documents into the same space and ranks by\n# similarity, so it matches intent even when the user's words differ from the source.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Semantic retrieval — retrieve by meaning, and see why keyword retrieval misses\nimport math\ndocs = {\n    \"d1\": (\"Resetting a forgotten password\",  [1,0,0]),\n    \"d2\": (\"Troubleshooting sign-in failures\", [0.9,0.1,0]),\n    \"d3\": (\"Updating your billing card\",       [0,1,0]),\n}\ndef embed_q(q):\n    q=q.lower()\n    return [1.0 if any(w in q for w in (\"login\",\"log in\",\"sign in\",\"password\",\"access\")) else 0.0,\n            1.0 if any(w in q for w in (\"billing\",\"card\",\"pay\")) else 0.0, 0.0]\ndef cosine(a,b):\n    d=sum(x*y for x,y in zip(a,b)); na=math.sqrt(sum(x*x for x in a)); nb=math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\n\ndef keyword_retrieve(query):\n    qwords = set(query.lower().split())\n    hits = [k for k,(text,_) in docs.items() if qwords & set(text.lower().split())]\n    return hits\ndef semantic_retrieve(query, k=1):\n    qv = embed_q(query)\n    return [k for k,_ in sorted(docs.items(), key=lambda kv: cosine(qv, kv[1][1]), reverse=True)[:k]]\n\nq = \"I can't access my account\"\nprint(\"Keyword retrieval:\", keyword_retrieve(q), \"(no shared words -> misses)\")\nprint(\"Semantic retrieval:\", semantic_retrieve(q), \"->\", docs[semantic_retrieve(q)[0]][0])\nassert keyword_retrieve(q) == [], \"keyword search finds nothing\"\nassert semantic_retrieve(q)[0] in (\"d1\",\"d2\"), \"semantic search finds the right doc\"\nprint(\"Semantic retrieval embeds query + docs and ranks by similarity \\u2014 robust to wording differences.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Keyword retrieval: [] (no shared words -> misses)\nSemantic retrieval: ['d1'] -> Resetting a forgotten password\nSemantic retrieval embeds query + docs and ranks by similarity — robust to wording differences.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

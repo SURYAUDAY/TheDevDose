@@ -1,0 +1,65 @@
+{
+  "id": "p1a-032",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 32,
+  "orderInPhase": 32,
+  "slug": "constructor-functions",
+  "title": "Constructor Functions",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "constructor",
+    "functions"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `User(name, email)` constructor used to spin up many user objects from API data, each with its own name/email but sharing one `getProfile` method on the pr…"
+  },
+  "sections": {
+    "simple_en": "Before ES6 classes, constructor functions were the way to create many similar objects. A constructor is a normal function called with the `new` keyword and conventionally named with a capital letter. `new` creates a fresh object, sets its prototype, binds `this` to it, runs the body, and returns the object.\n\nMethods shared by all instances are placed on the constructor's `prototype` (not inside the constructor body) so they aren't duplicated per instance. ES6 `class` syntax is essentially syntactic sugar over this exact mechanism.",
+    "hinglish": "ES6 classes se pehle, constructor functions kai similar objects banane ka tarika the. Constructor ek normal function hai jo `new` keyword se call hota hai aur convention se capital letter se naam hota hai. `new` ek naya object banata hai, uska prototype set karta hai, `this` ko us object se bind karta hai, body chalata hai, aur object return karta hai.\nSab instances me shared methods constructor ke `prototype` par rakhe jaate hain (constructor body ke andar nahi) taki har instance me duplicate na ho. ES6 `class` syntax basically isi mechanism ke upar syntactic sugar hai.",
+    "keyPoints": [
+      "A constructor is a function invoked with `new`; capitalised by convention.",
+      "`new` does 4 things: creates an object, links its prototype, binds `this`, returns it.",
+      "Per-instance data goes on `this`; shared methods go on `Constructor.prototype`.",
+      "Putting methods on the prototype avoids duplicating them on every instance.",
+      "ES6 classes are syntactic sugar over constructor functions + prototypes."
+    ],
+    "real_world": "A `User(name, email)` constructor used to spin up many user objects from API data, each with its own name/email but sharing one `getProfile` method on the prototype — memory-efficient when you have thousands of users.",
+    "followups": [
+      {
+        "q": "What does the `new` keyword do?",
+        "a": "It creates a new empty object, links its internal prototype to the constructor's `prototype`, binds `this` to the new object, executes the constructor body, and returns the object (unless the body returns its own object)."
+      },
+      {
+        "q": "Why put methods on the prototype instead of inside the constructor?",
+        "a": "So all instances share a single copy of each method rather than each instance getting its own duplicate, which saves memory and allows runtime method changes to affect all instances."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Constructor function with shared prototype methods.\n\nfunction User(name, email) {\n  // per-instance properties\n  this.name = name;\n  this.email = email;\n}\n\n// shared by ALL instances (one copy)\nUser.prototype.getProfile = function () {\n  return this.name + \" <\" + this.email + \">\";\n};\n\nmodule.exports = { User };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { User } = require(\"./solution\");\n\nconst a = new User(\"Asha\", \"asha@x.com\");\nconst b = new User(\"Ravi\", \"ravi@x.com\");\n\nconsole.log(a.getProfile()); // Asha <asha@x.com>\nconsole.log(b.getProfile()); // Ravi <ravi@x.com>\n\nconsole.assert(a.getProfile() === \"Asha <asha@x.com>\", \"instance a profile\");\nconsole.assert(a instanceof User, \"a is a User\");\n// method is shared, not duplicated:\nconsole.assert(a.getProfile === b.getProfile, \"method shared via prototype\");\nconsole.assert(Object.getPrototypeOf(a) === User.prototype, \"prototype linked\");\nconsole.log(\"constructor function assertions passed.\");",
+      "expectedOutput": "Asha <asha@x.com>\nRavi <ravi@x.com>\nconstructor function assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

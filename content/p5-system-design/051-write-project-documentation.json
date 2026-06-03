@@ -1,0 +1,70 @@
+{
+  "id": "p5-051",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 51,
+  "orderInPhase": 51,
+  "slug": "write-project-documentation",
+  "title": "Write project documentation",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "write",
+    "project",
+    "documentation"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "Two identical projects sit on GitHub; one has a thorough README with a description, screenshots, tech stack, setup steps, and a live demo link, the other jus…"
+  },
+  "sections": {
+    "simple_en": "Good project documentation — primarily the README — is what turns code into a portfolio piece, because it makes the project understandable in under a minute. A strong README answers what the project is, why it exists, what it does (features), the tech stack, how to set it up and run it, and ideally links a live demo.\n\nDocumentation matters because reviewers won't dig through source to figure out your project; if they can't quickly understand it, they move on. Clear setup/usage instructions also let others (and future you) actually run it. Treat the README as the front door: it should sell and explain the project at a glance.",
+    "hinglish": "Achhi project documentation — primarily README — wo hai jo code ko ek portfolio piece mein badal deti hai, kyunki ye project ko ek minute se kam mein understandable banati hai. Ek strong README answer karta hai ki project kya hai, kyun hai, kya karta hai (features), tech stack, use kaise setup aur run karein, aur ideally ek live demo link karta hai.\n\nDocumentation matter karti hai kyunki reviewers aapke project ko samajhne ke liye source mein dig nahi karenge; agar wo use jaldi nahi samajh sakte, wo aage badh jaate hain. Clear setup/usage instructions doosron ko (aur future aap ko) bhi use actually run karne dete hain. README ko front door ki tarah treat karo: ise project ko ek glance mein sell aur explain karna chahiye.",
+    "keyPoints": [
+      "Documentation (the README) turns code into a portfolio piece.",
+      "Cover: what it is, why, features, tech stack, setup, usage, demo.",
+      "Reviewers won't dig through source — make it understandable fast.",
+      "Clear setup/usage lets others (and future you) run it.",
+      "Treat the README as the project's front door — sell and explain at a glance."
+    ],
+    "real_world": "Two identical projects sit on GitHub; one has a thorough README with a description, screenshots, tech stack, setup steps, and a live demo link, the other just code. A hiring manager engages with the documented one and skips the other — the documentation, not the code, made the difference.",
+    "followups": [
+      {
+        "q": "What should a project README include?",
+        "a": "What the project is, why it exists, its features, the tech stack, setup and usage instructions, and ideally a live demo link and screenshots — enough for someone to understand and run it quickly."
+      },
+      {
+        "q": "Why does documentation matter for a portfolio?",
+        "a": "Reviewers spend seconds and won't read source to understand your project. A clear README makes the project graspable instantly, which is what turns raw code into a credible, impressive portfolio piece."
+      },
+      {
+        "q": "What's the most important part of a README?",
+        "a": "A concise description of what the project does and why, plus how to run it (or a live demo). If a reader gets only that, they can still understand and try your work."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo scoring a README for the key sections (title, description, features, tech stack, setup, usage, demo), verifying completeness.",
+      "source": "# Write project documentation — a README that sells and explains the project.\n\nREADME_SECTIONS = [\"title\", \"description\", \"features\", \"tech_stack\",\n                   \"setup\", \"usage\", \"demo\", \"screenshots\"]\n\ndef readme_completeness(readme: dict) -> dict:\n    present = [s for s in README_SECTIONS if readme.get(s)]\n    missing = [s for s in README_SECTIONS if not readme.get(s)]\n    return {\"score\": round(100 * len(present) / len(README_SECTIONS)), \"missing\": missing}\n\n# A strong README answers, in order:\n#   - WHAT it is (title + one-line description)\n#   - WHY it exists / what problem it solves\n#   - FEATURES (bullet list of what it does)\n#   - TECH STACK (the technologies used)\n#   - SETUP (how to install/run locally, copy-paste commands)\n#   - USAGE (how to use it, with examples)\n#   - DEMO (a live link) and SCREENSHOTS/GIFs\n# Good docs make a reviewer understand the project in ~30 seconds — it's what turns a code\n# dump into a portfolio piece. Add architecture notes for larger projects.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Write project documentation — a good README answers what, why, how to run, and how it works\nSECTIONS = [\"title\", \"description\", \"features\", \"tech_stack\", \"setup\", \"usage\", \"demo\"]\ndef readme_completeness(readme):\n    present = [s for s in SECTIONS if readme.get(s)]\n    missing = [s for s in SECTIONS if not readme.get(s)]\n    return {\"score\": round(100 * len(present) / len(SECTIONS)), \"missing\": missing}\n\nreadme = {\"title\": \"RAG PDF Chat\", \"description\": \"Chat with your PDFs\",\n          \"features\": [\"upload\", \"ask\", \"cite\"], \"tech_stack\": [\"React\", \"FastAPI\", \"Chroma\"],\n          \"setup\": \"pip install -r requirements.txt\", \"usage\": \"python app.py\", \"demo\": \"https://demo.example.com\"}\nr = readme_completeness(readme)\nprint(\"README completeness:\", r[\"score\"], \"% | missing:\", r[\"missing\"] or \"none\")\nassert r[\"score\"] == 100, \"all key sections present\"\nsparse = readme_completeness({\"title\": \"X\", \"description\": \"Y\"})\nassert sparse[\"score\"] < 50 and \"setup\" in sparse[\"missing\"]\nprint(\"\\nProject docs: a README should cover what it is, why it exists, features, tech stack, setup, usage, and a live demo.\")\nprint(\"Good documentation makes a project understandable in 30 seconds — it's what turns code into a portfolio piece.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "README completeness: 100 % | missing: none\n\nProject docs: a README should cover what it is, why it exists, features, tech stack, setup, usage, and a live demo.\nGood documentation makes a project understandable in 30 seconds — it's what turns code into a portfolio piece.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

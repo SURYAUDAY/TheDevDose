@@ -1,0 +1,66 @@
+{
+  "id": "p1a-095",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 95,
+  "orderInPhase": 95,
+  "slug": "regular-expressions-regex",
+  "title": "Regular Expressions (regex)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "regular",
+    "expressions",
+    "regex"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Validating an email or phone field, extracting all hashtags from a post, or formatting input as the user types — regex handles all of these concisely where m…"
+  },
+  "sections": {
+    "simple_en": "A regular expression is a pattern used to match, search, and replace text. In JavaScript you write them between slashes (`/pattern/flags`) or with `new RegExp()`. Common flags: `g` (global, all matches), `i` (case-insensitive), `m` (multiline).\n\nKey methods: `test()` returns a boolean, `match()`/`matchAll()` extract matches, and `String.replace()` substitutes. Building blocks include character classes (`\\d`, `\\w`, `\\s`), quantifiers (`*`, `+`, `?`, `{n,m}`), anchors (`^`, `$`), groups (`( )`), and alternation (`|`).",
+    "hinglish": "Regular expression ek pattern hai jo text ko match, search, aur replace karne ke liye use hota hai. JavaScript me inhe slashes ke beech likhte ho (`/pattern/flags`) ya `new RegExp()` se. Common flags: `g` (global, saare matches), `i` (case-insensitive), `m` (multiline).\nKey methods: `test()` boolean deta hai, `match()`/`matchAll()` matches nikaalte hain, aur `String.replace()` substitute karta hai. Building blocks: character classes (`\\d`, `\\w`, `\\s`), quantifiers (`*`, `+`, `?`, `{n,m}`), anchors (`^`, `$`), groups (`( )`), aur alternation (`|`).",
+    "keyPoints": [
+      "Write as `/pattern/flags` or `new RegExp(...)`.",
+      "Flags: `g` (all), `i` (ignore case), `m` (multiline), `s`, `u`.",
+      "Methods: `regex.test(str)` (boolean), `str.match`/`matchAll`, `str.replace`.",
+      "Classes `\\d \\w \\s`, quantifiers `* + ? {n,m}`, anchors `^ $`, groups `( )`.",
+      "Use capture groups to extract parts; named groups `(?<name>...)` improve clarity."
+    ],
+    "real_world": "Validating an email or phone field, extracting all hashtags from a post, or formatting input as the user types — regex handles all of these concisely where manual string parsing would be verbose and error-prone.",
+    "followups": [
+      {
+        "q": "What does the `g` flag do?",
+        "a": "It makes the regex global, so methods find ALL matches in the string (e.g. `matchAll`, or `replace` substituting every occurrence) rather than just the first."
+      },
+      {
+        "q": "How do you extract part of a match?",
+        "a": "Use capture groups `( )` and read them from the match result (e.g. `match[1]`), or use named groups `(?<name>...)` and read `match.groups.name`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Validation, extraction, and replacement with regex.\n\nfunction isValidEmail(str) {\n  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(str);\n}\n\nfunction extractHashtags(text) {\n  return [...text.matchAll(/#(\\w+)/g)].map((m) => m[1]); // capture group\n}\n\nfunction maskDigits(str) {\n  return str.replace(/\\d/g, \"*\"); // replace all digits\n}\n\nmodule.exports = { isValidEmail, extractHashtags, maskDigits };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { isValidEmail, extractHashtags, maskDigits } = require(\"./solution\");\n\nconsole.log(isValidEmail(\"asha@example.com\")); // true\nconsole.log(isValidEmail(\"not-an-email\"));     // false\nconsole.log(extractHashtags(\"Loving #js and #regex here\")); // ['js','regex']\nconsole.log(maskDigits(\"Call 98765\"));         // Call *****\n\nconsole.assert(isValidEmail(\"asha@example.com\") === true, \"valid email\");\nconsole.assert(isValidEmail(\"bad@\") === false, \"invalid email\");\nconsole.assert(JSON.stringify(extractHashtags(\"#a #b\")) === '[\"a\",\"b\"]', \"extract hashtags\");\nconsole.assert(maskDigits(\"a1b2\") === \"a*b*\", \"mask digits\");\nconsole.log(\"regex assertions passed.\");",
+      "expectedOutput": "true\nfalse\n[ 'js', 'regex' ]\nCall *****\nregex assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1b-019",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 19,
+  "orderInPhase": 19,
+  "slug": "optional-properties",
+  "title": "Optional Properties",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "optional",
+    "properties"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A function options object like `{ retries?: number; timeout?: number }` lets callers pass only what they care about, and the function fills in defaults for t…"
+  },
+  "sections": {
+    "simple_en": "An optional property is marked with a `?` after its name (`email?: string`), meaning the property may be present or absent. If absent, its type effectively includes `undefined`, so you must handle the missing case before using it.\n\nOptional properties model fields that aren't always provided — like an optional middle name or a config flag with a default. They differ from a required property typed `T | undefined`: an optional property can be omitted entirely, whereas the latter must be present (even if set to undefined).",
+    "hinglish": "Optional property apne naam ke baad `?` se mark hoti hai (`email?: string`), matlab property ho bhi sakti hai aur nahi bhi. Agar nahi ho, to uska type effectively `undefined` include karta hai, isliye use karne se pehle missing case handle karna padta hai.\nOptional properties un fields ko model karti hain jo hamesha provide nahi hoti — jaise optional middle name ya default wala config flag. Ye `T | undefined` wali required property se alag hain: optional property poori tarah omit ki ja sakti hai, jabki doosri present honi chahiye (chahe undefined set ho).",
+    "keyPoints": [
+      "Marked with `?`: `prop?: Type` may be present or absent.",
+      "Its type effectively includes `undefined` when absent.",
+      "Must handle the missing case (check, `?.`, or `??`).",
+      "Omittable entirely — different from a required `T | undefined`.",
+      "Great for optional config, partial inputs, and metadata."
+    ],
+    "real_world": "A function options object like `{ retries?: number; timeout?: number }` lets callers pass only what they care about, and the function fills in defaults for the omitted ones.",
+    "followups": [
+      {
+        "q": "Difference between `prop?: T` and `prop: T | undefined`?",
+        "a": "An optional property can be omitted entirely from the object. A required `T | undefined` property must be present (the key must exist), though its value may be undefined."
+      },
+      {
+        "q": "How do you safely use an optional property?",
+        "a": "Handle the absent case — check `if (opts.x !== undefined)`, use optional chaining `opts.x?.method()`, or supply a default with `opts.x ?? fallback`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — optional properties with defaults.\n\ninterface RequestOptions {\n  url: string;\n  method?: string;   // optional\n  timeout?: number;  // optional\n}\n\nexport function buildRequest(opts: RequestOptions): string {\n  const method = opts.method ?? \"GET\";\n  const timeout = opts.timeout ?? 3000;\n  return method + \" \" + opts.url + \" (timeout \" + timeout + \"ms)\";\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { buildRequest } from \"./solution\";\n\nconsole.log(buildRequest({ url: \"/api\" }));                       // GET /api (timeout 3000ms)\nconsole.log(buildRequest({ url: \"/api\", method: \"POST\" }));      // POST /api (timeout 3000ms)\nconsole.log(buildRequest({ url: \"/api\", timeout: 500 }));        // GET /api (timeout 500ms)\n\nconsole.assert(buildRequest({ url: \"/api\" }) === \"GET /api (timeout 3000ms)\", \"defaults applied\");\nconsole.assert(buildRequest({ url: \"/api\", method: \"POST\" }).startsWith(\"POST\"), \"method override\");\nconsole.assert(buildRequest({ url: \"/api\", timeout: 500 }).includes(\"500\"), \"timeout override\");\nconsole.log(\"optional-properties assertions passed.\");",
+      "expectedOutput": "GET /api (timeout 3000ms)\nPOST /api (timeout 3000ms)\nGET /api (timeout 500ms)\noptional-properties assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

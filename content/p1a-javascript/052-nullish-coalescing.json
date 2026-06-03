@@ -1,0 +1,65 @@
+{
+  "id": "p1a-052",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 52,
+  "orderInPhase": 52,
+  "slug": "nullish-coalescing",
+  "title": "Nullish Coalescing (??)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "nullish",
+    "coalescing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A volume setting where 0 is valid: `const volume = settings.volume ??"
+  },
+  "sections": {
+    "simple_en": "The nullish coalescing operator `??` returns its right-hand side only when the left-hand side is null or undefined. It's a safer alternative to `||` for providing default values, because `||` also triggers on other falsy values like 0, '', and false.\n\nSo `0 || 5` is 5 (often a bug), but `0 ?? 5` is 0 (usually what you want). Use `??` when 0, empty string, or false are legitimate values you want to keep, and `||` when you truly want a default for any falsy value.",
+    "hinglish": "Nullish coalescing operator `??` apna right-hand side tabhi return karta hai jab left-hand side null ya undefined ho. Ye default values dene ke liye `||` se safe alternative hai, kyunki `||` baaki falsy values jaise 0, '', false par bhi trigger ho jaata hai.\nTo `0 || 5` 5 deta hai (aksar bug), par `0 ?? 5` 0 deta hai (jo aksar aapko chahiye). `??` tab use karo jab 0, empty string, ya false legitimate values hain jinhe rakhna hai, aur `||` jab kisi bhi falsy value ke liye default chahiye.",
+    "keyPoints": [
+      "`a ?? b` returns `b` only if `a` is null or undefined.",
+      "Unlike `||`, it does NOT trigger on 0, '', or false.",
+      "Use `??` to preserve valid falsy values like 0 or empty string.",
+      "Can't be mixed directly with `&&`/`||` without parentheses (syntax rule).",
+      "Pairs with optional chaining for safe defaults."
+    ],
+    "real_world": "A volume setting where 0 is valid: `const volume = settings.volume ?? 50`. With `||`, a user who set volume to 0 would wrongly get 50 — `??` keeps their intended 0.",
+    "followups": [
+      {
+        "q": "When should you use `??` instead of `||`?",
+        "a": "When 0, '', or false are valid values you want to keep. `??` only defaults on null/undefined, whereas `||` defaults on any falsy value."
+      },
+      {
+        "q": "Why does `a ?? b || c` cause a syntax error?",
+        "a": "JavaScript forbids mixing `??` with `&&`/`||` without explicit parentheses, to avoid ambiguous precedence. Write `(a ?? b) || c` or `a ?? (b || c)`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// ?? vs || on falsy-but-valid values.\n\nfunction withDefault(value, fallback) {\n  return value ?? fallback;\n}\n\nfunction compareOperators(value) {\n  return {\n    orResult: value || \"default\",   // triggers on any falsy\n    nullishResult: value ?? \"default\", // triggers only on null/undefined\n  };\n}\n\nmodule.exports = { withDefault, compareOperators };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { withDefault, compareOperators } = require(\"./solution\");\n\nconsole.log(withDefault(0, 50));        // 0 (kept!)\nconsole.log(withDefault(null, 50));     // 50\nconsole.log(withDefault(undefined, 50));// 50\nconsole.log(compareOperators(0));       // { orResult: 'default', nullishResult: 0 }\nconsole.log(compareOperators(\"\"));      // { orResult: 'default', nullishResult: '' }\n\nconsole.assert(withDefault(0, 50) === 0, \"?? keeps 0\");\nconsole.assert(withDefault(null, 50) === 50, \"?? defaults on null\");\nconsole.assert(compareOperators(0).orResult === \"default\", \"|| replaces 0\");\nconsole.assert(compareOperators(0).nullishResult === 0, \"?? keeps 0\");\nconsole.log(\"nullish coalescing assertions passed.\");",
+      "expectedOutput": "0\n50\n50\n{ orResult: 'default', nullishResult: 0 }\n{ orResult: 'default', nullishResult: '' }\nnullish coalescing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

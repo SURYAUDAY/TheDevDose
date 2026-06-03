@@ -1,0 +1,66 @@
+{
+  "id": "p1b-005",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 5,
+  "orderInPhase": 5,
+  "slug": "strict-mode-typescript",
+  "title": "Strict mode (TypeScript)",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "strict",
+    "mode",
+    "typescript"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "With strictNullChecks on, `user.profile.name` won't compile if `profile` might be undefined — forcing an explicit check or optional chaining, which eliminate…"
+  },
+  "sections": {
+    "simple_en": "Setting `\"strict\": true` in tsconfig enables TypeScript's strict family of checks at once. The most important are `strictNullChecks` (null/undefined must be handled explicitly) and `noImplicitAny` (variables/params can't silently become `any`).\n\nStrict mode forces you to deal with the cases that cause most real bugs — accessing a property of something that might be null, or passing the wrong type. It's stricter to write but dramatically safer; nearly all modern TypeScript projects enable it.",
+    "hinglish": "tsconfig me `\"strict\": true` set karna TypeScript ke strict checks ke poore parivaar ko ek saath enable kar deta hai. Sabse important hain `strictNullChecks` (null/undefined ko explicitly handle karna padta hai) aur `noImplicitAny` (variables/params silently `any` nahi ban sakte).\nStrict mode aapko un cases handle karne par majboor karta hai jo zyadatar real bugs banate hain — null ho sakti cheez ki property access karna, ya galat type pass karna. Likhna thoda strict, par kaafi safe; lagbhag saare modern TypeScript projects ise enable karte hain.",
+    "keyPoints": [
+      "`strict: true` enables many checks together.",
+      "`strictNullChecks`: null/undefined are not assignable unless allowed.",
+      "`noImplicitAny`: implicit `any` becomes an error.",
+      "Forces explicit handling of nullable values (fewer runtime crashes).",
+      "Recommended for virtually all projects."
+    ],
+    "real_world": "With strictNullChecks on, `user.profile.name` won't compile if `profile` might be undefined — forcing an explicit check or optional chaining, which eliminates a classic 'cannot read property of undefined' production crash.",
+    "followups": [
+      {
+        "q": "What does strictNullChecks change?",
+        "a": "It removes `null`/`undefined` from every type by default, so you must explicitly include them in a type (e.g. `string | null`) and handle them before use — preventing null-access bugs."
+      },
+      {
+        "q": "What is `noImplicitAny`?",
+        "a": "A strict flag that makes it an error when TypeScript can't infer a type and would otherwise fall back to `any`, forcing you to annotate types and avoid silently untyped code."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — strictNullChecks forces handling of nullable values.\n\nexport function getLength(text: string | null): number {\n  // Must handle null explicitly under strictNullChecks:\n  if (text === null) return 0;\n  return text.length;\n}\n\n// noImplicitAny would flag a parameter with no inferable type:\nexport function greet(name: string): string { // explicit type avoids implicit any\n  return \"Hi \" + name;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { getLength, greet } from \"./solution\";\n\nconsole.log(getLength(\"hello\")); // 5\nconsole.log(getLength(null));    // 0\nconsole.log(greet(\"Asha\"));      // Hi Asha\n\nconsole.assert(getLength(\"hello\") === 5, \"length of string\");\nconsole.assert(getLength(null) === 0, \"null handled safely\");\nconsole.assert(greet(\"Asha\") === \"Hi Asha\", \"typed greet\");\nconsole.log(\"strict-mode assertions passed.\");",
+      "expectedOutput": "5\n0\nHi Asha\nstrict-mode assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": "p1a-069",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 69,
+  "orderInPhase": 69,
+  "slug": "throw-custom-error-classes",
+  "title": "throw & Custom Error Classes",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "throw",
+    "custom",
+    "error",
+    "classes"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An API layer throwing `ValidationError`, `NotFoundError`, and `AuthError`; the central error handler checks `instanceof` to return the right HTTP status code…"
+  },
+  "sections": {
+    "simple_en": "The `throw` statement raises an exception, interrupting normal flow until a `catch` handles it. You can throw any value, but you should throw `Error` objects (or subclasses) because they carry a message, a name, and a stack trace.\n\nCreating custom error classes by extending `Error` (e.g. `class ValidationError extends Error`) lets you distinguish error types in `catch` with `instanceof`, attach extra data, and produce clearer, more handleable failures in real applications.",
+    "hinglish": "`throw` statement ek exception raise karta hai, normal flow ko rok deta hai jab tak koi `catch` use handle na kare. Aap kuch bhi throw kar sakte ho, par `Error` objects (ya subclasses) throw karne chahiye kyunki unme message, name, aur stack trace hota hai.\n`Error` ko extend karke custom error classes banana (jaise `class ValidationError extends Error`) aapko `catch` me `instanceof` se error types distinguish karne, extra data attach karne, aur real applications me clearer, zyada handleable failures dene deta hai.",
+    "keyPoints": [
+      "`throw expr` raises an exception; prefer throwing `Error` instances.",
+      "Error objects carry `message`, `name`, and `stack`.",
+      "Extend `Error` for custom types; set `this.name` in the constructor.",
+      "Distinguish types in catch with `instanceof`.",
+      "Custom errors can carry extra fields (e.g. `field`, `statusCode`)."
+    ],
+    "real_world": "An API layer throwing `ValidationError`, `NotFoundError`, and `AuthError`; the central error handler checks `instanceof` to return the right HTTP status code (400/404/401) — clean, type-driven error handling.",
+    "followups": [
+      {
+        "q": "Why throw Error objects instead of strings?",
+        "a": "Error objects carry a name, message, and a stack trace for debugging, and they work with `instanceof` checks. Throwing a raw string loses the stack and type information."
+      },
+      {
+        "q": "How do custom error classes help?",
+        "a": "By extending Error you can create distinct types, check them with `instanceof` in catch, and attach extra context (like the offending field or an HTTP status), enabling precise, type-driven handling."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Custom error classes with extra data + instanceof handling.\n\nclass ValidationError extends Error {\n  constructor(message, field) {\n    super(message);\n    this.name = \"ValidationError\";\n    this.field = field;       // extra context\n  }\n}\n\nfunction validateAge(age) {\n  if (typeof age !== \"number\") throw new ValidationError(\"age must be a number\", \"age\");\n  if (age < 0) throw new ValidationError(\"age cannot be negative\", \"age\");\n  return true;\n}\n\nfunction handle(age) {\n  try {\n    validateAge(age);\n    return { ok: true };\n  } catch (err) {\n    if (err instanceof ValidationError) {\n      return { ok: false, field: err.field, message: err.message };\n    }\n    throw err; // re-throw unknown errors\n  }\n}\n\nmodule.exports = { ValidationError, validateAge, handle };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { ValidationError, handle } = require(\"./solution\");\n\nconsole.log(handle(25));   // { ok: true }\nconsole.log(handle(-5));   // { ok:false, field:'age', message:'age cannot be negative' }\nconsole.log(handle(\"x\"));  // { ok:false, field:'age', message:'age must be a number' }\n\nconsole.assert(handle(25).ok === true, \"valid age\");\nconsole.assert(handle(-5).field === \"age\", \"custom error carries field\");\nconsole.assert(handle(\"x\").message === \"age must be a number\", \"type validation\");\nconsole.assert(new ValidationError(\"m\") instanceof Error, \"custom error is an Error\");\nconsole.log(\"throw/custom error assertions passed.\");",
+      "expectedOutput": "{ ok: true }\n{ ok: false, field: 'age', message: 'age cannot be negative' }\n{ ok: false, field: 'age', message: 'age must be a number' }\nthrow/custom error assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1b-037",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 37,
+  "orderInPhase": 37,
+  "slug": "readonly-in-classes",
+  "title": "readonly in Classes",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "readonly",
+    "classes"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Declaring `public readonly id: number` on an entity guarantees the id, set once in the constructor, can never be reassigned anywhere else — the compiler reje…"
+  },
+  "sections": {
+    "simple_en": "A `readonly` class property can be assigned only in its declaration or inside the constructor, and never reassigned afterward. It enforces immutability of specific instance fields at compile time — perfect for ids and values fixed at construction.\n\n`readonly` combines with access modifiers (`private readonly`, `public readonly`) and with parameter properties (`constructor(public readonly id: number)`). Like all TypeScript features it's compile-time only; the value can still technically change at runtime unless you also freeze the object.",
+    "hinglish": "`readonly` class property sirf apni declaration me ya constructor ke andar assign ho sakti hai, aur baad me kabhi reassign nahi. Ye specific instance fields ki immutability compile time par enforce karti hai — ids aur construction par fix values ke liye perfect.\n`readonly` access modifiers (`private readonly`, `public readonly`) aur parameter properties (`constructor(public readonly id: number)`) ke saath combine hota hai. Saare TypeScript features ki tarah ye compile-time only hai; value runtime par technically badal sakti hai jab tak aap object ko freeze na karo.",
+    "keyPoints": [
+      "Assignable only in declaration or constructor; no later reassignment.",
+      "Enforces immutability of instance fields at compile time.",
+      "Combines with access modifiers and parameter properties.",
+      "Common for ids and construction-time constants.",
+      "Compile-time only — use `Object.freeze` for runtime immutability."
+    ],
+    "real_world": "Declaring `public readonly id: number` on an entity guarantees the id, set once in the constructor, can never be reassigned anywhere else — the compiler rejects `entity.id = 2`.",
+    "followups": [
+      {
+        "q": "Where can a readonly class field be assigned?",
+        "a": "Only in its declaration (initializer) or within the constructor. Any assignment elsewhere is a compile error."
+      },
+      {
+        "q": "Can readonly be combined with access modifiers?",
+        "a": "Yes — e.g. `private readonly` or `public readonly`, including as a parameter property like `constructor(public readonly id: number)`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — readonly class fields (with a parameter property).\n\nexport class Product {\n  public readonly id: number;\n  constructor(id: number, public name: string, public readonly sku: string) {\n    this.id = id; // allowed in constructor\n  }\n  rename(newName: string): void {\n    this.name = newName;   // allowed: 'name' is not readonly\n    // this.id = 99;        // compile error: 'id' is readonly\n  }\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { Product } from \"./solution\";\n\nconst p = new Product(1, \"Lamp\", \"SKU-001\");\nconsole.log(p.id, p.name, p.sku); // 1 Lamp SKU-001\np.rename(\"Desk Lamp\");\nconsole.log(p.name);              // Desk Lamp\n\nconsole.assert(p.id === 1, \"readonly id set in constructor\");\nconsole.assert(p.sku === \"SKU-001\", \"readonly param property\");\nconsole.assert(p.name === \"Desk Lamp\", \"mutable field can change\");\nconsole.log(\"readonly-in-classes assertions passed.\");",
+      "expectedOutput": "1 Lamp SKU-001\nDesk Lamp\nreadonly-in-classes assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

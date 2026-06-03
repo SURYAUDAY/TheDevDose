@@ -1,0 +1,67 @@
+{
+  "id": "p1a-066",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 66,
+  "orderInPhase": 66,
+  "slug": "nested-object-mutation-issues",
+  "title": "Nested Object Mutation Issues",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "nested",
+    "object",
+    "mutation",
+    "issues"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "In React, mutating `state.items[0].done = true` directly often fails to re-render because the array reference didn't change."
+  },
+  "sections": {
+    "simple_en": "Nested mutation bugs happen when you change a deeply nested property of an object that is shared (by reference) in more than one place. Because shallow copies share nested objects, a mutation can unexpectedly affect data you thought was separate.\n\nThe fix is immutability discipline: never mutate nested data in place; instead create new objects at every level you change (spread per level, or deep copy). Frameworks like React rely on this to detect changes by reference comparison.",
+    "hinglish": "Nested mutation bugs tab hote hain jab aap kisi object ki deeply nested property change karte ho jo ek se zyada jagah (reference se) shared hai. Kyunki shallow copies nested objects share karti hain, ek mutation unexpectedly us data ko affect kar sakta hai jise aap alag samajh rahe the.\nFix hai immutability discipline: nested data ko kabhi in place mutate mat karo; balki jis level ko change karna hai us har level par naye objects banao (per level spread, ya deep copy). React jaise frameworks change detection ke liye reference comparison par bharosa karte hain, isliye ye zaruri hai.",
+    "keyPoints": [
+      "Bug source: mutating nested data shared via shallow copies/references.",
+      "Mutations leak across all variables pointing to the same nested object.",
+      "Fix: create new objects at every changed level (immutable updates).",
+      "React/Redux detect changes by reference — mutation breaks updates.",
+      "Tools: spread per level, `structuredClone`, immer, or deep copy."
+    ],
+    "real_world": "In React, mutating `state.items[0].done = true` directly often fails to re-render because the array reference didn't change. Creating a new array with a new item object fixes the update.",
+    "followups": [
+      {
+        "q": "Why can mutating nested state break a React re-render?",
+        "a": "React compares references to detect changes. Mutating in place keeps the same reference, so React may conclude nothing changed and skip the re-render."
+      },
+      {
+        "q": "What's the immutable way to update one item in an array?",
+        "a": "Use `map` to return a new array, replacing only the target item with a new object (`{...item, changed}`) and reusing the rest by reference."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Buggy in-place mutation vs immutable update.\n\nfunction mutateInPlace(list) {\n  list[0].done = true;   // mutates shared object; reference unchanged\n  return list;           // same reference -> frameworks may miss the change\n}\n\nfunction immutableToggle(list, index) {\n  return list.map((item, i) =>\n    i === index ? { ...item, done: !item.done } : item\n  ); // new array + new changed item; references signal the change\n}\n\nmodule.exports = { mutateInPlace, immutableToggle };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { mutateInPlace, immutableToggle } = require(\"./solution\");\n\nconst original = [{ id: 1, done: false }, { id: 2, done: false }];\nconst updated = immutableToggle(original, 0);\n\nconsole.log(\"original[0].done:\", original[0].done); // false (unchanged)\nconsole.log(\"updated[0].done:\", updated[0].done);   // true\nconsole.log(\"new array?\", updated !== original);    // true\nconsole.log(\"changed item replaced?\", updated[0] !== original[0]); // true\nconsole.log(\"unchanged item shared?\", updated[1] === original[1]); // true (efficient)\n\nconsole.assert(original[0].done === false, \"immutable: original safe\");\nconsole.assert(updated[0].done === true, \"updated item toggled\");\nconsole.assert(updated !== original, \"new array reference\");\nconsole.assert(updated[1] === original[1], \"untouched items reused\");\nconsole.log(\"nested mutation assertions passed.\");",
+      "expectedOutput": "original[0].done: false\nupdated[0].done: true\nnew array? true\nchanged item replaced? true\nunchanged item shared? true\nnested mutation assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

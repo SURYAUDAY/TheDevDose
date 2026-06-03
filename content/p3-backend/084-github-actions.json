@@ -1,0 +1,69 @@
+{
+  "id": "p3-084",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 84,
+  "orderInPhase": 84,
+  "slug": "github-actions",
+  "title": "GitHub Actions",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "github",
+    "actions"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "On every push to main, a workflow runs a test job (checkout, install, test); only if it passes does the deploy job run, building the app and deploying with a…"
+  },
+  "sections": {
+    "simple_en": "GitHub Actions is GitHub's built-in CI/CD platform. You define workflows as YAML files in .github/workflows/, triggered by events like push, pull_request, schedule, or manual dispatch. A workflow contains jobs (which run on fresh virtual machines) and each job contains steps — either shell commands or reusable 'actions' from the marketplace.\n\nJobs run in parallel by default but can be ordered with needs:, so a deploy job waits for test to pass. Features include secrets (for credentials), caching (for dependencies), matrix builds (testing across multiple versions), and environments with protection rules. Being built into GitHub, it's a popular, low-setup choice for CI/CD.",
+    "hinglish": "GitHub Actions GitHub ka built-in CI/CD platform hai. Aap workflows ko YAML files mein define karte ho .github/workflows/ mein, jo push, pull_request, schedule, ya manual dispatch jaise events se trigger hote hain. Workflow mein jobs hote hain (jo fresh virtual machines par chalte hain) aur har job mein steps hote hain — ya to shell commands ya marketplace ke reusable 'actions'.\n\nJobs by default parallel chalte hain par needs: se order kiye ja sakte hain, taaki deploy job test pass hone ka wait kare. Features: secrets (credentials ke liye), caching (dependencies ke liye), matrix builds (multiple versions par testing), aur protection rules wale environments. GitHub mein built-in hone ki wajah se, ye CI/CD ke liye popular, low-setup choice hai.",
+    "keyPoints": [
+      "Workflows are YAML in .github/workflows/, triggered by repo events.",
+      "Workflow -> jobs (fresh VMs) -> steps (shell commands or reusable actions).",
+      "Jobs run in parallel; order them with needs: (e.g., deploy needs test).",
+      "Secrets, caching, matrix builds, and protected environments built in.",
+      "Built into GitHub — low setup, large marketplace of actions."
+    ],
+    "real_world": "On every push to main, a workflow runs a test job (checkout, install, test); only if it passes does the deploy job run, building the app and deploying with a token stored in repo secrets. The team configured it in one YAML file, with no separate CI server to maintain.",
+    "followups": [
+      {
+        "q": "What triggers a GitHub Actions workflow?",
+        "a": "Repository events declared under on: — such as push, pull_request, schedule (cron), or workflow_dispatch (manual). The matching event starts the workflow run."
+      },
+      {
+        "q": "How do you make one job wait for another?",
+        "a": "Use needs: — e.g., the deploy job declares needs: [test], so it only runs after the test job succeeds. Without needs, jobs run in parallel."
+      },
+      {
+        "q": "How are secrets handled?",
+        "a": "Store credentials as encrypted repository/organization secrets and reference them as ${{ secrets.NAME }} in the workflow. They're masked in logs and not exposed to forked-PR runs by default."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "A real GitHub Actions workflow (configuration, not Node code). The Node-runnable demo below simulates event-triggered jobs with dependencies so the ordering is verifiable here.",
+      "source": "// GitHub Actions — workflows of jobs and steps, triggered by repo events.\n// File: .github/workflows/deploy.yml\nconst workflow = `\nname: Build and Deploy\non:\n  push:\n    branches: [main]          # trigger on pushes to main\n  workflow_dispatch: {}       # allow manual runs\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with: { node-version: 20, cache: npm }\n      - run: npm ci\n      - run: npm test\n\n  deploy:\n    needs: [test]             # wait for 'test' to pass\n    runs-on: ubuntu-latest\n    environment: production\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm ci && npm run build\n      - name: Deploy\n        env:\n          API_TOKEN: \\${{ secrets.DEPLOY_TOKEN }}   # secrets from repo settings\n        run: ./deploy.sh\n`;\n// Reusable \"actions\" from the marketplace, secrets, matrix builds, caching,\n// and environments make Actions a full CI/CD platform inside GitHub.\nmodule.exports = workflow;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// GitHub Actions — a workflow triggered by events, with jobs of sequential steps\nfunction runWorkflow(workflow, event){\n  if (!workflow.on.includes(event)) return { triggered: false };\n  const order = []; const done = new Set();\n  function runJob(name){\n    const job = workflow.jobs[name];\n    (job.needs || []).forEach(dep => { if (!done.has(dep)) runJob(dep); });   // run dependencies first\n    job.steps.forEach(s => order.push(`${name}:${s}`));\n    done.add(name);\n  }\n  Object.keys(workflow.jobs).forEach(runJob);\n  return { triggered: true, order };\n}\nconst workflow = {\n  on: [\"push\", \"pull_request\"],\n  jobs: {\n    test: { steps: [\"checkout\", \"setup-node\", \"npm ci\", \"npm test\"] },\n    deploy: { needs: [\"test\"], steps: [\"checkout\", \"build\", \"deploy\"] },  // waits for test\n  },\n};\nconst result = runWorkflow(workflow, \"push\");\nconsole.log(\"Triggered on push:\", result.triggered);\nresult.order.forEach(s => console.log(\" \", s));\nconsole.log(\"Ignored event:\", JSON.stringify(runWorkflow(workflow, \"release\")));\nconsole.assert(result.order.indexOf(\"deploy:deploy\") > result.order.indexOf(\"test:npm test\"), \"deploy runs after test\");\nconsole.log(\"Workflows live in .github/workflows/*.yml: on: <events>, jobs -> steps, needs: for ordering.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Triggered on push: true\n  test:checkout\n  test:setup-node\n  test:npm ci\n  test:npm test\n  deploy:checkout\n  deploy:build\n  deploy:deploy\nIgnored event: {\"triggered\":false}\nWorkflows live in .github/workflows/*.yml: on: <events>, jobs -> steps, needs: for ordering.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

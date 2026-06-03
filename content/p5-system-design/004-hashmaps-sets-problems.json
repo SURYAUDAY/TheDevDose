@@ -1,0 +1,70 @@
+{
+  "id": "p5-004",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 4,
+  "orderInPhase": 4,
+  "slug": "hashmaps-sets-problems",
+  "title": "Hashmaps & sets problems",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "hashmaps",
+    "sets",
+    "problems"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Detecting duplicate transactions in a payment stream, counting word frequencies for a search index, or finding the first non-repeating character in a usernam…"
+  },
+  "sections": {
+    "simple_en": "Hashmaps (Map/object) and sets give O(1) average lookup, insert, and membership checks, which makes them the go-to tool for counting, deduping, and 'have I seen this before?' problems. The classic example is two-sum: instead of checking every pair (O(n²)), you store seen values in a map and look up the complement in O(1), solving it in one O(n) pass.\n\nSets do the same for uniqueness and membership. Whenever a brute force uses nested loops to find matches or count occurrences, a hashmap usually collapses it to a single pass by trading a bit of memory for fast lookups.",
+    "hinglish": "Hashmaps (Map/object) aur sets O(1) average lookup, insert, aur membership checks dete hain, jo unhe counting, deduping, aur 'kya maine ise pehle dekha hai?' problems ke liye go-to tool banata hai. Classic example two-sum hai: har pair check karne (O(n²)) ke bajaye, aap seen values ko ek map mein store karte ho aur complement ko O(1) mein look up karte ho, ise ek O(n) pass mein solve karke.\n\nSets uniqueness aur membership ke liye wahi karte hain. Jab bhi ek brute force matches dhoondhne ya occurrences count karne ke liye nested loops use karta hai, ek hashmap aksar use ek single pass mein collapse kar deta hai thodi memory ko fast lookups ke liye trade karke.",
+    "keyPoints": [
+      "Map/Set give O(1) average lookup, insert, and membership.",
+      "Two-sum: store seen values, look up the complement — one O(n) pass.",
+      "Sets handle uniqueness and 'seen before' checks cleanly.",
+      "Trade extra memory for speed, replacing nested loops with one pass.",
+      "The default tool for counting and frequency problems."
+    ],
+    "real_world": "Detecting duplicate transactions in a payment stream, counting word frequencies for a search index, or finding the first non-repeating character in a username check all use a hashmap to count or remember in a single pass — the same trick as two-sum.",
+    "followups": [
+      {
+        "q": "Why does two-sum use a hashmap?",
+        "a": "For each number, the needed complement (target − num) is checked in the map in O(1). Storing each seen number as you go means you find a matching pair in a single O(n) pass instead of O(n²) nested loops."
+      },
+      {
+        "q": "Map vs Set — when to use each?",
+        "a": "Use a Map when you need to associate a value with a key (counts, indices, last-seen positions). Use a Set when you only care about presence/uniqueness (have I seen this? are all items distinct?)."
+      },
+      {
+        "q": "What's the downside of hashmaps?",
+        "a": "Extra memory proportional to the data, and worst-case O(n) operations on pathological hash collisions (rare in practice). They also don't maintain sorted order — use a tree-based structure if you need ordering."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real, runnable JavaScript: two-sum with a hashmap and a frequency count. The Node demo below runs both and verifies the answers.",
+      "source": "// Hashmaps & sets — O(1) average lookup powers counting, dedupe, and \"have I seen this\".\n\n// Two-sum: return indices of two numbers adding to target, in O(n).\nfunction twoSum(nums, target) {\n  const indexByValue = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (indexByValue.has(complement)) return [indexByValue.get(complement), i];\n    indexByValue.set(nums[i], i);\n  }\n  return null;\n}\n\n// Group anagrams: bucket words by their sorted-letter signature.\nfunction groupAnagrams(words) {\n  const groups = new Map();\n  for (const w of words) {\n    const key = [...w].sort().join(\"\");\n    if (!groups.has(key)) groups.set(key, []);\n    groups.get(key).push(w);\n  }\n  return [...groups.values()];\n}\n\n// First unique character: count frequencies, then find the first with count 1.\nfunction firstUniqChar(s) {\n  const freq = new Map();\n  for (const c of s) freq.set(c, (freq.get(c) || 0) + 1);\n  for (let i = 0; i < s.length; i++) if (freq.get(s[i]) === 1) return i;\n  return -1;\n}\n\n// Reach for a hashmap when you need fast lookups/counts; a set when you only need membership.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Hashmaps & sets — O(1) average lookup makes counting and existence checks fast\n// Classic: two-sum using a hashmap (find indices summing to target) in O(n).\nfunction twoSum(nums, target) {\n  const seen = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n    if (seen.has(need)) return [seen.get(need), i];\n    seen.set(nums[i], i);\n  }\n  return null;\n}\n// Frequency count with a map.\nfunction topFrequent(arr) {\n  const freq = new Map();\n  for (const x of arr) freq.set(x, (freq.get(x) || 0) + 1);\n  return [...freq.entries()].sort((a, b) => b[1] - a[1])[0];\n}\nconsole.log(\"twoSum([2,7,11,15], 9) ->\", twoSum([2, 7, 11, 15], 9));\nconsole.log(\"topFrequent([1,1,2,3,1]) ->\", topFrequent([1, 1, 2, 3, 1]));\nconsole.assert(JSON.stringify(twoSum([2, 7, 11, 15], 9)) === \"[0,1]\", \"2+7=9\");\nconsole.assert(topFrequent([1, 1, 2, 3, 1])[0] === 1, \"1 appears most\");\nconsole.log(\"Hashmaps trade space for O(1) average lookups, turning nested loops into single passes.\");\nconsole.log(\"Sets do the same for membership/uniqueness checks. The go-to for counting problems.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "twoSum([2,7,11,15], 9) -> [ 0, 1 ]\ntopFrequent([1,1,2,3,1]) -> [ 1, 3 ]\nHashmaps trade space for O(1) average lookups, turning nested loops into single passes.\nSets do the same for membership/uniqueness checks. The go-to for counting problems.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

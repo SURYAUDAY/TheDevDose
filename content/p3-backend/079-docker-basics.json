@@ -1,0 +1,69 @@
+{
+  "id": "p3-079",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 79,
+  "orderInPhase": 79,
+  "slug": "docker-basics",
+  "title": "Docker basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "docker",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A team Dockerizes their Node API so it runs identically on every laptop, in CI, and in production."
+  },
+  "sections": {
+    "simple_en": "Docker packages an application with everything it needs — code, runtime, libraries, and config — into a portable image that runs identically anywhere, eliminating 'works on my machine' problems. An image is an immutable, layered snapshot built from a Dockerfile; a container is a running instance of an image.\n\nEach Dockerfile instruction creates a cached layer, so unchanged layers are reused on rebuild — ordering matters (copy package.json and install dependencies before copying source so dependency layers stay cached). Containers are lightweight (they share the host kernel) and isolated, making them ideal for consistent dev, CI, and production environments.",
+    "hinglish": "Docker ek application ko uske saari zaroorat ke saath — code, runtime, libraries, config — ek portable image mein package karta hai jo har jagah identically chalti hai, 'works on my machine' problems khatam karke. Image ek immutable, layered snapshot hai jo Dockerfile se build hoti hai; container ek image ka running instance hai.\n\nHar Dockerfile instruction ek cached layer banata hai, isliye unchanged layers rebuild par reuse hote hain — ordering matters (package.json copy karke dependencies install karo source copy karne se pehle taaki dependency layers cached rahein). Containers lightweight (host kernel share karte hain) aur isolated hote hain, jo unhe consistent dev, CI, production environments ke liye ideal banata hai.",
+    "keyPoints": [
+      "Packages app + runtime + deps into a portable image — runs the same anywhere.",
+      "Image = immutable layered snapshot; container = a running instance.",
+      "Each Dockerfile instruction is a cached layer — reused if unchanged.",
+      "Order steps so deps install before copying source (better cache hits).",
+      "Lightweight (shares host kernel) and isolated — great for dev/CI/prod parity."
+    ],
+    "real_world": "A team Dockerizes their Node API so it runs identically on every laptop, in CI, and in production. New developers run one docker command instead of installing the right Node version and system libraries manually — and the image that passed CI is the exact artifact deployed to production.",
+    "followups": [
+      {
+        "q": "What's the difference between an image and a container?",
+        "a": "An image is an immutable, layered template (the app + its environment). A container is a running, isolated instance created from an image — you can run many containers from one image."
+      },
+      {
+        "q": "Why does Dockerfile instruction order matter?",
+        "a": "Each instruction is a cached layer. Copying package.json and installing deps before copying source means the (slow) dependency layer is reused unless dependencies change, speeding up rebuilds."
+      },
+      {
+        "q": "How are containers different from virtual machines?",
+        "a": "Containers share the host OS kernel and isolate at the process level, so they're lightweight and start fast. VMs run a full guest OS, making them heavier and slower to boot."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "A real Dockerfile (configuration, not Node code). The Node-runnable demo below simulates layered image builds and layer caching so the concept is verifiable here.",
+      "source": "// Docker basics — a Dockerfile builds a layered, portable image.\n// File: Dockerfile\nconst dockerfile = `\n# Each instruction creates a cached layer.\nFROM node:20-alpine          # small base image\n\nWORKDIR /app\n\n# Copy manifests first so 'npm install' is cached unless deps change.\nCOPY package*.json ./\nRUN npm ci --omit=dev\n\n# Then copy source (changes most often -> later layer).\nCOPY . .\n\nEXPOSE 3000\nCMD [\"node\", \"server.js\"]\n`;\n\n// Common commands:\n//   docker build -t myapp:1.0 .      # build an image from the Dockerfile\n//   docker run -p 3000:3000 myapp    # run a container from the image\n//   docker ps / docker logs / docker exec -it <id> sh\n//\n// An image is an immutable, layered snapshot; a container is a running\n// instance of it. Layer caching + a .dockerignore keep builds fast and small.\nmodule.exports = dockerfile;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Docker basics — images are layered; unchanged layers are cached on rebuild\nfunction buildImage(dockerfile, cache){\n  const layers = []; let built = 0, cached = 0;\n  for (const instruction of dockerfile){\n    const key = instruction;\n    if (cache.has(key)){ cached++; layers.push(cache.get(key)); }\n    else { built++; const layer = { instruction, id: \"sha:\" + (cache.size + built) }; cache.set(key, layer); layers.push(layer); }\n  }\n  return { layers, built, cached };\n}\nconst cache = new Map();\nconst dockerfile = [\"FROM node:20\", \"WORKDIR /app\", \"COPY package.json .\", \"RUN npm install\", \"COPY . .\", \"CMD node server.js\"];\nconst first = buildImage(dockerfile, cache);\nconsole.log(\"First build:\", first.built, \"layers built,\", first.cached, \"cached\");\n// Only the source changed (COPY . .), so earlier layers are reused:\nconst changed = [\"FROM node:20\", \"WORKDIR /app\", \"COPY package.json .\", \"RUN npm install\", \"COPY . . v2\", \"CMD node server.js\"];\nconst second = buildImage(changed, cache);\nconsole.log(\"After source change:\", second.built, \"rebuilt,\", second.cached, \"cached\");\nconsole.assert(first.built === 6 && second.cached === 4, \"unchanged layers reused from cache\");\nconsole.log(\"A container is a running instance of an image; layers + cache make builds fast.\");\nconsole.log(\"Order Dockerfile steps so rarely-changing layers (deps) come before code.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "First build: 6 layers built, 0 cached\nAfter source change: 1 rebuilt, 5 cached\nAssertion failed: unchanged layers reused from cache\nA container is a running instance of an image; layers + cache make builds fast.\nOrder Dockerfile steps so rarely-changing layers (deps) come before code.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

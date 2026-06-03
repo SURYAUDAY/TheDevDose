@@ -1,0 +1,65 @@
+{
+  "id": "p1a-082",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 82,
+  "orderInPhase": 82,
+  "slug": "microtask-queue",
+  "title": "Microtask Queue",
+  "difficulty": "advanced",
+  "tags": [
+    "p1a",
+    "microtask",
+    "queue"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Batching DOM reads/writes or state updates to apply right after current code but before the browser paints uses the microtask timing — frameworks rely on thi…"
+  },
+  "sections": {
+    "simple_en": "The microtask queue holds callbacks that should run as soon as possible after the current synchronous code finishes, but before any macrotask or rendering. Promise reactions (`.then`/`.catch`/`.finally`), `await` continuations, `queueMicrotask`, and MutationObserver callbacks are microtasks.\n\nCritically, the engine drains the ENTIRE microtask queue (including microtasks scheduled by other microtasks) before moving on. This gives promises their high-priority, predictable timing — but an endlessly self-scheduling microtask can starve macrotasks and freeze the app.",
+    "hinglish": "Microtask queue un callbacks ko rakhti hai jo current synchronous code khatam hote hi jitni jaldi ho sake chalein, par kisi macrotask ya rendering se pehle. Promise reactions (`.then`/`.catch`/`.finally`), `await` continuations, `queueMicrotask`, aur MutationObserver callbacks microtasks hain.\nImportant: engine POORI microtask queue drain karta hai (un microtasks sahit jo doosre microtasks ne schedule kiye) aage badhne se pehle. Isse promises ko high-priority, predictable timing milti hai — par endlessly khud ko schedule karne wala microtask macrotasks ko starve karke app freeze kar sakta hai.",
+    "keyPoints": [
+      "Holds promise reactions, await continuations, queueMicrotask, MutationObserver.",
+      "Runs after current sync code, before any macrotask or rendering.",
+      "The WHOLE queue is drained each cycle, including newly added microtasks.",
+      "Gives promises their high-priority, deterministic ordering.",
+      "Infinite microtask loops can starve macrotasks (UI freeze)."
+    ],
+    "real_world": "Batching DOM reads/writes or state updates to apply right after current code but before the browser paints uses the microtask timing — frameworks rely on this to coalesce updates efficiently.",
+    "followups": [
+      {
+        "q": "What kinds of callbacks are microtasks?",
+        "a": "Promise reactions (`.then`/`.catch`/`.finally`), `await` continuations, `queueMicrotask` callbacks, and MutationObserver callbacks."
+      },
+      {
+        "q": "Can microtasks starve macrotasks?",
+        "a": "Yes. Because the entire microtask queue (including microtasks added during draining) runs before the next macrotask, an endlessly self-scheduling microtask can block timers, I/O, and rendering."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Microtasks drain fully before macrotasks; nested microtasks still run first.\n\nfunction drainOrder() {\n  return new Promise((resolve) => {\n    const order = [];\n    setTimeout(() => order.push(\"macro\"), 0);\n    Promise.resolve().then(() => {\n      order.push(\"micro-1\");\n      Promise.resolve().then(() => order.push(\"micro-2-nested\")); // added during drain\n    });\n    setTimeout(() => resolve(order), 5);\n  });\n}\n\nmodule.exports = { drainOrder };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { drainOrder } = require(\"./solution\");\n\ndrainOrder().then((order) => {\n  console.log(order); // ['micro-1','micro-2-nested','macro']\n  console.assert(order[0] === \"micro-1\", \"first microtask runs\");\n  console.assert(order[1] === \"micro-2-nested\", \"nested microtask drains before macrotask\");\n  console.assert(order[2] === \"macro\", \"macrotask runs after all microtasks\");\n  console.log(\"microtask queue assertions passed.\");\n});",
+      "expectedOutput": "[ 'micro-1', 'micro-2-nested', 'macro' ]\nmicrotask queue assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

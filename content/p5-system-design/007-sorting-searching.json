@@ -1,0 +1,69 @@
+{
+  "id": "p5-007",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 7,
+  "orderInPhase": 7,
+  "slug": "sorting-searching",
+  "title": "Sorting & searching",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "sorting",
+    "searching"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A dictionary or contacts app finds a name in milliseconds with binary search because the entries are sorted."
+  },
+  "sections": {
+    "simple_en": "Sorting arranges data so it can be processed or searched efficiently. Good comparison sorts (merge sort, quicksort, heapsort) run in O(n log n) on average; built-in sorts use optimized versions of these. Knowing their trade-offs (stability, worst case, in-place vs extra memory) is commonly tested.\n\nSearching is dramatically faster on sorted data: binary search repeatedly halves the search range to find an element in O(log n), versus O(n) for a linear scan. The catch is that binary search requires the data to be sorted first. The interview pattern 'sort, then binary search / two pointers' appears constantly.",
+    "hinglish": "Sorting data ko arrange karti hai taaki use efficiently process ya search kiya ja sake. Achhe comparison sorts (merge sort, quicksort, heapsort) average mein O(n log n) chalte hain; built-in sorts inke optimized versions use karte hain. Inke trade-offs jaanna (stability, worst case, in-place vs extra memory) commonly test hota hai.\n\nSearching sorted data par dramatically faster hai: binary search baar-baar search range ko half karke ek element O(log n) mein dhoondhti hai, versus linear scan ke liye O(n). Catch ye hai ki binary search ke liye data ko pehle sorted hona chahiye. Interview pattern 'sort karo, phir binary search / two pointers' lagataar aata hai.",
+    "keyPoints": [
+      "Good comparison sorts (merge/quick/heap) average O(n log n).",
+      "Know trade-offs: stability, worst case, in-place vs extra memory.",
+      "Binary search finds an element in O(log n) by halving the range.",
+      "Binary search REQUIRES sorted input.",
+      "Common pattern: sort first, then binary search / two pointers."
+    ],
+    "real_world": "A dictionary or contacts app finds a name in milliseconds with binary search because the entries are sorted. If they were unordered, you'd have to scan everything. The cost of keeping data sorted pays off every time you search it.",
+    "followups": [
+      {
+        "q": "Why is binary search O(log n)?",
+        "a": "Each comparison eliminates half the remaining candidates, so the search space shrinks by half each step. Halving a million items reaches one in about 20 steps — log₂(n)."
+      },
+      {
+        "q": "What's quicksort's worst case?",
+        "a": "O(n²) when pivots are consistently poor (e.g., already-sorted input with a naive pivot). Good pivot strategies (random or median-of-three) make this rare; average is O(n log n). Merge sort guarantees O(n log n) but uses extra memory."
+      },
+      {
+        "q": "What does a stable sort mean?",
+        "a": "A stable sort preserves the relative order of equal elements. It matters when sorting by multiple keys in sequence (e.g., sort by name, then stably by date) so earlier orderings aren't scrambled."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real, runnable JavaScript: quicksort and binary search. The Node demo below sorts an array and searches it, verifying results including a not-found case.",
+      "source": "// Sorting & searching — know the algorithms' costs; binary search needs sorted input.\n\n// Merge sort: stable, guaranteed O(n log n), O(n) extra space.\nfunction mergeSort(arr) {\n  if (arr.length <= 1) return arr;\n  const mid = arr.length >> 1;\n  const left = mergeSort(arr.slice(0, mid));\n  const right = mergeSort(arr.slice(mid));\n  const merged = [];\n  let i = 0, j = 0;\n  while (i < left.length && j < right.length)\n    merged.push(left[i] <= right[j] ? left[i++] : right[j++]);\n  return [...merged, ...left.slice(i), ...right.slice(j)];\n}\n\n// Binary search: O(log n), but ONLY on sorted data.\nfunction binarySearch(sorted, target) {\n  let lo = 0, hi = sorted.length - 1;\n  while (lo <= hi) {\n    const mid = (lo + hi) >> 1;\n    if (sorted[mid] === target) return mid;\n    if (sorted[mid] < target) lo = mid + 1;\n    else hi = mid - 1;\n  }\n  return -1;\n}\n\n// Built-in Array.prototype.sort is typically O(n log n); pass a comparator for numbers/objects.\n// Choose merge/heap sort for guaranteed O(n log n); quicksort is fast in practice but O(n^2) worst case.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Sorting & searching — know the trade-offs; binary search needs sorted data (O(log n))\nfunction quickSort(arr) {\n  if (arr.length <= 1) return arr;\n  const [pivot, ...rest] = arr;\n  const left = rest.filter((x) => x < pivot);\n  const right = rest.filter((x) => x >= pivot);\n  return [...quickSort(left), pivot, ...quickSort(right)];\n}\nfunction binarySearch(sorted, target) {\n  let lo = 0, hi = sorted.length - 1;\n  while (lo <= hi) {\n    const mid = (lo + hi) >> 1;\n    if (sorted[mid] === target) return mid;\n    if (sorted[mid] < target) lo = mid + 1; else hi = mid - 1;\n  }\n  return -1;\n}\nconst data = [5, 2, 9, 1, 7];\nconst sorted = quickSort(data);\nconsole.log(\"quickSort([5,2,9,1,7]) ->\", sorted);\nconsole.log(\"binarySearch for 7 ->\", binarySearch(sorted, 7));\nconsole.log(\"binarySearch for 6 (absent) ->\", binarySearch(sorted, 6));\nconsole.assert(JSON.stringify(sorted) === \"[1,2,5,7,9]\", \"sorted\");\nconsole.assert(binarySearch(sorted, 7) === 3, \"7 at index 3\");\nconsole.assert(binarySearch(sorted, 6) === -1, \"not found\");\nconsole.log(\"Comparison sorts average O(n log n). Binary search is O(log n) but requires sorted input.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "quickSort([5,2,9,1,7]) -> [ 1, 2, 5, 7, 9 ]\nbinarySearch for 7 -> 3\nbinarySearch for 6 (absent) -> -1\nComparison sorts average O(n log n). Binary search is O(log n) but requires sorted input.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

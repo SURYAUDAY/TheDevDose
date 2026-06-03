@@ -1,0 +1,68 @@
+{
+  "id": "p1a-101",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 101,
+  "orderInPhase": 101,
+  "slug": "implement-custom-map-filter-reduce",
+  "title": "Implement custom map / filter / reduce",
+  "difficulty": "advanced",
+  "tags": [
+    "p1a",
+    "implement",
+    "custom",
+    "map",
+    "filter",
+    "reduce"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "A whiteboard/interview favourite: being asked to implement `Array.prototype.map` shows you grasp callbacks and iteration, the same understanding you use dail…"
+  },
+  "sections": {
+    "simple_en": "Re-implementing the core array methods from scratch is a classic interview exercise that proves you understand higher-order functions, callbacks, and how these iterators actually work. The goal is to mimic the native behaviour, including the `(element, index, array)` callback signature.\n\n`map` builds a new array of transformed values; `filter` keeps elements where the predicate is truthy; `reduce` folds the array into a single value using an accumulator and an optional initial value. None of them should mutate the original array.",
+    "hinglish": "Core array methods ko scratch se dobara banana ek classic interview exercise hai jo prove karta hai ki aap higher-order functions, callbacks, aur ye iterators actually kaise kaam karte hain ye samajhte ho. Goal native behaviour ki nakal karna hai, including `(element, index, array)` callback signature.\n`map` transformed values ka naya array banata hai; `filter` woh elements rakhta hai jahan predicate truthy ho; `reduce` array ko ek accumulator aur optional initial value se ek single value me fold karta hai. Inme se koi bhi original array ko mutate nahi karna chahiye.",
+    "keyPoints": [
+      "Implement on `Array.prototype` with the `(element, index, array)` signature.",
+      "`map`: push `callback(...)` of each element into a new array.",
+      "`filter`: push only elements where the predicate is truthy.",
+      "`reduce`: thread an accumulator; handle the missing-initial-value case.",
+      "Never mutate the original array."
+    ],
+    "real_world": "A whiteboard/interview favourite: being asked to implement `Array.prototype.map` shows you grasp callbacks and iteration, the same understanding you use daily when chaining real map/filter/reduce.",
+    "followups": [
+      {
+        "q": "How does reduce behave without an initial value?",
+        "a": "It uses the first element as the initial accumulator and starts iterating from the second element. On an empty array with no initial value, native reduce throws a TypeError."
+      },
+      {
+        "q": "What callback arguments should your custom map pass?",
+        "a": "The element, its index, and the whole array — `(element, index, array)` — to match the native signature so callbacks relying on index/array work correctly."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Custom implementations matching native behaviour.\n\nfunction myMap(arr, callback) {\n  const result = [];\n  for (let i = 0; i < arr.length; i++) result.push(callback(arr[i], i, arr));\n  return result;\n}\n\nfunction myFilter(arr, predicate) {\n  const result = [];\n  for (let i = 0; i < arr.length; i++) {\n    if (predicate(arr[i], i, arr)) result.push(arr[i]);\n  }\n  return result;\n}\n\nfunction myReduce(arr, reducer, initial) {\n  let acc, start;\n  if (arguments.length >= 3) { acc = initial; start = 0; }\n  else { acc = arr[0]; start = 1; } // no initial -> use first element\n  for (let i = start; i < arr.length; i++) acc = reducer(acc, arr[i], i, arr);\n  return acc;\n}\n\nmodule.exports = { myMap, myFilter, myReduce };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { myMap, myFilter, myReduce } = require(\"./solution\");\n\nconst nums = [1, 2, 3, 4];\nconsole.log(myMap(nums, (n) => n * 2));          // [2,4,6,8]\nconsole.log(myFilter(nums, (n) => n % 2 === 0)); // [2,4]\nconsole.log(myReduce(nums, (a, b) => a + b, 0)); // 10\nconsole.log(myReduce(nums, (a, b) => a + b));    // 10 (no initial)\nconsole.log(\"original unchanged:\", nums);        // [1,2,3,4]\n\nconsole.assert(JSON.stringify(myMap(nums, (n) => n * 2)) === \"[2,4,6,8]\", \"map\");\nconsole.assert(JSON.stringify(myFilter(nums, (n) => n > 2)) === \"[3,4]\", \"filter\");\nconsole.assert(myReduce(nums, (a, b) => a + b, 0) === 10, \"reduce with initial\");\nconsole.assert(myReduce(nums, (a, b) => a + b) === 10, \"reduce without initial\");\nconsole.assert(JSON.stringify(nums) === \"[1,2,3,4]\", \"no mutation\");\nconsole.log(\"custom map/filter/reduce assertions passed.\");",
+      "expectedOutput": "[ 2, 4, 6, 8 ]\n[ 2, 4 ]\n10\n10\noriginal unchanged: [ 1, 2, 3, 4 ]\ncustom map/filter/reduce assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

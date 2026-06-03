@@ -1,0 +1,69 @@
+{
+  "id": "p3-068",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 68,
+  "orderInPhase": 68,
+  "slug": "file-uploads",
+  "title": "File uploads",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "file",
+    "uploads"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A profile-photo endpoint accepts PNG/JPEG up to 2MB."
+  },
+  "sections": {
+    "simple_en": "Handling file uploads means parsing multipart/form-data requests, validating the files, and storing them safely. In Express, middleware like multer parses the upload and exposes the file(s). You should enforce a maximum size, restrict allowed MIME types, and generate a safe, unique filename rather than trusting the user-provided name.\n\nSecurity matters: never use the original filename directly (path traversal risk), validate type and size to prevent abuse, and consider scanning untrusted files. For scale and durability, stream uploads to object storage (like S3) instead of local disk, and store only a reference (URL/key) in your database.",
+    "hinglish": "File uploads handle karne ka matlab hai multipart/form-data requests parse karna, files validate karna, aur unhe safely store karna. Express mein multer jaisa middleware upload parse karke file(s) expose karta hai. Aapko maximum size enforce karni chahiye, allowed MIME types restrict karne chahiye, aur user-provided naam par bharosa karne ke bajaye ek safe, unique filename generate karna chahiye.\n\nSecurity important hai: original filename seedha use mat karo (path traversal risk), abuse rokne ke liye type aur size validate karo, aur untrusted files scan karne par vichaar karo. Scale aur durability ke liye uploads ko object storage (jaise S3) par stream karo, local disk nahi, aur database mein sirf ek reference (URL/key) store karo.",
+    "keyPoints": [
+      "Parse multipart/form-data (e.g., with multer) to access uploaded files.",
+      "Enforce a max file size and an allowed MIME-type list.",
+      "Generate a safe, unique filename — never trust the original name (path traversal).",
+      "Validate (and ideally scan) untrusted files before storing.",
+      "For scale, stream to object storage (S3); store only a reference in the DB."
+    ],
+    "real_world": "A profile-photo endpoint accepts PNG/JPEG up to 2MB. multer parses the upload, the app rejects oversized or wrong-type files with 400, renames the file to a random unique name (avoiding path-traversal tricks), and uploads it to S3 — saving just the S3 key on the user record.",
+    "followups": [
+      {
+        "q": "Why not store files using the original filename?",
+        "a": "User-controlled names can contain path-traversal sequences (../) or collide with existing files. Generate a safe, unique name and store the original separately if you need it for display."
+      },
+      {
+        "q": "Why validate MIME type and size?",
+        "a": "To prevent abuse — huge files exhausting disk, or executable/malicious files being uploaded. Enforce an allowlist of types and a size cap (and ideally verify content, not just the header)."
+      },
+      {
+        "q": "Why upload to object storage instead of the server's disk?",
+        "a": "Local disk doesn't scale across instances, can fill up, and isn't durable. Object storage (S3) is scalable, durable, and serves files via CDN; the app stores only the reference."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + multer code. The Node-runnable demo below verifies size/type validation and filename sanitization so the safeguards are verifiable here.",
+      "source": "// File uploads — handle multipart uploads safely with multer.\nconst express = require(\"express\");\nconst multer = require(\"multer\");\nconst path = require(\"path\");\nconst crypto = require(\"crypto\");\nconst app = express();\n\nconst storage = multer.diskStorage({\n  destination: \"uploads/\",\n  filename: (req, file, cb) => {\n    // Generate a safe, unique filename; never trust the original name.\n    const ext = path.extname(file.originalname).toLowerCase();\n    cb(null, `${Date.now()}-${crypto.randomBytes(6).toString(\"hex\")}${ext}`);\n  },\n});\n\nconst upload = multer({\n  storage,\n  limits: { fileSize: 2 * 1024 * 1024 },     // 2 MB cap\n  fileFilter: (req, file, cb) => {\n    const allowed = [\"image/png\", \"image/jpeg\", \"application/pdf\"];\n    cb(null, allowed.includes(file.mimetype)); // reject other types\n  },\n});\n\napp.post(\"/upload\", upload.single(\"file\"), (req, res) => {\n  res.status(201).json({ stored: req.file.filename });\n});\napp.listen(3000);\n// For scale, stream uploads to object storage (S3) instead of local disk.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// File uploads — validate a multipart file (size + MIME) then store it\nconst MAX_BYTES = 2 * 1024 * 1024;            // 2 MB\nconst ALLOWED = [\"image/png\", \"image/jpeg\", \"application/pdf\"];\nfunction handleUpload(file){\n  const errors = [];\n  if (file.size > MAX_BYTES) errors.push(`too large (${file.size} > ${MAX_BYTES})`);\n  if (!ALLOWED.includes(file.mimetype)) errors.push(`type not allowed: ${file.mimetype}`);\n  if (errors.length) return { ok: false, status: 400, errors };\n  const safeName = `${Date.now()}-${file.originalname.replace(/[^\\w.\\-]/g, \"_\")}`; // sanitize name\n  return { ok: true, status: 201, storedAs: safeName, location: `/uploads/${safeName}` };\n}\nconsole.log(\"Valid PNG:\", JSON.stringify(handleUpload({ originalname: \"my pic.png\", mimetype: \"image/png\", size: 500000 })));\nconsole.log(\"Too big:  \", JSON.stringify(handleUpload({ originalname: \"huge.png\", mimetype: \"image/png\", size: 5e6 })));\nconsole.log(\"Bad type: \", JSON.stringify(handleUpload({ originalname: \"app.exe\", mimetype: \"application/x-msdownload\", size: 100 })));\nconst ok = handleUpload({ originalname: \"../etc/passwd.pdf\", mimetype: \"application/pdf\", size: 100 });\nconsole.log(\"Sanitized name:\", ok.storedAs);\nconsole.assert(!ok.storedAs.includes(\"/\"), \"path traversal characters stripped\");\nconsole.log(\"Use multer for multipart parsing; validate size/type; store to disk or S3; sanitize names.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Valid PNG: {\"ok\":true,\"status\":201,\"storedAs\":\"1780327647810-my_pic.png\",\"location\":\"/uploads/1780327647810-my_pic.png\"}\nToo big:   {\"ok\":false,\"status\":400,\"errors\":[\"too large (5000000 > 2097152)\"]}\nBad type:  {\"ok\":false,\"status\":400,\"errors\":[\"type not allowed: application/x-msdownload\"]}\nSanitized name: 1780327647813-.._etc_passwd.pdf\nUse multer for multipart parsing; validate size/type; store to disk or S3; sanitize names.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

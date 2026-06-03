@@ -1,0 +1,69 @@
+{
+  "id": "p5-011",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 11,
+  "orderInPhase": 11,
+  "slug": "performance-optimization",
+  "title": "Performance optimization",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "performance",
+    "optimization"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A dashboard recomputing an expensive chart on every keystroke becomes sluggish."
+  },
+  "sections": {
+    "simple_en": "Performance optimization is about doing less work and doing it at the right time. Memoization — caching a function's result by its inputs so repeated calls are instant — is a core technique and the basis of React.memo and useMemo. The first call computes; identical later calls return the cached value.\n\nOther major levers include avoiding unnecessary re-renders, debouncing/throttling frequent events, virtualizing long lists (render only what's visible), and code splitting/lazy loading to shrink the initial bundle. The discipline is to measure first, fix the actual bottleneck, and avoid premature optimization.",
+    "hinglish": "Performance optimization kam work karne aur use sahi time par karne ke baare mein hai. Memoization — ek function ka result uske inputs se cache karna taaki repeated calls instant hon — ek core technique hai aur React.memo aur useMemo ka basis hai. Pehli call compute karti hai; identical later calls cached value return karti hain.\n\nDoosre major levers mein shamil hain unnecessary re-renders se bachna, frequent events ko debounce/throttle karna, long lists ko virtualize karna (sirf jo visible hai wo render karna), aur code splitting/lazy loading initial bundle shrink karne ke liye. Discipline hai pehle measure karna, actual bottleneck fix karna, aur premature optimization se bachna.",
+    "keyPoints": [
+      "Memoization caches results by input so repeats are instant.",
+      "Basis of React.memo / useMemo (skip recomputation/re-render).",
+      "Avoid unnecessary re-renders; debounce/throttle frequent events.",
+      "Virtualize long lists; code-split and lazy-load to shrink bundles.",
+      "Measure first — fix the real bottleneck, avoid premature optimization."
+    ],
+    "real_world": "A dashboard recomputing an expensive chart on every keystroke becomes sluggish. Memoizing the computation by its inputs means it runs only when the underlying data changes — typing in an unrelated field no longer triggers the heavy work, and the UI stays responsive.",
+    "followups": [
+      {
+        "q": "What is memoization?",
+        "a": "Caching a function's output keyed by its inputs, so identical calls return the stored result instead of recomputing. It trades memory for speed and powers React.memo/useMemo to skip needless work."
+      },
+      {
+        "q": "What are other key frontend performance techniques?",
+        "a": "Avoiding unnecessary re-renders, debouncing/throttling high-frequency events, virtualizing long lists, code splitting and lazy loading, optimizing images, and minimizing main-thread work. Profile to find the real bottleneck first."
+      },
+      {
+        "q": "Why avoid premature optimization?",
+        "a": "Optimizing before measuring wastes effort and adds complexity that can hurt readability and even performance. Measure to find the actual bottleneck, then optimize that — most code isn't hot."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript implementing a generic memoize wrapper. The Node demo below shows repeated calls hitting the cache and verifies the underlying function runs only when inputs are new.",
+      "source": "// Performance optimization — memoize, virtualize, split, and avoid wasted re-renders (React).\nimport { useMemo, useCallback, memo, lazy, Suspense } from \"react\";\n\n// memo: skip re-render when props are unchanged (presentational components).\nconst ExpensiveList = memo(function ExpensiveList({ items }) {\n  return <ul>{items.map((i) => <li key={i.id}>{i.label}</li>)}</ul>;\n});\n\nfunction Dashboard({ rawItems, onSelect }) {\n  // useMemo: cache an expensive derived value across renders.\n  const sorted = useMemo(\n    () => [...rawItems].sort((a, b) => a.label.localeCompare(b.label)),\n    [rawItems],\n  );\n  // useCallback: keep a stable function identity so memoized children don't re-render.\n  const handleSelect = useCallback((id) => onSelect(id), [onSelect]);\n  return <ExpensiveList items={sorted} onSelect={handleSelect} />;\n}\n\n// Code splitting: load heavy routes/components lazily.\nconst Reports = lazy(() => import(\"./Reports\"));\nfunction ReportsRoute() {\n  return <Suspense fallback={<p>Loading…</p>}><Reports /></Suspense>;\n}\n\n// Levers: memoization (useMemo/useCallback/memo), list virtualization for long lists,\n// code splitting/lazy loading, debouncing input, and minimizing state that triggers renders.\nexport { Dashboard, ReportsRoute };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Performance optimization — memoize expensive work and avoid recomputation\nfunction memoize(fn) {\n  const cache = new Map();\n  return (...args) => {\n    const key = JSON.stringify(args);\n    if (cache.has(key)) return cache.get(key);\n    const result = fn(...args);\n    cache.set(key, result);\n    return result;\n  };\n}\nlet calls = 0;\nconst slowSquare = (n) => { calls++; return n * n; };\nconst fastSquare = memoize(slowSquare);\nfastSquare(12); fastSquare(12); fastSquare(5);\nconsole.log(\"fastSquare(12) ->\", fastSquare(12));\nconsole.log(\"Underlying fn calls (should be 2, not 4):\", calls);\nconsole.assert(fastSquare(12) === 144, \"correct result\");\nconsole.assert(calls === 2, \"12 computed once, 5 once; repeats are cached\");\nconsole.log(\"Memoization caches results by input so repeated work is skipped (the basis of React.memo/useMemo).\");\nconsole.log(\"Other levers: debounce/throttle, virtualization, code splitting, and avoiding unnecessary re-renders.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "fastSquare(12) -> 144\nUnderlying fn calls (should be 2, not 4): 2\nMemoization caches results by input so repeated work is skipped (the basis of React.memo/useMemo).\nOther levers: debounce/throttle, virtualization, code splitting, and avoiding unnecessary re-renders.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

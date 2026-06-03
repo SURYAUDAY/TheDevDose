@@ -1,0 +1,65 @@
+{
+  "id": "p1b-031",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 31,
+  "orderInPhase": 31,
+  "slug": "tuple-types",
+  "title": "Tuple Types",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "tuple",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Returning a typed pair from a function (like `[error, result]` from an async helper, or `[value, setValue]` from a hook) so destructuring gives each element…"
+  },
+  "sections": {
+    "simple_en": "A tuple is a fixed-length array where each position has a known, specific type — e.g. `[string, number]` is exactly a string followed by a number. Tuples give precise types to positional data, unlike a regular array where every element shares one type.\n\nTuples support optional elements (`[string, number?]`), rest elements (`[string, ...number[]]`), labels for readability (`[name: string, age: number]`), and `readonly`. They're famously used by React hooks like `useState`, which returns `[value, setter]`.",
+    "hinglish": "Tuple ek fixed-length array hai jisme har position ka ek known, specific type hota hai — jaise `[string, number]` bilkul ek string phir ek number. Tuples positional data ko precise types dete hain, regular array ke विपरीत jahan har element ek hi type share karta hai.\nTuples optional elements (`[string, number?]`), rest elements (`[string, ...number[]]`), readability ke liye labels (`[name: string, age: number]`), aur `readonly` support karte hain. Ye React hooks jaise `useState` me famous hain, jo `[value, setter]` return karta hai.",
+    "keyPoints": [
+      "Fixed-length array with a specific type per position: `[string, number]`.",
+      "Different from arrays (each slot can be a different type).",
+      "Supports optional (`?`), rest (`...T[]`), labels, and `readonly`.",
+      "Used by `useState` → `[value, setValue]`.",
+      "Great for returning multiple typed values from a function."
+    ],
+    "real_world": "Returning a typed pair from a function (like `[error, result]` from an async helper, or `[value, setValue]` from a hook) so destructuring gives each element its exact type.",
+    "followups": [
+      {
+        "q": "How does a tuple differ from a regular array?",
+        "a": "A tuple has a fixed length and a specific type per position (e.g. `[string, number]`), while a regular array has variable length with all elements sharing one element type."
+      },
+      {
+        "q": "Where do you commonly see tuples in real code?",
+        "a": "React's `useState` returns `[value, setValue]`, and 'errors-as-values' helpers return `[error, result]` — destructuring gives each position its precise type."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — tuples for precise positional data.\n\nexport function divmod(a: number, b: number): [quotient: number, remainder: number] {\n  return [Math.floor(a / b), a % b];\n}\n\nexport function parseCoord(s: string): [number, number] {\n  const [x, y] = s.split(\",\").map(Number);\n  return [x, y];\n}\n\n// rest element in a tuple\nexport function describe(...args: [string, ...number[]]): string {\n  const [label, ...nums] = args;\n  return label + \":\" + nums.join(\",\");\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { divmod, parseCoord, describe } from \"./solution\";\n\nconsole.log(divmod(17, 5));        // [3, 2]\nconsole.log(parseCoord(\"3,4\"));    // [3, 4]\nconsole.log(describe(\"nums\", 1, 2, 3)); // nums:1,2,3\n\nconst [q, r] = divmod(17, 5);\nconsole.assert(q === 3 && r === 2, \"tuple destructured with correct types\");\nconsole.assert(JSON.stringify(parseCoord(\"3,4\")) === \"[3,4]\", \"coord tuple\");\nconsole.assert(describe(\"nums\", 1, 2, 3) === \"nums:1,2,3\", \"tuple rest element\");\nconsole.log(\"tuple-types assertions passed.\");",
+      "expectedOutput": "[ 3, 2 ]\n[ 3, 4 ]\nnums:1,2,3\ntuple-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

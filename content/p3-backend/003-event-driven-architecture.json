@@ -1,0 +1,69 @@
+{
+  "id": "p3-003",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 3,
+  "orderInPhase": 3,
+  "slug": "event-driven-architecture",
+  "title": "Event-driven architecture",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "event-driven",
+    "architecture"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "When an order is placed, the order service emits 'order:created'."
+  },
+  "sections": {
+    "simple_en": "Event-driven architecture decouples the part of the system that detects something happening (the emitter/producer) from the parts that react to it (listeners/consumers). Instead of one function calling many others directly, it emits an event, and any number of independent listeners respond — they don't need to know about each other.\n\nNode has this built in via the EventEmitter class (and many core modules, like streams and HTTP servers, are emitters). It makes systems extensible and loosely coupled: you can add a new reaction to an event without modifying the code that emits it.",
+    "hinglish": "Event-driven architecture us hisse ko (jo kuch hone ka pata lagata hai — emitter/producer) un hisson se alag karti hai jo react karte hain (listeners/consumers). Ek function seedha kai functions call karne ke bajaye event emit karta hai, aur kitne bhi independent listeners respond karte hain — unhe ek doosre ka pata nahi hota.\n\nNode mein ye EventEmitter class se built-in hai (streams, HTTP servers bhi emitters hain). Isse system extensible aur loosely coupled banta hai: emit karne wale code ko badle bina aap event par naya reaction add kar sakte ho.",
+    "keyPoints": [
+      "Decouples producers (emit events) from consumers (listen and react).",
+      "Node's EventEmitter: .on() to subscribe, .emit() to publish, .once() for one-time.",
+      "Many core modules are emitters (streams, HTTP server, process).",
+      "Add new behavior by adding listeners — no change to the emitting code.",
+      "Listeners run synchronously in registration order by default."
+    ],
+    "real_world": "When an order is placed, the order service emits 'order:created'. Separate listeners send a confirmation email, reserve inventory, and log analytics. Adding a new reaction (say, an SMS alert) means registering one more listener — the order logic itself never changes.",
+    "followups": [
+      {
+        "q": "What's the benefit of event-driven design?",
+        "a": "Loose coupling and extensibility: the emitter doesn't know or care who listens, so you can add, remove, or change reactions independently without touching the source of the event."
+      },
+      {
+        "q": "Difference between .on() and .once()?",
+        "a": ".on() registers a listener that fires every time the event is emitted; .once() fires the listener only the first time, then removes it automatically."
+      },
+      {
+        "q": "Are EventEmitter listeners async?",
+        "a": "By default they run synchronously in the order registered. For async work, the listener can kick off a promise/async task itself, but emit() doesn't await them."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Node code using EventEmitter (runs with Node). The Node-runnable demo below verifies the same event flow.",
+      "source": "// Event-driven architecture — decouple producers and consumers with events.\nconst EventEmitter = require(\"events\");\n\nclass OrderService extends EventEmitter {\n  placeOrder(order) {\n    // ... persist the order ...\n    this.emit(\"order:created\", order); // notify all interested listeners\n    return order;\n  }\n}\n\nconst orders = new OrderService();\n\n// Independent listeners react to the same event without knowing about each other:\norders.on(\"order:created\", (o) => sendConfirmationEmail(o));\norders.on(\"order:created\", (o) => reserveInventory(o));\norders.on(\"order:created\", (o) => trackAnalytics(o));\n\nfunction sendConfirmationEmail(o) { console.log(`Email sent for order ${o.id}`); }\nfunction reserveInventory(o) { console.log(`Inventory reserved for ${o.item}`); }\nfunction trackAnalytics(o) { console.log(`Analytics: order ${o.id}`); }\n\norders.placeOrder({ id: 1, item: \"Phone\" });",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Event-driven architecture — Node's built-in EventEmitter\nconst EventEmitter = require(\"events\");\nclass OrderService extends EventEmitter {}\nconst orders = new OrderService();\nconst log = [];\norders.on(\"order:created\", (o) => log.push(`email sent for order ${o.id}`));\norders.on(\"order:created\", (o) => log.push(`inventory reserved for ${o.item}`));\norders.once(\"order:created\", (o) => log.push(`(once) analytics logged ${o.id}`));\n\norders.emit(\"order:created\", { id: 1, item: \"Phone\" });\norders.emit(\"order:created\", { id: 2, item: \"Laptop\" }); // 'once' won't fire again\nlog.forEach(l => console.log(l));\nconsole.log(\"Listeners for order:created:\", orders.listenerCount(\"order:created\"));\nconsole.assert(log.filter(l => l.includes(\"once\")).length === 1, \"once fires only once\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "email sent for order 1\ninventory reserved for Phone\n(once) analytics logged 1\nemail sent for order 2\ninventory reserved for Laptop\nListeners for order:created: 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

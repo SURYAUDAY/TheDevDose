@@ -1,0 +1,71 @@
+{
+  "id": "p2-059",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 59,
+  "orderInPhase": 59,
+  "slug": "chrome-devtools-network-tab",
+  "title": "Chrome DevTools — Network tab",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "chrome",
+    "devtools",
+    "network",
+    "tab"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "An API call intermittently fails in production."
+  },
+  "sections": {
+    "simple_en": "The Network tab records every request the page makes — documents, scripts, styles, images, and API calls — with status code, size, timing, and headers. It's the first place to look when something fails to load, an API returns an error, or the page feels slow on the wire.\n\nEach request's timing breakdown (queuing, waiting/TTFB, content download) helps you tell a slow server from a slow download. Handy controls include filtering by type (Fetch/XHR), 'Disable cache', and network throttling to simulate slow connections.",
+    "hinglish": "Network tab page ki har request record karta hai — documents, scripts, styles, images, API calls — status code, size, timing aur headers ke saath. Jab kuch load na ho, API error de, ya page slow lage, sabse pehle yahin dekho.\n\nHar request ka timing breakdown (queuing, waiting/TTFB, content download) batata hai slow server hai ya slow download. Useful controls: type filter (Fetch/XHR), 'Disable cache', aur throttling se slow connection simulate karna.",
+    "keyPoints": [
+      "Logs all requests with method, status, size, timing, and headers.",
+      "First stop for failed loads, API errors, and on-the-wire slowness.",
+      "Timing breakdown separates slow server (TTFB) from slow download.",
+      "Filter by Fetch/XHR to focus on API calls; inspect payloads and responses.",
+      "Use 'Disable cache' and throttling (Slow 3G) to test cold/slow loads."
+    ],
+    "real_world": "An API call intermittently fails in production. Using the Network tab, a developer sees it returns 401 only after a token expires, with the request headers confirming a stale token — pinpointing the refresh-logic bug without touching the code first.",
+    "followups": [
+      {
+        "q": "How do you tell if a slow request is the server's fault?",
+        "a": "Open the request's Timing tab: a long 'Waiting (TTFB)' points to slow server processing, while a long 'Content Download' points to a large response or slow connection."
+      },
+      {
+        "q": "How do you test how the app behaves on a slow network?",
+        "a": "Use the throttling dropdown (e.g., Slow 3G) and 'Disable cache' to simulate cold, slow loads and catch issues real users on poor connections would hit."
+      },
+      {
+        "q": "How do you focus on just API calls?",
+        "a": "Filter the Network tab by Fetch/XHR to hide assets and see only data requests, then inspect each one's payload, response, and status."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "DevTools debugging techniques (used in the browser, not shipped app code). The Node-runnable demo below simulates capturing requests, sizes, timing, and status.",
+      "source": "// Chrome DevTools — Network tab (debugging technique, not app code).\n// Use it to inspect requests, timing, sizes, status codes, and headers.\n\nexport default function DataLoader() {\n  async function load() {\n    // In the Network tab you'd watch this request: method, status, size,\n    // timing (waiting/TTFB, content download), and response payload.\n    const res = await fetch(\"/api/users\", {\n      headers: { Authorization: \"Bearer token\" }, // visible under Request Headers\n    });\n    const data = await res.json();\n    return data;\n  }\n\n  // Network tab tips:\n  // - Filter by XHR/Fetch to see API calls\n  // - \"Disable cache\" while DevTools is open to test cold loads\n  // - Throttle to \"Slow 3G\" to simulate poor connections\n  // - Check the Timing tab of a request to find slow TTFB vs download\n  return <button onClick={load}>Load users</button>;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Chrome DevTools (Network tab) — capture requests, sizes, timing, status\nconst requests = [\n  { url: \"/index.html\", status: 200, size: 4,   ms: 30 },\n  { url: \"/app.js\",     status: 200, size: 240, ms: 180 },\n  { url: \"/api/user\",   status: 500, size: 1,   ms: 90 },\n  { url: \"/logo.png\",   status: 200, size: 18,  ms: 40 },\n];\nconst totalSize = requests.reduce((s, r) => s + r.size, 0);\nconst totalTime = Math.max(...requests.map(r => r.ms)); // parallel -> slowest defines wall time\nconst failed = requests.filter(r => r.status >= 400);\nconst slowest = [...requests].sort((a, b) => b.ms - a.ms)[0];\nconsole.log(\"Requests:\", requests.length, \"| Transferred:\", totalSize + \"KB\");\nconsole.log(\"Slowest:\", slowest.url, slowest.ms + \"ms\");\nconsole.log(\"Failed:\", failed.map(r => `${r.url}(${r.status})`).join(\", \"));\nconsole.assert(failed.length === 1 && failed[0].status === 500, \"failed request detected\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Requests: 4 | Transferred: 263KB\nSlowest: /app.js 180ms\nFailed: /api/user(500)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

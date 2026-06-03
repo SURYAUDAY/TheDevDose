@@ -1,0 +1,70 @@
+{
+  "id": "p5-012",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 12,
+  "orderInPhase": 12,
+  "slug": "lazy-loading-strategy",
+  "title": "Lazy loading strategy",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "lazy",
+    "loading",
+    "strategy"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A large SaaS app loads only the login screen on startup."
+  },
+  "sections": {
+    "simple_en": "Lazy loading defers loading non-critical code or data until it's actually needed, so the initial load ships less and the first paint is faster. Instead of bundling every route, component, and image up front, you load each piece on demand — when the user navigates to a route or scrolls an image into view — and cache it thereafter.\n\nIn practice this pairs with code splitting (breaking the bundle into chunks) and tools like dynamic import() and React.lazy/Suspense. The trade-off is a small delay the first time a deferred piece is needed, which is usually well worth the faster startup, especially on large apps and slow networks.",
+    "hinglish": "Lazy loading non-critical code ya data ko load karne ko tab tak defer karta hai jab tak uski actually zaroorat na ho, taaki initial load kam ship kare aur first paint faster ho. Har route, component, aur image ko up front bundle karne ke bajaye, aap har piece ko on demand load karte ho — jab user ek route par navigate kare ya ek image ko scroll karke view mein laaye — aur use uske baad cache karte ho.\n\nPractice mein ye code splitting (bundle ko chunks mein todhna) aur dynamic import() aur React.lazy/Suspense jaise tools ke saath pair karta hai. Trade-off ek chhota delay hai pehli baar jab ek deferred piece ki zaroorat ho, jo aam taur par faster startup ke layak hota hai, khaaskar bade apps aur slow networks par.",
+    "keyPoints": [
+      "Defer loading non-critical code/data until it's needed.",
+      "Shrinks the initial bundle and speeds first paint.",
+      "Load routes/components/images on demand, then cache.",
+      "Pairs with code splitting and dynamic import() / React.lazy + Suspense.",
+      "Trade-off: a small first-use delay for a faster startup."
+    ],
+    "real_world": "A large SaaS app loads only the login screen on startup. The heavy reports module is fetched only when a user opens Reports — so most users, who never visit it, never download that code, and everyone gets a faster initial load.",
+    "followups": [
+      {
+        "q": "What's the benefit of lazy loading?",
+        "a": "It reduces the initial bundle/download, speeding first paint and time-to-interactive. Users only pay for the code and assets they actually use, which matters most on large apps and slower connections."
+      },
+      {
+        "q": "How does lazy loading relate to code splitting?",
+        "a": "Code splitting breaks the bundle into separate chunks; lazy loading is the strategy of fetching those chunks (or assets) only when needed. Together they keep the initial payload small and load the rest on demand."
+      },
+      {
+        "q": "What's the trade-off of lazy loading?",
+        "a": "A short delay the first time a deferred piece is requested. You mitigate it with loading states (Suspense fallbacks) and by prefetching likely-next chunks during idle time."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript simulating dynamic import: a module's cost is paid only on first access, then cached. The Node demo below verifies only the visited route loads.",
+      "source": "// Lazy loading strategy — defer non-critical code/data until it's actually needed.\nimport { lazy, Suspense } from \"react\";\n\n// Route-based code splitting: each route's bundle loads on navigation, not at startup.\nconst Dashboard = lazy(() => import(\"./routes/Dashboard\"));\nconst Settings = lazy(() => import(\"./routes/Settings\"));\n\nfunction App() {\n  return (\n    <Suspense fallback={<p>Loading…</p>}>\n      {/* router renders the matched lazy route */}\n      <Dashboard />\n    </Suspense>\n  );\n}\n\n// Other lazy techniques:\n//   - Images: <img loading=\"lazy\" ...> or an IntersectionObserver to load on scroll.\n//   - Data: fetch on demand / paginate / infinite scroll instead of loading everything.\n//   - Components: dynamically import heavy widgets (charts, editors) only when opened.\n\n// Goal: shrink the initial bundle and time-to-interactive by loading the critical path\n// first and everything else on demand. Combine with code splitting and prefetching hints.\nexport default App;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Lazy loading strategy — load code/data only when needed to shrink initial load\n// Simulate dynamic import: the module's cost is paid only on first access.\nconst moduleRegistry = {\n  Dashboard: () => ({ name: \"Dashboard\", size: 250 }),\n  Settings: () => ({ name: \"Settings\", size: 80 }),\n  Reports: () => ({ name: \"Reports\", size: 500 }),\n};\nlet loaded = {};\nfunction lazyLoad(name) {\n  if (!loaded[name]) loaded[name] = moduleRegistry[name]();   // load on demand, then cache\n  return loaded[name];\n}\n// Initial load ships nothing heavy; user navigates to Dashboard -> load just that.\nconsole.log(\"Loaded modules at startup:\", Object.keys(loaded));\nlazyLoad(\"Dashboard\");\nconsole.log(\"After visiting Dashboard:\", Object.keys(loaded));\nlazyLoad(\"Dashboard\");  // cached, not reloaded\nconsole.assert(Object.keys(loaded).length === 1, \"only the visited route loaded\");\nconsole.assert(lazyLoad(\"Dashboard\").size === 250, \"module available after lazy load\");\nconsole.log(\"Lazy loading defers non-critical code/data (routes, images, components) until needed.\");\nconsole.log(\"It shrinks the initial bundle and speeds first paint; pair with code splitting and Suspense.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Loaded modules at startup: []\nAfter visiting Dashboard: [ 'Dashboard' ]\nLazy loading defers non-critical code/data (routes, images, components) until needed.\nIt shrinks the initial bundle and speeds first paint; pair with code splitting and Suspense.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

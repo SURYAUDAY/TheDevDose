@@ -1,0 +1,68 @@
+{
+  "id": "p4-014",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 14,
+  "orderInPhase": 14,
+  "slug": "top-p",
+  "title": "top_p",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "top"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A summarization endpoint sets top_p=0.1 so the model only picks among its very top choices — producing tight, predictable summaries — while a creative-writin…"
+  },
+  "sections": {
+    "simple_en": "Top-p (nucleus sampling) limits sampling to the smallest set of most-likely tokens whose cumulative probability reaches p. For example, top_p=0.9 keeps just enough top tokens to cover 90% of the probability mass and samples from those, discarding the unlikely tail.\n\nUnlike top_k (a fixed count), top_p adapts: when the model is confident, the nucleus is small; when it's uncertain, more tokens qualify. Lower p makes output more focused and safe; higher p allows more diversity. It's an alternative to (or used alongside) temperature — the common advice is to tune one, not both.",
+    "hinglish": "Top-p (nucleus sampling) sampling ko sabse likely tokens ke smallest set tak limit karta hai jinka cumulative probability p tak pahunche. Jaise top_p=0.9 sirf utne top tokens rakhta hai jo 90% probability mass cover karein aur unmein se sample karta hai, unlikely tail discard karke.\n\nTop_k (fixed count) ke ulta, top_p adapt karta hai: jab model confident ho, nucleus chhota hota hai; jab uncertain ho, zyada tokens qualify karte hain. Lower p output ko zyada focused aur safe banata hai; higher p zyada diversity deta hai. Ye temperature ka alternative hai (ya saath use hota hai) — common advice hai ek tune karo, dono nahi.",
+    "keyPoints": [
+      "Samples from the smallest set of tokens covering cumulative probability p.",
+      "top_p=0.9 -> keeps the top tokens summing to 90% of the mass.",
+      "Dynamic count: small nucleus when confident, larger when uncertain.",
+      "Lower p -> focused; higher p -> diverse.",
+      "Alternative to temperature — tune one, not both."
+    ],
+    "real_world": "A summarization endpoint sets top_p=0.1 so the model only picks among its very top choices — producing tight, predictable summaries — while a creative-writing endpoint uses top_p=0.95 to allow a wider, more varied vocabulary.",
+    "followups": [
+      {
+        "q": "How does top_p differ from top_k?",
+        "a": "Top_p keeps a dynamic number of tokens covering probability mass p, adapting to the model's confidence. Top_k keeps a fixed number (k) of top tokens regardless of their probabilities."
+      },
+      {
+        "q": "What is the 'nucleus' in nucleus sampling?",
+        "a": "The smallest group of highest-probability tokens whose probabilities sum to at least p. The model samples only from this nucleus, discarding the long, unlikely tail."
+      },
+      {
+        "q": "Should you combine top_p with temperature?",
+        "a": "Generally tune one at a time. Both control randomness through the distribution, so adjusting both together makes the output behavior harder to predict and reason about."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI top_p code (needs an API key). The Python-runnable demo below implements nucleus sampling so the dynamic token selection is verifiable here.",
+      "source": "# top_p (nucleus sampling) — sample from the smallest set covering probability p.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef generate(prompt: str, top_p: float) -> str:\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        top_p=top_p,   # consider only tokens within the top cumulative probability p\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return response.choices[0].message.content\n\n# top_p=0.1 -> very focused (only the most likely tokens);\n# top_p=1.0 -> consider the full distribution.\n# It selects a DYNAMIC number of tokens (the \"nucleus\"), unlike top_k's fixed count.\n# Tip: tune EITHER temperature OR top_p, not both at once.\n# focused = generate(\"Define recursion.\", top_p=0.1)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# top_p (nucleus sampling) — keep the smallest set of tokens whose probs sum to >= p\nprobs = {\"cat\": 0.40, \"dog\": 0.30, \"bird\": 0.15, \"fish\": 0.10, \"ant\": 0.05}\n\ndef nucleus(probs, p):\n    ordered = sorted(probs.items(), key=lambda kv: kv[1], reverse=True)\n    kept, cumulative = [], 0.0\n    for token, pr in ordered:\n        kept.append((token, pr)); cumulative += pr\n        if cumulative >= p: break          # stop once we cover p of the mass\n    total = sum(pr for _, pr in kept)\n    return {t: pr / total for t, pr in kept}  # renormalize over the nucleus\n\nfor p in (0.5, 0.9):\n    nuc = nucleus(probs, p)\n    print(f\"top_p={p}: kept {list(nuc)} -> \" + \", \".join(f\"{k}={v:.2f}\" for k, v in nuc.items()))\n\nn5 = nucleus(probs, 0.5)\nassert set(n5) == {\"cat\", \"dog\"}, \"top_p=0.5 keeps only the top tokens covering 50%\"\nprint(\"\\nTop-p picks a dynamic number of tokens (the 'nucleus') covering probability mass p.\")\nprint(\"Lower p -> more focused; higher p -> more diverse. Often used instead of/with temperature.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "top_p=0.5: kept ['cat', 'dog'] -> cat=0.57, dog=0.43\ntop_p=0.9: kept ['cat', 'dog', 'bird', 'fish'] -> cat=0.42, dog=0.32, bird=0.16, fish=0.11\n\nTop-p picks a dynamic number of tokens (the 'nucleus') covering probability mass p.\nLower p -> more focused; higher p -> more diverse. Often used instead of/with temperature.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

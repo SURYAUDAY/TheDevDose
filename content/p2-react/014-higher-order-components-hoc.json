@@ -1,0 +1,70 @@
+{
+  "id": "p2-014",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 14,
+  "orderInPhase": 14,
+  "slug": "higher-order-components-hoc",
+  "title": "Higher-Order Components (HOC)",
+  "difficulty": "beginner",
+  "tags": [
+    "p2",
+    "higher-order",
+    "components",
+    "hoc"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "withAuth(Component) checks whether a user is logged in; if not, it redirects to /login, otherwise it renders the wrapped component with the user injected as…"
+  },
+  "sections": {
+    "simple_en": "A Higher-Order Component is a function that takes a component and returns a new component with added behavior — const Enhanced = withFeature(Original). It's a pattern (not an API) for reusing cross-cutting logic like authentication checks, logging, or data injection.\n\nHOCs were the dominant reuse pattern before hooks. They still appear (e.g., connect from react-redux, withRouter historically), but for most new logic-sharing, custom hooks are preferred because HOCs cause wrapper nesting, prop collisions, and harder debugging.",
+    "hinglish": "Higher-Order Component ek function hai jo ek component leta hai aur naya component return karta hai jisme extra behavior add hota hai — const Enhanced = withFeature(Original). Ye auth check, logging ya data inject karne jaisi logic reuse karne ka pattern hai.\n\nHooks se pehle yahi main reuse pattern tha. Aaj bhi dikhta hai (jaise react-redux ka connect) par nayi logic ke liye custom hooks behtar hain kyunki HOC se wrapper nesting aur prop collision ho jaati hai.",
+    "keyPoints": [
+      "An HOC is a function: Component => EnhancedComponent (a pattern, not a built-in API).",
+      "Used for cross-cutting concerns: auth gating, logging, data fetching, prop injection.",
+      "Always forward unrelated props and set displayName for debuggable component trees.",
+      "Drawbacks: wrapper hell, prop name collisions, and ref forwarding complications.",
+      "Modern React prefers custom hooks for most logic reuse; connect() is a notable surviving HOC."
+    ],
+    "real_world": "withAuth(Component) checks whether a user is logged in; if not, it redirects to /login, otherwise it renders the wrapped component with the user injected as a prop. Wrapping several admin pages with withAuth keeps the gate logic in one place.",
+    "followups": [
+      {
+        "q": "HOC vs custom hook — which to choose?",
+        "a": "Custom hooks for most new code: no wrapper nesting, clearer props/types, easier composition. HOCs remain useful when you must wrap a component you don't control or inject props broadly."
+      },
+      {
+        "q": "Why set displayName on an HOC?",
+        "a": "So React DevTools shows a meaningful name like withAuth(Dashboard) instead of Anonymous, which makes debugging far easier."
+      },
+      {
+        "q": "What are common HOC pitfalls?",
+        "a": "Wrapper hell (deep nesting), prop name collisions when injecting props, and losing refs unless you use forwardRef."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// HOC: withAuth gates a component behind a login check.\nimport React from \"react\";\n\nfunction withAuth(Component) {\n  function Wrapped(props) {\n    const user = getCurrentUser(); // pretend auth lookup\n    if (!user) return <p>Please log in to continue.</p>;\n    return <Component {...props} user={user} />; // forward props + inject user\n  }\n  Wrapped.displayName = `withAuth(${Component.displayName || Component.name})`;\n  return Wrapped;\n}\n\nfunction Dashboard({ user }) {\n  return <h2>Welcome back, {user.name}</h2>;\n}\n\nfunction getCurrentUser() {\n  return { name: \"Asha\" }; // return null to see the gated message\n}\n\nexport default withAuth(Dashboard);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Higher-Order Component — withLogger wraps a component, adds behavior\nconst logs = [];\nfunction withLogger(Component){\n  return function Wrapped(props){\n    logs.push(`Rendering ${Component.displayName} with ${JSON.stringify(props)}`);\n    return Component(props);\n  };\n}\nfunction Button(props){ return `<button>${props.label}</button>`; }\nButton.displayName = \"Button\";\n\nconst LoggedButton = withLogger(Button);\nconst out1 = LoggedButton({ label: \"Save\" });\nconst out2 = LoggedButton({ label: \"Delete\" });\nconsole.log(out1);\nconsole.log(out2);\nlogs.forEach(l => console.log(l));\nconsole.assert(logs.length === 2, \"HOC should log each render\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "<button>Save</button>\n<button>Delete</button>\nRendering Button with {\"label\":\"Save\"}\nRendering Button with {\"label\":\"Delete\"}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

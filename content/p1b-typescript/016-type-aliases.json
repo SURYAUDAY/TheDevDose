@@ -1,0 +1,65 @@
+{
+  "id": "p1b-016",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 16,
+  "orderInPhase": 16,
+  "slug": "type-aliases",
+  "title": "Type Aliases",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "type",
+    "aliases"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Defining `type Handler = (event: string) => void` once and reusing it across many function signatures keeps callback types consistent and lets you change the…"
+  },
+  "sections": {
+    "simple_en": "A type alias gives a name to any type using the `type` keyword: `type ID = string | number`. It doesn't create a new type — it's a reusable label for an existing one, which makes complex types readable and DRY.\n\nAliases can name unions, intersections, primitives, objects, tuples, functions, and generics. They differ from interfaces in that they can alias non-object types (like unions) and can't be 'reopened'/merged, whereas interfaces are best for object shapes and support declaration merging.",
+    "hinglish": "Type alias kisi bhi type ko `type` keyword se naam deta hai: `type ID = string | number`. Ye naya type nahi banata — ye existing type ka ek reusable label hai, jo complex types ko readable aur DRY banata hai.\nAliases unions, intersections, primitives, objects, tuples, functions, aur generics ko naam de sakte hain. Ye interfaces se is tarah alag hain ki ye non-object types (jaise unions) ko alias kar sakte hain aur 'reopen'/merge nahi ho sakte, jabki interfaces object shapes ke liye best hain aur declaration merging support karte hain.",
+    "keyPoints": [
+      "`type Name = ...` names any type for reuse.",
+      "Can alias unions, intersections, primitives, tuples, functions, objects.",
+      "Improves readability and avoids repetition (DRY).",
+      "Unlike interfaces, can name non-object types and don't merge.",
+      "Often interchangeable with interfaces for object shapes."
+    ],
+    "real_world": "Defining `type Handler = (event: string) => void` once and reusing it across many function signatures keeps callback types consistent and lets you change the signature in a single place.",
+    "followups": [
+      {
+        "q": "Type alias vs interface — when does it matter?",
+        "a": "Aliases can name any type (unions, tuples, functions, primitives) but can't be merged. Interfaces are ideal for object shapes and support declaration merging/extends. For plain object types they're largely interchangeable."
+      },
+      {
+        "q": "Does a type alias create a new distinct type?",
+        "a": "No. It's just a name for an existing type. `type ID = string` makes `ID` and `string` interchangeable; it doesn't create a separate nominal type."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — type aliases for unions, objects, and functions.\n\nexport type ID = string | number;\nexport type Point = { x: number; y: number };\nexport type Transformer = (value: number) => number;\n\nexport function distance(a: Point, b: Point): number {\n  return Math.hypot(b.x - a.x, b.y - a.y);\n}\n\nexport function applyAll(value: number, fns: Transformer[]): number {\n  return fns.reduce((acc, fn) => fn(acc), value);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { distance, applyAll, Transformer } from \"./solution\";\n\nconsole.log(distance({ x: 0, y: 0 }, { x: 3, y: 4 })); // 5\nconst fns: Transformer[] = [(n) => n + 1, (n) => n * 2];\nconsole.log(applyAll(5, fns)); // (5+1)*2 = 12\n\nconsole.assert(distance({ x: 0, y: 0 }, { x: 3, y: 4 }) === 5, \"distance via aliased Point\");\nconsole.assert(applyAll(5, fns) === 12, \"applies aliased Transformer fns\");\nconsole.log(\"type-aliases assertions passed.\");",
+      "expectedOutput": "5\n12\ntype-aliases assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

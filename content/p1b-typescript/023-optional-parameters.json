@@ -1,0 +1,65 @@
+{
+  "id": "p1b-023",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 23,
+  "orderInPhase": 23,
+  "slug": "optional-parameters",
+  "title": "Optional Parameters",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "optional",
+    "parameters"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "A `formatName(first: string, last?: string)` function works whether or not a last name is provided, returning just the first name when `last` is omitted — co…"
+  },
+  "sections": {
+    "simple_en": "An optional parameter is marked with `?` after its name (`function greet(name: string, title?: string)`). It may be omitted by callers; when omitted, its value is `undefined`, so its type is effectively `T | undefined` inside the function.\n\nOptional parameters must come AFTER all required parameters. Inside the function you must handle the undefined case (a check or a default). They're the typed equivalent of JavaScript's 'this argument might not be passed'.",
+    "hinglish": "Optional parameter apne naam ke baad `?` se mark hota hai (`function greet(name: string, title?: string)`). Callers ise omit kar sakte hain; omit hone par uski value `undefined` hoti hai, isliye function ke andar uska type effectively `T | undefined` hota hai.\nOptional parameters saare required parameters ke BAAD aane chahiye. Function ke andar aapko undefined case handle karna padta hai (check ya default). Ye JavaScript ke 'ye argument shaayad pass na ho' ka typed equivalent hai.",
+    "keyPoints": [
+      "Mark with `?`: `param?: Type` may be omitted.",
+      "When omitted, the value is `undefined` (type is `T | undefined`).",
+      "Must come AFTER required parameters.",
+      "Handle the undefined case inside the function.",
+      "Different from default parameters (which supply a value)."
+    ],
+    "real_world": "A `formatName(first: string, last?: string)` function works whether or not a last name is provided, returning just the first name when `last` is omitted — common with partial form data.",
+    "followups": [
+      {
+        "q": "Where must optional parameters be placed?",
+        "a": "After all required parameters. You can't have a required parameter following an optional one (the compiler will reject it)."
+      },
+      {
+        "q": "What's the value of an omitted optional parameter?",
+        "a": "`undefined`. Inside the function its type is effectively `T | undefined`, so you should check it or provide a fallback before use."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — optional parameter handling.\n\nexport function formatName(first: string, last?: string): string {\n  return last ? first + \" \" + last : first;\n}\n\nexport function repeat(text: string, times?: number): string {\n  const n = times ?? 1; // handle the omitted case\n  return text.repeat(n);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { formatName, repeat } from \"./solution\";\n\nconsole.log(formatName(\"Asha\", \"Kumar\")); // Asha Kumar\nconsole.log(formatName(\"Asha\"));          // Asha\nconsole.log(repeat(\"ab\", 3));             // ababab\nconsole.log(repeat(\"x\"));                 // x (default times = 1)\n\nconsole.assert(formatName(\"Asha\", \"Kumar\") === \"Asha Kumar\", \"with last name\");\nconsole.assert(formatName(\"Asha\") === \"Asha\", \"without last name\");\nconsole.assert(repeat(\"ab\", 3) === \"ababab\", \"with count\");\nconsole.assert(repeat(\"x\") === \"x\", \"omitted count handled\");\nconsole.log(\"optional-parameters assertions passed.\");",
+      "expectedOutput": "Asha Kumar\nAsha\nababab\nx\noptional-parameters assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

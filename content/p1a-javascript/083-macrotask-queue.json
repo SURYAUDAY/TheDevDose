@@ -1,0 +1,65 @@
+{
+  "id": "p1a-083",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 83,
+  "orderInPhase": 83,
+  "slug": "macrotask-queue",
+  "title": "Macrotask Queue",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "macrotask",
+    "queue"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Breaking up a heavy computation with `setTimeout(chunk, 0)` between chunks lets the browser process UI events and repaint between macrotasks, keeping the pag…"
+  },
+  "sections": {
+    "simple_en": "The macrotask queue (also called the task queue or callback queue) holds callbacks scheduled by things like `setTimeout`, `setInterval`, I/O completion, and UI events. The event loop runs ONE macrotask per cycle, then drains all microtasks, then (in browsers) may render, before taking the next macrotask.\n\nThis is why even `setTimeout(fn, 0)` doesn't run immediately: it's queued as a macrotask and must wait for the current task and all pending microtasks. The '0ms' is a minimum, not a guarantee — the browser also enforces a minimum clamp for nested timers.",
+    "hinglish": "Macrotask queue (task queue ya callback queue bhi kehte hain) un callbacks ko rakhti hai jo `setTimeout`, `setInterval`, I/O completion, aur UI events jaise cheezein schedule karti hain. Event loop per cycle EK macrotask chalata hai, phir saare microtasks drain karta hai, phir (browsers me) render kar sakta hai, agla macrotask lene se pehle.\nIsiliye `setTimeout(fn, 0)` bhi turant nahi chalta: ye macrotask ki tarah queue hota hai aur current task + saare pending microtasks ka wait karta hai. '0ms' ek minimum hai, guarantee nahi — browser nested timers ke liye minimum clamp bhi lagaata hai.",
+    "keyPoints": [
+      "Holds setTimeout/setInterval, I/O, and UI event callbacks.",
+      "One macrotask runs per event-loop cycle.",
+      "After each macrotask, all microtasks drain (then possibly a render).",
+      "`setTimeout(fn,0)` is deferred — minimum delay, not immediate.",
+      "Browsers clamp nested timers to a minimum (~4ms)."
+    ],
+    "real_world": "Breaking up a heavy computation with `setTimeout(chunk, 0)` between chunks lets the browser process UI events and repaint between macrotasks, keeping the page responsive during long work.",
+    "followups": [
+      {
+        "q": "Why doesn't setTimeout(fn, 0) run immediately?",
+        "a": "It schedules a macrotask, which must wait for the current task to finish and all pending microtasks to drain. The 0ms is a minimum delay, not an instruction to run synchronously."
+      },
+      {
+        "q": "How many macrotasks run per event-loop cycle?",
+        "a": "One. After running a single macrotask, the loop drains the entire microtask queue (and may render in browsers) before picking the next macrotask."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Macrotasks run one per cycle; microtasks interleave between them.\n\nfunction interleave() {\n  return new Promise((resolve) => {\n    const order = [];\n    setTimeout(() => {\n      order.push(\"macro-1\");\n      Promise.resolve().then(() => order.push(\"micro-after-macro-1\"));\n    }, 0);\n    setTimeout(() => {\n      order.push(\"macro-2\");\n      resolve(order);\n    }, 5);\n  });\n}\n\nmodule.exports = { interleave };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { interleave } = require(\"./solution\");\n\ninterleave().then((order) => {\n  console.log(order); // ['macro-1','micro-after-macro-1','macro-2']\n  console.assert(order[0] === \"macro-1\", \"first macrotask\");\n  console.assert(order[1] === \"micro-after-macro-1\", \"microtask drains before next macrotask\");\n  console.assert(order[2] === \"macro-2\", \"second macrotask after microtasks\");\n  console.log(\"macrotask queue assertions passed.\");\n});",
+      "expectedOutput": "[ 'macro-1', 'micro-after-macro-1', 'macro-2' ]\nmacrotask queue assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

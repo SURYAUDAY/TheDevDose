@@ -1,0 +1,69 @@
+{
+  "id": "p5-033",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 33,
+  "orderInPhase": 33,
+  "slug": "explain-embeddings",
+  "title": "Explain embeddings",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "explain",
+    "embeddings"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A support search embeds every help article and the user's query into the same space."
+  },
+  "sections": {
+    "simple_en": "To explain embeddings, say: an embedding maps text (or images, etc.) to a fixed-length vector of numbers, arranged so that semantically similar items land close together in that vector space. 'Cat' and 'kitten' end up near each other; 'cat' and 'computer' end up far apart.\n\nWe measure closeness with cosine similarity (the angle between vectors). This geometric notion of meaning is what powers semantic search, recommendations, clustering, and the retrieval step of RAG. The key interview point is that embeddings turn 'is this similar in meaning?' into 'are these vectors close?', which computers can answer fast.",
+    "hinglish": "Embeddings explain karne ke liye kaho: ek embedding text (ya images, etc.) ko numbers ke ek fixed-length vector se map karta hai, aise arrange karke ki semantically similar items us vector space mein paas land karein. 'Cat' aur 'kitten' ek doosre ke paas aate hain; 'cat' aur 'computer' door aate hain.\n\nHum closeness ko cosine similarity (vectors ke beech ka angle) se measure karte hain. Meaning ka ye geometric notion hi semantic search, recommendations, clustering, aur RAG ke retrieval step ko power deta hai. Key interview point ye hai ki embeddings 'kya ye meaning mein similar hai?' ko 'kya ye vectors paas hain?' mein badal dete hain, jise computers fast answer kar sakte hain.",
+    "keyPoints": [
+      "Map text to a fixed-length numeric vector capturing meaning.",
+      "Semantically similar items land close in the vector space.",
+      "Closeness is measured with cosine similarity (angle).",
+      "Powers semantic search, recommendations, clustering, and RAG retrieval.",
+      "Turn 'similar in meaning?' into 'are these vectors close?'"
+    ],
+    "real_world": "A support search embeds every help article and the user's query into the same space. 'I can't log in' lands near the 'authentication troubleshooting' article — even with no shared words — because embeddings place similar meanings close together, which is exactly what makes semantic search work.",
+    "followups": [
+      {
+        "q": "What is an embedding in one sentence?",
+        "a": "A fixed-length vector representation of text (or other data) where semantically similar items are close together, so meaning becomes geometric distance you can compute."
+      },
+      {
+        "q": "How do you compare embeddings?",
+        "a": "Most commonly cosine similarity — the cosine of the angle between vectors — which captures directional (meaning) similarity regardless of vector length. Higher cosine means more similar."
+      },
+      {
+        "q": "Why are embeddings central to GenAI apps?",
+        "a": "They enable semantic search and retrieval: you embed documents and queries into the same space and find nearest neighbors. That retrieval step is the foundation of RAG, recommendations, clustering, and deduplication."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo comparing toy concept vectors with cosine similarity, showing semantically similar words score higher — verifiable here.",
+      "source": "# Explain embeddings — real embedding generation + cosine similarity.\nfrom openai import OpenAI\nimport numpy as np\nclient = OpenAI()\n\ndef embed(texts):\n    resp = client.embeddings.create(model=\"text-embedding-3-small\", input=texts)\n    return [np.array(d.embedding) for d in resp.data]\n\ndef cosine(a, b):\n    return float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b)))\n\n# v = embed([\"cat\", \"kitten\", \"computer\"])\n# cosine(v[0], v[1]) is high (cat ~ kitten); cosine(v[0], v[2]) is low (cat vs computer).\n\n# Interview definition: an embedding is a fixed-length numeric vector representing the meaning\n# of text, produced by a model so that semantically similar inputs are close in vector space.\n# We compare them with cosine similarity. Embeddings underpin semantic search, RAG, clustering,\n# recommendations, and classification — use the SAME model for documents and queries.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Explain embeddings — turn text into vectors so similar meaning is geometrically close\nimport math\ndef cosine(a, b):\n    d = sum(x*y for x, y in zip(a, b)); na = math.sqrt(sum(x*x for x in a)); nb = math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\n# Toy concept vectors over [animal, tech]\nvectors = {\n    \"cat\":      [0.9, 0.0],\n    \"kitten\":   [0.85, 0.05],   # close to 'cat' in meaning\n    \"computer\": [0.0, 0.9],\n}\nprint(\"similarity(cat, kitten):  \", round(cosine(vectors[\"cat\"], vectors[\"kitten\"]), 3))     # high\nprint(\"similarity(cat, computer):\", round(cosine(vectors[\"cat\"], vectors[\"computer\"]), 3))   # low\nassert cosine(vectors[\"cat\"], vectors[\"kitten\"]) > cosine(vectors[\"cat\"], vectors[\"computer\"])\nprint(\"\\nInterview answer: an embedding maps text to a fixed-length vector where semantically similar\")\nprint(\"text lands close together. We compare with cosine similarity. Embeddings power semantic search and RAG retrieval.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "similarity(cat, kitten):   0.998\nsimilarity(cat, computer): 0.0\n\nInterview answer: an embedding maps text to a fixed-length vector where semantically similar\ntext lands close together. We compare with cosine similarity. Embeddings power semantic search and RAG retrieval.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

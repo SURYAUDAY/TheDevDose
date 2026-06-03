@@ -1,0 +1,69 @@
+{
+  "id": "p5-026",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 26,
+  "orderInPhase": 26,
+  "slug": "consistency-eventual-consistency",
+  "title": "Consistency & eventual consistency",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "consistency",
+    "eventual"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A bank account balance uses strong consistency — you must always see the latest figure."
+  },
+  "sections": {
+    "simple_en": "Consistency describes when replicas of data agree. Strong consistency means every read sees the latest write immediately, everywhere — simpler to reason about, but it usually costs more latency and coordination (often synchronous replication). It's what you want for things like account balances.\n\nEventual consistency means a write reaches one node now and propagates to the others asynchronously, so reads may be briefly stale, but all replicas converge to the same value over time. It trades immediate correctness for higher availability and scale — fine for things like social feeds, likes, or view counts where a moment of staleness is acceptable.",
+    "hinglish": "Consistency batati hai ki data ke replicas kab agree karte hain. Strong consistency ka matlab har read latest write ko turant dekhe, har jagah — reason karna simpler, par ye aksar zyada latency aur coordination cost karti hai (aksar synchronous replication). Ye wo hai jo aap account balances jaisi cheezon ke liye chahte ho.\n\nEventual consistency ka matlab ek write ek node par abhi pahunchti hai aur doosron tak asynchronously propagate hoti hai, to reads briefly stale ho sakti hain, par saare replicas time ke saath same value par converge karte hain. Ye immediate correctness ko higher availability aur scale ke liye trade karti hai — social feeds, likes, ya view counts jaisi cheezon ke liye theek jahan ek pal ki staleness acceptable hai.",
+    "keyPoints": [
+      "Strong consistency: every read sees the latest write immediately, everywhere.",
+      "Strong is simpler to reason about but costs latency/coordination.",
+      "Eventual consistency: writes propagate async; reads may be briefly stale.",
+      "Eventual replicas converge to the same value over time.",
+      "Choose strong for correctness-critical data, eventual for availability/scale."
+    ],
+    "real_world": "A bank account balance uses strong consistency — you must always see the latest figure. A social media like-count uses eventual consistency — if your like takes a second to appear on everyone's screen, no harm done, and the system stays fast and available at huge scale.",
+    "followups": [
+      {
+        "q": "Strong vs eventual consistency in one line?",
+        "a": "Strong: every read returns the latest write immediately (more coordination, higher latency). Eventual: replicas may be briefly stale but converge over time (higher availability and scale)."
+      },
+      {
+        "q": "When is eventual consistency acceptable?",
+        "a": "When brief staleness causes no real harm — social feeds, like/view counts, product recommendations. It's not acceptable where reads must be exact, like balances, inventory at checkout, or unique-username checks."
+      },
+      {
+        "q": "How does this relate to the CAP theorem?",
+        "a": "During a network partition, an AP system favors availability and typically offers eventual consistency, while a CP system favors strong consistency and may reject requests. Consistency choices are the practical expression of CAP trade-offs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript simulating a strongly-consistent store vs an eventually-consistent one. The Node demo below shows an immediate read vs a stale-then-converged read, verifying both models.",
+      "source": "// Consistency & eventual consistency — the trade-off in distributed data stores.\n\n// Strong consistency: every read returns the most recent write. Usually achieved with\n// synchronous replication or consensus (e.g., Raft/Paxos). Simpler to reason about, but\n// higher write latency and lower availability during partitions (CP side of CAP).\n\n// Eventual consistency: writes propagate asynchronously, so replicas may briefly disagree,\n// but with no new writes all replicas converge. Higher availability and scale (AP side),\n// at the cost of possibly-stale reads. Common in Cassandra, DynamoDB, DNS, CDNs.\n\n// Tunable consistency (Dynamo-style quorums): pick R + W > N for strong reads.\n//   N = replicas, W = nodes that must ack a write, R = nodes read from.\nfunction isStronglyConsistent(N, R, W) { return R + W > N; }\n\n// Example: N=3. W=2, R=2 -> 2+2 > 3 -> strong. W=1, R=1 -> 1+1 = 2, not > 3 -> eventual.\n// console.log(isStronglyConsistent(3, 2, 2)); // true\n// console.log(isStronglyConsistent(3, 1, 1)); // false\n\n// Practical guidance: use strong consistency where correctness is critical (payments,\n// inventory); accept eventual consistency where availability/scale matter more (feeds,\n// likes, view counts). Many systems let you choose per operation.\nmodule.exports = { isStronglyConsistent };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Consistency & eventual consistency — strong (always latest) vs eventual (converges over time)\n// Strong consistency: a write is visible everywhere immediately (often via sync replication).\nclass StrongStore {\n  constructor() { this.nodes = [{}, {}, {}]; }\n  write(key, value) { this.nodes.forEach((n) => (n[key] = value)); }  // all nodes updated atomically\n  read(nodeIdx, key) { return this.nodes[nodeIdx][key]; }\n}\n// Eventual consistency: a write hits one node now; others catch up asynchronously.\nclass EventualStore {\n  constructor() { this.nodes = [{}, {}, {}]; this.pending = []; }\n  write(key, value) { this.nodes[0][key] = value; this.pending.push([key, value]); } // only node 0 now\n  propagate() { for (const [k, v] of this.pending) this.nodes.forEach((n) => (n[k] = v)); this.pending = []; }\n  read(nodeIdx, key) { return this.nodes[nodeIdx][key]; }\n}\nconst strong = new StrongStore();\nstrong.write(\"x\", 1);\nconsole.log(\"Strong: node2 reads immediately ->\", strong.read(2, \"x\"));   // 1 (always latest)\n\nconst eventual = new EventualStore();\neventual.write(\"x\", 1);\nconsole.log(\"Eventual: node2 before propagation ->\", eventual.read(2, \"x\")); // undefined (stale)\neventual.propagate();\nconsole.log(\"Eventual: node2 after propagation  ->\", eventual.read(2, \"x\")); // 1 (converged)\n\nconsole.assert(strong.read(2, \"x\") === 1, \"strong is immediately consistent everywhere\");\nconsole.assert(eventual.read(2, \"x\") === 1, \"eventual converges after propagation\");\nconsole.log(\"Strong consistency: every read sees the latest write (simpler reasoning, higher latency/cost).\");\nconsole.log(\"Eventual consistency: reads may be briefly stale but all nodes converge (higher availability, scale).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Strong: node2 reads immediately -> 1\nEventual: node2 before propagation -> undefined\nEventual: node2 after propagation  -> 1\nStrong consistency: every read sees the latest write (simpler reasoning, higher latency/cost).\nEventual consistency: reads may be briefly stale but all nodes converge (higher availability, scale).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

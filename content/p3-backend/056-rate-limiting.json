@@ -1,0 +1,69 @@
+{
+  "id": "p3-056",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 56,
+  "orderInPhase": 56,
+  "slug": "rate-limiting",
+  "title": "Rate limiting",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "rate",
+    "limiting"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A login endpoint allows 5 attempts per 15 minutes per IP."
+  },
+  "sections": {
+    "simple_en": "Rate limiting caps how many requests a client can make in a time window, protecting the API from abuse, brute-force attacks, scraping, and accidental overload. When a client exceeds the limit, the server responds 429 Too Many Requests, often with a Retry-After header.\n\nCommon algorithms are fixed window, sliding window, and token bucket. Limits are usually keyed per IP, user, or API key, and stricter limits are applied to sensitive endpoints like login. Across multiple servers, the counters must live in a shared store (e.g., Redis) so the limit is global rather than per-instance.",
+    "hinglish": "Rate limiting cap karta hai ki ek client ek time window mein kitni requests kar sakta hai, API ko abuse, brute-force attacks, scraping aur accidental overload se bachata hai. Jab client limit cross kare, server 429 Too Many Requests deta hai, aksar Retry-After header ke saath.\n\nCommon algorithms: fixed window, sliding window, aur token bucket. Limits aksar per IP, user, ya API key keyed hote hain, aur login jaise sensitive endpoints par stricter limits lagti hain. Multiple servers ke across counters shared store (jaise Redis) mein hone chahiye taaki limit global ho, per-instance nahi.",
+    "keyPoints": [
+      "Caps requests per client per time window; returns 429 when exceeded.",
+      "Protects against abuse, brute force, scraping, and overload.",
+      "Algorithms: fixed window, sliding window, token bucket.",
+      "Key by IP, user, or API key; stricter limits on sensitive routes (login).",
+      "Use a shared store (Redis) so limits are global across instances."
+    ],
+    "real_world": "A login endpoint allows 5 attempts per 15 minutes per IP. A brute-force script gets blocked with 429 after the fifth try, dramatically slowing password guessing, while normal users are unaffected. The general API has a looser limit to prevent scraping and overload.",
+    "followups": [
+      {
+        "q": "Which status code signals rate limiting?",
+        "a": "429 Too Many Requests, usually accompanied by a Retry-After (or RateLimit-*) header telling the client when it can try again."
+      },
+      {
+        "q": "Why must rate-limit counters be shared across servers?",
+        "a": "If each instance counts separately, a client could multiply its allowance by hitting different servers. A shared store like Redis makes the limit global and accurate."
+      },
+      {
+        "q": "Fixed window vs token bucket — a quick difference?",
+        "a": "Fixed window counts requests per discrete interval (simple but bursty at boundaries); token bucket refills tokens at a steady rate and allows short bursts, giving smoother throttling."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + express-rate-limit code. The Node-runnable demo below verifies a fixed-window limiter so the behavior is verifiable here.",
+      "source": "// Rate limiting — throttle requests with express-rate-limit.\nconst express = require(\"express\");\nconst rateLimit = require(\"express-rate-limit\");\nconst app = express();\n\n// General API limiter: 100 requests per 15 minutes per IP.\nconst apiLimiter = rateLimit({\n  windowMs: 15 * 60 * 1000,\n  max: 100,\n  standardHeaders: true,   // send RateLimit-* headers\n  legacyHeaders: false,\n  message: { error: \"Too many requests, please try again later.\" },\n});\napp.use(\"/api\", apiLimiter);\n\n// Stricter limiter for sensitive endpoints (e.g., login) to slow brute force.\nconst loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });\napp.post(\"/login\", loginLimiter, (req, res) => res.json({ ok: true }));\n\n// For multiple servers, back the limiter with a shared store (Redis) so\n// counts are global, not per-instance.\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Rate limiting — fixed-window counter per client\nfunction createRateLimiter(limit, windowMs){\n  const hits = new Map(); // key -> { count, resetAt }\n  return function check(key, now){\n    const rec = hits.get(key);\n    if (!rec || now >= rec.resetAt){ hits.set(key, { count: 1, resetAt: now + windowMs }); return { allowed: true, remaining: limit - 1 }; }\n    if (rec.count < limit){ rec.count++; return { allowed: true, remaining: limit - rec.count }; }\n    return { allowed: false, remaining: 0, retryAfter: rec.resetAt - now };\n  };\n}\nconst limiter = createRateLimiter(3, 1000); // 3 requests per second\nlet now = 0;\nfor (let i = 1; i <= 4; i++) console.log(`req ${i}:`, JSON.stringify(limiter(\"1.2.3.4\", now)));\nnow = 1000;                                  // window resets\nconsole.log(\"after window:\", JSON.stringify(limiter(\"1.2.3.4\", now)));\nconsole.assert(limiter(\"9.9.9.9\", 1500).allowed, \"different client has its own bucket\");\nconsole.log(\"Rate limiting protects against abuse, brute force, and overload.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "req 1: {\"allowed\":true,\"remaining\":2}\nreq 2: {\"allowed\":true,\"remaining\":1}\nreq 3: {\"allowed\":true,\"remaining\":0}\nreq 4: {\"allowed\":false,\"remaining\":0,\"retryAfter\":1000}\nafter window: {\"allowed\":true,\"remaining\":2}\nRate limiting protects against abuse, brute force, and overload.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

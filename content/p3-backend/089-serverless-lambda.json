@@ -1,0 +1,69 @@
+{
+  "id": "p3-089",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 89,
+  "orderInPhase": 89,
+  "slug": "serverless-lambda",
+  "title": "Serverless / Lambda",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "serverless",
+    "lambda"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An image-upload feature triggers a Lambda whenever a file lands in S3: it generates thumbnails and writes metadata to DynamoDB."
+  },
+  "sections": {
+    "simple_en": "Serverless lets you run code without provisioning or managing servers — you deploy functions, and the cloud runs them on demand in response to events (an HTTP request via API Gateway, a file landing in S3, a queue message, a schedule). AWS Lambda is the canonical example. You pay only for actual execution time, and the platform scales automatically with load.\n\nFunctions are stateless: each invocation may run in a fresh environment, so you store state externally (DynamoDB, S3, RDS). The trade-offs are cold starts (latency when a new execution environment spins up), execution time and memory limits, and the discipline of statelessness. Serverless shines for spiky, event-driven, or low-ops workloads; long-running or very high-throughput services may favor containers.",
+    "hinglish": "Serverless aapko servers provision ya manage kiye bina code chalane deta hai — aap functions deploy karte ho, aur cloud unhe on demand events ke jawab mein chalata hai (API Gateway se HTTP request, S3 mein file aana, queue message, schedule). AWS Lambda canonical example hai. Aap sirf actual execution time ke liye pay karte ho, aur platform load ke saath automatically scale karta hai.\n\nFunctions stateless hote hain: har invocation ek fresh environment mein chal sakta hai, isliye state externally store karo (DynamoDB, S3, RDS). Trade-offs: cold starts (jab naya execution environment spin up ho to latency), execution time aur memory limits, aur statelessness ki discipline. Serverless spiky, event-driven, ya low-ops workloads ke liye shine karta hai; long-running ya bahut high-throughput services containers ko prefer kar sakti hain.",
+    "keyPoints": [
+      "Run functions without managing servers; cloud runs them on events.",
+      "Triggers: HTTP (API Gateway), S3, queues, schedules.",
+      "Pay-per-execution; auto-scales with load.",
+      "Stateless — store state externally (DynamoDB/S3/RDS).",
+      "Trade-offs: cold starts, time/memory limits; great for spiky/event-driven work."
+    ],
+    "real_world": "An image-upload feature triggers a Lambda whenever a file lands in S3: it generates thumbnails and writes metadata to DynamoDB. During a quiet night it costs nothing; during a viral spike it scales to thousands of concurrent invocations automatically — with no servers to provision or idle.",
+    "followups": [
+      {
+        "q": "What is a cold start?",
+        "a": "The latency incurred when a new execution environment must be initialized to handle an invocation (no warm one is available). Subsequent invocations reuse the warm environment and are faster."
+      },
+      {
+        "q": "Why must serverless functions be stateless?",
+        "a": "Each invocation may run in a different, ephemeral environment, so in-memory state isn't reliable between calls. Persist state externally (DynamoDB, S3, RDS) instead."
+      },
+      {
+        "q": "When is serverless a good fit — and when not?",
+        "a": "Great for event-driven, spiky, or low-ops workloads with short tasks. Less ideal for long-running processes, very latency-sensitive paths sensitive to cold starts, or steady high-throughput services where containers may be cheaper."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real AWS Lambda handler plus serverless.yml configuration. The Node-runnable demo below simulates event invocation, cold vs warm starts, and concurrency so the model is verifiable here.",
+      "source": "// Serverless / Lambda — event-driven functions, no servers to manage.\n// AWS Lambda handler: invoked per event (HTTP via API Gateway, S3, queue, cron).\nexports.handler = async (event) => {\n  // Stateless: keep no in-memory state between invocations; use a DB/cache.\n  const name = event.queryStringParameters?.name || \"world\";\n  return {\n    statusCode: 200,\n    headers: { \"Content-Type\": \"application/json\" },\n    body: JSON.stringify({ message: `Hello, ${name}` }),\n  };\n};\n\n// Deploy with the Serverless Framework (serverless.yml):\nconst serverlessYml = `\nservice: greeter\nprovider: { name: aws, runtime: nodejs20.x }\nfunctions:\n  greet:\n    handler: handler.handler\n    events:\n      - httpApi: { path: /greet, method: get }   # triggered by HTTP\n`;\n// Benefits: no server management, automatic scaling, pay only for execution.\n// Trade-offs: cold starts, execution time/memory limits, and statelessness\n// (store state externally in DynamoDB/S3/RDS).\nmodule.exports = { serverlessYml };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Serverless / Lambda — event-driven functions; stateless; scale per concurrent event\nfunction createLambdaRuntime(handler){\n  const containers = [];                              // warm execution environments\n  function invoke(event){\n    let container = containers.find(c => !c.busy);\n    let coldStart = false;\n    if (!container){ container = { busy: false, initialized: true }; containers.push(container); coldStart = true; }\n    container.busy = true;\n    const result = handler(event);\n    container.busy = false;                            // returns to pool (stays warm)\n    return { result, coldStart, concurrency: containers.length };\n  }\n  // Concurrent burst: N events at once need N containers\n  function invokeConcurrent(events){\n    const busy = events.map(() => { const c = { busy: true, initialized: true }; containers.push(c); return c; });\n    const out = events.map(e => handler(e));\n    busy.forEach(c => c.busy = false);\n    return { results: out, concurrency: containers.length };\n  }\n  return { invoke, invokeConcurrent };\n}\nconst lambda = createLambdaRuntime((e) => ({ doubled: e.value * 2 }));\nconst first = lambda.invoke({ value: 21 });\nconsole.log(\"First invoke:\", JSON.stringify(first), \"(cold start:\", first.coldStart + \")\");\nconst second = lambda.invoke({ value: 10 });\nconsole.log(\"Second invoke:\", JSON.stringify(second), \"(reused warm container)\");\nconst burst = lambda.invokeConcurrent([{ value: 1 }, { value: 2 }, { value: 3 }]);\nconsole.log(\"Concurrent burst -> containers:\", burst.concurrency);\nconsole.assert(first.coldStart && !second.coldStart, \"first is cold, second reuses a warm container\");\nconsole.log(\"Serverless: no servers to manage, pay-per-use, auto-scales, stateless functions.\");\nconsole.log(\"Watch for cold starts, time limits, and statelessness (use external state).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "First invoke: {\"result\":{\"doubled\":42},\"coldStart\":true,\"concurrency\":1} (cold start: true)\nSecond invoke: {\"result\":{\"doubled\":20},\"coldStart\":false,\"concurrency\":1} (reused warm container)\nConcurrent burst -> containers: 4\nServerless: no servers to manage, pay-per-use, auto-scales, stateless functions.\nWatch for cold starts, time limits, and statelessness (use external state).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

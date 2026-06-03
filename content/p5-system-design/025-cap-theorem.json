@@ -1,0 +1,69 @@
+{
+  "id": "p5-025",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 25,
+  "orderInPhase": 25,
+  "slug": "cap-theorem",
+  "title": "CAP theorem",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "cap",
+    "theorem"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A banking system chooses CP: during a network split it would rather reject a balance read than risk showing a wrong (stale) number."
+  },
+  "sections": {
+    "simple_en": "The CAP theorem states that during a network partition (when parts of a distributed system can't communicate), you must choose between Consistency and Availability — you can't have both. Consistency means every read sees the latest write; availability means every request gets a non-error response.\n\nA CP system (many SQL databases, HBase) sacrifices availability during a partition: it refuses or blocks requests rather than serve possibly-stale data. An AP system (Cassandra, DynamoDB) stays available but may return stale data until the partition heals. Crucially, CAP is about the partition case — with no partition, a system can offer both consistency and availability.",
+    "hinglish": "CAP theorem kehta hai ki ek network partition ke dauran (jab ek distributed system ke parts communicate nahi kar sakte), aapko Consistency aur Availability ke beech choose karna padta hai — aap dono nahi rakh sakte. Consistency ka matlab har read latest write dekhe; availability ka matlab har request ek non-error response paaye.\n\nEk CP system (kai SQL databases, HBase) partition ke dauran availability sacrifice karta hai: ye possibly-stale data serve karne ke bajaye requests refuse ya block karta hai. Ek AP system (Cassandra, DynamoDB) available rehta hai par partition heal hone tak stale data return kar sakta hai. Khaas baat: CAP partition case ke baare mein hai — bina partition ke, ek system dono consistency aur availability offer kar sakta hai.",
+    "keyPoints": [
+      "During a network partition, choose Consistency OR Availability — not both.",
+      "Consistency: every read sees the latest write.",
+      "Availability: every request gets a non-error response.",
+      "CP (many SQL, HBase): refuse stale reads (sacrifice availability).",
+      "AP (Cassandra, DynamoDB): stay up, may serve stale; no partition -> both possible."
+    ],
+    "real_world": "A banking system chooses CP: during a network split it would rather reject a balance read than risk showing a wrong (stale) number. A social feed chooses AP: it keeps serving, even if a few likes are momentarily out of date, because staying available matters more there.",
+    "followups": [
+      {
+        "q": "What does CAP actually force you to choose?",
+        "a": "Only during a network partition: between consistency (every read sees the latest write) and availability (every request gets a response). Without a partition, you can have both — CAP is specifically about partition behavior."
+      },
+      {
+        "q": "CP vs AP — give an example of each?",
+        "a": "CP systems (many traditional SQL setups, HBase) refuse or block during a partition to avoid stale data. AP systems (Cassandra, DynamoDB) stay available and accept temporary staleness, reconciling later (eventual consistency)."
+      },
+      {
+        "q": "Is CAP a strict either/or in practice?",
+        "a": "It's a spectrum in real systems. Many databases offer tunable consistency, letting you trade latency and staleness per operation. CAP is the theoretical frame; PACELC extends it to also consider latency when there's no partition."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript modeling request handling under a partition for CP vs AP systems. The Node demo below shows a CP system refusing service and an AP system serving possibly-stale data, verifying each choice.",
+      "source": "// CAP theorem — during a network partition, choose Consistency or Availability (not both).\n\n// C (Consistency): every read returns the most recent write (or an error).\n// A (Availability): every request gets a non-error response (possibly stale).\n// P (Partition tolerance): the system keeps working despite dropped/delayed network messages.\n// Since partitions are unavoidable in distributed systems, the real choice is C vs A when one occurs.\n\n// CP systems (e.g., traditional SQL with sync replication, HBase, ZooKeeper):\n//   On a partition, refuse requests that can't guarantee the latest data -> stay consistent,\n//   sacrifice availability. Good when correctness is critical (banking, inventory).\n\n// AP systems (e.g., Cassandra, DynamoDB, Riak):\n//   On a partition, keep serving (possibly stale) data -> stay available, sacrifice strong\n//   consistency. They reconcile later (eventual consistency). Good for feeds, carts, likes.\n\n//   function handle(req, partitioned, mode) {\n//     if (!partitioned) return latest();          // no partition: both C and A\n//     return mode === \"CP\" ? error(\"unavailable\") // CP: refuse stale\n//                          : possiblyStaleData();  // AP: stay available\n//   }\n\n// Remember: CAP is about the PARTITION case. Without a partition you can have both C and A.\n// Modern databases often let you tune consistency per operation (e.g., quorum reads/writes).\nexport {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CAP theorem — under a network Partition you must choose Consistency OR Availability\nfunction handleRequest({ partitioned, mode }) {\n  // C = every read sees the latest write; A = every request gets a (non-error) response.\n  if (!partitioned) return { ok: true, data: \"latest\", note: \"no partition: C and A both fine\" };\n  if (mode === \"CP\") return { ok: false, error: \"unavailable\", note: \"refuse to serve stale -> consistency\" };\n  if (mode === \"AP\") return { ok: true, data: \"possibly-stale\", note: \"stay available -> may be stale\" };\n}\nconsole.log(\"No partition:\", handleRequest({ partitioned: false }));\nconsole.log(\"Partition, CP system:\", handleRequest({ partitioned: true, mode: \"CP\" }));\nconsole.log(\"Partition, AP system:\", handleRequest({ partitioned: true, mode: \"AP\" }));\nconst cp = handleRequest({ partitioned: true, mode: \"CP\" });\nconst ap = handleRequest({ partitioned: true, mode: \"AP\" });\nconsole.assert(cp.ok === false, \"CP sacrifices availability during a partition\");\nconsole.assert(ap.ok === true && ap.data === \"possibly-stale\", \"AP sacrifices consistency\");\nconsole.log(\"CAP: with a network partition you can keep only Consistency or Availability, not both.\");\nconsole.log(\"CP (e.g., many SQL/HBase) refuse stale reads; AP (e.g., Cassandra/Dynamo) stay up but may serve stale data.\");\nconsole.log(\"Without a partition, systems can offer both — CAP is about the partition case.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "No partition: { ok: true, data: 'latest', note: 'no partition: C and A both fine' }\nPartition, CP system: {\n  ok: false,\n  error: 'unavailable',\n  note: 'refuse to serve stale -> consistency'\n}\nPartition, AP system: {\n  ok: true,\n  data: 'possibly-stale',\n  note: 'stay available -> may be stale'\n}\nCAP: with a network partition you can keep only Consistency or Availability, not both.\nCP (e.g., many SQL/HBase) refuse stale reads; AP (e.g., Cassandra/Dynamo) stay up but may serve stale data.\nWithout a partition, systems can offer both — CAP is about the partition case.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

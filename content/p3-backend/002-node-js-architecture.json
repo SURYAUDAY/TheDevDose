@@ -1,0 +1,69 @@
+{
+  "id": "p3-002",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 2,
+  "orderInPhase": 2,
+  "slug": "node-js-architecture",
+  "title": "Node.js architecture",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "node.js",
+    "architecture"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An API receiving 5,000 simultaneous requests that each query a database stays responsive because Node doesn't block while waiting on the DB — it fires the qu…"
+  },
+  "sections": {
+    "simple_en": "Node.js runs JavaScript on a single main thread using an event loop, paired with libuv, which provides a thread pool for I/O. Instead of blocking the thread while reading a file or querying a database, Node offloads that work and continues; when the I/O completes, its callback is queued back onto the event loop.\n\nThis non-blocking, event-driven model lets a single Node process handle thousands of concurrent connections efficiently — ideal for I/O-heavy workloads like APIs. The trade-off: CPU-bound work blocks the single thread, so heavy computation should be offloaded (worker threads, child processes, or external services).",
+    "hinglish": "Node.js JavaScript ko ek single main thread par event loop se chalata hai, aur libuv I/O ke liye thread pool deta hai. File read ya DB query ke dauraan thread block karne ke bajaye Node wo kaam offload karke aage badh jaata hai; I/O complete hone par uska callback event loop par wapas queue ho jaata hai.\n\nYe non-blocking, event-driven model ek hi Node process ko hazaaron concurrent connections efficiently handle karne deta hai — APIs jaise I/O-heavy kaam ke liye perfect. Trade-off: CPU-bound kaam single thread block karta hai, isliye heavy computation offload karni chahiye (worker threads, child processes).",
+    "keyPoints": [
+      "Single main thread runs your JS via the event loop; libuv handles I/O on a thread pool.",
+      "Non-blocking I/O: work is offloaded and its callback runs later — the thread never waits.",
+      "Event loop phases process timers, I/O callbacks, check (setImmediate), etc., in order.",
+      "process.nextTick and Promise microtasks run before the loop continues.",
+      "Great for I/O-bound apps; CPU-heavy tasks block the thread — offload them."
+    ],
+    "real_world": "An API receiving 5,000 simultaneous requests that each query a database stays responsive because Node doesn't block while waiting on the DB — it fires the queries, serves other requests, and handles each response as it arrives, all on one thread.",
+    "followups": [
+      {
+        "q": "Why is Node good for I/O-heavy apps but not CPU-heavy ones?",
+        "a": "I/O is offloaded so the single thread stays free to handle other requests. CPU-bound work runs on that same thread, blocking everything else until it finishes."
+      },
+      {
+        "q": "How do you handle CPU-intensive work in Node?",
+        "a": "Offload it to worker threads, child processes, a job queue, or a separate service so the main event loop stays unblocked."
+      },
+      {
+        "q": "What runs first: nextTick, a Promise, or setTimeout?",
+        "a": "process.nextTick runs first, then Promise microtasks, then timer callbacks (setTimeout). nextTick and microtasks drain before the loop proceeds to timers."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Node code demonstrating non-blocking I/O (runs with Node). The Node-runnable demo below verifies event-loop phase ordering.",
+      "source": "// Node.js architecture — single-threaded JS + non-blocking I/O via the event loop.\nconst fs = require(\"fs\");\n\nconsole.log(\"1. runs first (synchronous)\");\n\n// Non-blocking I/O: the read is offloaded; JS keeps running, callback fires later.\nfs.readFile(__filename, \"utf8\", () => {\n  console.log(\"4. file read callback (I/O completion)\");\n});\n\n// Microtask: runs after the current operation, before timers.\nPromise.resolve().then(() => console.log(\"3. promise microtask\"));\n\nconsole.log(\"2. runs second (synchronous)\");\n\n// Key idea: one main thread runs your JS; libuv handles I/O on a thread pool\n// and queues callbacks back onto the event loop when work completes — so the\n// server can handle thousands of concurrent connections without blocking.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Node.js architecture — single thread + event loop ordering of phases\n// nextTick > microtasks (promises) > timers (setTimeout) > check (setImmediate)\nconst order = [];\nconsole.log(\"1. sync start\");\nsetTimeout(() => order.push(\"setTimeout (timers phase)\"), 0);\nsetImmediate(() => order.push(\"setImmediate (check phase)\"));\nPromise.resolve().then(() => order.push(\"promise (microtask)\"));\nprocess.nextTick(() => order.push(\"nextTick (runs first)\"));\nconsole.log(\"2. sync end\");\nsetTimeout(() => {\n  order.forEach((o, i) => console.log(`${i + 3}. ${o}`));\n  console.assert(order[0] === \"nextTick (runs first)\", \"nextTick before microtasks\");\n  console.assert(order[1] === \"promise (microtask)\", \"microtask before timers\");\n  console.log(\"All assertions passed.\");\n}, 10);",
+      "expectedOutput": "1. sync start\n2. sync end\n3. nextTick (runs first)\n4. promise (microtask)\n5. setImmediate (check phase)\n6. setTimeout (timers phase)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

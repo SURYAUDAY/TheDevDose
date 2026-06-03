@@ -1,0 +1,71 @@
+{
+  "id": "p3-095",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 95,
+  "orderInPhase": 95,
+  "slug": "capstone-realtime-chat-app",
+  "title": "Capstone: Realtime Chat App",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "capstone",
+    "realtime",
+    "chat",
+    "app"
+  ],
+  "estMinutes": 8,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A team chat product: each channel is a room, messages broadcast instantly to everyone in it, history loads from the database when you open a channel, and pre…"
+  },
+  "sections": {
+    "simple_en": "This capstone combines the realtime topics into a chat application. Using WebSockets (via Socket.IO), clients connect, authenticate, and join rooms (channels). When someone sends a message, the server broadcasts it to everyone in that room in real time, persists it to a database for history, and tracks presence (who's online/joined).\n\nIt ties together WebSockets for two-way communication, rooms for targeted fan-out, a database for message history, and authentication on the socket connection. To scale across multiple servers, you add the Socket.IO Redis adapter so rooms and broadcasts span all instances. This is the architecture behind chat, live collaboration, and notification systems.",
+    "hinglish": "Ye capstone realtime topics ko ek chat application mein combine karta hai. WebSockets (Socket.IO ke through) use karke, clients connect karte hain, authenticate karte hain, aur rooms (channels) join karte hain. Jab koi message bhejta hai, server use real time mein us room ke sabko broadcast karta hai, history ke liye database mein persist karta hai, aur presence track karta hai (kaun online/joined hai).\n\nYe two-way communication ke liye WebSockets, targeted fan-out ke liye rooms, message history ke liye database, aur socket connection par authentication ko jodta hai. Multiple servers ke across scale karne ke liye, aap Socket.IO Redis adapter add karte ho taaki rooms aur broadcasts saare instances mein span karein. Ye chat, live collaboration, aur notification systems ke peechhe ki architecture hai.",
+    "keyPoints": [
+      "WebSockets (Socket.IO): clients connect, authenticate, and join rooms.",
+      "Messages broadcast to everyone in the room in real time.",
+      "Persist messages to a database for history; track presence.",
+      "Combines WebSockets + rooms + DB + socket auth.",
+      "Scale across servers with the Socket.IO Redis adapter."
+    ],
+    "real_world": "A team chat product: each channel is a room, messages broadcast instantly to everyone in it, history loads from the database when you open a channel, and presence shows who's online. Behind multiple servers, a Redis adapter ensures a message sent on one server reaches users connected to another — exactly how Slack-style apps work.",
+    "followups": [
+      {
+        "q": "What pieces make up a realtime chat app?",
+        "a": "A WebSocket layer (Socket.IO) for two-way messaging, rooms to target the right recipients, a database for message history, authentication on the connection, and presence tracking for who's online."
+      },
+      {
+        "q": "How do you scale WebSocket chat across multiple servers?",
+        "a": "Use a shared backplane like the Socket.IO Redis adapter so that broadcasts and room membership are propagated across all server instances — otherwise users on different servers wouldn't see each other's messages."
+      },
+      {
+        "q": "Why store messages in a database if they're sent in real time?",
+        "a": "Realtime delivery only reaches currently-connected clients. Persisting messages provides history for users who join later or reconnect, and a durable record of the conversation."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Socket.IO chat server code. The Node-runnable demo below runs rooms, broadcast, message history, and presence so the behavior is provably correct here.",
+      "source": "// CAPSTONE: Realtime Chat App — Socket.IO rooms, broadcast, history, presence.\nconst express = require(\"express\");\nconst http = require(\"http\");\nconst { Server } = require(\"socket.io\");\nconst jwt = require(\"jsonwebtoken\");\n\nconst app = express();\nconst server = http.createServer(app);\nconst io = new Server(server, { cors: { origin: \"*\" } });\n\n// Authenticate the socket connection with a JWT.\nio.use((socket, next) => {\n  try {\n    socket.user = jwt.verify(socket.handshake.auth.token, process.env.JWT_SECRET);\n    next();\n  } catch { next(new Error(\"unauthorized\")); }\n});\n\nio.on(\"connection\", (socket) => {\n  socket.on(\"join\", async (room) => {\n    socket.join(room);\n    // Send recent history (from a DB) to the joiner:\n    const history = await loadMessages(room, 50);\n    socket.emit(\"history\", history);\n    // Notify others in the room (presence):\n    socket.to(room).emit(\"system\", `${socket.user.email} joined`);\n  });\n\n  socket.on(\"message\", async ({ room, text }) => {\n    const msg = { from: socket.user.email, text, ts: Date.now() };\n    await saveMessage(room, msg);              // persist for history\n    io.to(room).emit(\"message\", msg);          // broadcast to everyone in the room\n  });\n\n  socket.on(\"disconnect\", () => { /* update presence */ });\n});\n\nasync function loadMessages(room, n) { return []; }   // from MongoDB/Postgres\nasync function saveMessage(room, msg) { /* insert */ }\nserver.listen(3000);\n// To scale across servers, add the Socket.IO Redis adapter so rooms and\n// broadcasts span all instances. Persist messages in a DB for history.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CAPSTONE: Realtime Chat App — rooms, broadcast, presence, and message history\nfunction createChatServer(){\n  const rooms = {};   // room -> { members:Set, history:[] }\n  const room = (r) => (rooms[r] ||= { members: new Set(), history: [] });\n  return {\n    join(r, user, onMessage){ const rm = room(r); rm.members.add(user);\n      rm._handlers ||= {}; rm._handlers[user] = onMessage;\n      this.system(r, `${user} joined`); return rm.history.slice(); },   // send history on join\n    leave(r, user){ const rm = room(r); rm.members.delete(user); delete rm._handlers[user]; this.system(r, `${user} left`); },\n    send(r, from, text){ const rm = room(r); const msg = { from, text, ts: rm.history.length + 1 };\n      rm.history.push(msg);\n      rm.members.forEach(u => { if (u !== from) rm._handlers[u]?.(msg); });   // broadcast to others\n      return msg; },\n    system(r, text){ const rm = room(r); const msg = { from: \"system\", text, ts: rm.history.length + 1 };\n      rm.history.push(msg); rm.members.forEach(u => rm._handlers[u]?.(msg)); },\n    presence(r){ return [...room(r).members]; },\n  };\n}\nconst chat = createChatServer();\nconst ashaInbox = [], raviInbox = [];\nchat.join(\"general\", \"Asha\", (m) => ashaInbox.push(`${m.from}: ${m.text}`));\nconst history = chat.join(\"general\", \"Ravi\", (m) => raviInbox.push(`${m.from}: ${m.text}`));\nconsole.log(\"Ravi got history on join:\", JSON.stringify(history.map(m => m.text)));\nconsole.log(\"Presence:\", JSON.stringify(chat.presence(\"general\")));\nchat.send(\"general\", \"Asha\", \"Hi Ravi!\");\nchat.send(\"general\", \"Ravi\", \"Hey Asha!\");\nconsole.log(\"Asha inbox:\", JSON.stringify(ashaInbox));\nconsole.log(\"Ravi inbox:\", JSON.stringify(raviInbox));\nconsole.assert(raviInbox.includes(\"Asha: Hi Ravi!\"), \"message broadcast to room members\");\nconsole.assert(chat.presence(\"general\").length === 2, \"presence tracks members\");\nconsole.log(\"Stack: WebSockets/Socket.IO + rooms + a DB for history + Redis adapter to scale across servers.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Ravi got history on join: [\"Asha joined\",\"Ravi joined\"]\nPresence: [\"Asha\",\"Ravi\"]\nAsha inbox: [\"system: Asha joined\",\"system: Ravi joined\",\"Ravi: Hey Asha!\"]\nRavi inbox: [\"system: Ravi joined\",\"Asha: Hi Ravi!\"]\nStack: WebSockets/Socket.IO + rooms + a DB for history + Redis adapter to scale across servers.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

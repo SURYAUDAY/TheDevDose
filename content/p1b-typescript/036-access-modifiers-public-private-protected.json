@@ -1,0 +1,68 @@
+{
+  "id": "p1b-036",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 36,
+  "orderInPhase": 36,
+  "slug": "access-modifiers-public-private-protected",
+  "title": "Access Modifiers (public / private / protected)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "access",
+    "modifiers",
+    "public",
+    "private",
+    "protected"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `BankAccount` keeps `private balance` so external code can only change it through `deposit`/`withdraw`, while a `protected` field lets a `SavingsAccount` s…"
+  },
+  "sections": {
+    "simple_en": "Access modifiers control where a class member can be accessed. `public` (the default) is accessible anywhere; `private` is accessible only within the same class; `protected` is accessible within the class and its subclasses.\n\nThese are compile-time (TypeScript) checks and don't enforce true runtime privacy — for genuine runtime privacy use JS `#private` fields. A handy shortcut: putting a modifier on a constructor parameter (parameter properties) declares and assigns the field automatically.",
+    "hinglish": "Access modifiers control karte hain ki class member kahan access ho sakta hai. `public` (default) kahin bhi accessible; `private` sirf usi class ke andar; `protected` class aur uske subclasses ke andar.\nYe compile-time (TypeScript) checks hain aur true runtime privacy enforce nahi karte — asli runtime privacy ke liye JS `#private` fields use karo. Ek handy shortcut: constructor parameter par modifier lagana (parameter properties) field ko automatically declare aur assign kar deta hai.",
+    "keyPoints": [
+      "`public` (default): accessible anywhere.",
+      "`private`: only within the declaring class.",
+      "`protected`: within the class and its subclasses.",
+      "Compile-time only — not true runtime privacy (use `#field` for that).",
+      "Parameter properties: a modifier on a ctor param declares+assigns it."
+    ],
+    "real_world": "A `BankAccount` keeps `private balance` so external code can only change it through `deposit`/`withdraw`, while a `protected` field lets a `SavingsAccount` subclass extend behaviour without exposing internals publicly.",
+    "followups": [
+      {
+        "q": "Difference between private and protected?",
+        "a": "`private` is accessible only inside the declaring class; `protected` is also accessible in subclasses. Both restrict external access."
+      },
+      {
+        "q": "Do TypeScript's private members provide runtime privacy?",
+        "a": "No — they're compile-time checks and the field still exists at runtime. For true runtime privacy use JavaScript's `#private` class fields."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — access modifiers + parameter properties.\n\nexport class BankAccount {\n  // 'private' parameter property: declared + assigned automatically\n  constructor(private balance: number, protected readonly owner: string) {}\n\n  deposit(amount: number): number {\n    this.balance += amount;\n    return this.balance;\n  }\n  getBalance(): number { return this.balance; } // public accessor\n}\n\nexport class AuditedAccount extends BankAccount {\n  whoOwns(): string { return this.owner; } // protected -> visible to subclass\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { BankAccount, AuditedAccount } from \"./solution\";\n\nconst acc = new BankAccount(100, \"Asha\");\nconsole.log(acc.deposit(50));     // 150\nconsole.log(acc.getBalance());    // 150\n// acc.balance;   // compile error: 'balance' is private\nconst aud = new AuditedAccount(0, \"Ravi\");\nconsole.log(aud.whoOwns());       // Ravi\n\nconsole.assert(acc.deposit(50) === 200, \"deposit via public method\");\nconsole.assert(acc.getBalance() === 200, \"balance accessed via accessor\");\nconsole.assert(aud.whoOwns() === \"Ravi\", \"protected visible to subclass\");\nconsole.log(\"access-modifiers assertions passed.\");",
+      "expectedOutput": "150\n150\nRavi\naccess-modifiers assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

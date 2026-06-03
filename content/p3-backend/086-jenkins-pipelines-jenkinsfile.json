@@ -1,0 +1,70 @@
+{
+  "id": "p3-086",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 86,
+  "orderInPhase": 86,
+  "slug": "jenkins-pipelines-jenkinsfile",
+  "title": "Jenkins pipelines (Jenkinsfile)",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "jenkins",
+    "pipelines",
+    "jenkinsfile"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "A repo's Jenkinsfile defines Checkout, Install, Test (publishing JUnit results), Build Image, and Deploy (only on the main branch)."
+  },
+  "sections": {
+    "simple_en": "A Jenkins Pipeline defines your build/test/deploy process as code in a Jenkinsfile committed to the repo (pipeline as code), so it's versioned, reviewable, and reproducible. The preferred declarative syntax is structured: a pipeline block with an agent, stages (each containing steps), and supporting blocks like environment, when (conditions), and post.\n\nStages run in sequence — Checkout, Install, Test, Build, Deploy — and the post block defines actions for success, failure, or always (publish test results, notify on failure, clean the workspace). Keeping the pipeline in the repo means changes to the build process go through the same review and history as the code.",
+    "hinglish": "Jenkins Pipeline aapke build/test/deploy process ko code ke roop mein ek Jenkinsfile mein define karta hai jo repo mein commit hota hai (pipeline as code), isliye ye versioned, reviewable aur reproducible hai. Preferred declarative syntax structured hai: ek pipeline block jisme agent, stages (har ek mein steps), aur supporting blocks jaise environment, when (conditions), aur post.\n\nStages sequence mein chalte hain — Checkout, Install, Test, Build, Deploy — aur post block success, failure, ya always ke liye actions define karta hai (test results publish, failure par notify, workspace clean). Pipeline ko repo mein rakhne ka matlab build process ke changes wahi review aur history se guzarte hain jo code.",
+    "keyPoints": [
+      "Pipeline as code in a versioned Jenkinsfile (reviewable, reproducible).",
+      "Declarative syntax: pipeline { agent; stages { stage { steps } } }.",
+      "Supporting blocks: environment, when (conditions), post (always/success/failure).",
+      "Stages run in order; post handles results (publish, notify, cleanup).",
+      "Build-process changes go through code review like the rest of the repo."
+    ],
+    "real_world": "A repo's Jenkinsfile defines Checkout, Install, Test (publishing JUnit results), Build Image, and Deploy (only on the main branch). A post block emails the team on failure and cleans the workspace always — so the entire CI/CD process is transparent, version-controlled, and changes are reviewed in pull requests.",
+    "followups": [
+      {
+        "q": "Why keep the pipeline in a Jenkinsfile (pipeline as code)?",
+        "a": "It's versioned with the code, reviewable in pull requests, and reproducible — unlike UI-configured jobs, the build process has history and changes go through the same review as application code."
+      },
+      {
+        "q": "Declarative vs scripted pipelines?",
+        "a": "Declarative is the structured, recommended syntax (pipeline/stages/steps with built-in constructs like when and post). Scripted is more flexible Groovy code but more complex; most teams prefer declarative."
+      },
+      {
+        "q": "What is the post block for?",
+        "a": "Defining actions based on the outcome — always (e.g., clean workspace, archive logs), success, or failure (e.g., notify the team) — so cleanup and alerts happen regardless of how the build ends."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "A real declarative Jenkinsfile (configuration, not Node application code). The Node-runnable demo below simulates running its stages and post actions so the flow is verifiable here.",
+      "source": "// Jenkins pipelines (Jenkinsfile) — declarative pipeline as code in the repo.\n// File: Jenkinsfile\nconst jenkinsfile = `\npipeline {\n  agent any                          // run on any available agent\n  environment {\n    NODE_ENV = 'production'\n    REGISTRY = 'registry.example.com'\n  }\n  stages {\n    stage('Checkout') { steps { checkout scm } }\n    stage('Install')  { steps { sh 'npm ci' } }\n    stage('Test') {\n      steps { sh 'npm test' }\n      post { always { junit 'reports/*.xml' } }   // publish test results\n    }\n    stage('Build Image') {\n      steps { sh 'docker build -t \\$REGISTRY/api:\\$BUILD_NUMBER .' }\n    }\n    stage('Deploy') {\n      when { branch 'main' }          // only deploy from main\n      steps { sh 'kubectl apply -f k8s/' }\n    }\n  }\n  post {\n    success { echo 'Pipeline succeeded' }\n    failure { mail to: 'team@example.com', subject: 'Build failed' }\n    always  { cleanWs() }             // clean the workspace\n  }\n}\n`;\n// Declarative pipelines are structured and readable: stages, steps, agent,\n// environment, when (conditions), and post (always/success/failure) blocks.\nmodule.exports = jenkinsfile;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Jenkins pipelines (Jenkinsfile) — declarative pipeline of stages as code\nfunction runDeclarativePipeline(pipeline){\n  const log = []; let status = \"SUCCESS\";\n  for (const stage of pipeline.stages){\n    log.push(`[Stage] ${stage.name}`);\n    try { stage.steps.forEach(step => { log.push(`   + ${step()}`); }); }\n    catch (e){ status = \"FAILURE\"; log.push(`   ! ${e.message}`); break; }\n  }\n  if (pipeline.post && pipeline.post.always) log.push(`[post/always] ${pipeline.post.always()}`);\n  return { status, log };\n}\n// Mirrors a Jenkinsfile: pipeline { agent any; stages { stage('Build'){ steps{ sh '...' } } } }\nconst jenkinsfile = {\n  stages: [\n    { name: \"Build\", steps: [() => \"npm ci\", () => \"npm run build\"] },\n    { name: \"Test\",  steps: [() => \"npm test\"] },\n    { name: \"Deploy\", steps: [() => \"kubectl apply -f k8s/\"] },\n  ],\n  post: { always: () => \"archive logs & notify\" },\n};\nconst result = runDeclarativePipeline(jenkinsfile);\nresult.log.forEach(l => console.log(l));\nconsole.log(\"Status:\", result.status);\nconsole.assert(result.status === \"SUCCESS\", \"all stages succeeded\");\nconsole.log(\"A Jenkinsfile lives in the repo (pipeline as code): stages, steps, agent, post actions.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "[Stage] Build\n   + npm ci\n   + npm run build\n[Stage] Test\n   + npm test\n[Stage] Deploy\n   + kubectl apply -f k8s/\n[post/always] archive logs & notify\nStatus: SUCCESS\nA Jenkinsfile lives in the repo (pipeline as code): stages, steps, agent, post actions.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p3-088",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 88,
+  "orderInPhase": 88,
+  "slug": "aws-basics",
+  "title": "AWS basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "aws",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A startup hosts its API on EC2 behind an ELB, stores user uploads in S3 served via CloudFront, runs its database on RDS (so AWS handles backups and patching)…"
+  },
+  "sections": {
+    "simple_en": "AWS (Amazon Web Services) is the largest cloud platform, offering on-demand infrastructure and managed services so you don't run your own data centers. The core building blocks every backend engineer should know: EC2 (virtual servers/compute), S3 (object storage), RDS (managed relational databases), and Lambda (serverless functions).\n\nSupporting services include ELB (load balancing), VPC (private networking), IAM (identity and least-privilege access), CloudFront (CDN), Route 53 (DNS), and CloudWatch (monitoring/logs). A common web architecture chains them: DNS → CDN → load balancer → compute → managed database, with S3 for assets and IAM controlling permissions. You provision via the console, CLI, SDK, or IaC like Terraform.",
+    "hinglish": "AWS (Amazon Web Services) sabse bada cloud platform hai, jo on-demand infrastructure aur managed services deta hai taaki aap apne data centers na chalao. Core building blocks jo har backend engineer ko pata hone chahiye: EC2 (virtual servers/compute), S3 (object storage), RDS (managed relational databases), aur Lambda (serverless functions).\n\nSupporting services: ELB (load balancing), VPC (private networking), IAM (identity aur least-privilege access), CloudFront (CDN), Route 53 (DNS), aur CloudWatch (monitoring/logs). Ek common web architecture inhe chain karta hai: DNS → CDN → load balancer → compute → managed database, S3 assets ke liye aur IAM permissions control karte hue. Aap console, CLI, SDK, ya Terraform jaise IaC se provision karte ho.",
+    "keyPoints": [
+      "Largest cloud: on-demand infrastructure + managed services.",
+      "Core: EC2 (compute), S3 (storage), RDS (managed DB), Lambda (serverless).",
+      "Supporting: ELB, VPC, IAM, CloudFront (CDN), Route 53 (DNS), CloudWatch.",
+      "Typical flow: DNS -> CDN -> load balancer -> compute -> managed DB.",
+      "Provision via console, CLI, SDK, or IaC (Terraform)."
+    ],
+    "real_world": "A startup hosts its API on EC2 behind an ELB, stores user uploads in S3 served via CloudFront, runs its database on RDS (so AWS handles backups and patching), controls access with IAM roles, and watches everything in CloudWatch — scaling globally without owning a single server.",
+    "followups": [
+      {
+        "q": "What are the most important core AWS services?",
+        "a": "EC2 (compute), S3 (object storage), RDS (managed databases), and Lambda (serverless) — plus ELB, VPC, IAM, and CloudWatch as the supporting cast for routing, networking, access, and monitoring."
+      },
+      {
+        "q": "Why use RDS instead of running a database on EC2?",
+        "a": "RDS is managed: AWS handles backups, patching, replication, and failover. Running your own DB on EC2 means you operate all of that yourself — more control but more work and risk."
+      },
+      {
+        "q": "What does IAM do?",
+        "a": "Identity and Access Management controls who (users/roles/services) can do what on which resources, enabling least-privilege security. Proper IAM policies are central to keeping a cloud account safe."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": false,
+      "note": "Real AWS SDK usage plus a core-services map (mostly cloud configuration, not standalone Node code). The Node-runnable demo below simulates a request flowing through core AWS building blocks so the architecture is verifiable here.",
+      "source": "// AWS basics — core building blocks of a typical cloud deployment.\n// (Conceptual map; you'd use the AWS Console, CLI, SDK, or Terraform.)\nconst awsCoreServices = {\n  EC2: \"Virtual servers (compute) you manage\",\n  S3: \"Object storage for files, backups, static assets\",\n  RDS: \"Managed relational databases (PostgreSQL, MySQL, ...)\",\n  Lambda: \"Serverless functions (run code without managing servers)\",\n  ELB: \"Elastic Load Balancer distributes traffic across instances\",\n  VPC: \"Virtual private network isolating your resources\",\n  IAM: \"Identity & access management (users, roles, least-privilege policies)\",\n  CloudFront: \"CDN that caches content close to users\",\n  Route53: \"DNS and domain routing\",\n  CloudWatch: \"Monitoring, logs, metrics, and alarms\",\n};\n\n// A common web architecture on AWS:\n//   Route53 (DNS) -> CloudFront (CDN) -> ELB -> EC2/ECS (app) -> RDS (DB)\n//   with S3 for assets/uploads, IAM for permissions, CloudWatch for observability.\n//\n// Example: read an object with the SDK.\nconst { S3Client, GetObjectCommand } = require(\"@aws-sdk/client-s3\");\nconst s3 = new S3Client({ region: \"us-east-1\" });\nasync function getFile(key) {\n  return s3.send(new GetObjectCommand({ Bucket: \"my-bucket\", Key: key }));\n}\nmodule.exports = { awsCoreServices, getFile };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// AWS basics — a request flows through core building blocks\n// (ELB -> EC2/compute -> RDS/database, with S3 for objects and CloudFront/CDN)\nfunction awsArchitecture(){\n  const services = {\n    route53: (domain) => ({ resolvedTo: \"elb\" }),                 // DNS\n    elb: (req) => ({ routedTo: \"ec2-\" + ((req.id % 2) + 1) }),    // load balancer -> targets\n    ec2: (instance, req) => ({ instance, handled: req.path }),    // compute\n    rds: (query) => ({ rows: query === \"SELECT\" ? 5 : 0 }),       // managed database\n    s3: (key) => ({ url: `https://bucket.s3.amazonaws.com/${key}` }), // object storage\n  };\n  return services;\n}\nconst aws = awsArchitecture();\nconst req = { id: 3, path: \"/api/users\" };\nconst target = aws.elb(req);                       // load-balance across instances\nconsole.log(\"ELB routed request to:\", target.routedTo);\nconsole.log(\"EC2 handled:\", JSON.stringify(aws.ec2(target.routedTo, req)));\nconsole.log(\"RDS query:\", JSON.stringify(aws.rds(\"SELECT\")));\nconsole.log(\"S3 object URL:\", aws.s3(\"avatars/asha.png\").url);\nconsole.assert(target.routedTo.startsWith(\"ec2-\"), \"request load-balanced to a compute instance\");\nconsole.log(\"Core AWS: EC2 (compute), S3 (storage), RDS (DB), ELB (LB), VPC (network), IAM (access), Lambda.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "ELB routed request to: ec2-2\nEC2 handled: {\"instance\":\"ec2-2\",\"handled\":\"/api/users\"}\nRDS query: {\"rows\":5}\nS3 object URL: https://bucket.s3.amazonaws.com/avatars/asha.png\nCore AWS: EC2 (compute), S3 (storage), RDS (DB), ELB (LB), VPC (network), IAM (access), Lambda.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "p1b-045",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 45,
+  "orderInPhase": 45,
+  "slug": "partial-t",
+  "title": "Partial<T>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "partial"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "An `updateUser(id, changes: Partial<User>)` function lets callers send only the fields to change (e.g."
+  },
+  "sections": {
+    "simple_en": "`Partial<T>` produces a new type with all of `T`'s properties made OPTIONAL. It's perfect for update/patch operations where the caller supplies only the fields they want to change, and for default-merging configuration objects.\n\nInternally it's a mapped type that adds `?` to every property. Note it's shallow — nested objects aren't made partial. For deep optionality you'd write a recursive `DeepPartial<T>` yourself.",
+    "hinglish": "`Partial<T>` ek naya type banata hai jisme `T` ki saari properties OPTIONAL ho jaati hain. Ye update/patch operations ke liye perfect hai jahan caller sirf woh fields deta hai jo change karne hain, aur configuration objects ke default-merging ke liye.\nAndar se ye ek mapped type hai jo har property me `?` add karta hai. Note ye shallow hai — nested objects partial nahi hote. Deep optionality ke liye aapko khud ek recursive `DeepPartial<T>` likhna padega.",
+    "keyPoints": [
+      "Makes every property of T optional.",
+      "Ideal for patch/update functions and merging defaults.",
+      "Implemented as a mapped type adding `?`.",
+      "Shallow — nested objects are not made partial.",
+      "Pair with spread to merge updates onto a full object."
+    ],
+    "real_world": "An `updateUser(id, changes: Partial<User>)` function lets callers send only the fields to change (e.g. just `{ email }`), which the server merges onto the existing record.",
+    "followups": [
+      {
+        "q": "What does Partial<T> do?",
+        "a": "It returns a type identical to T but with every property optional (`?`). Useful for partial updates where only some fields are provided."
+      },
+      {
+        "q": "Is Partial deep or shallow?",
+        "a": "Shallow — only top-level properties become optional. Nested object properties stay required; you'd need a custom recursive `DeepPartial<T>` for deep optionality."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Partial for updates.\n\ninterface Settings {\n  theme: string;\n  fontSize: number;\n  notifications: boolean;\n}\n\nexport function updateSettings(current: Settings, changes: Partial<Settings>): Settings {\n  return { ...current, ...changes };\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { updateSettings } from \"./solution\";\n\nconst current = { theme: \"light\", fontSize: 14, notifications: true };\nconsole.log(updateSettings(current, { theme: \"dark\" }));         // only theme changes\nconsole.log(updateSettings(current, { fontSize: 18, notifications: false }));\n\nconst r = updateSettings(current, { theme: \"dark\" });\nconsole.assert(r.theme === \"dark\", \"changed field applied\");\nconsole.assert(r.fontSize === 14 && r.notifications === true, \"other fields preserved\");\nconsole.log(\"Partial assertions passed.\");",
+      "expectedOutput": "{ theme: 'dark', fontSize: 14, notifications: true }\n{ theme: 'light', fontSize: 18, notifications: false }\nPartial assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

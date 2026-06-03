@@ -1,0 +1,68 @@
+{
+  "id": "p2-053",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 53,
+  "orderInPhase": 53,
+  "slug": "vite",
+  "title": "Vite",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "vite"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A team migrating a large app from Create React App to Vite sees dev server startup drop from ~30 seconds to under a second, and hot reloads become instant —…"
+  },
+  "sections": {
+    "simple_en": "Vite is a modern build tool and dev server. In development it serves your source as native ES modules on demand — no upfront bundling — so the dev server starts almost instantly and updates are near-instant via Hot Module Replacement, even in large projects.\n\nFor production it bundles with Rollup, applying optimizations like minification, tree-shaking, and code splitting. Vite has largely become the default choice for new React apps, replacing the slower bundle-everything-first approach of older tooling.",
+    "hinglish": "Vite ek modern build tool aur dev server hai. Development mein ye aapka source native ES modules ke roop mein on demand serve karta hai — pehle se bundling nahi — isliye dev server lagbhag instantly start hota hai aur HMR se updates bhi turant aate hain, bade projects mein bhi.\n\nProduction ke liye ye Rollup se bundle karta hai — minification, tree-shaking, code splitting. Naye React apps ke liye Vite ab default choice ban gaya hai, purane 'pehle sab bundle karo' approach ki jagah.",
+    "keyPoints": [
+      "Dev: serves native ES modules on demand — instant server start, fast HMR.",
+      "Prod: bundles with Rollup (minify, tree-shake, code-split).",
+      "No full bundling step in dev means speed stays constant as the app grows.",
+      "Simple config (vite.config.js) with plugins (e.g., @vitejs/plugin-react).",
+      "Now the de facto default for new React projects (over Create React App/Webpack)."
+    ],
+    "real_world": "A team migrating a large app from Create React App to Vite sees dev server startup drop from ~30 seconds to under a second, and hot reloads become instant — because Vite stops pre-bundling everything and serves modules as the browser requests them.",
+    "followups": [
+      {
+        "q": "Why is Vite's dev server so fast?",
+        "a": "It serves source files as native ES modules on demand instead of bundling the whole app first, so startup is near-instant and HMR updates only the changed module."
+      },
+      {
+        "q": "Does Vite bundle for production?",
+        "a": "Yes — it uses Rollup to produce an optimized, code-split, minified bundle. The no-bundle approach is a development-only optimization."
+      },
+      {
+        "q": "Vite vs Webpack?",
+        "a": "Vite is faster in dev (native ESM + esbuild pre-bundling) with simpler config; Webpack is more mature with a huge plugin ecosystem. New projects increasingly default to Vite."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "A Vite build-tool configuration file. The Node-runnable demo below illustrates how Vite serves modules on demand in dev.",
+      "source": "// Vite: minimal config. Dev uses native ESM (instant start); build uses Rollup.\n// vite.config.js\nimport { defineConfig } from \"vite\";\nimport react from \"@vitejs/plugin-react\";\n\nexport default defineConfig({\n  plugins: [react()],\n  server: { port: 3000, open: true },\n  build: {\n    outDir: \"dist\",\n    sourcemap: true,\n    rollupOptions: {\n      output: {\n        // Split big vendor libs into their own cacheable chunk.\n        manualChunks: { vendor: [\"react\", \"react-dom\"] },\n      },\n    },\n  },\n});\n\n// package.json scripts: \"dev\": \"vite\", \"build\": \"vite build\", \"preview\": \"vite preview\"",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Vite — dev serves native ES modules on demand (no bundling in dev)\nconst moduleGraph = {\n  \"main.js\": [\"App.js\", \"utils.js\"],\n  \"App.js\": [\"Button.js\"],\n  \"Button.js\": [],\n  \"utils.js\": [],\n};\nlet requests = 0;\nfunction devServe(entry, served = new Set()){\n  if (served.has(entry)) return served;\n  requests++; served.add(entry);            // browser requests each module as needed\n  for (const dep of moduleGraph[entry]) devServe(dep, served);\n  return served;\n}\nconst served = devServe(\"main.js\");\nconsole.log(\"Modules served on demand:\", [...served].join(\", \"));\nconsole.log(\"Module requests (no bundling step):\", requests);\nconsole.assert(requests === 4, \"each module served individually in dev\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Modules served on demand: main.js, App.js, Button.js, utils.js\nModule requests (no bundling step): 4\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

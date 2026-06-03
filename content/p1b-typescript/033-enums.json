@@ -1,0 +1,64 @@
+{
+  "id": "p1b-033",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 33,
+  "orderInPhase": 33,
+  "slug": "enums",
+  "title": "Enums",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "enums"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Representing order states with `enum Status { Pending, Shipped, Delivered }` gives readable names instead of magic numbers, and the compiler restricts a stat…"
+  },
+  "sections": {
+    "simple_en": "An enum defines a set of named constants. Numeric enums auto-assign incrementing numbers starting at 0 (or from a value you set); string enums assign explicit string values. Enums give meaningful names to a fixed set of related values.\n\nUnlike most type features, a regular enum produces real JavaScript code at runtime (an object), so it exists when the program runs. Many teams now prefer string literal unions or `as const` objects for lighter output, but enums remain common and are worth knowing.",
+    "hinglish": "Enum named constants ka ek set define karta hai. Numeric enums 0 se (ya aapke set kiye value se) incrementing numbers auto-assign karte hain; string enums explicit string values assign karte hain. Enums related values ke fixed set ko meaningful naam dete hain.\nZyadatar type features ke विपरीत, regular enum runtime par real JavaScript code (ek object) banata hai, isliye program chalne par ye exist karta hai. Aaj kai teams lighter output ke liye string literal unions ya `as const` objects prefer karti hain, par enums abhi bhi common hain aur jaanne layak.",
+    "keyPoints": [
+      "Defines named constants; numeric (auto-increment) or string enums.",
+      "Numeric enums start at 0 by default; you can set start values.",
+      "Regular enums emit a real runtime object (unlike type-only features).",
+      "Reverse mapping exists for numeric enums (value → name).",
+      "Alternatives: string literal unions or `as const` objects."
+    ],
+    "real_world": "Representing order states with `enum Status { Pending, Shipped, Delivered }` gives readable names instead of magic numbers, and the compiler restricts a status field to those values.",
+    "followups": [
+      {
+        "q": "Difference between numeric and string enums?",
+        "a": "Numeric enums auto-assign incrementing numbers (and support reverse mapping value→name); string enums require explicit string values and have no reverse mapping but are more readable in output/logs."
+      },
+      {
+        "q": "Do enums exist at runtime?",
+        "a": "Regular enums do — they compile to a real JavaScript object. This differs from most type features, which are erased. (const enums are an exception — they're inlined.)"
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — numeric and string enums.\n\nexport enum Direction { Up, Down, Left, Right } // 0,1,2,3\n\nexport enum Status {\n  Pending = \"PENDING\",\n  Shipped = \"SHIPPED\",\n  Delivered = \"DELIVERED\",\n}\n\nexport function move(d: Direction): string {\n  return \"moving \" + Direction[d]; // reverse mapping (numeric enum)\n}\n\nexport function isFinal(s: Status): boolean {\n  return s === Status.Delivered;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { Direction, Status, move, isFinal } from \"./solution\";\n\nconsole.log(Direction.Up, Direction.Right); // 0 3\nconsole.log(move(Direction.Left));          // moving Left\nconsole.log(Status.Shipped);                // SHIPPED\nconsole.log(isFinal(Status.Delivered));     // true\nconsole.log(isFinal(Status.Pending));       // false\n\nconsole.assert(Direction.Up === 0 && Direction.Right === 3, \"numeric enum values\");\nconsole.assert(move(Direction.Left) === \"moving Left\", \"reverse mapping\");\nconsole.assert(Status.Shipped === \"SHIPPED\", \"string enum value\");\nconsole.assert(isFinal(Status.Delivered) === true, \"final status check\");\nconsole.log(\"enums assertions passed.\");",
+      "expectedOutput": "0 3\nmoving Left\nSHIPPED\ntrue\nfalse\nenums assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

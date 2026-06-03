@@ -1,0 +1,66 @@
+{
+  "id": "p1b-062",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 62,
+  "orderInPhase": 62,
+  "slug": "template-literal-types",
+  "title": "Template Literal Types",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "template",
+    "literal",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "Typing event handler keys as `\\`on${Capitalize<EventName>}\\`` derives `onClick`, `onChange`, etc."
+  },
+  "sections": {
+    "simple_en": "Template literal types let you build new string-literal types by interpolating other types inside backtick type expressions: `type Greeting = \\`Hello, ${string}\\``. They mirror template literals but at the type level.\n\nCombined with unions they generate combinations — e.g. `\\`${\"on\" | \"off\"}-${\"a\" | \"b\"}\\`` produces all four string variants. With intrinsic helpers like `Uppercase`/`Lowercase`/`Capitalize`, they enable precise, derived string types for event names, CSS classes, and keys.",
+    "hinglish": "Template literal types aapko naye string-literal types banane dete hain doosre types ko backtick type expressions me interpolate karke: `type Greeting = \\`Hello, ${string}\\``. Ye template literals ki nakal karte hain par type level par.\nUnions ke saath ye combinations generate karte hain — jaise `\\`${\"on\" | \"off\"}-${\"a\" | \"b\"}\\`` chaaro string variants banata hai. `Uppercase`/`Lowercase`/`Capitalize` jaise intrinsic helpers ke saath, ye event names, CSS classes, aur keys ke liye precise, derived string types dete hain.",
+    "keyPoints": [
+      "Build string-literal types via `\\`...${T}...\\`` type expressions.",
+      "Unions inside generate all combinations.",
+      "Intrinsics: Uppercase, Lowercase, Capitalize, Uncapitalize.",
+      "Great for event names, prefixed keys, CSS class types.",
+      "Type-level mirror of runtime template literals."
+    ],
+    "real_world": "Typing event handler keys as `\\`on${Capitalize<EventName>}\\`` derives `onClick`, `onChange`, etc. from a base list — keeping handler prop names exact and in sync with the event names.",
+    "followups": [
+      {
+        "q": "What do template literal types let you build?",
+        "a": "New string-literal types by interpolating other types in backtick type expressions (e.g. `\\`on${Capitalize<E>}\\``), including generating all combinations from unions."
+      },
+      {
+        "q": "What intrinsic string helpers exist?",
+        "a": "`Uppercase`, `Lowercase`, `Capitalize`, and `Uncapitalize` transform string-literal types, often used together with template literal types to derive precise key/event names."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — template literal types.\n\ntype Event = \"click\" | \"change\";\nexport type Handler = `on${Capitalize<Event>}`; // \"onClick\" | \"onChange\"\n\nexport function makeHandlerName(event: Event): Handler {\n  return (\"on\" + event.charAt(0).toUpperCase() + event.slice(1)) as Handler;\n}\n\ntype Size = \"sm\" | \"lg\";\ntype Color = \"red\" | \"blue\";\nexport type Variant = `${Size}-${Color}`; // 4 combinations\n\nexport function variant(size: Size, color: Color): Variant {\n  return `${size}-${color}`;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { makeHandlerName, variant } from \"./solution\";\n\nconsole.log(makeHandlerName(\"click\"));  // onClick\nconsole.log(makeHandlerName(\"change\")); // onChange\nconsole.log(variant(\"sm\", \"red\"));      // sm-red\n\nconsole.assert(makeHandlerName(\"click\") === \"onClick\", \"capitalized handler name\");\nconsole.assert(variant(\"lg\", \"blue\") === \"lg-blue\", \"combined variant\");\nconsole.log(\"template-literal-types assertions passed.\");",
+      "expectedOutput": "onClick\nonChange\nsm-red\ntemplate-literal-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

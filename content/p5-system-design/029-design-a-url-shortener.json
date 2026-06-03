@@ -1,0 +1,70 @@
+{
+  "id": "p5-029",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 29,
+  "orderInPhase": 29,
+  "slug": "design-a-url-shortener",
+  "title": "Design a URL shortener",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "design",
+    "url",
+    "shortener"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A link-sharing service turns a 200-character tracking URL into example.co/aZ3 — a base62 encoding of a unique id."
+  },
+  "sections": {
+    "simple_en": "A URL shortener maps a long URL to a short code and redirects from the code back to the original. The classic design assigns each URL an incrementing numeric id and encodes it in base62 (0-9, a-z, A-Z) to produce a short, URL-safe code — a handful of base62 characters covers billions of URLs.\n\nYou store the code-to-URL mapping (and optionally URL-to-code, to dedupe identical URLs), then on each visit you look up the code and issue a redirect. At scale the pieces become a distributed unique-id generator, a fast key-value store for the mapping, caching for hot links, and analytics on click events.",
+    "hinglish": "Ek URL shortener ek long URL ko ek short code se map karta hai aur code se wapas original par redirect karta hai. Classic design har URL ko ek incrementing numeric id assign karta hai aur use base62 (0-9, a-z, A-Z) mein encode karta hai ek short, URL-safe code banane ke liye — kuch base62 characters billions URLs cover karte hain.\n\nAap code-to-URL mapping store karte ho (aur optionally URL-to-code, identical URLs dedupe karne ke liye), phir har visit par aap code look up karke ek redirect issue karte ho. Scale par pieces ban jaate hain ek distributed unique-id generator, mapping ke liye ek fast key-value store, hot links ke liye caching, aur click events par analytics.",
+    "keyPoints": [
+      "Map a long URL to a short code; redirect code -> original.",
+      "Assign an incrementing id, encode it in base62 for a short, safe code.",
+      "Store code->URL (and URL->code to dedupe identical URLs).",
+      "On visit, look up the code and issue a redirect.",
+      "At scale: distributed id generator, KV store, caching, click analytics."
+    ],
+    "real_world": "A link-sharing service turns a 200-character tracking URL into example.co/aZ3 — a base62 encoding of a unique id. Clicking it hits the service, which looks up the id and redirects you, while recording a click for analytics, all in milliseconds.",
+    "followups": [
+      {
+        "q": "How do you generate the short code?",
+        "a": "A common approach assigns each URL a unique incrementing id and encodes it in base62, giving a compact, URL-safe string. Alternatives include hashing the URL (and handling collisions) or random codes checked for uniqueness."
+      },
+      {
+        "q": "How does it scale to billions of URLs?",
+        "a": "Use a distributed unique-id generator (to avoid a single counter bottleneck), a horizontally scalable key-value store for the mapping, a cache for popular links, and replication for availability."
+      },
+      {
+        "q": "How do you handle the same URL submitted twice?",
+        "a": "Keep a URL-to-code index and return the existing code for a duplicate, so identical URLs share one short code — saving space and keeping analytics consistent. (Some services intentionally issue unique codes per request instead.)"
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript implementing base62 encoding and a shorten/resolve store with dedup. The Node demo below shortens URLs and resolves a code back, verifying round-trip and dedup.",
+      "source": "// Design a URL shortener — core LLD plus scaling notes.\n\n// Encoding: map an incrementing numeric id to a short base62 code (0-9a-zA-Z).\nconst ALPHABET = \"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\";\nfunction encode(id) {\n  if (id === 0) return ALPHABET[0];\n  let s = \"\";\n  while (id > 0) { s = ALPHABET[id % 62] + s; id = Math.floor(id / 62); }\n  return s;\n}\nfunction decode(code) {\n  return [...code].reduce((acc, ch) => acc * 62 + ALPHABET.indexOf(ch), 0);\n}\n\n// HLD at scale:\n//   - Write path: POST /shorten -> get a unique id (distributed id generator like Snowflake,\n//     or a sharded counter) -> base62 encode -> store code->URL in a KV store.\n//   - Read path: GET /:code -> look up URL (cache hot codes in Redis) -> 301/302 redirect.\n//   - Add: custom aliases, expiry/TTL, click analytics, and rate limiting.\nmodule.exports = { encode, decode };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Design a URL shortener — map a long URL to a short code and back (base62 of an incrementing id)\nconst ALPHABET = \"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\"; // base62\nfunction encode(id) {\n  if (id === 0) return ALPHABET[0];\n  let s = \"\";\n  while (id > 0) { s = ALPHABET[id % 62] + s; id = Math.floor(id / 62); }\n  return s;   // short, URL-safe code\n}\nclass URLShortener {\n  constructor() { this.nextId = 1; this.idToUrl = new Map(); this.urlToCode = new Map(); }\n  shorten(longUrl) {\n    if (this.urlToCode.has(longUrl)) return this.urlToCode.get(longUrl);  // dedupe identical URLs\n    const id = this.nextId++; const code = encode(id);\n    this.idToUrl.set(code, longUrl); this.urlToCode.set(longUrl, code);\n    return code;\n  }\n  resolve(code) { return this.idToUrl.get(code) || null; }   // redirect lookup\n}\nconst s = new URLShortener();\nconst c1 = s.shorten(\"https://example.com/very/long/path\");\nconst c2 = s.shorten(\"https://another.com/page\");\nconsole.log(\"short code 1:\", c1, \"-> resolves to\", s.resolve(c1));\nconsole.log(\"short code 2:\", c2);\nconsole.log(\"encode(1), encode(62), encode(125):\", encode(1), encode(62), encode(125));\nconsole.assert(s.resolve(c1) === \"https://example.com/very/long/path\", \"code resolves back to URL\");\nconsole.assert(s.shorten(\"https://another.com/page\") === c2, \"same URL -> same code (dedup)\");\nconsole.log(\"URL shortener: generate a unique short code (base62 of an id), store code<->URL, redirect on lookup.\");\nconsole.log(\"At scale: a distributed id generator, a KV store for the mapping, caching, and analytics on clicks.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "short code 1: 1 -> resolves to https://example.com/very/long/path\nshort code 2: 2\nencode(1), encode(62), encode(125): 1 10 21\nURL shortener: generate a unique short code (base62 of an id), store code<->URL, redirect on lookup.\nAt scale: a distributed id generator, a KV store for the mapping, caching, and analytics on clicks.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

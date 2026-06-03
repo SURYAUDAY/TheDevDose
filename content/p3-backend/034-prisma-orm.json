@@ -1,0 +1,69 @@
+{
+  "id": "p3-034",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 34,
+  "orderInPhase": 34,
+  "slug": "prisma-orm",
+  "title": "Prisma ORM",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "prisma",
+    "orm"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "queue",
+    "seedText": "A TypeScript team uses Prisma so that prisma.user.findMany({ where: { role: 'admin' } }) is fully typed — the editor autocompletes fields and the compiler re…"
+  },
+  "sections": {
+    "simple_en": "Prisma is a modern, type-safe ORM for Node and TypeScript. You define your data model in a schema.prisma file, and Prisma generates a fully typed client — queries get autocomplete and compile-time checking, so a typo or wrong field is caught before runtime. It supports PostgreSQL, MySQL, SQLite, and more.\n\nIts query API (findMany, findUnique, create, update, with where/select/include) is concise and readable, and relations are easy to fetch with include. Prisma also manages migrations from the schema. The trade-off versus raw SQL is less control over highly tuned queries, though it supports raw queries when needed.",
+    "hinglish": "Prisma Node aur TypeScript ke liye ek modern, type-safe ORM hai. Aap data model schema.prisma file mein define karte ho, aur Prisma ek fully typed client generate karta hai — queries ko autocomplete aur compile-time checking milti hai, isliye typo ya galat field runtime se pehle pakda jaata hai. PostgreSQL, MySQL, SQLite aur zyada support karta hai.\n\nIski query API (findMany, findUnique, create, update, with where/select/include) concise aur readable hai, aur relations include se aasaani se fetch hote hain. Prisma schema se migrations bhi manage karta hai. Raw SQL ke comparison mein trade-off hai highly tuned queries par kam control, halaanki zaroorat par raw queries support karta hai.",
+    "keyPoints": [
+      "Type-safe ORM: a typed client generated from schema.prisma.",
+      "Autocomplete + compile-time checks catch query errors early.",
+      "Concise API: findMany/findUnique/create/update with where/select/include.",
+      "Handles relations and schema-driven migrations.",
+      "Less control than hand-tuned SQL, but supports raw queries when needed."
+    ],
+    "real_world": "A TypeScript team uses Prisma so that prisma.user.findMany({ where: { role: 'admin' } }) is fully typed — the editor autocompletes fields and the compiler rejects nonexistent ones. Fetching a user with their posts is a one-line include, no manual JOIN.",
+    "followups": [
+      {
+        "q": "What does 'type-safe' buy you with Prisma?",
+        "a": "Queries are checked against your schema at compile time, with autocomplete for models/fields, so mistakes like wrong field names or types are caught before the code runs."
+      },
+      {
+        "q": "How does Prisma handle relations?",
+        "a": "Relations are declared in the schema; you fetch related records with include (to embed them) or select (to pick fields), without writing JOINs by hand."
+      },
+      {
+        "q": "When might you still write raw SQL with Prisma?",
+        "a": "For complex, highly optimized queries or DB-specific features the query API doesn't express. Prisma provides $queryRaw for those cases."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Prisma ORM code (Node + @prisma/client generated from schema.prisma). The Node-runnable demo below simulates a typed query client so the output is verifiable here.",
+      "source": "// Prisma ORM — type-safe database access generated from a schema.\n// schema.prisma:\n//   model User {\n//     id    Int     @id @default(autoincrement())\n//     email String  @unique\n//     name  String\n//     role  String  @default(\"user\")\n//     posts Post[]\n//   }\n\nconst { PrismaClient } = require(\"@prisma/client\");\nconst prisma = new PrismaClient();\n\nasync function demo() {\n  // Fully typed queries — autocomplete and compile-time safety.\n  const user = await prisma.user.create({\n    data: { email: \"asha@x.com\", name: \"Asha\" },\n  });\n\n  const admins = await prisma.user.findMany({\n    where: { role: \"admin\" },\n    select: { id: true, name: true },     // pick fields\n    orderBy: { name: \"asc\" },\n  });\n\n  // Relations are easy to include:\n  const withPosts = await prisma.user.findUnique({\n    where: { id: user.id },\n    include: { posts: true },\n  });\n\n  return { user, admins, withPosts };\n}\nmodule.exports = { demo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Prisma ORM — type-safe-style query API over a model (simulated client)\nconst db = { user: [\n  { id: 1, name: \"Asha\", email: \"a@x.com\", role: \"admin\" },\n  { id: 2, name: \"Ravi\", email: \"r@x.com\", role: \"user\" },\n  { id: 3, name: \"Mira\", email: \"m@x.com\", role: \"user\" },\n] };\nfunction createClient(db){\n  const matches = (row, where) => Object.entries(where || {}).every(([k, v]) => row[k] === v);\n  return {\n    user: {\n      findMany: ({ where, select } = {}) => db.user.filter(r => matches(r, where))\n        .map(r => select ? Object.fromEntries(Object.keys(select).filter(k => select[k]).map(k => [k, r[k]])) : r),\n      findUnique: ({ where }) => db.user.find(r => matches(r, where)) || null,\n      create: ({ data }) => { const r = { id: db.user.length + 1, ...data }; db.user.push(r); return r; },\n    },\n  };\n}\nconst prisma = createClient(db);\nconsole.log(\"findMany role=user:\", JSON.stringify(prisma.user.findMany({ where: { role: \"user\" }, select: { name: true } })));\nconsole.log(\"findUnique id=1:\", JSON.stringify(prisma.user.findUnique({ where: { id: 1 } })));\nconsole.log(\"create:\", JSON.stringify(prisma.user.create({ data: { name: \"Sam\", email: \"s@x.com\", role: \"user\" } })));\nconsole.assert(prisma.user.findMany({ where: { role: \"user\" } }).length === 3, \"users incl. new one\");\nconsole.log(\"Prisma generates a typed client from schema.prisma for safe queries.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "findMany role=user: [{\"name\":\"Ravi\"},{\"name\":\"Mira\"}]\nfindUnique id=1: {\"id\":1,\"name\":\"Asha\",\"email\":\"a@x.com\",\"role\":\"admin\"}\ncreate: {\"id\":4,\"name\":\"Sam\",\"email\":\"s@x.com\",\"role\":\"user\"}\nPrisma generates a typed client from schema.prisma for safe queries.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

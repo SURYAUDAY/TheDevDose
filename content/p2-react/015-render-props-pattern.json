@@ -1,0 +1,70 @@
+{
+  "id": "p2-015",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 15,
+  "orderInPhase": 15,
+  "slug": "render-props-pattern",
+  "title": "Render props pattern",
+  "difficulty": "beginner",
+  "tags": [
+    "p2",
+    "render",
+    "props",
+    "pattern"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A <Mouse> component tracks the cursor position and exposes it via a render prop."
+  },
+  "sections": {
+    "simple_en": "The render props pattern shares logic by passing a function as a prop (often as children) that a component calls with its internal state, letting the caller decide what to render. The component owns the behavior; the consumer owns the presentation.\n\nIt solves the same reuse problem as HOCs without wrapper nesting, but it can lead to deeply nested 'callback pyramids' in JSX. Hooks now handle most of these cases more cleanly, though render props are still useful for some flexible, presentation-agnostic components.",
+    "hinglish": "Render props pattern logic share karne ke liye ek function ko prop (aksar children) ke roop mein pass karta hai, jise component apni internal state ke saath call karta hai. Component behavior rakhta hai, consumer decide karta hai kya render karna hai.\n\nYe HOC jaisi reuse problem bina wrapper nesting ke solve karta hai, par JSX mein nested callbacks ki pyramid ban sakti hai. Aaj zyadatar cases hooks se cleaner ho jaate hain.",
+    "keyPoints": [
+      "Pass a function (as a prop or as children) that receives state and returns JSX.",
+      "Separates behavior (in the component) from presentation (decided by the caller).",
+      "Avoids HOC wrapper hell but can create nested callback pyramids in JSX.",
+      "Children-as-a-function is the most common form: <Mouse>{({x,y}) => ...}</Mouse>.",
+      "Hooks now cover most cases more cleanly; render props persist for flexible primitives."
+    ],
+    "real_world": "A <Mouse> component tracks the cursor position and exposes it via a render prop. One screen renders a cat image that follows the cursor; another renders coordinates as text. Same tracking logic, completely different output — chosen by each caller.",
+    "followups": [
+      {
+        "q": "How do render props differ from HOCs?",
+        "a": "Both share logic, but render props pass a function to decide rendering (no new wrapper component), while HOCs wrap and return a new component. Render props avoid wrapper hell but can nest in JSX."
+      },
+      {
+        "q": "What is 'children as a function'?",
+        "a": "Passing a function as the children prop: <Comp>{(state) => <UI .../>}</Comp>. The component calls it with internal state to render."
+      },
+      {
+        "q": "Why have hooks largely replaced render props?",
+        "a": "Hooks share stateful logic without extra component layers or JSX nesting, keeping code flatter and easier to read and type."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Render props: a Mouse component shares position via a function child.\nimport React, { useState } from \"react\";\n\nfunction Mouse({ children }) {\n  const [pos, setPos] = useState({ x: 0, y: 0 });\n  return (\n    <div\n      style={{ height: 200 }}\n      onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}\n    >\n      {/* children is a function; we hand it the tracked state */}\n      {children(pos)}\n    </div>\n  );\n}\n\nexport default function App() {\n  return (\n    <Mouse>\n      {({ x, y }) => (\n        <p>Cursor is at ({x}, {y})</p>\n      )}\n    </Mouse>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Render props — a component shares state via a function child\nfunction MouseTracker(renderFn){\n  const state = { x: 10, y: 20 };          // pretend tracked position\n  return renderFn(state);                   // hand state to caller\n}\nconst output = MouseTracker(({ x, y }) => `Cursor at (${x}, ${y})`);\nconsole.log(output);\n\n// reuse the same logic with a different presentation\nconst dot = MouseTracker(({ x, y }) => `<div style=\"left:${x};top:${y}\">•</div>`);\nconsole.log(dot);\nconsole.assert(output.includes(\"10, 20\"), \"render prop receives state\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Cursor at (10, 20)\n<div style=\"left:10;top:20\">•</div>\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

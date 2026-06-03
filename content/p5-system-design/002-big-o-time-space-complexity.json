@@ -1,0 +1,71 @@
+{
+  "id": "p5-002",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 2,
+  "orderInPhase": 2,
+  "slug": "big-o-time-space-complexity",
+  "title": "Big-O / time & space complexity",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "big-o",
+    "time",
+    "space",
+    "complexity"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Searching a sorted phone book by repeatedly halving the remaining pages is O(log n) — a million entries take ~20 steps."
+  },
+  "sections": {
+    "simple_en": "Big-O notation describes how an algorithm's running time or memory grows as the input size n grows, focusing on the dominant term in the worst case. It lets you compare algorithms independent of hardware: O(n) work doubles when the input doubles, while O(n²) quadruples.\n\nYou drop constants and lower-order terms (so 3n + 5 is just O(n)) and describe the term that dominates for large n. The common ranking, fastest to slowest, is O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ). Space complexity applies the same idea to memory usage.",
+    "hinglish": "Big-O notation batata hai ki ek algorithm ka running time ya memory kaise badhta hai jab input size n badhta hai, worst case mein dominant term par focus karke. Ye aapko hardware se independent algorithms compare karne deta hai: O(n) work double ho jaata hai jab input double hota hai, jabki O(n²) chaar guna.\n\nAap constants aur lower-order terms drop karte ho (to 3n + 5 bas O(n) hai) aur wo term describe karte ho jo large n ke liye dominate karta hai. Common ranking, fastest se slowest: O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ). Space complexity wahi idea memory usage par apply karti hai.",
+    "keyPoints": [
+      "Describes growth of time/space vs input size n (worst case, dominant term).",
+      "Drop constants and lower-order terms: 3n + 5 -> O(n).",
+      "Ranking: O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ).",
+      "O(log n) comes from repeatedly halving (e.g., binary search).",
+      "Space complexity measures extra memory the algorithm uses."
+    ],
+    "real_world": "Searching a sorted phone book by repeatedly halving the remaining pages is O(log n) — a million entries take ~20 steps. Scanning every page would be O(n) — up to a million steps. Big-O is why the halving approach scales and the scan doesn't.",
+    "followups": [
+      {
+        "q": "Why drop constants in Big-O?",
+        "a": "Big-O describes growth as n gets large, where constants and lower-order terms become negligible relative to the dominant term. 2n and 100n both grow linearly, so both are O(n)."
+      },
+      {
+        "q": "What's the difference between time and space complexity?",
+        "a": "Time complexity measures how the number of operations grows with input size; space complexity measures how much extra memory the algorithm needs. An algorithm can be fast but memory-hungry, or vice versa — it's a trade-off."
+      },
+      {
+        "q": "Is a lower Big-O always better in practice?",
+        "a": "Usually for large inputs, but not always for small ones — constants and real-world factors matter. An O(n²) algorithm with tiny constants can beat an O(n log n) one for small n. Big-O describes asymptotic behavior."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real, runnable JavaScript with functions at O(1), O(n), O(n²), and O(log n). The Node demo below runs each and verifies the operation counts.",
+      "source": "// Big-O — analyze how time/space scale with input size n.\n\n// O(1): work independent of n.\nfunction first(arr) { return arr[0]; }\n\n// O(n): one pass over the input.\nfunction sum(arr) { let s = 0; for (const x of arr) s += x; return s; }\n\n// O(n log n): typical of efficient comparison sorts.\nfunction sorted(arr) { return [...arr].sort((a, b) => a - b); }\n\n// O(n^2): nested loops over the input (e.g., naive pair checks).\nfunction hasDuplicateNaive(arr) {\n  for (let i = 0; i < arr.length; i++)\n    for (let j = i + 1; j < arr.length; j++)\n      if (arr[i] === arr[j]) return true;\n  return false;\n}\n\n// Optimize O(n^2) -> O(n) with extra O(n) space (a classic time/space trade-off).\nfunction hasDuplicate(arr) {\n  const seen = new Set();\n  for (const x of arr) { if (seen.has(x)) return true; seen.add(x); }\n  return false;\n}\n\n// Rules: keep the dominant term, drop constants/lower-order terms, analyze the worst case.\n// Also track SPACE complexity (extra memory), not just time.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Big-O — describe how runtime/space grows with input size n (worst case, dominant term)\nfunction constant(arr) { return arr[0]; }                    // O(1)\nfunction linear(arr) { let s = 0; for (const x of arr) s += x; return s; } // O(n)\nfunction quadratic(arr) {                                     // O(n^2)\n  let count = 0;\n  for (let i = 0; i < arr.length; i++)\n    for (let j = 0; j < arr.length; j++) count++;\n  return count;\n}\nfunction logarithmic(n) {                                     // O(log n)\n  let steps = 0;\n  while (n > 1) { n = Math.floor(n / 2); steps++; }\n  return steps;\n}\nconst data = [1, 2, 3, 4];\nconsole.log(\"O(1) constant   ->\", constant(data));\nconsole.log(\"O(n) linear sum ->\", linear(data));\nconsole.log(\"O(n^2) pair count for n=4 ->\", quadratic(data));\nconsole.log(\"O(log n) halvings of 16 ->\", logarithmic(16));\nconsole.assert(linear(data) === 10, \"linear sum\");\nconsole.assert(quadratic(data) === 16, \"n^2 = 4*4 operations\");\nconsole.assert(logarithmic(16) === 4, \"log2(16) = 4 halvings\");\nconsole.log(\"Big-O ranks growth: O(1) < O(log n) < O(n) < O(n log n) < O(n^2) < O(2^n).\");\nconsole.log(\"Drop constants and lower-order terms; describe the dominant term in the worst case.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "O(1) constant   -> 1\nO(n) linear sum -> 10\nO(n^2) pair count for n=4 -> 16\nO(log n) halvings of 16 -> 4\nBig-O ranks growth: O(1) < O(log n) < O(n) < O(n log n) < O(n^2) < O(2^n).\nDrop constants and lower-order terms; describe the dominant term in the worst case.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

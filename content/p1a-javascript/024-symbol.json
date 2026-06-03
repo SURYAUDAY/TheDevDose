@@ -1,0 +1,64 @@
+{
+  "id": "p1a-024",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 24,
+  "orderInPhase": 24,
+  "slug": "symbol",
+  "title": "Symbol",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "symbol"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A library wants to tag objects with metadata without risking a clash with the user's own properties."
+  },
+  "sections": {
+    "simple_en": "`Symbol` is a primitive type that produces a guaranteed-unique value every time you call `Symbol()`. Two symbols are never equal, even with the same description (`Symbol('id') !== Symbol('id')`). This makes them ideal as collision-proof object keys.\n\nSymbols are used to add 'hidden' properties that won't clash with normal string keys and aren't returned by `Object.keys()` or `for...in`. JavaScript also has well-known symbols (like `Symbol.iterator`) that let you hook into built-in language behaviour.",
+    "hinglish": "`Symbol` ek primitive type hai jo har baar `Symbol()` call karne par ek guaranteed-unique value deta hai. Do symbols kabhi equal nahi hote, same description ke saath bhi (`Symbol('id') !== Symbol('id')`). Isliye ye collision-proof object keys ke liye perfect hain.\nSymbols se aise 'hidden' properties add hoti hain jo normal string keys se clash nahi karti aur `Object.keys()` ya `for...in` me nahi aati. JavaScript me well-known symbols bhi hain (jaise `Symbol.iterator`) jinse aap built-in language behaviour me hook kar sakte ho.",
+    "keyPoints": [
+      "Every `Symbol()` call returns a unique value; `typeof sym` is 'symbol'.",
+      "Same description does NOT make symbols equal.",
+      "Great as unique, non-colliding object property keys.",
+      "Symbol-keyed properties are skipped by `Object.keys` and `for...in` (use `Object.getOwnPropertySymbols`).",
+      "Well-known symbols (e.g. `Symbol.iterator`) customise built-in behaviour."
+    ],
+    "real_world": "A library wants to tag objects with metadata without risking a clash with the user's own properties. Using a Symbol key guarantees the tag can't collide with any string key the user adds, even one literally named 'id'.",
+    "followups": [
+      {
+        "q": "Are two symbols with the same description equal?",
+        "a": "No. Each `Symbol()` call is unique. (The exception is `Symbol.for('x')`, which uses a global registry and returns the same symbol for the same key.)"
+      },
+      {
+        "q": "Why use a Symbol as an object key?",
+        "a": "To create a property that is guaranteed not to collide with any string key and that is hidden from `Object.keys`/`for...in`/`JSON.stringify`, which is useful for library metadata or private-ish fields."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Symbols as unique, non-enumerable-by-default keys.\n\nfunction symbolUniqueness() {\n  const a = Symbol(\"id\");\n  const b = Symbol(\"id\");\n  return { equal: a === b, type: typeof a }; // { equal:false, type:'symbol' }\n}\n\nfunction hiddenKey() {\n  const ID = Symbol(\"id\");\n  const user = { name: \"Asha\", [ID]: 42 };\n  return {\n    stringKeys: Object.keys(user),                  // ['name'] only\n    symbolValue: user[ID],                          // 42\n    symbolKeysCount: Object.getOwnPropertySymbols(user).length, // 1\n  };\n}\n\nmodule.exports = { symbolUniqueness, hiddenKey };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { symbolUniqueness, hiddenKey } = require(\"./solution\");\n\nconsole.log(symbolUniqueness());\nconsole.log(hiddenKey());\n\nconsole.assert(symbolUniqueness().equal === false, \"symbols always unique\");\nconsole.assert(symbolUniqueness().type === \"symbol\", \"typeof symbol\");\nconst h = hiddenKey();\nconsole.assert(JSON.stringify(h.stringKeys) === '[\"name\"]', \"symbol key hidden from keys()\");\nconsole.assert(h.symbolValue === 42, \"symbol value accessible directly\");\nconsole.assert(h.symbolKeysCount === 1, \"one symbol key present\");\nconsole.log(\"Symbol assertions passed.\");",
+      "expectedOutput": "{ equal: false, type: 'symbol' }\n{ stringKeys: [ 'name' ], symbolValue: 42, symbolKeysCount: 1 }\nSymbol assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

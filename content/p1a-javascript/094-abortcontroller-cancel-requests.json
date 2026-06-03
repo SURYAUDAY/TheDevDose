@@ -1,0 +1,66 @@
+{
+  "id": "p1a-094",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 94,
+  "orderInPhase": 94,
+  "slug": "abortcontroller-cancel-requests",
+  "title": "AbortController (cancel requests)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "abortcontroller",
+    "cancel",
+    "requests"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A search-as-you-type box: each new keystroke aborts the previous in-flight request so results never arrive out of order, and a slow request that's been super…"
+  },
+  "sections": {
+    "simple_en": "`AbortController` lets you cancel asynchronous operations like fetch requests. You create a controller, pass its `signal` to `fetch(url, { signal })`, and call `controller.abort()` to cancel — which causes the fetch promise to reject with an `AbortError`.\n\nIt's essential for cancelling stale requests (e.g. a new search supersedes the previous one), implementing timeouts, and cleaning up when a component unmounts. The same signal can be passed to multiple operations to cancel them together; `AbortSignal.timeout(ms)` creates an auto-aborting signal.",
+    "hinglish": "`AbortController` aapko fetch requests jaise asynchronous operations cancel karne deta hai. Aap ek controller banate ho, uska `signal` `fetch(url, { signal })` ko dete ho, aur cancel karne ke liye `controller.abort()` call karte ho — jisse fetch promise `AbortError` ke saath reject ho jaata hai.\nYe stale requests cancel karne (jaise nayi search purani ko supersede kare), timeouts implement karne, aur component unmount par cleanup ke liye zaruri hai. Same signal kai operations ko de kar unhe saath cancel kar sakte ho; `AbortSignal.timeout(ms)` ek auto-aborting signal banata hai.",
+    "keyPoints": [
+      "Create a controller; pass `controller.signal` to the async op.",
+      "Call `controller.abort()` to cancel → operation rejects with `AbortError`.",
+      "Use for stale-request cancellation, timeouts, and unmount cleanup.",
+      "One signal can cancel multiple operations together.",
+      "`AbortSignal.timeout(ms)` auto-aborts after a delay."
+    ],
+    "real_world": "A search-as-you-type box: each new keystroke aborts the previous in-flight request so results never arrive out of order, and a slow request that's been superseded is cancelled instead of wasting bandwidth.",
+    "followups": [
+      {
+        "q": "How do you cancel a fetch request?",
+        "a": "Create an `AbortController`, pass `controller.signal` in the fetch options, and call `controller.abort()`. The fetch promise then rejects with an `AbortError`."
+      },
+      {
+        "q": "Give a common use case for AbortController.",
+        "a": "Cancelling stale requests in search-as-you-type (abort the previous request on each keystroke), enforcing timeouts, and cleaning up pending requests when a component unmounts."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrating AbortController with an abortable async operation.\n// (AbortController is built into Node 16+ and browsers.)\n\nfunction abortableTask(signal, ms = 50) {\n  return new Promise((resolve, reject) => {\n    if (signal.aborted) return reject(new Error(\"AbortError\"));\n    const id = setTimeout(() => resolve(\"completed\"), ms);\n    signal.addEventListener(\"abort\", () => {\n      clearTimeout(id);\n      reject(new Error(\"AbortError\"));\n    });\n  });\n}\n\nmodule.exports = { abortableTask };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { abortableTask } = require(\"./solution\");\n\n(async () => {\n  // 1) completes normally\n  const c1 = new AbortController();\n  console.log(await abortableTask(c1.signal, 10)); // completed\n\n  // 2) aborted before completion\n  const c2 = new AbortController();\n  const p = abortableTask(c2.signal, 50);\n  c2.abort(); // cancel immediately\n  let msg = null;\n  try { await p; } catch (e) { msg = e.message; }\n  console.log(\"aborted:\", msg); // AbortError\n\n  console.assert(await abortableTask(new AbortController().signal, 5) === \"completed\", \"completes when not aborted\");\n  console.assert(msg === \"AbortError\", \"abort() rejects the task\");\n  console.log(\"AbortController assertions passed.\");\n})();",
+      "expectedOutput": "completed\naborted: AbortError\nAbortController assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

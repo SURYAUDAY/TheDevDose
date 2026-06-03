@@ -1,0 +1,71 @@
+{
+  "id": "p2-066",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 66,
+  "orderInPhase": 66,
+  "slug": "react-testing-library-basics",
+  "title": "React Testing Library basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "react",
+    "testing",
+    "library",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A Counter component is tested by rendering it, asserting it shows 'Count: 0', clicking the Increment button via userEvent, and asserting it shows 'Count: 1'."
+  },
+  "sections": {
+    "simple_en": "React Testing Library (RTL) tests components the way a user experiences them — by what's rendered and how you interact with it, not internal implementation details. You render a component, query elements by accessible roles/text (getByRole, getByText), and simulate interactions with userEvent.\n\nThis 'test behavior, not implementation' philosophy makes tests resilient to refactors: as long as the user-visible behavior is unchanged, the tests pass. Queries are also accessibility-oriented, nudging you toward more accessible markup.",
+    "hinglish": "React Testing Library (RTL) components ko waise test karta hai jaise user experience karta hai — jo render hota hai aur jaise interact karte ho, internal details se nahi. Aap component render karte ho, elements ko accessible roles/text se query karte ho (getByRole, getByText), aur interactions userEvent se simulate karte ho.\n\n'Behavior test karo, implementation nahi' philosophy tests ko refactors ke against resilient banati hai: jab tak user-visible behavior same hai, tests pass rehte hain. Queries accessibility-oriented bhi hain, jo better markup ki taraf push karti hain.",
+    "keyPoints": [
+      "Test components by user-visible behavior, not internal implementation.",
+      "Render, then query by role/text (getByRole, getByText, findBy* for async).",
+      "Simulate interactions with userEvent (click, type) — closer to real users.",
+      "Resilient to refactors: unchanged behavior keeps tests passing.",
+      "Accessibility-first queries encourage more accessible markup."
+    ],
+    "real_world": "A Counter component is tested by rendering it, asserting it shows 'Count: 0', clicking the Increment button via userEvent, and asserting it shows 'Count: 1'. The test never references state internals, so refactoring useState to useReducer doesn't break it.",
+    "followups": [
+      {
+        "q": "Why query by role/text instead of test IDs or classes?",
+        "a": "Because it mirrors how users (and assistive tech) find elements, making tests realistic and refactor-resistant. Test IDs are a fallback when no accessible query fits."
+      },
+      {
+        "q": "getBy vs queryBy vs findBy — when to use each?",
+        "a": "getBy throws if not found (assert presence); queryBy returns null (assert absence); findBy returns a promise (wait for async elements to appear)."
+      },
+      {
+        "q": "What's the core philosophy of RTL?",
+        "a": "Test behavior, not implementation — interact with the component as a user would so tests stay valid through internal refactors."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "React Testing Library test code (run with Jest/Vitest). The Node-runnable demo below simulates its query API so the output is verifiable here.",
+      "source": "// React Testing Library — test components the way users interact with them.\n// Counter.jsx\nimport React, { useState } from \"react\";\nexport function Counter() {\n  const [count, setCount] = useState(0);\n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={() => setCount((c) => c + 1)}>Increment</button>\n    </div>\n  );\n}\n\n// Counter.test.jsx\nimport { render, screen } from \"@testing-library/react\";\nimport userEvent from \"@testing-library/user-event\";\nimport { Counter } from \"./Counter\";\n\ntest(\"increments when the button is clicked\", async () => {\n  render(<Counter />);\n  expect(screen.getByText(\"Count: 0\")).toBeInTheDocument();\n\n  await userEvent.click(screen.getByRole(\"button\", { name: /increment/i }));\n\n  expect(screen.getByText(\"Count: 1\")).toBeInTheDocument();\n});",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React Testing Library basics — query a (fake) rendered tree by role/text\nfunction render(tree){\n  return {\n    getByText: (txt) => { const n = find(tree, n => n.text === txt); if (!n) throw new Error(\"not found: \" + txt); return n; },\n    getByRole: (role) => { const n = find(tree, n => n.role === role); if (!n) throw new Error(\"no role: \" + role); return n; },\n    queryByText: (txt) => find(tree, n => n.text === txt) || null,\n  };\n}\nfunction find(node, pred){\n  if (pred(node)) return node;\n  for (const c of node.children || []){ const f = find(c, pred); if (f) return f; }\n  return null;\n}\nconst ui = { role: \"main\", children: [\n  { role: \"heading\", text: \"Welcome\" },\n  { role: \"button\", text: \"Submit\", onClick: () => \"clicked\" },\n]};\nconst screen = render(ui);\nconsole.log(\"getByText('Welcome'):\", screen.getByText(\"Welcome\").role);\nconsole.log(\"button click ->\", screen.getByRole(\"button\").onClick());\nconsole.log(\"queryByText('Missing'):\", screen.queryByText(\"Missing\"));\nconsole.assert(screen.queryByText(\"Missing\") === null, \"absent text returns null\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "getByText('Welcome'): heading\nbutton click -> clicked\nqueryByText('Missing'): null\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1b-072",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 72,
+  "orderInPhase": 72,
+  "slug": "typing-hooks",
+  "title": "Typing Hooks",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "typing",
+    "hooks"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A custom `useToggle(): [boolean, () => void]` returns a strongly-typed value and toggler, so destructuring `const [open, toggle] = useToggle()` gives `open:…"
+  },
+  "sections": {
+    "simple_en": "React hooks are generic, so you can specify or let TypeScript infer their types. `useState(0)` infers `number`; `useState<string | null>(null)` specifies a union. `useRef<HTMLInputElement>(null)` types the ref, and `useReducer` infers state/action types from the reducer.\n\nTyping hooks correctly gives you safe state updates and refs. For custom hooks, type the arguments and the returned tuple/object explicitly so consumers get accurate types — e.g. a `useToggle` returning `[boolean, () => void]`.",
+    "hinglish": "React hooks generic hain, isliye aap unke types specify kar sakte ho ya TypeScript ko infer karne de sakte ho. `useState(0)` `number` infer karta hai; `useState<string | null>(null)` ek union specify karta hai. `useRef<HTMLInputElement>(null)` ref type karta hai, aur `useReducer` reducer se state/action types infer karta hai.\nHooks ko sahi type karna safe state updates aur refs deta hai. Custom hooks ke liye, arguments aur returned tuple/object explicitly type karo taaki consumers ko accurate types milein — jaise ek `useToggle` jo `[boolean, () => void]` return kare.",
+    "keyPoints": [
+      "Hooks are generic: `useState<T>`, `useRef<T>`, `useReducer`.",
+      "`useState(0)` infers number; specify for unions/null initial.",
+      "Type custom hooks' args and returned tuple/object explicitly.",
+      "Typed reducers infer state/action types for useReducer.",
+      "Accurate hook types give safe updates and autocomplete."
+    ],
+    "real_world": "A custom `useToggle(): [boolean, () => void]` returns a strongly-typed value and toggler, so destructuring `const [open, toggle] = useToggle()` gives `open: boolean` and `toggle: () => void` automatically.",
+    "followups": [
+      {
+        "q": "When should you specify useState's type explicitly?",
+        "a": "When the initial value doesn't capture the full type — e.g. `useState<string | null>(null)` or an empty array you intend to fill: `useState<User[]>([])`. Otherwise inference is fine."
+      },
+      {
+        "q": "How do you type a custom hook's return?",
+        "a": "Annotate the returned tuple/object explicitly (e.g. `[boolean, () => void]`) so consumers destructure with precise types instead of inferred-but-vague ones."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// React usage (in a .tsx file):\n//\n//   const [count, setCount] = useState<number>(0);\n//   const inputRef = useRef<HTMLInputElement>(null);\n//\n// Runnable stand-in: a typed mini 'useState' returning a [getter, setter] tuple.\n\nexport function createState<T>(initial: T): [() => T, (next: T) => void] {\n  let value = initial;\n  const get = () => value;\n  const set = (next: T) => { value = next; };\n  return [get, set];\n}\n\n// A typed custom 'hook' (logic only)\nexport function createToggle(initial = false): [() => boolean, () => void] {\n  let on = initial;\n  return [() => on, () => { on = !on; }];\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { createState, createToggle } from \"./solution\";\n\nconst [count, setCount] = createState<number>(0);\nsetCount(5);\nconsole.log(count()); // 5\n\nconst [isOn, toggle] = createToggle();\ntoggle();\nconsole.log(isOn()); // true\n\nconsole.assert(count() === 5, \"typed state setter/getter\");\nconsole.assert(isOn() === true, \"typed toggle hook\");\nconsole.log(\"typing-hooks assertions passed.\");",
+      "expectedOutput": "5\ntrue\ntyping-hooks assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

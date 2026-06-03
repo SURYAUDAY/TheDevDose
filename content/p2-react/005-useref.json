@@ -1,0 +1,68 @@
+{
+  "id": "p2-005",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 5,
+  "orderInPhase": 5,
+  "slug": "useref",
+  "title": "useRef",
+  "difficulty": "beginner",
+  "tags": [
+    "p2",
+    "useref"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "container",
+    "seedText": "A search box that auto-focuses on page load attaches a ref to the input and calls inputRef.current.focus() inside useEffect."
+  },
+  "sections": {
+    "simple_en": "useRef returns a mutable object with a single .current property that persists for the full lifetime of the component. Unlike state, changing ref.current does not trigger a re-render — it's a place to store values that should survive renders but shouldn't drive the UI.\n\nIts two main uses are: holding a reference to a DOM node (so you can focus, measure, or scroll it imperatively) and storing mutable values like timer IDs, previous values, or instance-like flags without causing re-renders.",
+    "hinglish": "useRef ek mutable object deta hai jiska sirf ek .current property hota hai jo poore component life tak rehta hai. State ke ulat, ref.current change karne se re-render nahi hota.\n\nIska use do tarah se hota hai: DOM node ko pakadne ke liye (focus, scroll, measure karne ke liye) aur timer id ya previous value jaisi cheezein store karne ke liye bina re-render trigger kiye.",
+    "keyPoints": [
+      "useRef(initial) returns { current: initial }; the same object persists across renders.",
+      "Mutating ref.current does NOT cause a re-render — use state when the UI must update.",
+      "Common DOM use: attach ref to an element to focus(), scrollIntoView(), or measure it.",
+      "Common value use: store timer/interval IDs, previous props/state, or 'has mounted' flags.",
+      "Don't read or write ref.current during render for rendering decisions — it's for side-effect territory."
+    ],
+    "real_world": "A search box that auto-focuses on page load attaches a ref to the input and calls inputRef.current.focus() inside useEffect. The ref also commonly stores the debounce timer ID so a new keystroke can clear the previous timer.",
+    "followups": [
+      {
+        "q": "When do you use useRef instead of useState?",
+        "a": "When the value must persist across renders but should not trigger a re-render or appear in the output — e.g., a timer ID, a DOM node, or a mutable flag."
+      },
+      {
+        "q": "Is ref.current available during the first render?",
+        "a": "For DOM refs, no — React sets it after committing to the DOM, so read it in effects or event handlers, not during render."
+      },
+      {
+        "q": "Does changing a ref re-render the component?",
+        "a": "No. That's the key difference from state. If the UI needs to reflect the change, use state instead."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// useRef: focus a DOM node, and store a value that survives renders\n// WITHOUT causing a re-render (the render counter).\nimport React, { useRef, useState, useEffect } from \"react\";\n\nexport default function SearchBox() {\n  const inputRef = useRef(null);   // DOM node ref\n  const renderCount = useRef(0);   // mutable value, no re-render\n\n  renderCount.current += 1;        // mutating a ref does not re-render\n\n  useEffect(() => {\n    inputRef.current.focus();      // auto-focus on mount\n  }, []);\n\n  const [query, setQuery] = useState(\"\");\n\n  return (\n    <div>\n      <input\n        ref={inputRef}\n        value={query}\n        onChange={(e) => setQuery(e.target.value)}\n        placeholder=\"Search...\"\n      />\n      <p>Component rendered {renderCount.current} times</p>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// useRef — a mutable box that persists across renders WITHOUT causing re-render\nfunction createRef(initial) { return { current: initial }; }\n\nlet renderCount = 0;\nconst ref = createRef(0);          // survives all renders\nfunction render() {\n  renderCount++;\n  return renderCount;\n}\nrender();\nref.current = 42;                  // mutating ref does NOT trigger render\nrender();\nconsole.log(\"ref.current after mutation:\", ref.current);\nconsole.log(\"renderCount (mutation did not add a render):\", renderCount);\nconsole.assert(ref.current === 42, \"ref should hold latest value\");\nconsole.assert(renderCount === 2, \"only explicit render() calls count\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "ref.current after mutation: 42\nrenderCount (mutation did not add a render): 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

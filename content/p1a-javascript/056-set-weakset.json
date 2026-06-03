@@ -1,0 +1,65 @@
+{
+  "id": "p1a-056",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 56,
+  "orderInPhase": 56,
+  "slug": "set-weakset",
+  "title": "Set & WeakSet",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "set",
+    "weakset"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Tracking which DOM nodes you've already processed without leaking memory uses a WeakSet — when a node is removed and dereferenced elsewhere, it's automatical…"
+  },
+  "sections": {
+    "simple_en": "A `Set` is a collection of unique values — adding a duplicate has no effect. It preserves insertion order and offers `add`, `has`, `delete`, and `size`, with O(1) average lookups. A common use is removing duplicates from an array via `[...new Set(arr)]`.\n\nA `WeakSet` only stores objects and holds them weakly: if an object is only referenced by the WeakSet, it can be garbage-collected. WeakSets aren't iterable and have no `size` — they're for tagging/tracking objects without preventing their cleanup.",
+    "hinglish": "`Set` unique values ka collection hai — duplicate add karne ka koi effect nahi. Ye insertion order preserve karta hai aur `add`, `has`, `delete`, `size` deta hai, average O(1) lookups ke saath. Common use: array se duplicates hatana `[...new Set(arr)]` se.\n`WeakSet` sirf objects store karta hai aur unhe weakly hold karta hai: agar object sirf WeakSet me referenced ho to woh garbage-collect ho sakta hai. WeakSets iterable nahi hote aur `size` nahi hota — ye objects ko tag/track karne ke liye hain bina unka cleanup roke.",
+    "keyPoints": [
+      "`Set` stores unique values, preserves insertion order, O(1) average ops.",
+      "Methods: `add`, `has`, `delete`, `clear`, property `size`; it's iterable.",
+      "Dedupe arrays with `[...new Set(arr)]`.",
+      "`WeakSet` holds objects weakly (GC-friendly); only objects allowed.",
+      "WeakSet is not iterable and has no `size` — used for tagging objects."
+    ],
+    "real_world": "Tracking which DOM nodes you've already processed without leaking memory uses a WeakSet — when a node is removed and dereferenced elsewhere, it's automatically dropped. Deduping a list of tags uses a Set.",
+    "followups": [
+      {
+        "q": "How do you remove duplicates from an array?",
+        "a": "Wrap it in a Set and spread back to an array: `[...new Set(arr)]`. The Set drops duplicates while preserving first-seen order."
+      },
+      {
+        "q": "Why use a WeakSet over a Set?",
+        "a": "WeakSet holds objects weakly, so members can be garbage-collected when no longer referenced elsewhere — useful for tracking objects without causing memory leaks. It only stores objects and isn't iterable."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Set for uniqueness + WeakSet for leak-free object tagging.\n\nfunction unique(arr) {\n  return [...new Set(arr)];\n}\n\nfunction setOps() {\n  const s = new Set();\n  s.add(1); s.add(1); s.add(2);\n  return { size: s.size, hasOne: s.has(1), hasThree: s.has(3) };\n}\n\nfunction weakSetTagging() {\n  const seen = new WeakSet();\n  const objA = {};\n  seen.add(objA);\n  return { hasA: seen.has(objA), hasOther: seen.has({}) };\n}\n\nmodule.exports = { unique, setOps, weakSetTagging };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { unique, setOps, weakSetTagging } = require(\"./solution\");\n\nconsole.log(unique([1, 2, 2, 3, 3, 3])); // [1,2,3]\nconsole.log(setOps());                    // { size:2, hasOne:true, hasThree:false }\nconsole.log(weakSetTagging());            // { hasA:true, hasOther:false }\n\nconsole.assert(JSON.stringify(unique([1,2,2,3])) === \"[1,2,3]\", \"dedupe\");\nconsole.assert(setOps().size === 2, \"duplicates ignored\");\nconsole.assert(setOps().hasOne === true, \"has works\");\nconsole.assert(weakSetTagging().hasA === true, \"weakset tracks object\");\nconsole.log(\"Set/WeakSet assertions passed.\");",
+      "expectedOutput": "[ 1, 2, 3 ]\n{ size: 2, hasOne: true, hasThree: false }\n{ hasA: true, hasOther: false }\nSet/WeakSet assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

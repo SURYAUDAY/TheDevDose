@@ -1,0 +1,68 @@
+{
+  "id": "p1a-019",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 19,
+  "orderInPhase": 19,
+  "slug": "iife-immediately-invoked-function-expression",
+  "title": "IIFE (Immediately Invoked Function Expression)",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "iife",
+    "immediately",
+    "invoked",
+    "function",
+    "expression"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Library bootstrapping: older libraries wrapped their entire code in one IIFE so their internal variables never clashed with the host page's globals — a self-…"
+  },
+  "sections": {
+    "simple_en": "An IIFE is a function that is defined and called at the same time. You wrap a function in parentheses to turn it into an expression, then immediately invoke it with another pair of parentheses: `(function(){ ... })();`.\n\nHistorically, IIFEs were the main way to create a private scope and avoid polluting the global namespace (before `let`/`const` block scoping and ES modules existed). They're still useful for one-off initialisation and for creating isolated scopes inline.",
+    "hinglish": "IIFE ek function hota hai jo define hote hi turant call ho jaata hai. Function ko parentheses me wrap karke expression banate ho, phir doosre parentheses se turant invoke: `(function(){ ... })();`.\nPehle IIFE private scope banane aur global namespace ganda hone se bachane ka main tareeka tha (jab `let`/`const` block scope aur ES modules nahi the). Aaj bhi one-off initialisation aur inline isolated scope ke liye useful hain.",
+    "keyPoints": [
+      "Syntax: `(function(){ ... })();` or `(() => { ... })();`.",
+      "Runs immediately upon definition — once.",
+      "Creates a private scope; variables inside don't leak to the global scope.",
+      "Historically used for module-like encapsulation before ES modules.",
+      "Can return a value and can take arguments: `((x) => x*2)(5)`."
+    ],
+    "real_world": "Library bootstrapping: older libraries wrapped their entire code in one IIFE so their internal variables never clashed with the host page's globals — a self-contained capsule that runs and exposes only what it chooses.",
+    "followups": [
+      {
+        "q": "Why wrap the function in parentheses?",
+        "a": "To force it to be parsed as an expression rather than a declaration, which then lets you invoke it immediately with the trailing `()`."
+      },
+      {
+        "q": "Are IIFEs still necessary today?",
+        "a": "Less so — `let`/`const` block scoping and ES modules now provide isolation. IIFEs remain handy for quick inline scoping, one-time setup, and `async` IIFEs to use `await` at top level in non-module scripts."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// IIFE creating a private, self-contained module result.\n\nconst config = (function () {\n  // these are private; not visible outside the IIFE\n  const secret = \"abc123\";\n  const version = 2;\n  return {\n    getVersion: () => version,\n    masked: () => \"*\".repeat(secret.length),\n  };\n})();\n\n// IIFE that takes arguments and returns a value\nconst computed = ((a, b) => a * b + 1)(6, 7); // 43\n\nmodule.exports = { config, computed };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { config, computed } = require(\"./solution\");\n\nconsole.log(config.getVersion()); // 2\nconsole.log(config.masked());     // ******\nconsole.log(computed);            // 43\n\nconsole.assert(config.getVersion() === 2, \"IIFE exposes version\");\nconsole.assert(config.masked() === \"******\", \"secret stays private, length 6\");\nconsole.assert(typeof config.secret === \"undefined\", \"secret not leaked\");\nconsole.assert(computed === 43, \"arg-taking IIFE returns value\");\nconsole.log(\"IIFE assertions passed.\");",
+      "expectedOutput": "2\n******\n43\nIIFE assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

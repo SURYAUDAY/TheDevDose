@@ -1,0 +1,68 @@
+{
+  "id": "p4-035",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 35,
+  "orderInPhase": 35,
+  "slug": "what-is-rag",
+  "title": "What is RAG",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "rag"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A company chatbot answers questions about internal HR policies by retrieving the relevant policy chunks from a vector store and feeding them to the LLM — giv…"
+  },
+  "sections": {
+    "simple_en": "RAG (Retrieval-Augmented Generation) is a pattern that grounds an LLM's answers in external knowledge. Instead of relying only on what the model learned during training, you retrieve relevant documents at query time, inject them into the prompt, and have the model generate an answer based on that retrieved context.\n\nThe three steps are Retrieve (find relevant chunks, usually by semantic search), Augment (add them to the prompt), and Generate (answer from the context). RAG lets LLMs use fresh, private, or domain-specific knowledge without retraining, and it sharply reduces hallucinations because answers are tied to real sources you can cite.",
+    "hinglish": "RAG (Retrieval-Augmented Generation) ek pattern hai jo ek LLM ke answers ko external knowledge mein ground karta hai. Sirf us par depend karne ke bajaye jo model ne training mein seekha, aap query time par relevant documents retrieve karte ho, unhe prompt mein inject karte ho, aur model se us retrieved context ke aadhaar par answer generate karwate ho.\n\nTeen steps hain Retrieve (relevant chunks dhoondho, aksar semantic search se), Augment (unhe prompt mein add karo), aur Generate (context se answer do). RAG LLMs ko fresh, private, ya domain-specific knowledge use karne deta hai bina retraining ke, aur ye hallucinations ko sharply kam karta hai kyunki answers real sources se tied hote hain jinhe aap cite kar sakte ho.",
+    "keyPoints": [
+      "Grounds LLM answers in external knowledge retrieved at query time.",
+      "Three steps: Retrieve -> Augment (the prompt) -> Generate.",
+      "Adds fresh/private/domain knowledge without retraining the model.",
+      "Sharply reduces hallucinations by tying answers to real sources.",
+      "Sources can be cited, making answers verifiable."
+    ],
+    "real_world": "A company chatbot answers questions about internal HR policies by retrieving the relevant policy chunks from a vector store and feeding them to the LLM — giving accurate, up-to-date answers grounded in the actual documents, which the base model was never trained on.",
+    "followups": [
+      {
+        "q": "What problem does RAG solve?",
+        "a": "It gives LLMs access to knowledge outside their training — fresh, private, or domain-specific — without retraining, and reduces hallucinations by grounding answers in retrieved, citable sources."
+      },
+      {
+        "q": "What are the three stages of RAG?",
+        "a": "Retrieve relevant chunks (usually via semantic search), Augment the prompt by injecting them as context, and Generate an answer based on that context."
+      },
+      {
+        "q": "How does RAG reduce hallucinations?",
+        "a": "By instructing the model to answer from the retrieved context (and ideally cite it), responses are tied to real documents rather than the model's unreliable internal recall."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI RAG code (needs an API key). The Python-runnable demo below runs a complete retrieve → augment → generate loop so the grounding behavior is verifiable here.",
+      "source": "# What is RAG — Retrieval-Augmented Generation, end to end.\nfrom openai import OpenAI\nimport numpy as np\nclient = OpenAI()\n\ndef embed(texts):\n    return [d.embedding for d in client.embeddings.create(model=\"text-embedding-3-small\", input=texts).data]\n\n# Pre-index your knowledge base.\nKB = [\"Returns are accepted within 30 days.\", \"Free shipping over $50.\", \"Stores open 9-9 daily.\"]\nKB_VECS = np.array(embed(KB))\n\ndef rag(question, k=2):\n    # 1) RETRIEVE: find the most relevant chunks.\n    qv = np.array(embed([question])[0])\n    sims = KB_VECS @ qv / (np.linalg.norm(KB_VECS, axis=1) * np.linalg.norm(qv))\n    context = \"\\n\".join(KB[i] for i in np.argsort(sims)[::-1][:k])\n    # 2) AUGMENT: inject context into the prompt.\n    prompt = f\"Answer using ONLY this context:\\n{context}\\n\\nQuestion: {question}\"\n    # 3) GENERATE: the LLM answers, grounded in your data.\n    return client.chat.completions.create(\n        model=\"gpt-4o-mini\", temperature=0,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    ).choices[0].message.content\n\n# RAG grounds the model in your private/up-to-date data, cutting hallucinations.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# What is RAG — Retrieval-Augmented Generation: retrieve relevant context, then generate\nimport math\ndef cosine(a,b):\n    d=sum(x*y for x,y in zip(a,b)); na=math.sqrt(sum(x*x for x in a)); nb=math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\n\n# Knowledge base: (text, toy embedding [policy, hours, returns])\nkb = [\n    (\"Our return window is 30 days from purchase.\", [0,0,1]),\n    (\"Stores are open 9am to 9pm daily.\",           [0,1,0]),\n    (\"We offer free shipping over $50.\",            [1,0,0]),\n]\ndef embed_q(q):\n    q=q.lower()\n    return [1.0 if \"shipping\" in q else 0.0,\n            1.0 if any(w in q for w in (\"open\",\"hours\",\"time\")) else 0.0,\n            1.0 if any(w in q for w in (\"return\",\"refund\")) else 0.0]\n\ndef rag_answer(question):\n    qv = embed_q(question)\n    best_text, best_score = max(kb, key=lambda kv: cosine(qv, kv[1]))\n    # 'Generate' grounded in the retrieved context (here: echo the fact).\n    return f\"Based on our policy: {best_text}\"\n\nq = \"How many days do I have to return an item?\"\nprint(\"Q:\", q)\nprint(\"A:\", rag_answer(q))\nassert \"30 days\" in rag_answer(q), \"answer grounded in the retrieved document\"\nprint(\"RAG = Retrieve relevant docs (via embeddings) + Augment the prompt + Generate the answer.\")\nprint(\"It grounds the LLM in YOUR data, reducing hallucinations and adding up-to-date knowledge.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Q: How many days do I have to return an item?\nA: Based on our policy: Our return window is 30 days from purchase.\nRAG = Retrieve relevant docs (via embeddings) + Augment the prompt + Generate the answer.\nIt grounds the LLM in YOUR data, reducing hallucinations and adding up-to-date knowledge.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

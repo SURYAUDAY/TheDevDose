@@ -1,0 +1,66 @@
+{
+  "id": "p1a-005",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 5,
+  "orderInPhase": 5,
+  "slug": "memory-creation-phase",
+  "title": "Memory Creation Phase",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "memory",
+    "creation",
+    "phase"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "Think of setting a dinner table before guests eat."
+  },
+  "sections": {
+    "simple_en": "Before any line of a context actually runs, the engine performs the Memory Creation phase (also called the creation or allocation phase). It scans the code and reserves memory for every variable and function it finds in that scope.\n\nDuring this phase, `var` variables are allocated and initialised to `undefined`; `let` and `const` are allocated but left uninitialised (in the Temporal Dead Zone); and function declarations are stored entirely (their full body). This phase is what makes hoisting possible.",
+    "hinglish": "Context ki koi bhi line chalne se pehle, engine Memory Creation phase chalata hai. Ye code ko scan karke us scope ke har variable aur function ke liye memory reserve karta hai.\nIs phase me `var` variables ko memory milti hai aur woh `undefined` set ho jaate hain; `let`/`const` ko memory milti hai par initialise nahi hote (Temporal Dead Zone me rehte hain); aur function declarations poori body ke saath store ho jaate hain. Yahi phase hoisting ko possible banata hai.",
+    "keyPoints": [
+      "Runs first, before execution; scans the scope and allocates memory.",
+      "`var` → allocated and set to `undefined`.",
+      "`let`/`const` → allocated but uninitialised (Temporal Dead Zone).",
+      "Function declarations → fully stored (body included), so they're callable before their line.",
+      "Function expressions/arrow functions assigned to `var` follow the variable rules (only the name is hoisted as `undefined`)."
+    ],
+    "real_world": "Think of setting a dinner table before guests eat. You lay out all the empty plates and labelled name cards first (allocation). The food (values) is served later, during the meal (execution phase).",
+    "followups": [
+      {
+        "q": "What value does a `var` hold during the memory creation phase?",
+        "a": "`undefined`. It is allocated immediately, but its actual value is assigned later during the execution phase."
+      },
+      {
+        "q": "Why can you call a function-declaration before its line but not a function-expression?",
+        "a": "Function declarations are stored in full during creation; a function expression only hoists its variable name (as `undefined`), so calling it early throws a TypeError."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// This file is meant to be REQUIRED so we can observe creation-phase effects.\n\n// Function declaration is fully available even though it's used \"early\".\nfunction describeCreationPhase() {\n  // 'callableEarly' was usable above its definition because function\n  // declarations are stored whole during the memory creation phase.\n  return {\n    varBefore: readVarBeforeAssign(),     // undefined (allocated, not yet assigned)\n    funcWorks: callableEarly(),           // works due to full hoisting\n  };\n}\n\nfunction readVarBeforeAssign() {\n  // 'x' is allocated and set to undefined during creation phase\n  var snapshot = x; // undefined here\n  var x = 10;       // assigned during execution phase\n  return snapshot;\n}\n\nfunction callableEarly() { return \"function body was stored at creation\"; }\n\nmodule.exports = { describeCreationPhase };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { describeCreationPhase } = require(\"./solution\");\n\nconst r = describeCreationPhase();\nconsole.log(r);\n\nconsole.assert(r.varBefore === undefined, \"var is undefined before assignment\");\nconsole.assert(r.funcWorks === \"function body was stored at creation\", \"function fully hoisted\");\nconsole.log(\"Memory creation phase assertions passed.\");",
+      "expectedOutput": "{ varBefore: undefined, funcWorks: 'function body was stored at creation' }\nMemory creation phase assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

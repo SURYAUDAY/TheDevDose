@@ -1,0 +1,69 @@
+{
+  "id": "p4-033",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 33,
+  "orderInPhase": 33,
+  "slug": "faiss-basics",
+  "title": "FAISS basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "faiss",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "An ML team builds an in-app semantic search over a few million embeddings using a FAISS HNSW index loaded into memory — getting millisecond queries with full…"
+  },
+  "sections": {
+    "simple_en": "FAISS (Facebook AI Similarity Search) is a high-performance library for similarity search over dense vectors. It's not a server — it's an in-process library you embed in your app, and you manage storage/persistence yourself. It powers the search inside many higher-level vector stores.\n\nFAISS offers exact indexes (IndexFlat, brute-force — perfect accuracy) and approximate indexes (IVF, HNSW, PQ) that cluster or compress vectors for much faster, memory-efficient search at scale, with a small accuracy trade-off. Normalizing vectors lets you use inner-product search as cosine similarity. It's a go-to when you want speed and control without running a separate database.",
+    "hinglish": "FAISS (Facebook AI Similarity Search) dense vectors par similarity search ke liye ek high-performance library hai. Ye server nahi hai — ye ek in-process library hai jo aap apne app mein embed karte ho, aur storage/persistence aap khud manage karte ho. Ye kai higher-level vector stores ke andar ki search ko power karta hai.\n\nFAISS exact indexes (IndexFlat, brute-force — perfect accuracy) aur approximate indexes (IVF, HNSW, PQ) deta hai jo vectors ko cluster ya compress karke scale par bahut faster, memory-efficient search dete hain, thodi si accuracy ke trade-off ke saath. Vectors normalize karne se aap inner-product search ko cosine similarity ki tarah use kar sakte ho. Ye tab go-to hai jab aap speed aur control chahte ho bina alag database chalaye.",
+    "keyPoints": [
+      "High-performance similarity-search library (in-process, not a server).",
+      "You manage storage/persistence; it powers many vector stores.",
+      "Exact (IndexFlat) = perfect accuracy, brute force.",
+      "Approximate (IVF, HNSW, PQ) = fast, memory-efficient at scale.",
+      "Normalize vectors to use inner-product search as cosine similarity."
+    ],
+    "real_world": "An ML team builds an in-app semantic search over a few million embeddings using a FAISS HNSW index loaded into memory — getting millisecond queries with full control and no external database, persisting the index to disk between runs.",
+    "followups": [
+      {
+        "q": "Is FAISS a database?",
+        "a": "No — it's a library for fast vector search that runs in your process. You handle persistence and serving yourself, unlike a managed vector DB. It often serves as the search engine inside other tools."
+      },
+      {
+        "q": "Exact vs approximate FAISS indexes?",
+        "a": "Flat indexes do exact brute-force search (perfect accuracy, slower at scale). IVF/HNSW/PQ are approximate — they cluster or compress vectors for much faster, lower-memory search with a small accuracy cost."
+      },
+      {
+        "q": "How do you get cosine similarity with FAISS?",
+        "a": "Normalize your vectors (L2) and use an inner-product index (IndexFlatIP). For normalized vectors, inner product equals cosine similarity."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real FAISS code (Facebook AI Similarity Search). The Python-runnable demo below implements an exact inner-product index so the search behavior is verifiable here.",
+      "source": "# FAISS basics — a fast in-memory similarity-search library (you host it yourself).\nimport numpy as np\nimport faiss\n\ndim = 128\n# Exact search:\nindex = faiss.IndexFlatL2(dim)                 # L2 distance; IndexFlatIP for inner product\n\nvectors = np.random.random((1000, dim)).astype(\"float32\")\nindex.add(vectors)                             # add all document vectors\nprint(\"Indexed vectors:\", index.ntotal)\n\nquery = np.random.random((1, dim)).astype(\"float32\")\ndistances, ids = index.search(query, k=5)      # top-5 nearest neighbors\n\n# For large datasets, use approximate indexes for speed:\n# quantizer = faiss.IndexFlatL2(dim)\n# index = faiss.IndexIVFFlat(quantizer, dim, 100)  # IVF; or faiss.IndexHNSWFlat(dim, 32)\n# index.train(vectors); index.add(vectors)\n# Save/load: faiss.write_index(index, \"my.index\"); faiss.read_index(\"my.index\")",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# FAISS basics — a high-performance similarity-search library (in-memory ANN index)\nimport math\ndef l2(a, b): return math.sqrt(sum((x-y)**2 for x, y in zip(a, b)))\n\nclass FakeFaissFlatIndex:\n    # Mimics IndexFlatL2: stores vectors, searches by exact L2 distance.\n    def __init__(self, dim): self.dim=dim; self.vectors=[]\n    def add(self, vectors): self.vectors.extend(vectors)   # add many vectors at once\n    def search(self, query, k):\n        dists = sorted(((l2(query, v), i) for i, v in enumerate(self.vectors)))\n        D = [d for d, _ in dists[:k]]; I = [i for _, i in dists[:k]]\n        return D, I    # distances and integer ids (FAISS returns numpy arrays)\n\nindex = FakeFaissFlatIndex(dim=3)\nindex.add([[1,0,0],[0.9,0.1,0],[0,1,0],[0,0,1]])\nD, I = index.search([0.95,0.05,0], k=2)\nprint(\"Nearest ids:\", I)\nprint(\"Distances:  \", [round(d,3) for d in D])\nassert I[0] in (0,1), \"closest vectors found\"\nassert D[0] <= D[1], \"results sorted by ascending distance\"\nprint(\"FAISS: a fast C++/Python library for vector search, not a managed service (you host it).\")\nprint(\"Use IndexFlat for exact search; IVF/HNSW for approximate search at large scale.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Nearest ids: [1, 0]\nDistances:   [0.071, 0.071]\nFAISS: a fast C++/Python library for vector search, not a managed service (you host it).\nUse IndexFlat for exact search; IVF/HNSW for approximate search at large scale.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

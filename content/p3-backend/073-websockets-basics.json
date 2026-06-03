@@ -1,0 +1,69 @@
+{
+  "id": "p3-073",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 73,
+  "orderInPhase": 73,
+  "slug": "websockets-basics",
+  "title": "WebSockets basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "websockets",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A chat app opens a WebSocket when a user joins."
+  },
+  "sections": {
+    "simple_en": "WebSockets provide a full-duplex, persistent connection between client and server over a single TCP connection, so both sides can send messages at any time with low latency. The connection starts as an HTTP request that 'upgrades' to the WebSocket protocol, then stays open for ongoing two-way communication.\n\nThis makes WebSockets the right tool for truly interactive realtime features — chat, multiplayer games, collaborative editing, live trading. In Node you use libraries like ws or Socket.IO (which adds rooms, reconnection, and fallbacks). The trade-off versus SSE/polling is more complexity and stateful connections to manage, especially across multiple servers.",
+    "hinglish": "WebSockets client aur server ke beech ek full-duplex, persistent connection dete hain ek single TCP connection par, taaki dono taraf kabhi bhi low latency par messages bhej sakein. Connection ek HTTP request ke roop mein shuru hota hai jo WebSocket protocol mein 'upgrade' hota hai, phir ongoing two-way communication ke liye open rehta hai.\n\nIsse WebSockets truly interactive realtime features ke liye sahi tool ban jaate hain — chat, multiplayer games, collaborative editing, live trading. Node mein ws ya Socket.IO (jo rooms, reconnection, fallbacks add karta hai) jaisi libraries use karte ho. SSE/polling ke comparison mein trade-off zyada complexity aur stateful connections manage karna hai, khaaskar multiple servers ke across.",
+    "keyPoints": [
+      "Full-duplex, persistent connection — both sides send anytime, low latency.",
+      "Starts as HTTP, then upgrades to the WebSocket protocol.",
+      "Ideal for chat, multiplayer, collaboration, live trading.",
+      "Node: ws (low-level) or Socket.IO (rooms, reconnection, fallbacks).",
+      "Trade-off: stateful connections to manage, harder to scale across servers."
+    ],
+    "real_world": "A chat app opens a WebSocket when a user joins. Messages typed by one user travel up the socket to the server, which instantly broadcasts them down every connected client's socket — delivering real-time, two-way conversation that polling or SSE alone couldn't provide.",
+    "followups": [
+      {
+        "q": "How is a WebSocket connection established?",
+        "a": "It begins as a normal HTTP request with an Upgrade header; if the server agrees, the protocol switches to WebSocket and the connection stays open for bidirectional messaging."
+      },
+      {
+        "q": "When choose WebSockets over SSE?",
+        "a": "When you need two-way communication — the client sends messages frequently too (chat, games, collaborative editing). SSE only pushes server-to-client."
+      },
+      {
+        "q": "What's hard about scaling WebSockets?",
+        "a": "Connections are stateful and pinned to a server instance. Broadcasting across instances needs a shared backplane (e.g., a Redis adapter) so a message on one server reaches clients connected to others."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real ws WebSocket server code. The Node-runnable demo below simulates a two-way message exchange so the bidirectional flow is verifiable here.",
+      "source": "// WebSockets — full-duplex realtime with the ws library.\nconst { WebSocketServer } = require(\"ws\");\nconst wss = new WebSocketServer({ port: 8080 });\n\nwss.on(\"connection\", (socket) => {\n  socket.send(JSON.stringify({ type: \"welcome\" }));   // server -> client\n\n  // Receive messages from the client (client -> server).\n  socket.on(\"message\", (raw) => {\n    const msg = JSON.parse(raw);\n    if (msg.type === \"chat\") {\n      // Broadcast to all connected clients.\n      for (const client of wss.clients) {\n        if (client.readyState === client.OPEN) {\n          client.send(JSON.stringify({ type: \"chat\", text: msg.text }));\n        }\n      }\n    }\n  });\n\n  socket.on(\"close\", () => console.log(\"client disconnected\"));\n});\n// WebSockets start as an HTTP request, then \"Upgrade\" to a persistent\n// two-way connection — ideal for chat, multiplayer, and live collaboration.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// WebSockets — full-duplex: client and server exchange messages over one connection\nfunction createConnection(){\n  const serverInbox = [], clientInbox = [];\n  const server = {\n    onMessage(handler){ this._h = handler; },\n    receive(msg){ this._h && this._h(msg, (reply) => clientInbox.push(reply)); },\n  };\n  const client = {\n    send(msg){ serverInbox.push(msg); server.receive(msg); },     // client -> server\n    inbox: clientInbox,\n  };\n  return { server, client, serverInbox };\n}\nconst { server, client, serverInbox } = createConnection();\n// Server echoes and can push unprompted messages too (bidirectional):\nserver.onMessage((msg, reply) => reply(`echo: ${msg}`));\nclient.send(\"hello\");\nclient.send(\"ping\");\nconsole.log(\"Server received:\", JSON.stringify(serverInbox));\nconsole.log(\"Client received:\", JSON.stringify(client.inbox));\nconsole.assert(client.inbox[0] === \"echo: hello\", \"server pushed a reply back\");\nconsole.log(\"WebSockets upgrade from HTTP, then keep a persistent two-way channel.\");\nconsole.log(\"Use for chat, multiplayer, collaborative editing, live dashboards.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Server received: [\"hello\",\"ping\"]\nClient received: [\"echo: hello\",\"echo: ping\"]\nWebSockets upgrade from HTTP, then keep a persistent two-way channel.\nUse for chat, multiplayer, collaborative editing, live dashboards.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

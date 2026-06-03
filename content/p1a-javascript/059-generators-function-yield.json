@@ -1,0 +1,66 @@
+{
+  "id": "p1a-059",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 59,
+  "orderInPhase": 59,
+  "slug": "generators-function-yield",
+  "title": "Generators (function*, yield)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "generators",
+    "function",
+    "yield"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Generating an infinite stream of IDs or paginated API results lazily — you only compute the next value when you actually need it, which saves memory compared…"
+  },
+  "sections": {
+    "simple_en": "A generator is a special function declared with `function*` that can pause and resume its execution. Inside it, `yield` produces a value and suspends the function until the caller asks for the next value. Calling a generator returns an iterator (which is also iterable).\n\nGenerators make it easy to create lazy sequences (even infinite ones), implement custom iterables cleanly, and model step-by-step processes. Each `next()` call runs the body until the next `yield`, returning `{ value, done }`.",
+    "hinglish": "Generator ek special function hai jo `function*` se declare hota hai aur apni execution ko pause/resume kar sakta hai. Iske andar `yield` ek value produce karta hai aur function ko suspend kar deta hai jab tak caller agli value na maange. Generator call karne par ek iterator milta hai (jo iterable bhi hai).\nGenerators se lazy sequences (infinite bhi) banana, custom iterables saaf tarike se implement karna, aur step-by-step processes model karna aasaan ho jaata hai. Har `next()` call body ko agle `yield` tak chalata hai, `{ value, done }` return karke.",
+    "keyPoints": [
+      "Declared with `function*`; uses `yield` to produce values and pause.",
+      "Calling it returns an iterator/iterable (lazy — runs on demand).",
+      "Each `next()` resumes until the next `yield`, returning `{ value, done }`.",
+      "Great for lazy/infinite sequences and clean custom iterables.",
+      "`yield*` delegates to another iterable/generator."
+    ],
+    "real_world": "Generating an infinite stream of IDs or paginated API results lazily — you only compute the next value when you actually need it, which saves memory compared to building the whole list up front.",
+    "followups": [
+      {
+        "q": "What does `yield` do?",
+        "a": "It produces a value to the caller and pauses the generator's execution at that point. Execution resumes from there on the next `next()` call."
+      },
+      {
+        "q": "Why are generators useful for infinite sequences?",
+        "a": "Because they're lazy — values are computed only when requested, so an infinite loop with `yield` never blocks; you simply pull as many values as you need."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Generators: finite, infinite (lazy), and delegation.\n\nfunction* countTo(n) {\n  for (let i = 1; i <= n; i++) yield i;\n}\n\nfunction* idGenerator() {\n  let id = 1;\n  while (true) yield id++;   // infinite, but lazy\n}\n\nfunction* combined() {\n  yield* countTo(2);   // delegate\n  yield 99;\n}\n\nmodule.exports = { countTo, idGenerator, combined };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { countTo, idGenerator, combined } = require(\"./solution\");\n\nconsole.log([...countTo(4)]); // [1,2,3,4]\n\nconst ids = idGenerator();\nconsole.log(ids.next().value, ids.next().value, ids.next().value); // 1 2 3\n\nconsole.log([...combined()]); // [1,2,99]\n\nconsole.assert(JSON.stringify([...countTo(4)]) === \"[1,2,3,4]\", \"finite generator\");\nconst g = idGenerator();\nconsole.assert(g.next().value === 1 && g.next().value === 2, \"infinite lazy generator\");\nconsole.assert(JSON.stringify([...combined()]) === \"[1,2,99]\", \"yield* delegation\");\nconsole.log(\"generators assertions passed.\");",
+      "expectedOutput": "[ 1, 2, 3, 4 ]\n1 2 3\n[ 1, 2, 99 ]\ngenerators assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

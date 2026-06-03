@@ -1,0 +1,70 @@
+{
+  "id": "p3-054",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 54,
+  "orderInPhase": 54,
+  "slug": "sql-injection-prevention",
+  "title": "SQL injection prevention",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "sql",
+    "injection",
+    "prevention"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A naive login builds WHERE email = '<input>'."
+  },
+  "sections": {
+    "simple_en": "SQL injection happens when user input is concatenated directly into a SQL string, letting an attacker alter the query — for example, turning a login check into a tautology that returns every row, or dropping tables. It's one of the most damaging and common web vulnerabilities.\n\nThe fix is parameterized queries (prepared statements): the SQL text and the values are sent separately, so user input is always treated as data, never as executable SQL. ORMs and query builders parameterize for you. Additional layers include input validation and using least-privilege database accounts.",
+    "hinglish": "SQL injection tab hota hai jab user input seedha SQL string mein concatenate hota hai, jisse attacker query badal sakta hai — jaise login check ko tautology bana dena jo saari rows return kare, ya tables drop kar dena. Ye sabse damaging aur common web vulnerabilities mein se ek hai.\n\nFix hai parameterized queries (prepared statements): SQL text aur values alag bheje jaate hain, isliye user input hamesha data samjha jaata hai, kabhi executable SQL nahi. ORMs aur query builders aapke liye parameterize karte hain. Extra layers: input validation aur least-privilege database accounts.",
+    "keyPoints": [
+      "Caused by concatenating user input into SQL text.",
+      "Attackers can read all data, bypass auth, or destroy tables.",
+      "Fix: parameterized queries / prepared statements ($1, ? placeholders).",
+      "Input is sent separately from SQL, so it's treated as data, never code.",
+      "Defense in depth: input validation + least-privilege DB users."
+    ],
+    "real_world": "A naive login builds WHERE email = '<input>'. An attacker enters x' OR '1'='1, making the condition always true and logging in without a password. A parameterized query passes the input as a bound value, so the malicious text is treated as a literal email — the attack fails.",
+    "followups": [
+      {
+        "q": "Why do parameterized queries prevent injection?",
+        "a": "The database receives the SQL structure and the values separately. User input is bound as data and can never be parsed as SQL, so it can't change the query's meaning."
+      },
+      {
+        "q": "Do ORMs protect against SQL injection?",
+        "a": "Generally yes — they parameterize queries for you. But raw query escape hatches still require care; never interpolate user input into raw SQL strings."
+      },
+      {
+        "q": "Is escaping input as good as parameterizing?",
+        "a": "No — manual escaping is error-prone and easy to get wrong. Parameterized queries are the robust, standard solution; validation and least privilege are complementary, not replacements."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real node-postgres parameterized code. The Node-runnable demo below contrasts injectable string concatenation with safe bound parameters so the difference is verifiable here.",
+      "source": "// SQL injection prevention — always parameterize; never concatenate input.\nconst { Pool } = require(\"pg\");\nconst pool = new Pool();\n\n// ❌ VULNERABLE — never build SQL by string concatenation:\n//    const sql = `SELECT * FROM users WHERE email = '${email}'`;\n//    Input  x' OR '1'='1  turns this into a query that returns every row.\n\n// ✅ SAFE — parameterized query: values are sent separately from the SQL text.\nasync function findUserByEmail(email) {\n  const { rows } = await pool.query(\n    \"SELECT id, name FROM users WHERE email = $1\",\n    [email]                               // bound parameter, treated as data\n  );\n  return rows[0];\n}\n\n// Also safe: ORMs/query builders parameterize for you (Prisma, Knex, Sequelize).\n// Extra layers: validate input, use least-privilege DB accounts.\nmodule.exports = { findUserByEmail };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// SQL injection prevention — parameterized queries vs string concatenation\n// VULNERABLE: user input becomes part of the SQL text\nfunction unsafeQuery(email){ return `SELECT * FROM users WHERE email = '${email}'`; }\n// SAFE: input is sent separately as a bound parameter ($1), never as SQL\nfunction safeQuery(email){ return { text: \"SELECT * FROM users WHERE email = $1\", values: [email] }; }\n\nconst attack = \"x' OR '1'='1\";   // classic injection payload\nconsole.log(\"Unsafe SQL:\", unsafeQuery(attack));   // becomes a tautology -> leaks all rows\nconst safe = safeQuery(attack);\nconsole.log(\"Safe query text:\", safe.text);\nconsole.log(\"Safe values:\", JSON.stringify(safe.values), \"(treated as data, not SQL)\");\nconsole.assert(unsafeQuery(attack).includes(\"OR '1'='1\"), \"unsafe version is injectable\");\nconsole.assert(!safe.text.includes(attack), \"payload never enters the SQL text\");\nconsole.log(\"Always use parameterized queries / prepared statements (or an ORM).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Unsafe SQL: SELECT * FROM users WHERE email = 'x' OR '1'='1'\nSafe query text: SELECT * FROM users WHERE email = $1\nSafe values: [\"x' OR '1'='1\"] (treated as data, not SQL)\nAlways use parameterized queries / prepared statements (or an ORM).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

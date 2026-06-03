@@ -1,0 +1,68 @@
+{
+  "id": "p2-012",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 12,
+  "orderInPhase": 12,
+  "slug": "forwardref",
+  "title": "forwardRef",
+  "difficulty": "beginner",
+  "tags": [
+    "p2",
+    "forwardref"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "A design-system <TextInput> wraps a native input with styling."
+  },
+  "sections": {
+    "simple_en": "By default, refs don't pass through custom components — a ref attaches to React component instances, not to the DOM inside them. forwardRef lets a component receive a ref from its parent and forward it onto a specific child DOM node, so the parent can access that node directly.\n\nThis is essential for reusable input or button components where the parent needs to focus, measure, or scroll the underlying element. It's often paired with useImperativeHandle to expose a small, controlled API instead of the raw DOM node.",
+    "hinglish": "Default mein ref custom components ke through pass nahi hoti. forwardRef se ek component parent se ref le kar use kisi specific child DOM node par laga deta hai, taaki parent us node ko directly access kar sake.\n\nYe reusable input ya button components ke liye zaroori hai jahan parent ko underlying element focus ya scroll karna ho. Iske saath aksar useImperativeHandle use hota hai taaki ek chhota controlled API expose ho.",
+    "keyPoints": [
+      "Refs don't automatically pass through custom components — forwardRef enables that.",
+      "Signature: const X = forwardRef((props, ref) => <input ref={ref} ... />).",
+      "Lets a parent imperatively focus/measure/scroll a child's DOM node.",
+      "Pair with useImperativeHandle to expose a curated API instead of the raw node.",
+      "Common in design systems for input, button, and modal primitives."
+    ],
+    "real_world": "A design-system <TextInput> wraps a native input with styling. A login form needs to focus the email field on mount. With forwardRef, the form attaches a ref to <TextInput> and calls ref.current.focus() — reaching the real input inside the wrapper.",
+    "followups": [
+      {
+        "q": "Why is forwardRef needed at all?",
+        "a": "Because a ref on a custom component would point at the component instance (or nothing for function components), not the DOM node inside it. forwardRef bridges the parent's ref to a specific child node."
+      },
+      {
+        "q": "What does useImperativeHandle add?",
+        "a": "It lets the child expose a custom object (e.g., { focus, scrollToTop }) through the forwarded ref instead of the raw DOM node, keeping the API intentional."
+      },
+      {
+        "q": "Is forwardRef only for DOM nodes?",
+        "a": "Most often, but combined with useImperativeHandle it can expose any imperative methods you choose, not just the DOM element."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// forwardRef: let a parent focus the input inside a custom component.\nimport React, { forwardRef, useRef } from \"react\";\n\nconst TextInput = forwardRef(function TextInput(props, ref) {\n  // The ref from the parent is attached to the real <input> node.\n  return <input ref={ref} className=\"text-input\" {...props} />;\n});\n\nexport default function LoginForm() {\n  const emailRef = useRef(null);\n\n  const focusEmail = () => emailRef.current.focus(); // reaches the inner input\n\n  return (\n    <div>\n      <TextInput ref={emailRef} placeholder=\"Email\" />\n      <button onClick={focusEmail}>Focus Email</button>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// forwardRef — parent gets a ref to a child's underlying node\nfunction createRef(){ return { current: null }; }\n// child \"forwards\" the ref it receives onto its inner node\nfunction Input(props, ref){\n  const node = { tag: \"input\", value: \"\", focus(){ this.focused = true; } };\n  ref.current = node;            // forwardRef wiring\n  return node;\n}\nconst inputRef = createRef();\nInput({ placeholder: \"name\" }, inputRef);\nconsole.log(\"Parent can access child node:\", inputRef.current.tag);\ninputRef.current.focus();        // parent imperatively focuses child\nconsole.log(\"Focused via forwarded ref:\", inputRef.current.focused);\nconsole.assert(inputRef.current.focused === true, \"parent should focus child\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Parent can access child node: input\nFocused via forwarded ref: true\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "p2-057",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 57,
+  "orderInPhase": 57,
+  "slug": "service-workers-pwa-basics",
+  "title": "Service Workers & PWA basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "service",
+    "workers",
+    "pwa",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A news PWA precaches the app shell and recent articles."
+  },
+  "sections": {
+    "simple_en": "A Service Worker is a script the browser runs in the background, separate from the page. It can intercept network requests, cache responses, and serve them — enabling offline support, faster repeat loads, and background sync. It's the backbone of Progressive Web Apps (PWAs).\n\nA PWA combines a service worker (for caching/offline) with a web app manifest (icons, name, theme) so the app can be installed to the home screen and behave like a native app. Common caching strategies include cache-first, network-first, and stale-while-revalidate.",
+    "hinglish": "Service Worker ek script hai jo browser background mein chalata hai, page se alag. Ye network requests intercept kar sakta hai, responses cache karke serve kar sakta hai — isse offline support, fast repeat loads aur background sync milte hain. Ye PWAs ki reedh ki haddi hai.\n\nPWA ek service worker (caching/offline) aur web app manifest (icons, name, theme) ko combine karta hai taaki app home screen par install ho aur native jaisa lage. Common caching strategies: cache-first, network-first, stale-while-revalidate.",
+    "keyPoints": [
+      "A background script that intercepts requests and manages a cache.",
+      "Enables offline support, faster repeat visits, and background sync.",
+      "Core of PWAs, paired with a web app manifest for installability.",
+      "Strategies: cache-first, network-first, stale-while-revalidate.",
+      "Requires HTTPS and a registration step; versioned caches for updates."
+    ],
+    "real_world": "A news PWA precaches the app shell and recent articles. On the subway with no signal, the user still opens the app and reads cached stories; when connectivity returns, the service worker fetches fresh content in the background.",
+    "followups": [
+      {
+        "q": "What can a service worker do that regular JS can't?",
+        "a": "Run in the background independent of the page, intercept network requests, and serve cached responses — enabling offline use, push notifications, and background sync."
+      },
+      {
+        "q": "What's the difference between cache-first and network-first?",
+        "a": "Cache-first serves cached data immediately (great for static assets); network-first tries the network and falls back to cache (better for frequently changing data)."
+      },
+      {
+        "q": "What makes a web app a PWA?",
+        "a": "A service worker for caching/offline plus a web app manifest (name, icons, theme) served over HTTPS, which together allow installation and app-like behavior."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Service worker + registration code (runs in the browser). The Node-runnable demo below simulates the cache-first fetch handler.",
+      "source": "// Service Worker / PWA: register a SW and cache assets for offline use.\n// main.jsx — register the service worker\nif (\"serviceWorker\" in navigator) {\n  window.addEventListener(\"load\", () => {\n    navigator.serviceWorker.register(\"/sw.js\");\n  });\n}\n\n// sw.js — cache-first strategy\nconst CACHE = \"app-v1\";\nconst ASSETS = [\"/\", \"/index.html\", \"/app.js\", \"/styles.css\"];\n\nself.addEventListener(\"install\", (e) => {\n  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));\n});\n\nself.addEventListener(\"fetch\", (e) => {\n  e.respondWith(\n    caches.match(e.request).then((cached) => cached || fetch(e.request)) // cache first\n  );\n});",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Service Worker / PWA — cache-first fetch handler enables offline\nconst cacheStore = new Map();\nfunction precache(assets){ assets.forEach(a => cacheStore.set(a.url, a.body)); }\nasync function handleFetch(url, network){\n  if (cacheStore.has(url)){ return { from: \"cache\", body: cacheStore.get(url) }; }   // cache-first\n  try { const body = await network(url); cacheStore.set(url, body); return { from: \"network\", body }; }\n  catch { return { from: \"offline-fallback\", body: \"Offline page\" }; }\n}\n(async () => {\n  precache([{ url: \"/app.js\", body: \"console.log('app')\" }]);\n  console.log(await handleFetch(\"/app.js\", null));                          // cache hit\n  console.log(await handleFetch(\"/api/data\", async () => \"fresh data\"));    // network + cache\n  console.log(await handleFetch(\"/missing\", async () => { throw new Error(\"no net\"); })); // offline\n  const cached = await handleFetch(\"/api/data\", () => { throw new Error(\"should not call\"); });\n  console.log(\"Second /api/data:\", cached.from);\n  console.assert(cached.from === \"cache\", \"served from cache offline\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "{ from: 'cache', body: \"console.log('app')\" }\n{ from: 'network', body: 'fresh data' }\n{ from: 'offline-fallback', body: 'Offline page' }\nSecond /api/data: cache\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

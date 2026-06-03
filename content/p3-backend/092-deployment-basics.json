@@ -1,0 +1,69 @@
+{
+  "id": "p3-092",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 92,
+  "orderInPhase": 92,
+  "slug": "deployment-basics",
+  "title": "Deployment basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "deployment",
+    "basics"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A team deploys via rolling update in Kubernetes (maxUnavailable: 0), so capacity never drops while pods update one by one."
+  },
+  "sections": {
+    "simple_en": "Deployment is the process of getting a new version of your application running in production safely — ideally with zero downtime. The main strategies: recreate (stop old, start new — simple but causes downtime), rolling (replace instances gradually so some always serve traffic), blue-green (run the new version alongside the old, then switch traffic instantly, with rollback as a switch back), and canary (route a small percentage of traffic to the new version first, widening if healthy).\n\nSafe deployment also involves backward-compatible database migrations, health checks so traffic only reaches ready instances, monitoring with automated rollback on error spikes, and feature flags to decouple deploying code from releasing features. The goal is shipping frequently with low risk and quick recovery.",
+    "hinglish": "Deployment aapke application ke naye version ko production mein safely chalane ka process hai — ideally zero downtime ke saath. Main strategies: recreate (purana stop, naya start — simple par downtime), rolling (instances gradually replace karo taaki kuch hamesha serve karein), blue-green (naya version purane ke saath chalao, phir traffic instantly switch karo, rollback ek switch back ki tarah), aur canary (pehle thoda percentage traffic naye version par bhejo, healthy ho to widen karo).\n\nSafe deployment mein backward-compatible database migrations, health checks (taaki traffic sirf ready instances tak jaaye), monitoring with error spikes par automated rollback, aur feature flags (code deploy karna feature release karne se decouple karne ke liye) bhi shamil hain. Lakshya hai frequently ship karna low risk aur quick recovery ke saath.",
+    "keyPoints": [
+      "Goal: get the new version into production safely, ideally zero downtime.",
+      "Strategies: recreate, rolling, blue-green, canary.",
+      "Rolling: gradual replacement; blue-green: instant switch + easy rollback.",
+      "Canary: small % first, widen if healthy.",
+      "Pair with backward-compatible migrations, health checks, monitoring, rollback, feature flags."
+    ],
+    "real_world": "A team deploys via rolling update in Kubernetes (maxUnavailable: 0), so capacity never drops while pods update one by one. For a risky change they use canary — 5% of traffic first — and watch error rates; if metrics stay healthy they roll it out fully, otherwise they roll back instantly.",
+    "followups": [
+      {
+        "q": "Rolling vs blue-green deployment?",
+        "a": "Rolling gradually replaces instances so some always serve traffic (zero downtime, slower switch). Blue-green runs the new version in parallel and switches all traffic at once, making rollback as simple as switching back — at the cost of double the resources during the cutover."
+      },
+      {
+        "q": "What is a canary deployment?",
+        "a": "Releasing the new version to a small subset of traffic/users first, monitoring health, and only widening the rollout if metrics look good — limiting the blast radius of a bad release."
+      },
+      {
+        "q": "How do feature flags help deployment?",
+        "a": "They decouple deploying code from releasing features — you can deploy dormant code and enable it later (or for select users), and instantly turn a feature off without a redeploy if something goes wrong."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real deployment-strategy configuration (Kubernetes rolling update). The Node-runnable demo below simulates rolling and blue-green zero-downtime deploys so the strategies are verifiable here.",
+      "source": "// Deployment basics — ship new versions safely with minimal/zero downtime.\n// Strategies (conceptual):\nconst strategies = {\n  recreate: \"Stop old, start new. Simple but causes downtime.\",\n  rolling: \"Replace instances gradually; some always serve traffic (zero downtime).\",\n  blueGreen: \"Run new version (green) alongside old (blue); switch traffic instantly; rollback = switch back.\",\n  canary: \"Route a small % of traffic to the new version first; widen if healthy.\",\n};\n\n// Example: a rolling deploy in Kubernetes is the default Deployment behavior.\nconst k8sRolling = `\nspec:\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxUnavailable: 0     # never drop below desired capacity\n      maxSurge: 1           # add one new pod at a time\n`;\n\n// Good deployment practice also includes:\n//   - run database migrations safely (backward-compatible first)\n//   - health checks so traffic only hits ready instances\n//   - monitoring + automated rollback on error-rate spikes\n//   - feature flags to decouple deploy from release\nmodule.exports = { strategies, k8sRolling };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Deployment basics — zero-downtime strategies: rolling and blue-green\nfunction rollingDeploy(instances, newVersion){\n  const steps = [];\n  for (const inst of instances){\n    inst.draining = true;  steps.push(`drain ${inst.id}`);\n    inst.version = newVersion; inst.draining = false; steps.push(`update ${inst.id} -> ${newVersion}`);\n    // at least one old instance always serving -> no downtime\n  }\n  return steps;\n}\nfunction blueGreen(state, newVersion){\n  state.green = { version: newVersion, ready: false };\n  state.green.ready = true;                       // deploy & health-check green\n  const previous = state.live;\n  state.live = \"green\";                            // instant switch\n  return { now: state.live, runningVersion: state.green.version, rollbackTo: previous };\n}\nconst instances = [{ id: \"a\", version: \"v1\" }, { id: \"b\", version: \"v1\" }, { id: \"c\", version: \"v1\" }];\nconsole.log(\"Rolling deploy steps:\"); rollingDeploy(instances, \"v2\").forEach(s => console.log(\"  \" + s));\nconsole.log(\"All on v2:\", instances.every(i => i.version === \"v2\"));\nconst bg = blueGreen({ live: \"blue\", blue: { version: \"v1\" } }, \"v2\");\nconsole.log(\"Blue-green:\", JSON.stringify(bg));\nconsole.assert(instances.every(i => i.version === \"v2\") && bg.runningVersion === \"v2\", \"deploy succeeded\");\nconsole.log(\"Strategies: rolling (gradual), blue-green (instant switch + easy rollback), canary (small % first).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Rolling deploy steps:\n  drain a\n  update a -> v2\n  drain b\n  update b -> v2\n  drain c\n  update c -> v2\nAll on v2: true\nBlue-green: {\"now\":\"green\",\"runningVersion\":\"v2\",\"rollbackTo\":\"blue\"}\nStrategies: rolling (gradual), blue-green (instant switch + easy rollback), canary (small % first).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

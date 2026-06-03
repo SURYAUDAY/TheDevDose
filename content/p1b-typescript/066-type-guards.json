@@ -1,0 +1,65 @@
+{
+  "id": "p1b-066",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 66,
+  "orderInPhase": 66,
+  "slug": "type-guards",
+  "title": "Type Guards",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "type",
+    "guards"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "An `isUser(value): value is User` guard validates incoming API JSON; after `if (isUser(data))`, the rest of the code treats `data` as a fully-typed `User` wi…"
+  },
+  "sections": {
+    "simple_en": "A type guard is an expression (often a function) that narrows a type at runtime in a way the compiler understands. A user-defined type guard uses a return type of the form `value is Type` (a 'type predicate'), telling TypeScript that when the function returns true, the argument is that type.\n\nBuilt-in guards include `typeof`, `instanceof`, and `Array.isArray`. Custom guards are invaluable for validating unknown/external data (like API responses) and narrowing unions, letting the rest of your code work with precise types.",
+    "hinglish": "Type guard ek expression (aksar ek function) hai jo runtime par type ko aise narrow karta hai jise compiler samajhta hai. User-defined type guard `value is Type` form ka return type (ek 'type predicate') use karta hai, TypeScript ko batate hue ki jab function true return kare to argument us type ka hai.\nBuilt-in guards me `typeof`, `instanceof`, aur `Array.isArray` aate hain. Custom guards unknown/external data (jaise API responses) validate karne aur unions narrow karne ke liye bohot useful hain, jisse baaki code precise types ke saath kaam karta hai.",
+    "keyPoints": [
+      "A type guard narrows a type in a compiler-aware way.",
+      "User-defined guard returns a predicate: `value is Type`.",
+      "When it returns true, TS narrows the argument to that type.",
+      "Built-in guards: typeof, instanceof, Array.isArray.",
+      "Essential for validating unknown/external data and unions."
+    ],
+    "real_world": "An `isUser(value): value is User` guard validates incoming API JSON; after `if (isUser(data))`, the rest of the code treats `data` as a fully-typed `User` with no casts.",
+    "followups": [
+      {
+        "q": "What is a type predicate?",
+        "a": "A special return type of the form `value is Type` on a boolean-returning function. When the function returns true, TypeScript narrows the argument to that type in the calling code."
+      },
+      {
+        "q": "Why are type guards important for unknown data?",
+        "a": "They let you validate external/untrusted data at runtime and have the compiler treat it as a known type afterward, combining runtime safety with static typing."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — a user-defined type guard (type predicate).\n\ninterface User { id: number; name: string; }\n\nexport function isUser(value: unknown): value is User {\n  return (\n    typeof value === \"object\" && value !== null &&\n    typeof (value as any).id === \"number\" &&\n    typeof (value as any).name === \"string\"\n  );\n}\n\nexport function describe(value: unknown): string {\n  if (isUser(value)) return \"User: \" + value.name; // narrowed to User\n  return \"Unknown\";\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { isUser, describe } from \"./solution\";\n\nconsole.log(isUser({ id: 1, name: \"Asha\" })); // true\nconsole.log(isUser({ id: 1 }));               // false\nconsole.log(describe({ id: 2, name: \"Ravi\" })); // User: Ravi\nconsole.log(describe(\"nope\"));                  // Unknown\n\nconsole.assert(isUser({ id: 1, name: \"Asha\" }) === true, \"valid user passes guard\");\nconsole.assert(isUser({ id: 1 }) === false, \"invalid object fails guard\");\nconsole.assert(describe({ id: 2, name: \"Ravi\" }) === \"User: Ravi\", \"narrowed access\");\nconsole.log(\"type-guards assertions passed.\");",
+      "expectedOutput": "true\nfalse\nUser: Ravi\nUnknown\ntype-guards assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

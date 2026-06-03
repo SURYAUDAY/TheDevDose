@@ -1,0 +1,68 @@
+{
+  "id": "p4-003",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 3,
+  "orderInPhase": 3,
+  "slug": "tokens",
+  "title": "Tokens",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "tokens"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Estimating the cost of summarizing a 10-page document: you count its tokens with tiktoken (say ~6,000) rather than its words, because the API bills per token…"
+  },
+  "sections": {
+    "simple_en": "LLMs don't read characters or whole words — they process tokens, which are subword units produced by a tokenizer (commonly using Byte-Pair Encoding). A token may be a whole word, part of a word, a space, or punctuation. Common words are often single tokens; rare or long words split into several.\n\nTokens matter practically because both context limits and pricing are measured in tokens, not words or characters. A rough English rule of thumb is ~4 characters or ~0.75 words per token. Knowing this lets you estimate costs and ensure prompts fit within the model's context window.",
+    "hinglish": "LLMs characters ya poore words nahi padhte — wo tokens process karte hain, jo subword units hain ek tokenizer se bane (aksar Byte-Pair Encoding use karke). Ek token poora word, word ka part, space, ya punctuation ho sakta hai. Common words aksar single tokens hote hain; rare ya lambe words kai mein split hote hain.\n\nTokens practically matter karte hain kyunki context limits aur pricing dono tokens mein measure hote hain, words ya characters mein nahi. Ek rough English rule hai ~4 characters ya ~0.75 words per token. Ye jaan kar aap costs estimate kar sakte ho aur ensure kar sakte ho ki prompts model ke context window mein fit hon.",
+    "keyPoints": [
+      "LLMs process tokens (subword units), not raw characters or words.",
+      "Tokenizers use schemes like Byte-Pair Encoding (BPE).",
+      "Common words = one token; rare/long words split into multiple.",
+      "Context limits AND pricing are measured in tokens.",
+      "Rule of thumb: ~4 characters / ~0.75 words per token (English)."
+    ],
+    "real_world": "Estimating the cost of summarizing a 10-page document: you count its tokens with tiktoken (say ~6,000) rather than its words, because the API bills per token and you must confirm input + output fit the model's token limit.",
+    "followups": [
+      {
+        "q": "Why do models use tokens instead of words?",
+        "a": "Subword tokenization handles any text — including rare words, typos, and other languages — with a fixed vocabulary, balancing vocabulary size against sequence length. Pure word-level vocabularies would be huge and brittle."
+      },
+      {
+        "q": "How do tokens relate to cost and limits?",
+        "a": "APIs price per token (input and output), and the context window is a token budget. So you estimate and optimize in tokens, not words — e.g., trimming prompts to fit and control cost."
+      },
+      {
+        "q": "Is token count the same as word count?",
+        "a": "No. A long word can be several tokens, and punctuation/spaces count too. Roughly 100 tokens ≈ 75 English words, but it varies by text and language."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real tiktoken code (OpenAI's tokenizer). The Python-runnable demo below approximates subword tokenization so the token-vs-word idea is verifiable here.",
+      "source": "# Tokens — count tokens precisely with the tiktoken library (OpenAI's tokenizer).\nimport tiktoken\n\nenc = tiktoken.encoding_for_model(\"gpt-4o-mini\")\n\ndef count_tokens(text: str) -> int:\n    return len(enc.encode(text))\n\nsamples = [\"Hello world!\", \"Tokenization\", \"internationalization\"]\nfor s in samples:\n    ids = enc.encode(s)\n    print(f\"{s!r}: {len(ids)} tokens -> ids {ids}\")\n\n# Tokens drive both cost and context limits. A rough rule: ~4 characters or\n# ~0.75 words per token in English. Always budget prompts in tokens, not words.\nprompt = \"Summarize the following article in three bullet points.\"\nprint(\"Prompt token count:\", count_tokens(prompt))",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Tokens — text is split into tokens (subword units), not words; ~4 chars/token (English)\ndef approx_tokenize(text):\n    # A rough word/subword splitter for intuition (real tokenizers use BPE).\n    import re\n    pieces = re.findall(r\"\\w+|[^\\w\\s]\", text)\n    tokens = []\n    for p in pieces:\n        # split long words into ~4-char subword chunks (BPE-like intuition)\n        for i in range(0, len(p), 4):\n            tokens.append(p[i:i+4])\n    return tokens\n\nsamples = [\"Hello world!\", \"Tokenization\", \"GPT models are powerful.\"]\nfor s in samples:\n    toks = approx_tokenize(s)\n    print(f\"{s!r}: {len(toks)} tokens, {len(s.split())} words -> {toks}\")\n\ntext = \"internationalization\"\ntoks = approx_tokenize(text)\nprint(f\"\\nOne long word {text!r} = {len(toks)} tokens (token count != word count)\")\nest = len(\"Hello world!\") / 4\nprint(f\"Rule of thumb: ~4 chars per token, so 'Hello world!' ~= {est:.0f} tokens\")\nassert len(toks) > 1, \"a long word becomes multiple tokens\"\nprint(\"Tokens matter: pricing and context limits are measured in tokens, not words or characters.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "'Hello world!': 5 tokens, 2 words -> ['Hell', 'o', 'worl', 'd', '!']\n'Tokenization': 3 tokens, 1 words -> ['Toke', 'niza', 'tion']\n'GPT models are powerful.': 7 tokens, 4 words -> ['GPT', 'mode', 'ls', 'are', 'powe', 'rful', '.']\n\nOne long word 'internationalization' = 5 tokens (token count != word count)\nRule of thumb: ~4 chars per token, so 'Hello world!' ~= 3 tokens\nTokens matter: pricing and context limits are measured in tokens, not words or characters.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

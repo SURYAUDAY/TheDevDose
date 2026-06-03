@@ -1,0 +1,64 @@
+{
+  "id": "p1a-041",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 41,
+  "orderInPhase": 41,
+  "slug": "array-map",
+  "title": "Array.map()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "array.map"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "Rendering a list in React: `users.map(u => <li key={u.id}>{u.name}</li>)` transforms each data object into a UI element — `map` is the workhorse of list rend…"
+  },
+  "sections": {
+    "simple_en": "`map` creates a new array by applying a transformation function to every element of the original array. It does not mutate the original — it returns a same-length array of transformed values. The callback receives the element, index, and the whole array.\n\nUse `map` when you want to transform each item into something else (e.g. objects → names, numbers → squares). If you don't need the returned array, use `forEach` instead; if you want to keep only some items, use `filter`.",
+    "hinglish": "`map` har element par ek transformation function laga kar ek naya array banata hai. Ye original ko mutate nahi karta — same-length transformed values ka array return karta hai. Callback ko element, index, aur poora array milta hai.\n`map` tab use karo jab har item ko kisi aur cheez me transform karna ho (jaise objects → names, numbers → squares). Agar returned array nahi chahiye to `forEach` use karo; agar sirf kuch items rakhne hain to `filter`.",
+    "keyPoints": [
+      "Returns a NEW array of the same length with each item transformed.",
+      "Does not mutate the original array.",
+      "Callback signature: `(element, index, array)`.",
+      "Use for one-to-one transformations; chain with filter/reduce.",
+      "Always return a value from the callback (forgetting to is a common bug → undefined items)."
+    ],
+    "real_world": "Rendering a list in React: `users.map(u => <li key={u.id}>{u.name}</li>)` transforms each data object into a UI element — `map` is the workhorse of list rendering.",
+    "followups": [
+      {
+        "q": "How is map different from forEach?",
+        "a": "`map` returns a new transformed array and is for producing data; `forEach` returns undefined and is for side effects (it can't be chained)."
+      },
+      {
+        "q": "Does map change the original array?",
+        "a": "No. `map` is non-mutating — it returns a new array. The original is left intact unless your callback itself mutates objects by reference."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// map transformations (non-mutating).\n\nfunction squares(nums) {\n  return nums.map((n) => n * n);\n}\n\nfunction userNames(users) {\n  return users.map((u) => u.name);\n}\n\nfunction withIndex(items) {\n  return items.map((item, i) => i + \": \" + item);\n}\n\nmodule.exports = { squares, userNames, withIndex };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { squares, userNames, withIndex } = require(\"./solution\");\n\nconst original = [1, 2, 3];\nconsole.log(squares(original));   // [1,4,9]\nconsole.log(\"original:\", original); // unchanged\nconsole.log(userNames([{ name: \"Asha\" }, { name: \"Ravi\" }])); // ['Asha','Ravi']\nconsole.log(withIndex([\"a\", \"b\"])); // ['0: a','1: b']\n\nconsole.assert(JSON.stringify(squares([1,2,3])) === \"[1,4,9]\", \"squares\");\nconsole.assert(JSON.stringify(original) === \"[1,2,3]\", \"map does not mutate\");\nconsole.assert(JSON.stringify(userNames([{name:\"Asha\"}])) === '[\"Asha\"]', \"extract names\");\nconsole.log(\"map assertions passed.\");",
+      "expectedOutput": "[ 1, 4, 9 ]\noriginal: [ 1, 2, 3 ]\n[ 'Asha', 'Ravi' ]\n[ '0: a', '1: b' ]\nmap assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

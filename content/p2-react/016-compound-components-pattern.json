@@ -1,0 +1,70 @@
+{
+  "id": "p2-016",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 16,
+  "orderInPhase": 16,
+  "slug": "compound-components-pattern",
+  "title": "Compound components pattern",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "compound",
+    "components",
+    "pattern"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A <Select> component exposes <Select.Trigger>, <Select.Options>, and <Select.Option>."
+  },
+  "sections": {
+    "simple_en": "Compound components let several related components work together to form one cohesive unit, sharing implicit state through context. The classic example is <Tabs> with <Tab> and <TabPanel> children: the parent manages which tab is active, and the children read that shared state without prop drilling.\n\nThis gives consumers a flexible, declarative API — they arrange the sub-components however they like — while the internal coordination stays hidden. It's a favorite pattern for building expressive design-system components.",
+    "hinglish": "Compound components mein kai related components milkar ek unit banate hain aur context se implicit state share karte hain. Classic example <Tabs> ke saath <Tab> aur <TabPanel> — parent active tab manage karta hai aur children bina prop drilling ke wo state padhte hain.\n\nIsse consumer ko flexible declarative API milta hai — wo sub-components apni marzi se arrange karte hain — jabki internal coordination chhupa rehta hai. Design systems mein ye pattern bahut pasand kiya jaata hai.",
+    "keyPoints": [
+      "Multiple sub-components cooperate as one unit, sharing state via React context.",
+      "Parent holds the state; children consume it implicitly — no prop drilling.",
+      "Gives a flexible, declarative API: consumers compose the parts freely.",
+      "Often exposed as namespaced parts: <Tabs>, <Tabs.Tab>, <Tabs.Panel>.",
+      "Great for accordions, menus, tabs, and other coordinated UI families."
+    ],
+    "real_world": "A <Select> component exposes <Select.Trigger>, <Select.Options>, and <Select.Option>. The Select owns the open/closed and selected state via context; consumers arrange and style the parts as needed without wiring state between them manually.",
+    "followups": [
+      {
+        "q": "How do compound components share state?",
+        "a": "Usually via React context: the parent provides state and updater functions; the child components consume them, avoiding prop drilling."
+      },
+      {
+        "q": "What's the advantage over passing many props?",
+        "a": "A cleaner, more flexible API. Consumers compose the sub-components declaratively instead of configuring one component with a long, rigid prop list."
+      },
+      {
+        "q": "How are the sub-components usually exposed?",
+        "a": "As properties of the parent (e.g., Tabs.Tab = Tab), which signals the relationship and keeps imports tidy."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Compound components: Tabs shares active state with Tab/Panel via context.\nimport React, { createContext, useContext, useState } from \"react\";\n\nconst TabsContext = createContext(null);\n\nfunction Tabs({ children, defaultIndex = 0 }) {\n  const [active, setActive] = useState(defaultIndex);\n  return (\n    <TabsContext.Provider value={{ active, setActive }}>\n      {children}\n    </TabsContext.Provider>\n  );\n}\n\nfunction Tab({ index, children }) {\n  const { active, setActive } = useContext(TabsContext);\n  return (\n    <button className={index === active ? \"active\" : \"\"} onClick={() => setActive(index)}>\n      {children}\n    </button>\n  );\n}\n\nfunction Panel({ index, children }) {\n  const { active } = useContext(TabsContext);\n  return index === active ? <div>{children}</div> : null;\n}\n\nTabs.Tab = Tab;\nTabs.Panel = Panel;\n\nexport default function App() {\n  return (\n    <Tabs>\n      <Tabs.Tab index={0}>Profile</Tabs.Tab>\n      <Tabs.Tab index={1}>Settings</Tabs.Tab>\n      <Tabs.Panel index={0}>Profile content</Tabs.Panel>\n      <Tabs.Panel index={1}>Settings content</Tabs.Panel>\n    </Tabs>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Compound components — parent shares implicit state with children (Tabs)\nfunction createTabs(initial){\n  const ctx = { active: initial, listeners: [] };\n  return {\n    setActive(i){ ctx.active = i; },\n    Tab(index, label){ return `${index === ctx.active ? \"[*]\" : \"[ ]\"} ${label}`; },\n    Panel(index, content){ return index === ctx.active ? content : null; },\n  };\n}\nconst tabs = createTabs(0);\nconsole.log(tabs.Tab(0, \"Profile\"), \"|\", tabs.Tab(1, \"Settings\"));\nconsole.log(\"Visible panel:\", tabs.Panel(0, \"Profile content\"));\ntabs.setActive(1);\nconsole.log(tabs.Tab(0, \"Profile\"), \"|\", tabs.Tab(1, \"Settings\"));\nconsole.log(\"Visible panel:\", tabs.Panel(1, \"Settings content\"));\nconsole.assert(tabs.Panel(0, \"Profile content\") === null, \"panel 0 hidden when tab 1 active\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "[*] Profile | [ ] Settings\nVisible panel: Profile content\n[ ] Profile | [*] Settings\nVisible panel: Settings content\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

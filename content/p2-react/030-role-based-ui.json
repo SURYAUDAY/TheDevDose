@@ -1,0 +1,69 @@
+{
+  "id": "p2-030",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 30,
+  "orderInPhase": 30,
+  "slug": "role-based-ui",
+  "title": "Role-based UI",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "role-based",
+    "ui"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "In a project-management tool, owners see 'Delete project' and 'Manage billing', members see only 'Leave project'."
+  },
+  "sections": {
+    "simple_en": "Role-based UI shows or hides features based on the user's role or permissions — an admin sees delete buttons, a viewer doesn't. This is usually driven by a permissions map and small helper components or hooks like <Can> or usePermission.\n\nLike route guards, hiding UI is a usability layer, not a security boundary. The backend must still reject unauthorized actions, because a determined user can re-enable hidden controls in the browser.",
+    "hinglish": "Role-based UI user ke role ya permissions ke hisaab se features dikhata ya chhupata hai — admin ko delete button dikhega, viewer ko nahi. Ye aksar ek permissions map aur chhote helper components/hooks (jaise <Can>) se hota hai.\n\nRoute guards ki tarah, UI chhupana usability ke liye hai, security ke liye nahi. Backend ko phir bhi unauthorized actions reject karne hote hain, kyunki user browser mein chhupe controls wapas enable kar sakta hai.",
+    "keyPoints": [
+      "Render features conditionally based on the user's role/permissions.",
+      "Centralize rules in a permissions map; expose via a <Can> component or usePermission hook.",
+      "Keeps components clean: <Can action=\"delete\"> ... </Can> instead of scattered if-checks.",
+      "UI gating is UX only — the server must authorize every sensitive action.",
+      "Combine with route guards: hide the link AND protect the route/endpoint."
+    ],
+    "real_world": "In a project-management tool, owners see 'Delete project' and 'Manage billing', members see only 'Leave project'. A single permissions map decides what each role renders, so adding a new role means updating one place, not every component.",
+    "followups": [
+      {
+        "q": "Is hiding a button enough to secure an action?",
+        "a": "No. It only prevents accidental use. The API must verify the user's role on the server, since hidden UI can be re-enabled or the endpoint called directly."
+      },
+      {
+        "q": "How do you keep role logic maintainable?",
+        "a": "Centralize it in a permissions map or policy module and access it via a helper (hook or component) so rules aren't duplicated across the codebase."
+      },
+      {
+        "q": "Difference between authentication and authorization here?",
+        "a": "Authentication is who you are (logged in); authorization is what you may do (your role/permissions). Role-based UI is about authorization."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Role-based UI: show actions according to the user's permissions.\nimport React from \"react\";\n\nconst permissions = {\n  admin: [\"view\", \"edit\", \"delete\"],\n  editor: [\"view\", \"edit\"],\n  viewer: [\"view\"],\n};\n\nfunction Can({ role, action, children }) {\n  const allowed = permissions[role]?.includes(action);\n  return allowed ? children : null; // render only if permitted\n}\n\nexport default function Toolbar({ role }) {\n  return (\n    <div>\n      <Can role={role} action=\"view\"><button>View</button></Can>\n      <Can role={role} action=\"edit\"><button>Edit</button></Can>\n      <Can role={role} action=\"delete\"><button>Delete</button></Can>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Role-based UI — show actions based on the user's role/permissions\nconst permissions = {\n  admin:  [\"view\", \"edit\", \"delete\"],\n  editor: [\"view\", \"edit\"],\n  viewer: [\"view\"],\n};\nfunction can(role, action){ return permissions[role]?.includes(action) ?? false; }\nfunction visibleActions(role){ return [\"view\", \"edit\", \"delete\"].filter(a => can(role, a)); }\n\nconsole.log(\"admin  can:\", visibleActions(\"admin\").join(\", \"));\nconsole.log(\"editor can:\", visibleActions(\"editor\").join(\", \"));\nconsole.log(\"viewer can:\", visibleActions(\"viewer\").join(\", \"));\nconsole.assert(!can(\"viewer\", \"delete\"), \"viewer cannot delete\");\nconsole.assert(can(\"admin\", \"delete\"), \"admin can delete\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "admin  can: view, edit, delete\neditor can: view, edit\nviewer can: view\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

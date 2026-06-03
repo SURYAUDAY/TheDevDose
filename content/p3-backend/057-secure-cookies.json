@@ -1,0 +1,69 @@
+{
+  "id": "p3-057",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 57,
+  "orderInPhase": 57,
+  "slug": "secure-cookies",
+  "title": "Secure cookies",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "secure",
+    "cookies"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A session cookie set with HttpOnly, Secure, and SameSite=Strict can't be read by an injected script, never travels over plain HTTP, and isn't sent when anoth…"
+  },
+  "sections": {
+    "simple_en": "When cookies carry sensitive data like session ids or tokens, the protective attributes matter as much as the value. HttpOnly prevents JavaScript from reading the cookie (mitigating XSS theft), Secure ensures it's only sent over HTTPS, and SameSite (Strict/Lax) stops it from being sent on cross-site requests (mitigating CSRF).\n\nAdditional controls include Max-Age/Expires for lifetime, Path/Domain for scope, and prefixes like __Host- for stricter guarantees. The rule of thumb for auth/session cookies is HttpOnly + Secure + SameSite — a missing flag is a real vulnerability, not just a best-practice nicety.",
+    "hinglish": "Jab cookies sensitive data jaise session ids ya tokens carry karti hain, protective attributes value jitne hi important hote hain. HttpOnly JavaScript ko cookie padhne se rokta hai (XSS theft mitigate), Secure ensure karta hai sirf HTTPS par jaaye, aur SameSite (Strict/Lax) cross-site requests par bhejne se rokta hai (CSRF mitigate).\n\nExtra controls: lifetime ke liye Max-Age/Expires, scope ke liye Path/Domain, aur stricter guarantees ke liye __Host- jaise prefixes. Auth/session cookies ke liye rule hai HttpOnly + Secure + SameSite — missing flag ek real vulnerability hai, sirf best-practice nicety nahi.",
+    "keyPoints": [
+      "HttpOnly: not readable by JavaScript — mitigates XSS token theft.",
+      "Secure: only sent over HTTPS.",
+      "SameSite (Strict/Lax): not sent on cross-site requests — mitigates CSRF.",
+      "Set Max-Age/Expires for lifetime, Path/Domain for scope.",
+      "Auth/session cookies should be HttpOnly + Secure + SameSite."
+    ],
+    "real_world": "A session cookie set with HttpOnly, Secure, and SameSite=Strict can't be read by an injected script, never travels over plain HTTP, and isn't sent when another site triggers a request — closing the main avenues for session theft and CSRF in one configuration.",
+    "followups": [
+      {
+        "q": "Why set HttpOnly on a session cookie?",
+        "a": "So JavaScript can't read it. Even if an XSS bug exists, the attacker's script can't exfiltrate the session token via document.cookie, limiting the damage."
+      },
+      {
+        "q": "What does SameSite protect against?",
+        "a": "CSRF — the browser won't send a SameSite=Strict/Lax cookie on cross-site requests, so forged requests from other origins arrive without the session cookie."
+      },
+      {
+        "q": "Why is Secure important even on an HTTPS site?",
+        "a": "Without Secure, the browser may send the cookie over an accidental HTTP request (e.g., a downgrade or mixed link), exposing it to interception. Secure guarantees HTTPS-only transmission."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express cookie code. The Node-runnable demo below audits cookie attributes and flags insecure ones so the rules are verifiable here.",
+      "source": "// Secure cookies — set protective attributes on auth/session cookies.\nconst express = require(\"express\");\nconst app = express();\n\napp.post(\"/login\", (req, res) => {\n  // ...verify credentials, create session/token...\n  res.cookie(\"session\", \"TOKEN_VALUE\", {\n    httpOnly: true,                 // not readable by JavaScript (mitigates XSS theft)\n    secure: true,                   // only sent over HTTPS\n    sameSite: \"strict\",             // not sent on cross-site requests (mitigates CSRF)\n    maxAge: 1000 * 60 * 60,         // 1 hour\n    path: \"/\",\n    // domain: \".example.com\",      // scope to your domain if needed\n  });\n  res.json({ ok: true });\n});\n\napp.post(\"/logout\", (req, res) => {\n  res.clearCookie(\"session\");\n  res.json({ ok: true });\n});\n\napp.listen(3000);\n// Rule: session cookies should always be HttpOnly + Secure + SameSite.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Secure cookies — set protective attributes and flag insecure ones\nfunction serializeCookie(name, value, opts = {}){\n  let c = `${name}=${value}`;\n  if (opts.httpOnly) c += \"; HttpOnly\";\n  if (opts.secure) c += \"; Secure\";\n  if (opts.sameSite) c += `; SameSite=${opts.sameSite}`;\n  if (opts.maxAge) c += `; Max-Age=${opts.maxAge}`;\n  return c;\n}\nfunction audit(opts){\n  const issues = [];\n  if (!opts.httpOnly) issues.push(\"missing HttpOnly (readable by JS \\u2014 XSS risk)\");\n  if (!opts.secure) issues.push(\"missing Secure (can travel over HTTP)\");\n  if (!opts.sameSite) issues.push(\"missing SameSite (CSRF risk)\");\n  return issues;\n}\nconst secure = { httpOnly: true, secure: true, sameSite: \"Strict\", maxAge: 3600 };\nconsole.log(\"Secure cookie:\", serializeCookie(\"session\", \"abc\", secure));\nconsole.log(\"Audit secure:\", JSON.stringify(audit(secure)));\nconsole.log(\"Audit insecure:\", JSON.stringify(audit({})));\nconsole.assert(audit(secure).length === 0, \"secure cookie passes audit\");\nconsole.assert(audit({}).length === 3, \"insecure cookie flagged\");\nconsole.log(\"Session cookies should be HttpOnly + Secure + SameSite.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Secure cookie: session=abc; HttpOnly; Secure; SameSite=Strict; Max-Age=3600\nAudit secure: []\nAudit insecure: [\"missing HttpOnly (readable by JS — XSS risk)\",\"missing Secure (can travel over HTTP)\",\"missing SameSite (CSRF risk)\"]\nSession cookies should be HttpOnly + Secure + SameSite.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1b-043",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 43,
+  "orderInPhase": 43,
+  "slug": "generic-defaults",
+  "title": "Generic Defaults",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "generic",
+    "defaults"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A generic `createStore<State = {}>()` defaults to an empty state shape so simple usage needs no type argument, while a typed app passes its specific `AppStat…"
+  },
+  "sections": {
+    "simple_en": "A generic default provides a fallback type for a type parameter when the caller doesn't specify (and it can't be inferred): `<T = string>`. The default is used unless a type argument is supplied or inferred from usage.\n\nDefaults make generic APIs more convenient — common cases need no explicit type argument while advanced cases can override. They're often combined with constraints (`<T extends object = {}>`) and are common in library types (e.g. React's `useState`, generic config types).",
+    "hinglish": "Generic default ek type parameter ke liye fallback type deta hai jab caller specify na kare (aur infer na ho sake): `<T = string>`. Default tab use hota hai jab tak koi type argument na diya jaaye ya usage se infer na ho.\nDefaults generic APIs ko zyada convenient banate hain — common cases me explicit type argument nahi chahiye jabki advanced cases override kar sakte hain. Ye aksar constraints ke saath combine hote hain (`<T extends object = {}>`) aur library types me common hain (jaise React ka `useState`, generic config types).",
+    "keyPoints": [
+      "`<T = Default>` supplies a fallback type parameter.",
+      "Used when no type argument is given or inferred.",
+      "Makes common usage simpler; advanced usage can override.",
+      "Often combined with constraints: `<T extends X = Y>`.",
+      "Common in library/config type definitions."
+    ],
+    "real_world": "A generic `createStore<State = {}>()` defaults to an empty state shape so simple usage needs no type argument, while a typed app passes its specific `AppState` to get full type safety.",
+    "followups": [
+      {
+        "q": "When is a generic default used?",
+        "a": "When the type argument is neither explicitly provided nor inferable from the arguments. The default fills in so common usage doesn't need an explicit type."
+      },
+      {
+        "q": "Can defaults and constraints be combined?",
+        "a": "Yes — `<T extends object = {}>` both restricts what T can be and provides a fallback when none is supplied."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — generic defaults.\n\nexport interface Container<T = string> {\n  items: T[];\n}\n\nexport function makeContainer<T = number>(items: T[]): Container<T> {\n  return { items };\n}\n\n// Default applies when nothing is specified/inferable:\nexport function emptyContainer<T = boolean>(): Container<T> {\n  return { items: [] };\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { makeContainer, emptyContainer } from \"./solution\";\n\nconsole.log(makeContainer([1, 2, 3]));      // T inferred as number\nconsole.log(makeContainer([\"a\", \"b\"]));     // T inferred as string\nconsole.log(emptyContainer());              // uses default T = boolean\nconsole.log(emptyContainer<number>());      // overridden to number\n\nconsole.assert(makeContainer([1, 2, 3]).items.length === 3, \"inferred number container\");\nconsole.assert(makeContainer([\"a\"]).items[0] === \"a\", \"inferred string container\");\nconsole.assert(emptyContainer().items.length === 0, \"default-typed empty container\");\nconsole.log(\"generic-defaults assertions passed.\");",
+      "expectedOutput": "{ items: [ 1, 2, 3 ] }\n{ items: [ 'a', 'b' ] }\n{ items: [] }\n{ items: [] }\ngeneric-defaults assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

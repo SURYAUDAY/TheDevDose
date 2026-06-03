@@ -1,0 +1,70 @@
+{
+  "id": "p5-028",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 28,
+  "orderInPhase": 28,
+  "slug": "rate-limiting-design",
+  "title": "Rate limiting design",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "rate",
+    "limiting",
+    "design"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A public API allows 100 requests per minute per API key via a token bucket."
+  },
+  "sections": {
+    "simple_en": "Rate limiting caps how many requests a client can make in a time window, protecting a service from abuse, accidental overload, and runaway costs. When a client exceeds the limit, the server typically responds with HTTP 429 (Too Many Requests).\n\nA popular algorithm is the token bucket: the bucket holds up to a capacity of tokens, refills at a steady rate, and each request spends one token — so it permits short bursts (up to capacity) while enforcing a long-run average rate. Other approaches include leaky bucket and fixed/sliding windows. Limits are usually applied per user, API key, or IP.",
+    "hinglish": "Rate limiting cap karta hai ki ek client ek time window mein kitni requests kar sakta hai, ek service ko abuse, accidental overload, aur runaway costs se protect karke. Jab ek client limit exceed karta hai, server aam taur par HTTP 429 (Too Many Requests) se respond karta hai.\n\nEk popular algorithm token bucket hai: bucket ek capacity tak tokens rakhta hai, ek steady rate par refill hota hai, aur har request ek token spend karti hai — to ye short bursts (capacity tak) permit karta hai jabki long-run average rate enforce karta hai. Doosre approaches mein leaky bucket aur fixed/sliding windows shamil hain. Limits aam taur par per user, API key, ya IP apply hoti hain.",
+    "keyPoints": [
+      "Caps requests per client per time window (anti-abuse, anti-overload).",
+      "Exceeding the limit typically returns HTTP 429.",
+      "Token bucket: tokens refill at a rate; each request spends one.",
+      "Token bucket allows bursts up to capacity, enforces an average rate.",
+      "Other algorithms: leaky bucket, fixed/sliding window; limit per user/key/IP."
+    ],
+    "real_world": "A public API allows 100 requests per minute per API key via a token bucket. A client can briefly burst when its bucket is full, but sustained traffic is throttled to the refill rate — abusive clients get 429s while legitimate ones are unaffected, keeping the service stable for everyone.",
+    "followups": [
+      {
+        "q": "Why rate-limit an API?",
+        "a": "To prevent abuse and denial-of-service, protect the service from overload, ensure fair usage across clients, and control costs. It keeps one heavy or malicious client from degrading the service for everyone."
+      },
+      {
+        "q": "How does the token bucket algorithm work?",
+        "a": "A bucket holds up to N tokens and refills at a fixed rate. Each request consumes a token; if none are available, the request is rejected. This permits short bursts (up to N) while capping the long-run average rate."
+      },
+      {
+        "q": "Token bucket vs fixed window?",
+        "a": "Fixed window counts requests per interval but can allow double-rate bursts at window boundaries. Token bucket (and sliding window) smooth this out, allowing controlled bursts while enforcing a steadier average rate."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript implementing a token-bucket rate limiter. The Node demo below shows a burst capped at capacity and tokens refilling over time, verifying both.",
+      "source": "// Rate limiting design — protect services from overload/abuse.\n\n// Token bucket (allows controlled bursts): each client has a bucket of `capacity` tokens\n// that refills at `refillPerSec`. Each request spends one token; if empty, reject with 429.\nclass TokenBucket {\n  constructor(capacity, refillPerSec) {\n    this.capacity = capacity; this.tokens = capacity;\n    this.refillPerSec = refillPerSec; this.last = Date.now();\n  }\n  allow() {\n    const now = Date.now();\n    this.tokens = Math.min(this.capacity, this.tokens + ((now - this.last) / 1000) * this.refillPerSec);\n    this.last = now;\n    if (this.tokens >= 1) { this.tokens -= 1; return true; }\n    return false;\n  }\n}\n\n// In production: store buckets/counters in Redis (shared across instances), key by user/IP/API-key,\n// and return HTTP 429 with a Retry-After header. Other algorithms: leaky bucket (smooths bursts),\n// fixed window (simple but bursty at edges), sliding window log/counter (more accurate).\nmodule.exports = { TokenBucket };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Rate limiting design — cap how many requests a client can make in a window (token bucket)\nclass TokenBucket {\n  constructor(capacity, refillPerSec) {\n    this.capacity = capacity; this.tokens = capacity; this.refillPerSec = refillPerSec; this.last = 0;\n  }\n  allow(now) {\n    // Refill tokens based on elapsed time, capped at capacity.\n    this.tokens = Math.min(this.capacity, this.tokens + (now - this.last) * this.refillPerSec);\n    this.last = now;\n    if (this.tokens >= 1) { this.tokens -= 1; return true; }   // spend a token\n    return false;                                              // no tokens -> reject (429)\n  }\n}\nconst bucket = new TokenBucket(3, 1);   // burst of 3, refill 1/sec\nconst results = [];\nfor (let i = 0; i < 5; i++) results.push(bucket.allow(0));      // 5 requests at t=0\nconsole.log(\"5 requests at t=0 (capacity 3):\", results);        // 3 allowed, then rejected\nconst afterRefill = bucket.allow(2);                            // 2s later -> refilled\nconsole.log(\"Request at t=2 (after refill):\", afterRefill);\nconsole.assert(results.filter(Boolean).length === 3, \"only capacity (3) allowed in the burst\");\nconsole.assert(afterRefill === true, \"tokens refilled over time\");\nconsole.log(\"Rate limiting protects services from abuse/overload by capping requests per client/window.\");\nconsole.log(\"Algorithms: token bucket (allows bursts), leaky bucket, fixed/sliding window. Return 429 when exceeded.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "5 requests at t=0 (capacity 3): [ true, true, true, false, false ]\nRequest at t=2 (after refill): true\nRate limiting protects services from abuse/overload by capping requests per client/window.\nAlgorithms: token bucket (allows bursts), leaky bucket, fixed/sliding window. Return 429 when exceeded.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

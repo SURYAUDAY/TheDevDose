@@ -1,0 +1,64 @@
+{
+  "id": "p1a-027",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 27,
+  "orderInPhase": 27,
+  "slug": "recursion",
+  "title": "Recursion",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "recursion"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Walking a file system or a nested comment thread: each folder/comment can contain more of the same structure, so you recurse into children until you hit leav…"
+  },
+  "sections": {
+    "simple_en": "Recursion is when a function calls itself to solve a problem by breaking it into smaller sub-problems. Every recursive function needs a base case (a condition that stops the recursion) and a recursive case (where it calls itself with a smaller input).\n\nRecursion is natural for tree/graph traversal, nested data, and divide-and-conquer algorithms. The trade-off is that each call adds a stack frame, so deep recursion can overflow the call stack — sometimes an iterative version or tail-call style is preferable.",
+    "hinglish": "Recursion tab hota hai jab ek function khud ko call karta hai, problem ko chhote sub-problems me todkar. Har recursive function me ek base case (jo recursion rokta hai) aur ek recursive case (jisme woh chhote input ke saath khud ko call karta hai) hona chahiye.\nRecursion tree/graph traversal, nested data, aur divide-and-conquer algorithms ke liye natural hai. Trade-off: har call ek stack frame add karti hai, isliye deep recursion call stack overflow kar sakti hai — kabhi iterative version ya tail-call style behtar hota hai.",
+    "keyPoints": [
+      "Needs a base case (stop condition) and a recursive case (self-call on a smaller input).",
+      "Without a reachable base case → infinite recursion → stack overflow.",
+      "Ideal for trees, graphs, nested structures, and divide-and-conquer.",
+      "Each call adds a stack frame → memory cost grows with depth.",
+      "Many recursions can be rewritten iteratively (or with an explicit stack) for safety."
+    ],
+    "real_world": "Walking a file system or a nested comment thread: each folder/comment can contain more of the same structure, so you recurse into children until you hit leaves (files / comments with no replies).",
+    "followups": [
+      {
+        "q": "What two parts must every recursive function have?",
+        "a": "A base case that stops the recursion, and a recursive case that calls the function with a smaller/simpler input moving toward the base case."
+      },
+      {
+        "q": "What's the main risk of recursion and how do you mitigate it?",
+        "a": "Stack overflow from too-deep recursion. Mitigate by converting to iteration, using an explicit stack/queue, or restructuring to a tail-recursive form (where the engine supports it)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Recursion examples: factorial, sum of nested array (deep traversal).\n\nfunction factorial(n) {\n  if (n <= 1) return 1;          // base case\n  return n * factorial(n - 1);   // recursive case\n}\n\n// Deeply sum numbers in an arbitrarily nested array.\nfunction deepSum(arr) {\n  let total = 0;\n  for (const item of arr) {\n    if (Array.isArray(item)) total += deepSum(item); // recurse\n    else total += item;\n  }\n  return total;\n}\n\n// Flatten a nested object tree into a list of leaf values.\nfunction collectLeaves(node, acc = []) {\n  if (node && typeof node === \"object\") {\n    for (const key of Object.keys(node)) collectLeaves(node[key], acc);\n  } else {\n    acc.push(node);\n  }\n  return acc;\n}\n\nmodule.exports = { factorial, deepSum, collectLeaves };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { factorial, deepSum, collectLeaves } = require(\"./solution\");\n\nconsole.log(factorial(5));                 // 120\nconsole.log(deepSum([1, [2, [3, 4]], 5])); // 15\nconsole.log(collectLeaves({ a: 1, b: { c: 2, d: { e: 3 } } })); // [1,2,3]\n\nconsole.assert(factorial(5) === 120, \"5! = 120\");\nconsole.assert(deepSum([1, [2, [3, 4]], 5]) === 15, \"deep sum = 15\");\nconsole.assert(JSON.stringify(collectLeaves({ a: 1, b: { c: 2, d: { e: 3 } } })) === \"[1,2,3]\", \"leaves collected\");\nconsole.log(\"recursion assertions passed.\");",
+      "expectedOutput": "120\n15\n[ 1, 2, 3 ]\nrecursion assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

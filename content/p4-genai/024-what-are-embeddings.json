@@ -1,0 +1,68 @@
+{
+  "id": "p4-024",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 24,
+  "orderInPhase": 24,
+  "slug": "what-are-embeddings",
+  "title": "What are embeddings",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "embeddings"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A help center embeds every article and the user's question, then finds the articles whose vectors are closest to the question's — surfacing relevant help eve…"
+  },
+  "sections": {
+    "simple_en": "An embedding is a vector of numbers that represents the meaning of a piece of text (or an image, etc.) in a high-dimensional space. An embedding model maps text so that semantically similar inputs land close together and dissimilar ones land far apart — 'king' and 'queen' are near each other; 'king' and 'apple' are far.\n\nBecause meaning becomes geometry, you can compare texts numerically (typically with cosine similarity) to find related content. Embeddings are the foundation of semantic search, RAG retrieval, clustering, deduplication, and recommendations — anywhere you need to compare text by meaning rather than exact keywords.",
+    "hinglish": "Embedding numbers ka ek vector hai jo ek text (ya image, etc.) ke meaning ko ek high-dimensional space mein represent karta hai. Ek embedding model text ko aise map karta hai ki semantically similar inputs paas aayein aur dissimilar door — 'king' aur 'queen' paas hain; 'king' aur 'apple' door.\n\nKyunki meaning geometry ban jaata hai, aap texts ko numerically compare kar sakte ho (aksar cosine similarity se) related content dhoondhne ke liye. Embeddings semantic search, RAG retrieval, clustering, deduplication aur recommendations ka aadhaar hain — jahan bhi aapko text ko meaning se compare karna ho, exact keywords ke bajaye.",
+    "keyPoints": [
+      "A numeric vector representing the meaning of text (or other data).",
+      "Semantically similar inputs land close; dissimilar ones land far.",
+      "Compare with cosine similarity to find related content.",
+      "Meaning becomes geometry — enabling search by meaning, not keywords.",
+      "Foundation of semantic search, RAG, clustering, and recommendations."
+    ],
+    "real_world": "A help center embeds every article and the user's question, then finds the articles whose vectors are closest to the question's — surfacing relevant help even when the user's wording doesn't match the article's keywords (e.g., 'can't log in' matches an article titled 'authentication issues').",
+    "followups": [
+      {
+        "q": "What does an embedding represent?",
+        "a": "The semantic meaning of input as a point (vector) in a high-dimensional space, arranged so that similar meanings are nearby and different meanings are far apart."
+      },
+      {
+        "q": "How do you measure similarity between embeddings?",
+        "a": "Most commonly cosine similarity (the cosine of the angle between vectors), which captures directional similarity regardless of magnitude. Higher cosine = more similar meaning."
+      },
+      {
+        "q": "What are embeddings used for?",
+        "a": "Semantic search, RAG retrieval, clustering, deduplication, classification, and recommendations — any task that benefits from comparing items by meaning rather than exact text match."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI embeddings code with NumPy (needs an API key). The Python-runnable demo below computes cosine similarity over toy vectors so the 'similar meaning = close vectors' idea is verifiable here.",
+      "source": "# What are embeddings — turn text into vectors with an embeddings model.\nfrom openai import OpenAI\nimport numpy as np\n\nclient = OpenAI()\n\ndef embed(text: str) -> list[float]:\n    resp = client.embeddings.create(model=\"text-embedding-3-small\", input=text)\n    return resp.data[0].embedding   # e.g., a 1536-dimensional vector\n\ndef cosine_similarity(a, b):\n    a, b = np.array(a), np.array(b)\n    return float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b)))\n\n# Semantically similar texts produce vectors that are close (high cosine similarity).\n# king = embed(\"king\"); queen = embed(\"queen\"); apple = embed(\"apple\")\n# cosine_similarity(king, queen)  -> high\n# cosine_similarity(king, apple)  -> low\n#\n# Embeddings power semantic search, RAG retrieval, clustering, deduplication,\n# and recommendations — anywhere you need \"meaning-based\" comparison of text.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# What are embeddings — text mapped to vectors where similar meanings are close\nimport math\n# Toy 3-dim \"semantic\" vectors (real embeddings have hundreds/thousands of dims).\nembeddings = {\n    \"king\":   [0.9, 0.8, 0.1],\n    \"queen\":  [0.9, 0.75, 0.15],\n    \"man\":    [0.8, 0.2, 0.1],\n    \"apple\":  [0.1, 0.1, 0.9],\n    \"banana\": [0.15, 0.12, 0.85],\n}\ndef cosine(a, b):\n    dot = sum(x*y for x, y in zip(a, b))\n    na = math.sqrt(sum(x*x for x in a)); nb = math.sqrt(sum(y*y for y in b))\n    return dot / (na * nb)\n\ndef most_similar(word):\n    return sorted(((w, cosine(embeddings[word], v)) for w, v in embeddings.items() if w != word),\n                  key=lambda kv: kv[1], reverse=True)\n\nprint(\"Closest to 'king': \", [(w, round(s, 3)) for w, s in most_similar(\"king\")][:2])\nprint(\"Closest to 'apple':\", [(w, round(s, 3)) for w, s in most_similar(\"apple\")][:2])\nassert most_similar(\"king\")[0][0] == \"queen\", \"king is closest to queen\"\nassert most_similar(\"apple\")[0][0] == \"banana\", \"apple is closest to banana\"\nprint(\"\\nEmbeddings turn text into numeric vectors capturing meaning; similar text -> nearby vectors.\")\nprint(\"They power semantic search, RAG retrieval, clustering, and recommendations.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Closest to 'king':  [('queen', 0.999), ('man', 0.887)]\nClosest to 'apple': [('banana', 0.998), ('queen', 0.279)]\n\nEmbeddings turn text into numeric vectors capturing meaning; similar text -> nearby vectors.\nThey power semantic search, RAG retrieval, clustering, and recommendations.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p2-045",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 45,
+  "orderInPhase": 45,
+  "slug": "accessibility-a11y",
+  "title": "Accessibility (a11y)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "accessibility",
+    "a11y"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A modal dialog uses role=\"dialog\" and aria-modal=\"true\", moves focus to the first control on open, traps focus inside, and returns focus to the trigger on cl…"
+  },
+  "sections": {
+    "simple_en": "Accessibility (a11y) means building UIs everyone can use, including people relying on screen readers, keyboard navigation, or other assistive tech. The foundation is semantic HTML — real buttons, headings, labels, and lists — because it conveys meaning and behavior to assistive tools for free.\n\nWhen semantics aren't enough, ARIA attributes add roles, states, and accessible names (e.g., aria-label for icon-only buttons, aria-modal for dialogs). Key practices include keyboard operability, visible focus, sufficient color contrast, and correct label-to-input associations.",
+    "hinglish": "Accessibility (a11y) ka matlab hai aisi UI banana jo sab use kar saken, including screen reader, keyboard navigation ya assistive tech wale log. Iski neenv semantic HTML hai — real buttons, headings, labels — kyunki ye meaning aur behavior assistive tools tak free mein pahunchata hai.\n\nJab semantics kaafi na ho, ARIA attributes roles, states aur accessible names add karte hain (jaise icon-only button ke liye aria-label, dialog ke liye aria-modal). Important: keyboard operability, visible focus, achha color contrast, aur label-input ka sahi connection.",
+    "keyPoints": [
+      "Start with semantic HTML (button, nav, label, h1–h6) — it carries meaning for free.",
+      "ARIA adds roles/states/names only when semantics fall short (don't overuse it).",
+      "Icon-only controls need an accessible name (aria-label) so they're announced.",
+      "Ensure full keyboard operability and a visible focus indicator.",
+      "Mind color contrast and associate every input with a label (htmlFor/id)."
+    ],
+    "real_world": "A modal dialog uses role=\"dialog\" and aria-modal=\"true\", moves focus to the first control on open, traps focus inside, and returns focus to the trigger on close. Its close button uses aria-label=\"Close\" since it only shows an × icon — so screen-reader users hear a meaningful label.",
+    "followups": [
+      {
+        "q": "Why prefer semantic HTML over ARIA?",
+        "a": "Native elements come with built-in behavior, focus, and semantics that assistive tech understands. ARIA only describes — it doesn't add behavior — so 'no ARIA is better than bad ARIA'."
+      },
+      {
+        "q": "How do you make an icon-only button accessible?",
+        "a": "Give it an accessible name with aria-label (e.g., aria-label=\"Close\") and mark the decorative icon aria-hidden so it isn't announced separately."
+      },
+      {
+        "q": "What are the basics of keyboard accessibility?",
+        "a": "Every interactive element must be reachable and operable via keyboard (Tab/Enter/Space), with a visible focus indicator and a logical focus order."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Accessibility (a11y): semantic HTML + ARIA for an icon-only button and a modal.\nimport React, { useRef, useEffect } from \"react\";\n\nexport default function IconButton({ onClose }) {\n  const closeRef = useRef(null);\n  useEffect(() => { closeRef.current.focus(); }, []); // move focus into the dialog\n\n  return (\n    <div role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"dialog-title\">\n      <h2 id=\"dialog-title\">Settings</h2>\n\n      {/* Icon-only button MUST have an accessible name via aria-label */}\n      <button ref={closeRef} aria-label=\"Close settings\" onClick={onClose}>\n        <span aria-hidden=\"true\">×</span>\n      </button>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Accessibility (a11y) — compute the accessible name of an element\nfunction accessibleName(el){\n  // priority: aria-labelledby > aria-label > associated <label> > text content\n  if (el[\"aria-labelledby\"]) return el.labelledbyText;\n  if (el[\"aria-label\"]) return el[\"aria-label\"];\n  if (el.labelText) return el.labelText;\n  return el.textContent || \"\";\n}\nconsole.log(accessibleName({ \"aria-label\": \"Close dialog\" }));\nconsole.log(accessibleName({ labelText: \"Email address\" }));\nconsole.log(accessibleName({ textContent: \"Submit\" }));\nconst iconButton = { \"aria-label\": \"Search\" };       // icon-only button needs a name\nconsole.assert(accessibleName(iconButton) === \"Search\", \"icon button is named\");\nconsole.assert(accessibleName({ textContent: \"\" }) === \"\", \"unnamed element flagged empty\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Close dialog\nEmail address\nSubmit\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

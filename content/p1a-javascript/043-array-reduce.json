@@ -1,0 +1,64 @@
+{
+  "id": "p1a-043",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 43,
+  "orderInPhase": 43,
+  "slug": "array-reduce",
+  "title": "Array.reduce()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "array.reduce"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Computing a shopping-cart total, or grouping orders by status into an object — `orders.reduce((acc, o) => { (acc[o.status] ??= []).push(o); return acc; }, {}…"
+  },
+  "sections": {
+    "simple_en": "`reduce` boils an array down to a single value by repeatedly applying a reducer function that accumulates a result. The reducer receives an accumulator and the current element: `(acc, cur) => newAcc`. You supply an initial value for the accumulator as the second argument.\n\nIt's the most powerful and general array method — sums, products, grouping, counting, flattening, and even re-implementing map/filter can all be done with reduce. Always provide the initial value to avoid surprises on empty arrays.",
+    "hinglish": "`reduce` ek array ko baar-baar ek reducer function laga kar ek single value me samet deta hai jo result accumulate karta hai. Reducer ko accumulator aur current element milta hai: `(acc, cur) => newAcc`. Accumulator ki initial value second argument me deni hoti hai.\nYe sabse powerful aur general array method hai — sums, products, grouping, counting, flattening, yahan tak ki map/filter dobara banana bhi reduce se ho sakta hai. Empty arrays par surprises se bachne ke liye hamesha initial value do.",
+    "keyPoints": [
+      "Reduces an array to one value via `(accumulator, current) => newAccumulator`.",
+      "Second argument is the initial accumulator value — always provide it.",
+      "Use for sums, products, counts, grouping, flattening, building objects.",
+      "Can re-implement map and filter; it's the general-purpose iterator.",
+      "Without an initial value, reduce uses the first element and can throw on empty arrays."
+    ],
+    "real_world": "Computing a shopping-cart total, or grouping orders by status into an object — `orders.reduce((acc, o) => { (acc[o.status] ??= []).push(o); return acc; }, {})` builds a grouped report in one pass.",
+    "followups": [
+      {
+        "q": "Why should you always pass an initial value to reduce?",
+        "a": "It defines the accumulator's starting type/value and prevents errors on empty arrays. Without it, reduce uses the first element as the seed, which can produce wrong types or throw on an empty array."
+      },
+      {
+        "q": "Can reduce replace map and filter?",
+        "a": "Yes — reduce is general enough to implement both (and more), since you fully control how the accumulator is built. map/filter are just clearer for their specific jobs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// reduce: sum, group-by, and count.\n\nfunction sum(nums) {\n  return nums.reduce((acc, n) => acc + n, 0);\n}\n\nfunction groupByStatus(orders) {\n  return orders.reduce((acc, o) => {\n    (acc[o.status] = acc[o.status] || []).push(o.id);\n    return acc;\n  }, {});\n}\n\nfunction countWords(words) {\n  return words.reduce((acc, w) => {\n    acc[w] = (acc[w] || 0) + 1;\n    return acc;\n  }, {});\n}\n\nmodule.exports = { sum, groupByStatus, countWords };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { sum, groupByStatus, countWords } = require(\"./solution\");\n\nconsole.log(sum([10, 20, 30])); // 60\nconsole.log(groupByStatus([\n  { id: 1, status: \"paid\" }, { id: 2, status: \"pending\" }, { id: 3, status: \"paid\" },\n]));\nconsole.log(countWords([\"a\", \"b\", \"a\", \"a\", \"b\"]));\n\nconsole.assert(sum([10,20,30]) === 60, \"sum\");\nconst g = groupByStatus([{id:1,status:\"paid\"},{id:2,status:\"pending\"},{id:3,status:\"paid\"}]);\nconsole.assert(JSON.stringify(g.paid) === \"[1,3]\", \"group paid ids\");\nconsole.assert(countWords([\"a\",\"b\",\"a\"]).a === 2, \"count a=2\");\nconsole.log(\"reduce assertions passed.\");",
+      "expectedOutput": "60\n{ paid: [ 1, 3 ], pending: [ 2 ] }\n{ a: 3, b: 2 }\nreduce assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

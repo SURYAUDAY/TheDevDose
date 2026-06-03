@@ -1,0 +1,67 @@
+{
+  "id": "p1a-029",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 29,
+  "orderInPhase": 29,
+  "slug": "arrow-vs-regular-functions-this-binding",
+  "title": "Arrow vs Regular Functions (this binding)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "arrow",
+    "regular",
+    "functions",
+    "binding"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Inside a class method that sets a timer, `setTimeout(() => this.tick(), 1000)` works because the arrow keeps the class instance's `this`."
+  },
+  "sections": {
+    "simple_en": "The biggest difference is `this`. A regular function gets its own `this`, determined by how it is called (the call site). An arrow function has no own `this` — it lexically inherits `this` from the surrounding scope where it was defined.\n\nOther differences: arrow functions have no `arguments` object (use rest params instead), cannot be used as constructors (no `new`), and have no `prototype`. Arrows are ideal for callbacks where you want to keep the outer `this`; regular functions are needed for methods and constructors.",
+    "hinglish": "Sabse bada farak `this` ka hai. Regular function ka apna `this` hota hai, jo is baat par depend karta hai ki use kaise call kiya gaya (call site). Arrow function ka apna `this` nahi hota — woh lexically surrounding scope se `this` inherit karta hai jahan define hua tha.\nAur differences: arrow functions me `arguments` object nahi hota (rest params use karo), constructor ki tarah `new` se use nahi ho sakte, aur `prototype` nahi hota. Arrows un callbacks ke liye best hain jahan outer `this` chahiye; regular functions methods aur constructors ke liye zaruri hain.",
+    "keyPoints": [
+      "Regular: own `this` set by call site. Arrow: inherits `this` lexically (no own `this`).",
+      "Arrow has no `arguments` object — use rest parameters `(...args)`.",
+      "Arrow cannot be a constructor (`new` throws) and has no `prototype`.",
+      "Arrows are great for callbacks that must keep the enclosing `this`.",
+      "Use regular functions for object methods and constructors."
+    ],
+    "real_world": "Inside a class method that sets a timer, `setTimeout(() => this.tick(), 1000)` works because the arrow keeps the class instance's `this`. A regular `function(){ this.tick() }` would lose `this` (it'd be undefined/global).",
+    "followups": [
+      {
+        "q": "How does `this` differ between arrow and regular functions?",
+        "a": "A regular function's `this` is determined dynamically by the call site; an arrow function has no own `this` and lexically inherits it from where it was defined."
+      },
+      {
+        "q": "Can an arrow function be used as a constructor?",
+        "a": "No. Arrow functions have no `[[Construct]]` and no `prototype`, so calling them with `new` throws a TypeError. Use a regular function or a class instead."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrates this-binding differences.\n\nconst obj = {\n  value: 42,\n  regular() { return this.value; },        // 'this' = obj\n  arrow: () => (typeof this),               // 'this' = module scope, not obj\n  delayed() {\n    // arrow keeps 'this' = obj; regular fn would lose it\n    return new Promise((resolve) => {\n      setTimeout(() => resolve(this.value), 0); // arrow -> this.value = 42\n    });\n  },\n};\n\nfunction regularHasArguments() { return arguments.length; }\nconst arrowUsesRest = (...args) => args.length;\n\nmodule.exports = { obj, regularHasArguments, arrowUsesRest };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { obj, regularHasArguments, arrowUsesRest } = require(\"./solution\");\n\nconsole.log(obj.regular());          // 42\nconsole.log(regularHasArguments(1,2,3)); // 3\nconsole.log(arrowUsesRest(1,2,3,4)); // 4\n\nobj.delayed().then((v) => {\n  console.log(\"delayed this.value:\", v); // 42\n  console.assert(v === 42, \"arrow keeps outer this\");\n  console.log(\"arrow vs regular assertions passed.\");\n});\n\nconsole.assert(obj.regular() === 42, \"regular method this = obj\");\nconsole.assert(regularHasArguments(1,2,3) === 3, \"regular has arguments\");\nconsole.assert(arrowUsesRest(1,2,3,4) === 4, \"arrow uses rest params\");",
+      "expectedOutput": "42\n3\n4\ndelayed this.value: 42\narrow vs regular assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

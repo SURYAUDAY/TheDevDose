@@ -1,0 +1,69 @@
+{
+  "id": "p2-038",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 38,
+  "orderInPhase": 38,
+  "slug": "optimistic-updates",
+  "title": "Optimistic updates",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "optimistic",
+    "updates"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "Liking a post updates the heart icon and count the instant you tap, without waiting for the server."
+  },
+  "sections": {
+    "simple_en": "An optimistic update applies a change to the UI immediately — before the server confirms it — assuming the request will succeed. This makes the app feel instant. If the request fails, you roll back to the previous state so the UI stays consistent with reality.\n\nIn React Query you implement this in a mutation's lifecycle: onMutate snapshots the current cache and applies the optimistic change, onError restores the snapshot, and onSettled refetches to sync with the server's true state.",
+    "hinglish": "Optimistic update UI mein change turant laga deta hai — server confirm karne se pehle — ye maan kar ki request safal hogi. Isse app instant lagta hai. Agar request fail ho jaye to purani state par rollback kar dete ho.\n\nReact Query mein ye mutation ke lifecycle se hota hai: onMutate current cache snapshot le kar optimistic change lagata hai, onError snapshot wapas laata hai, aur onSettled refetch karke server ki sahi state se sync karta hai.",
+    "keyPoints": [
+      "Apply the change in the UI immediately; assume success for a snappy feel.",
+      "On failure, roll back to the pre-update snapshot to stay consistent.",
+      "React Query: onMutate (snapshot + apply), onError (rollback), onSettled (refetch).",
+      "Cancel in-flight queries in onMutate so they don't overwrite your optimistic data.",
+      "Best for high-confidence, low-risk actions (likes, toggles, reordering)."
+    ],
+    "real_world": "Liking a post updates the heart icon and count the instant you tap, without waiting for the server. If the network call fails, the like silently reverts — the user gets immediate feedback in the common case and correctness in the rare failure.",
+    "followups": [
+      {
+        "q": "Why snapshot the previous state in onMutate?",
+        "a": "So you can roll back to it in onError if the request fails, keeping the UI consistent with the server."
+      },
+      {
+        "q": "When should you avoid optimistic updates?",
+        "a": "For high-stakes or likely-to-fail actions (payments, irreversible changes) where showing unconfirmed success could mislead the user."
+      },
+      {
+        "q": "What does onSettled do?",
+        "a": "Runs after success or failure; it typically invalidates/refetches the query to reconcile the UI with the server's actual state."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Optimistic updates: update the UI immediately, roll back if the request fails.\nimport { useMutation, useQueryClient } from \"@tanstack/react-query\";\n\nexport function useAddTodo() {\n  const qc = useQueryClient();\n  return useMutation({\n    mutationFn: (todo) => fetch(\"/api/todos\", { method: \"POST\", body: JSON.stringify(todo) }),\n    onMutate: async (newTodo) => {\n      await qc.cancelQueries({ queryKey: [\"todos\"] });\n      const previous = qc.getQueryData([\"todos\"]);          // snapshot\n      qc.setQueryData([\"todos\"], (old = []) => [...old, newTodo]); // optimistic\n      return { previous };\n    },\n    onError: (_err, _newTodo, context) => {\n      qc.setQueryData([\"todos\"], context.previous);          // rollback\n    },\n    onSettled: () => qc.invalidateQueries({ queryKey: [\"todos\"] }), // resync\n  });\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Optimistic updates — apply immediately, roll back if the request fails\nasync function optimisticUpdate(list, item, save){\n  const snapshot = [...list];          // remember previous state\n  list.push(item);                     // optimistic: show it now\n  try { await save(item); return { list, status: \"confirmed\" }; }\n  catch (e) { return { list: snapshot, status: \"rolled back: \" + e.message }; }\n}\n(async () => {\n  let todos = [\"A\", \"B\"];\n  let r1 = await optimisticUpdate(todos, \"C\", () => Promise.resolve());\n  console.log(\"After success:\", r1.list.join(\",\"), \"-\", r1.status);\n\n  todos = [\"A\", \"B\"];\n  let r2 = await optimisticUpdate(todos, \"C\", () => Promise.reject(new Error(\"network\")));\n  console.log(\"After failure:\", r2.list.join(\",\"), \"-\", r2.status);\n  console.assert(r2.list.length === 2, \"rolled back to previous state\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "After success: A,B,C - confirmed\nAfter failure: A,B - rolled back: network\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

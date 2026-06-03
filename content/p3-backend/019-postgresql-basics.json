@@ -1,0 +1,69 @@
+{
+  "id": "p3-019",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 19,
+  "orderInPhase": 19,
+  "slug": "postgresql-basics",
+  "title": "PostgreSQL basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "postgresql",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An app stores user profiles in Postgres, using a JSONB column for flexible preferences and parameterized queries for lookups by email."
+  },
+  "sections": {
+    "simple_en": "PostgreSQL is a powerful, open-source relational database known for standards compliance, reliability, and rich features: advanced data types (JSONB, arrays), full-text search, window functions, transactions with strong ACID guarantees, and extensibility. It's a popular default for production backends.\n\nFrom Node you typically use the pg (node-postgres) library with a connection pool and parameterized queries ($1, $2). Parameterization sends values separately from the SQL text, which prevents SQL injection and lets the database cache query plans.",
+    "hinglish": "PostgreSQL ek powerful, open-source relational database hai jo standards compliance, reliability aur rich features ke liye jaana jaata hai: advanced data types (JSONB, arrays), full-text search, window functions, strong ACID transactions, aur extensibility. Production backends ke liye popular default hai.\n\nNode se aap aksar pg (node-postgres) library, connection pool aur parameterized queries ($1, $2) use karte ho. Parameterization values ko SQL text se alag bhejta hai, jo SQL injection rokta hai aur DB ko query plans cache karne deta hai.",
+    "keyPoints": [
+      "Open-source, standards-compliant relational DB with rich features (JSONB, arrays, window fns).",
+      "Strong ACID transactions and reliability — a common production default.",
+      "Use node-postgres (pg) with a connection pool, not one connection per request.",
+      "Parameterized queries ($1, $2) prevent SQL injection and aid plan caching.",
+      "Supports advanced indexing (B-tree, GIN, partial) for performance."
+    ],
+    "real_world": "An app stores user profiles in Postgres, using a JSONB column for flexible preferences and parameterized queries for lookups by email. A connection pool reuses a handful of connections across thousands of requests instead of opening a new one each time.",
+    "followups": [
+      {
+        "q": "Why use parameterized queries?",
+        "a": "They send user values separately from the SQL text, so input can never be interpreted as SQL — preventing injection — and they enable the database to reuse cached query plans."
+      },
+      {
+        "q": "Why use a connection pool?",
+        "a": "Opening a DB connection is expensive. A pool maintains a set of reusable connections, dramatically improving throughput and avoiding exhausting the database's connection limit."
+      },
+      {
+        "q": "What's special about JSONB in Postgres?",
+        "a": "It stores JSON in a binary, indexable format, letting you mix flexible document-style data with relational tables and query inside the JSON efficiently."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real node-postgres code (runs against PostgreSQL). The Node-runnable demo below simulates parameterized queries so the output is verifiable here.",
+      "source": "// PostgreSQL basics — pooled connections + parameterized queries (node-postgres).\nconst { Pool } = require(\"pg\");\n\n// A pool reuses a set of connections instead of opening one per request.\nconst pool = new Pool({\n  host: process.env.PGHOST,\n  database: process.env.PGDATABASE,\n  user: process.env.PGUSER,\n  password: process.env.PGPASSWORD,\n  max: 10, // max connections in the pool\n});\n\nasync function getUserByEmail(email) {\n  // $1, $2 are bound parameters — values are sent separately, so this is\n  // immune to SQL injection (the input can never become SQL).\n  const { rows } = await pool.query(\n    \"SELECT id, name FROM users WHERE email = $1 AND active = $2\",\n    [email, true]\n  );\n  return rows[0];\n}\n\nmodule.exports = { getUserByEmail };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// PostgreSQL basics — parameterized query ($1) prevents SQL injection\nfunction buildQuery(text, params){\n  // Real pg driver sends text + params separately; values are NEVER concatenated.\n  let preview = text;\n  params.forEach((p, i) => { preview = preview.replace(`$${i + 1}`, typeof p === \"string\" ? `'${p}'` : p); });\n  return { text, params, preview };\n}\nconst safe = buildQuery(\"SELECT * FROM users WHERE email = $1 AND active = $2\", [\"a@x.com\", true]);\nconsole.log(\"Parameterized text:\", safe.text);\nconsole.log(\"Params:\", JSON.stringify(safe.params));\nconsole.log(\"Driver-rendered:\", safe.preview);\n// A malicious value stays DATA, not executable SQL:\nconst attack = buildQuery(\"SELECT * FROM users WHERE name = $1\", [\"x'; DROP TABLE users; --\"]);\nconsole.log(\"Injection attempt is bound as a value, not SQL:\", JSON.stringify(attack.params));\nconsole.assert(safe.params.length === 2, \"values passed separately from SQL text\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Parameterized text: SELECT * FROM users WHERE email = $1 AND active = $2\nParams: [\"a@x.com\",true]\nDriver-rendered: SELECT * FROM users WHERE email = 'a@x.com' AND active = true\nInjection attempt is bound as a value, not SQL: [\"x'; DROP TABLE users; --\"]\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

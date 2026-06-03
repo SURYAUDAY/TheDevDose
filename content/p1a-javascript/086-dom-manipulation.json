@@ -1,0 +1,65 @@
+{
+  "id": "p1a-086",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 86,
+  "orderInPhase": 86,
+  "slug": "dom-manipulation",
+  "title": "DOM Manipulation",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "dom",
+    "manipulation"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Rendering a to-do list: create an `<li>` per item, set its text, attach a delete button, and append all of them via a DocumentFragment so the browser reflows…"
+  },
+  "sections": {
+    "simple_en": "The DOM (Document Object Model) is the browser's in-memory tree representation of the HTML page. DOM manipulation means selecting elements and changing their content, attributes, styles, or structure with JavaScript so the page updates dynamically.\n\nCore APIs: select with `querySelector`/`querySelectorAll`/`getElementById`; read/write with `textContent`, `innerHTML`, `setAttribute`, `classList`, and `style`; and modify structure with `createElement`, `append`, `remove`. Minimise reflows by batching changes (e.g. using a DocumentFragment).",
+    "hinglish": "DOM (Document Object Model) HTML page ka browser ki memory me tree representation hai. DOM manipulation ka matlab JavaScript se elements select karke unka content, attributes, styles, ya structure change karna taaki page dynamically update ho.\nCore APIs: select ke liye `querySelector`/`querySelectorAll`/`getElementById`; read/write ke liye `textContent`, `innerHTML`, `setAttribute`, `classList`, `style`; aur structure modify ke liye `createElement`, `append`, `remove`. Reflows kam karne ke liye changes batch karo (jaise DocumentFragment use karke).",
+    "keyPoints": [
+      "DOM is the live tree of the page; manipulating it updates the UI.",
+      "Select: `querySelector`/`All`, `getElementById`.",
+      "Update: `textContent` (safe), `innerHTML` (parses HTML — XSS risk), `classList`, `style`.",
+      "Structure: `createElement`, `append`, `prepend`, `remove`.",
+      "Batch DOM writes (DocumentFragment) to reduce layout thrashing."
+    ],
+    "real_world": "Rendering a to-do list: create an `<li>` per item, set its text, attach a delete button, and append all of them via a DocumentFragment so the browser reflows once instead of per item.",
+    "followups": [
+      {
+        "q": "Difference between textContent and innerHTML?",
+        "a": "`textContent` sets plain text safely; `innerHTML` parses the string as HTML, which is powerful but risks XSS if you insert untrusted content. Prefer `textContent` unless you specifically need HTML."
+      },
+      {
+        "q": "How do you reduce layout thrashing when adding many nodes?",
+        "a": "Batch DOM writes — build nodes in a DocumentFragment (or set innerHTML once) and append in a single operation, so the browser reflows once instead of on every insertion."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Browser code (runs in a browser):\n//\n//   const ul = document.querySelector(\"#list\");\n//   const frag = document.createDocumentFragment();\n//   items.forEach(text => {\n//     const li = document.createElement(\"li\");\n//     li.textContent = text;            // safe (no HTML injection)\n//     li.classList.add(\"item\");\n//     frag.append(li);\n//   });\n//   ul.append(frag);                    // single reflow\n//\n// Node has no DOM, so we model the same logic with a minimal fake element\n// to prove the build-up is correct.\n\nfunction buildList(items) {\n  const fragment = { children: [] };\n  items.forEach((text) => {\n    const li = { tag: \"li\", textContent: text, classes: [\"item\"] };\n    fragment.children.push(li);\n  });\n  return fragment; // would be appended to the real <ul> in a browser\n}\n\nmodule.exports = { buildList };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (logic demo; real version uses the browser DOM) ---\nconst { buildList } = require(\"./solution\");\n\nconst frag = buildList([\"Buy milk\", \"Call Asha\"]);\nconsole.log(frag.children.map((c) => c.textContent)); // ['Buy milk','Call Asha']\nconsole.log(frag.children[0]); // { tag:'li', textContent:'Buy milk', classes:['item'] }\n\nconsole.assert(frag.children.length === 2, \"two list items built\");\nconsole.assert(frag.children[0].textContent === \"Buy milk\", \"text set correctly\");\nconsole.assert(frag.children[0].classes.includes(\"item\"), \"class added\");\nconsole.log(\"DOM manipulation (logic) assertions passed.\");",
+      "expectedOutput": "[ 'Buy milk', 'Call Asha' ]\n{ tag: 'li', textContent: 'Buy milk', classes: [ 'item' ] }\nDOM manipulation (logic) assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

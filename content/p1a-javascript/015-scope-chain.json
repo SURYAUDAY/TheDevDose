@@ -1,0 +1,65 @@
+{
+  "id": "p1a-015",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 15,
+  "orderInPhase": 15,
+  "slug": "scope-chain",
+  "title": "Scope Chain",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "scope",
+    "chain"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Looking for a stapler: you check your own desk (local), then the team cabinet (outer), then the office supply room (global)."
+  },
+  "sections": {
+    "simple_en": "Scope determines where a variable is accessible. The Scope Chain is the ordered list of environments JavaScript searches when resolving a variable: it looks in the current scope first, then the enclosing (outer) scope, and so on up to the global scope.\n\nIf the variable isn't found anywhere in the chain, you get a ReferenceError. The chain is built based on where functions are written in the source (lexical scope), not where they are called from. This is the mechanism that makes closures possible.",
+    "hinglish": "Scope decide karta hai ki variable kahan accessible hai. Scope Chain woh ordered list hai jisme JavaScript variable dhoondhta hai: pehle current scope, phir bahar wala (outer) scope, aise hi upar global scope tak.\nAgar variable poori chain me kahin na mile to ReferenceError aata hai. Ye chain is hisaab se banti hai ki function source me kahan likha gaya (lexical scope), kahan se call hua isse nahi. Yahi mechanism closures ko possible banata hai.",
+    "keyPoints": [
+      "Variable lookup goes inner → outer → ... → global, then throws if not found.",
+      "Each function's outer reference links to where it was DEFINED (lexical), not called.",
+      "Inner scopes can read outer variables; outer scopes cannot read inner ones.",
+      "Shadowing: an inner variable with the same name hides the outer one.",
+      "The scope chain is fixed at definition time — this is the basis of closures."
+    ],
+    "real_world": "Looking for a stapler: you check your own desk (local), then the team cabinet (outer), then the office supply room (global). You stop at the first place you find one. If nowhere has it, you 'throw' your hands up (ReferenceError).",
+    "followups": [
+      {
+        "q": "Is the scope chain based on where a function is called or defined?",
+        "a": "Where it is defined (lexical scoping). The outer reference is fixed at definition time, regardless of where or how the function is later called."
+      },
+      {
+        "q": "What happens if a variable isn't found in the entire scope chain?",
+        "a": "JavaScript throws a ReferenceError (in strict mode and for reads). In sloppy mode, an assignment to an undeclared name would instead create a global."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrates scope-chain lookup and shadowing.\n\nconst globalVal = \"global\";\n\nfunction outer() {\n  const outerVal = \"outer\";\n  function inner() {\n    const innerVal = \"inner\";\n    // inner can reach all three via the scope chain\n    return [innerVal, outerVal, globalVal].join(\" > \");\n  }\n  return inner();\n}\n\nfunction shadowing() {\n  const name = \"outer-name\";\n  function deep() {\n    const name = \"inner-name\"; // shadows the outer 'name'\n    return name;\n  }\n  return { inner: deep(), outer: name };\n}\n\nmodule.exports = { outer, shadowing };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { outer, shadowing } = require(\"./solution\");\n\nconsole.log(outer());\nconsole.log(shadowing());\n\nconsole.assert(outer() === \"inner > outer > global\", \"scope chain resolves all levels\");\nconsole.assert(shadowing().inner === \"inner-name\", \"inner shadows outer\");\nconsole.assert(shadowing().outer === \"outer-name\", \"outer unaffected by shadowing\");\nconsole.log(\"scope chain assertions passed.\");",
+      "expectedOutput": "inner > outer > global\n{ inner: 'inner-name', outer: 'outer-name' }\nscope chain assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

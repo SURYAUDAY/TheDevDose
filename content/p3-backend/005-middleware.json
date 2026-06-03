@@ -1,0 +1,68 @@
+{
+  "id": "p3-005",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 5,
+  "orderInPhase": 5,
+  "slug": "middleware",
+  "title": "Middleware",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "middleware"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A protected route uses a chain: a logger records the request, express.json() parses the body, an auth middleware verifies the token and attaches req.user, an…"
+  },
+  "sections": {
+    "simple_en": "Middleware are functions that run in sequence during the request/response cycle, each receiving (req, res, next). A middleware can inspect or modify the request and response, end the cycle by sending a response, or call next() to pass control to the next middleware in the chain.\n\nThis pipeline model is the heart of Express. Cross-cutting concerns — logging, body parsing, authentication, CORS, rate limiting, error handling — are implemented as middleware and composed in order, keeping route handlers focused on business logic.",
+    "hinglish": "Middleware aise functions hain jo request/response cycle ke dauraan sequence mein chalte hain, har ek (req, res, next) leta hai. Middleware request/response ko inspect/modify kar sakta hai, response bhej kar cycle end kar sakta hai, ya next() call karke control agle middleware ko de sakta hai.\n\nYe pipeline model Express ka dil hai. Cross-cutting concerns — logging, body parsing, authentication, CORS, rate limiting, error handling — middleware ke roop mein order mein compose hote hain, jisse route handlers business logic par focused rehte hain.",
+    "keyPoints": [
+      "Signature: (req, res, next) — inspect/modify, end the cycle, or call next().",
+      "Runs in the order registered; next() passes control along the chain.",
+      "Types: application-level (app.use), router-level, and error-handling (4 args).",
+      "Used for logging, parsing, auth, CORS, rate limiting, and more.",
+      "Forgetting next() (without sending a response) leaves the request hanging."
+    ],
+    "real_world": "A protected route uses a chain: a logger records the request, express.json() parses the body, an auth middleware verifies the token and attaches req.user, and only then does the handler run. Each concern is a small, reusable function plugged into the pipeline.",
+    "followups": [
+      {
+        "q": "How does Express recognize error-handling middleware?",
+        "a": "By its arity — it takes four arguments (err, req, res, next). Express routes errors (thrown or passed to next(err)) to these handlers."
+      },
+      {
+        "q": "What happens if middleware neither sends a response nor calls next()?",
+        "a": "The request hangs — the client waits indefinitely — because control never moves forward and no response is sent."
+      },
+      {
+        "q": "What's the difference between app.use and a route handler?",
+        "a": "app.use mounts middleware for all (or path-prefixed) requests; a route handler is middleware bound to a specific method + path. Both share the (req, res, next) signature."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express middleware code (Node + Express). The Node-runnable demo below verifies the middleware chain with next().",
+      "source": "// Middleware — functions that run in sequence on each request via next().\nconst express = require(\"express\");\nconst app = express();\n\n// Application-level middleware: runs for every request.\nfunction logger(req, res, next) {\n  console.log(`${req.method} ${req.url}`);\n  next(); // pass control to the next middleware\n}\n\n// Route-specific middleware: authentication guard.\nfunction requireAuth(req, res, next) {\n  const token = req.headers.authorization;\n  if (!token) return res.status(401).json({ error: \"Unauthorized\" });\n  req.user = { id: 1, name: \"Asha\" }; // attach data for downstream handlers\n  next();\n}\n\napp.use(logger);\n\napp.get(\"/profile\", requireAuth, (req, res) => {\n  res.json({ message: `Hello ${req.user.name}` });\n});\n\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Middleware — Express-style chain with next()\nfunction runMiddlewares(middlewares, req, res){\n  let i = 0;\n  function next(){ const mw = middlewares[i++]; if (mw) mw(req, res, next); }\n  next();\n}\nconst req = { url: \"/admin\", headers: { authorization: \"Bearer token\" }, user: null };\nconst res = { sent: null, send(d){ this.sent = d; } };\nconst log = [];\n\nconst logger = (req, res, next) => { log.push(`${req.url} requested`); next(); };\nconst auth = (req, res, next) => {\n  if (!req.headers.authorization) return res.send(\"401 Unauthorized\");\n  req.user = { name: \"Asha\" };  // attach data for later middleware\n  log.push(\"authenticated\"); next();\n};\nconst handler = (req, res) => { log.push(`hello ${req.user.name}`); res.send(\"200 OK\"); };\n\nrunMiddlewares([logger, auth, handler], req, res);\nlog.forEach(l => console.log(l));\nconsole.log(\"Response:\", res.sent);\nconsole.assert(res.sent === \"200 OK\" && req.user.name === \"Asha\", \"chain ran in order\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "/admin requested\nauthenticated\nhello Asha\nResponse: 200 OK\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "id": "p1a-087",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 87,
+  "orderInPhase": 87,
+  "slug": "browser-rendering-basics",
+  "title": "Browser Rendering Basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "browser",
+    "rendering",
+    "basics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Animating position with `top`/`left` causes reflow each frame and can stutter; switching to `transform: translate(...)` lets the compositor handle it on the…"
+  },
+  "sections": {
+    "simple_en": "When a browser loads a page it runs a rendering pipeline: parse HTML into the DOM, parse CSS into the CSSOM, combine them into the Render Tree (only visible nodes), compute Layout (positions and sizes), Paint pixels, and finally Composite layers onto the screen.\n\nChanging the DOM or styles can trigger a reflow (layout recalculation — expensive) and/or a repaint (re-drawing pixels). Some properties (like `transform` and `opacity`) can be composited without layout/paint, which is why they animate smoothly. Minimising reflows is key to performance.",
+    "hinglish": "Jab browser page load karta hai to ek rendering pipeline chalata hai: HTML ko DOM me parse, CSS ko CSSOM me parse, dono ko Render Tree me combine (sirf visible nodes), Layout compute (positions aur sizes), Paint pixels, aur aakhir me layers ko screen par Composite.\nDOM ya styles change karne se reflow (layout recalculation — mehnga) aur/ya repaint (pixels dobara draw) trigger ho sakta hai. Kuch properties (jaise `transform` aur `opacity`) bina layout/paint composite ho sakti hain, isliye woh smoothly animate hoti hain. Reflows kam karna performance ki kunji hai.",
+    "keyPoints": [
+      "Pipeline: DOM + CSSOM → Render Tree → Layout → Paint → Composite.",
+      "Reflow (layout) is triggered by geometry/structure changes — expensive.",
+      "Repaint redraws pixels (e.g. color change) without re-layout.",
+      "`transform`/`opacity` can be composited on the GPU — cheap to animate.",
+      "Batch DOM reads/writes and prefer compositor-friendly properties."
+    ],
+    "real_world": "Animating position with `top`/`left` causes reflow each frame and can stutter; switching to `transform: translate(...)` lets the compositor handle it on the GPU, producing buttery 60fps motion.",
+    "followups": [
+      {
+        "q": "What's the difference between reflow and repaint?",
+        "a": "Reflow (layout) recalculates element geometry and positions — expensive and can cascade. Repaint just redraws pixels (e.g. a color change) without changing layout. Reflow usually implies a repaint too."
+      },
+      {
+        "q": "Why do transform and opacity animate so smoothly?",
+        "a": "They can be handled by the compositor (often on the GPU) without triggering layout or paint, so each frame is cheap — unlike animating `top`/`left`, which forces reflow."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Conceptual model of the rendering pipeline (runnable representation).\n\nfunction renderingPipeline() {\n  return [\"DOM\", \"CSSOM\", \"RenderTree\", \"Layout\", \"Paint\", \"Composite\"];\n}\n\n// Classify what a given change triggers.\nfunction costOf(change) {\n  const layoutProps = [\"width\", \"height\", \"top\", \"left\", \"margin\", \"font-size\"];\n  const paintProps = [\"color\", \"background-color\", \"box-shadow\"];\n  const compositeProps = [\"transform\", \"opacity\"];\n  if (layoutProps.includes(change)) return \"reflow+repaint\";\n  if (paintProps.includes(change)) return \"repaint\";\n  if (compositeProps.includes(change)) return \"composite-only\";\n  return \"unknown\";\n}\n\nmodule.exports = { renderingPipeline, costOf };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { renderingPipeline, costOf } = require(\"./solution\");\n\nconsole.log(renderingPipeline());\nconsole.log(costOf(\"width\"));     // reflow+repaint\nconsole.log(costOf(\"color\"));     // repaint\nconsole.log(costOf(\"transform\")); // composite-only\n\nconsole.assert(renderingPipeline()[0] === \"DOM\", \"pipeline starts at DOM\");\nconsole.assert(renderingPipeline()[5] === \"Composite\", \"pipeline ends at Composite\");\nconsole.assert(costOf(\"width\") === \"reflow+repaint\", \"geometry change = reflow\");\nconsole.assert(costOf(\"transform\") === \"composite-only\", \"transform = composite only\");\nconsole.log(\"browser rendering assertions passed.\");",
+      "expectedOutput": "[ 'DOM', 'CSSOM', 'RenderTree', 'Layout', 'Paint', 'Composite' ]\nreflow+repaint\nrepaint\ncomposite-only\nbrowser rendering assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

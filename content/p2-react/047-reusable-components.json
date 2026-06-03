@@ -1,0 +1,69 @@
+{
+  "id": "p2-047",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 47,
+  "orderInPhase": 47,
+  "slug": "reusable-components",
+  "title": "Reusable components",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "reusable",
+    "components"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A design-system <Button variant size> covers primary/secondary/danger and sm/md/lg with one component."
+  },
+  "sections": {
+    "simple_en": "Reusable components are flexible, well-designed building blocks used across an app — buttons, inputs, modals, cards. The key is a clear prop API: sensible defaults, a small set of variants/sizes, and spreading the rest of the props (like onClick, disabled, aria-*) so the component stays adaptable.\n\nGood reusable components are composable rather than over-configured: prefer composition (children, slots) over a giant list of boolean flags. Consistent variant naming and accessibility baked in make a component library predictable and pleasant to use.",
+    "hinglish": "Reusable components flexible, achhe-design wale building blocks hain jo app bhar mein use hote hain — buttons, inputs, modals, cards. Key hai clear prop API: sensible defaults, kuch variants/sizes, aur baaki props (onClick, disabled, aria-*) spread karna taaki component adaptable rahe.\n\nAchhe reusable components over-configure ke bajaye composable hote hain: bahut saare boolean flags ke bajaye composition (children, slots) prefer karo. Consistent variant naming aur built-in accessibility component library ko predictable banate hain.",
+    "keyPoints": [
+      "Design a clear prop API: sensible defaults + a small set of variants/sizes.",
+      "Spread remaining props (...rest) so consumers can pass onClick, disabled, aria-*.",
+      "Prefer composition (children/slots) over a flood of boolean configuration flags.",
+      "Bake in accessibility and consistent styling so usage is predictable.",
+      "Keep components focused — one responsibility, easy to test and document."
+    ],
+    "real_world": "A design-system <Button variant size> covers primary/secondary/danger and sm/md/lg with one component. Forwarding ...rest means teams can add onClick, type=\"submit\", or aria-label without the library anticipating every prop — the same button serves dozens of screens.",
+    "followups": [
+      {
+        "q": "Why spread ...rest onto a reusable component?",
+        "a": "So consumers can pass any extra props (event handlers, ARIA attributes, data-*) without the component needing to declare each one — keeping it flexible."
+      },
+      {
+        "q": "Composition vs configuration — which is better?",
+        "a": "Favor composition (children, sub-components) over piling on boolean props. It scales better and avoids 'prop explosion' where a component has dozens of flags."
+      },
+      {
+        "q": "What makes a component truly reusable?",
+        "a": "Clear defaults, a small variant API, accessibility built in, no hard-coded business logic, and flexibility via props/composition."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Reusable components: a variant-driven Button with sensible defaults.\nimport React from \"react\";\nimport clsx from \"clsx\";\n\nconst VARIANTS = {\n  primary: \"bg-blue-600 text-white\",\n  secondary: \"bg-gray-200 text-gray-900\",\n  danger: \"bg-red-600 text-white\",\n};\nconst SIZES = { sm: \"text-sm px-2 py-1\", md: \"text-base px-4 py-2\", lg: \"text-lg px-6 py-3\" };\n\nexport default function Button({ variant = \"primary\", size = \"md\", className, ...rest }) {\n  return (\n    <button\n      className={clsx(\"rounded font-medium\", VARIANTS[variant], SIZES[size], className)}\n      {...rest} // spread the rest (onClick, disabled, aria-*) so it stays flexible\n    />\n  );\n}\n// <Button>Save</Button>  <Button variant=\"danger\" size=\"lg\">Delete</Button>",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Reusable components — a variant-driven API (like a Button design system)\nfunction buttonClasses({ variant = \"primary\", size = \"md\", disabled = false } = {}){\n  const base = \"btn\";\n  const variants = { primary: \"btn-blue\", secondary: \"btn-gray\", danger: \"btn-red\" };\n  const sizes = { sm: \"text-sm\", md: \"text-base\", lg: \"text-lg\" };\n  return [base, variants[variant], sizes[size], disabled && \"btn-disabled\"]\n    .filter(Boolean).join(\" \");\n}\nconsole.log(\"default:  \", buttonClasses());\nconsole.log(\"danger lg:\", buttonClasses({ variant: \"danger\", size: \"lg\" }));\nconsole.log(\"disabled: \", buttonClasses({ disabled: true }));\nconsole.assert(buttonClasses({ variant: \"danger\" }).includes(\"btn-red\"), \"variant maps to class\");\nconsole.assert(buttonClasses({ disabled: true }).includes(\"btn-disabled\"), \"disabled applied\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "default:   btn btn-blue text-base\ndanger lg: btn btn-red text-lg\ndisabled:  btn btn-blue text-base btn-disabled\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p5-020",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 20,
+  "orderInPhase": 20,
+  "slug": "horizontal-vs-vertical-scaling",
+  "title": "Horizontal vs vertical scaling",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "horizontal",
+    "vertical",
+    "scaling"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A database under growing load first gets a bigger server (vertical) — quick but soon maxed out."
+  },
+  "sections": {
+    "simple_en": "Vertical scaling (scaling up) means making a single machine more powerful — more CPU, RAM, or faster disks. It's simple (no code changes) but has a hard ceiling (you can only make one box so big) and leaves a single point of failure: if that machine dies, everything stops.\n\nHorizontal scaling (scaling out) means adding more machines and spreading load across them. It's effectively limitless and fault-tolerant (one machine failing doesn't take everything down), but it requires a load balancer and stateless design so requests can go to any instance. Most large systems scale horizontally for these reasons.",
+    "hinglish": "Vertical scaling (scaling up) ka matlab hai ek single machine ko zyada powerful banana — zyada CPU, RAM, ya faster disks. Ye simple hai (koi code changes nahi) par iska ek hard ceiling hai (aap ek box ko bas itna hi bada bana sakte ho) aur ek single point of failure chhodta hai: agar wo machine mar gayi, sab ruk jaata hai.\n\nHorizontal scaling (scaling out) ka matlab hai aur machines add karna aur load ko unke across spread karna. Ye effectively limitless aur fault-tolerant hai (ek machine fail hone se sab down nahi hota), par ise ek load balancer aur stateless design chahiye taaki requests kisi bhi instance par ja sakein. Zyaadatar bade systems in reasons se horizontally scale karte hain.",
+    "keyPoints": [
+      "Vertical (scale up): a bigger single machine — simple, no code change.",
+      "Vertical limits: a hard ceiling and a single point of failure.",
+      "Horizontal (scale out): more machines sharing the load.",
+      "Horizontal is near-limitless and fault-tolerant.",
+      "Horizontal needs a load balancer and stateless design."
+    ],
+    "real_world": "A database under growing load first gets a bigger server (vertical) — quick but soon maxed out. The web tier instead runs many small stateless servers behind a load balancer (horizontal), so the team handles holiday traffic by adding instances and removing them afterward.",
+    "followups": [
+      {
+        "q": "Vertical vs horizontal scaling in one line?",
+        "a": "Vertical means a bigger single machine (scale up); horizontal means more machines sharing the load (scale out). Vertical is simpler but capped and a single point of failure; horizontal is near-limitless and fault-tolerant but needs load balancing and stateless design."
+      },
+      {
+        "q": "Why do large systems prefer horizontal scaling?",
+        "a": "It has no hard ceiling (keep adding machines), tolerates failures (one node dying doesn't stop everything), and matches cloud elasticity. Vertical scaling eventually hits hardware and reliability limits."
+      },
+      {
+        "q": "What does horizontal scaling require from the app?",
+        "a": "Statelessness (so any instance handles any request) and a load balancer to distribute traffic. Shared state must live in external stores (databases, caches) rather than local server memory."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript computing capacity for scale-up (bigger machine) vs scale-out (more machines). The Node demo below verifies both strategies' effects.",
+      "source": "// Horizontal vs vertical scaling — scale out (more machines) vs scale up (a bigger machine).\n\n// VERTICAL (scale up): increase a single server's resources (CPU/RAM/disk).\n//   - Simple: no app changes, no distribution.\n//   - Limits: bounded by the biggest machine; still a single point of failure; downtime to upgrade.\n//   Example: move an app from a 4-core/16GB box to a 32-core/256GB box.\n\n// HORIZONTAL (scale out): add more servers and spread load across them.\n//   - Near-limitless capacity and fault tolerance (lose one node, others continue).\n//   - Requires a load balancer and STATELESS servers (shared session/state store).\n//   Example: run 10 identical API instances behind a load balancer; add more on traffic spikes.\n\n// In practice: vertical scaling is the quick first step; horizontal scaling is how large\n// systems grow. Cloud autoscaling adds/removes instances automatically based on load.\n//\n//   if (load > threshold) cluster.addInstance();   // horizontal autoscaling, conceptually\n//   else if (load < low)  cluster.removeInstance();\n\n// Key enabler for horizontal scaling: keep servers stateless so any instance can serve any request.\nexport {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Horizontal vs vertical scaling — add more machines vs make one machine bigger\nfunction verticalScale(server, extraCpu) {\n  return { ...server, cpu: server.cpu + extraCpu, machines: 1 };  // bigger box (a limit + SPOF)\n}\nfunction horizontalScale(server, addMachines) {\n  return { ...server, machines: server.machines + addMachines }; // more boxes (near-limitless)\n}\nlet server = { cpu: 4, machines: 1 };\nconst vertical = verticalScale(server, 12);     // 4 -> 16 CPU, still one machine\nconst horizontal = horizontalScale(server, 4);  // 1 -> 5 machines\nconsole.log(\"Vertical (scale up):\", vertical);\nconsole.log(\"Horizontal (scale out):\", horizontal);\nfunction totalCapacity(s) { return s.cpu * s.machines; }\nconsole.log(\"Vertical capacity:\", totalCapacity(vertical), \"| Horizontal capacity:\", totalCapacity(horizontal));\nconsole.assert(vertical.machines === 1 && vertical.cpu === 16, \"vertical = bigger single box\");\nconsole.assert(horizontal.machines === 5, \"horizontal = more boxes\");\nconsole.log(\"Vertical (scale up): bigger machine — simple but capped and a single point of failure.\");\nconsole.log(\"Horizontal (scale out): more machines — near-limitless and fault-tolerant, but needs load balancing + stateless design.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Vertical (scale up): { cpu: 16, machines: 1 }\nHorizontal (scale out): { cpu: 4, machines: 5 }\nVertical capacity: 16 | Horizontal capacity: 20\nVertical (scale up): bigger machine — simple but capped and a single point of failure.\nHorizontal (scale out): more machines — near-limitless and fault-tolerant, but needs load balancing + stateless design.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

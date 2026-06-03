@@ -1,0 +1,70 @@
+{
+  "id": "p5-003",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 3,
+  "orderInPhase": 3,
+  "slug": "arrays-strings-problems",
+  "title": "Arrays & strings problems",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "arrays",
+    "strings",
+    "problems"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A text editor highlighting the longest stretch of unique characters, or a streaming analytics job finding the busiest 5-minute window of traffic, both use a…"
+  },
+  "sections": {
+    "simple_en": "Array and string problems are interview staples, and two patterns solve a huge fraction of them efficiently: two pointers and the sliding window. Two pointers move inward or in tandem (e.g., reversing in place, or checking a palindrome) for O(n) solutions without extra passes.\n\nThe sliding window maintains a moving range over the data and adjusts its bounds as it scans — ideal for 'longest/shortest substring or subarray satisfying a condition' problems, like the longest substring without repeating characters. Both turn many naive O(n²) brute forces into single-pass O(n) algorithms.",
+    "hinglish": "Array aur string problems interview staples hain, aur do patterns inka ek bada hissa efficiently solve karte hain: two pointers aur sliding window. Two pointers andar ki taraf ya saath mein move karte hain (jaise in-place reverse, ya palindrome check) O(n) solutions ke liye bina extra passes ke.\n\nSliding window data ke upar ek moving range maintain karta hai aur scan karte hue uske bounds adjust karta hai — 'longest/shortest substring ya subarray jo ek condition satisfy kare' problems ke liye ideal, jaise longest substring without repeating characters. Dono kai naive O(n²) brute forces ko single-pass O(n) algorithms mein badal dete hain.",
+    "keyPoints": [
+      "Two pointers: move indices inward/in tandem for O(n) in-place work.",
+      "Sliding window: maintain a moving range, adjusting bounds as you scan.",
+      "Window pattern fits longest/shortest-substring/subarray problems.",
+      "Both avoid extra passes, turning O(n²) brute force into O(n).",
+      "Recognize the pattern from the problem shape, not memorized code."
+    ],
+    "real_world": "A text editor highlighting the longest stretch of unique characters, or a streaming analytics job finding the busiest 5-minute window of traffic, both use a sliding window — scanning once and adjusting the window bounds rather than re-checking every range.",
+    "followups": [
+      {
+        "q": "When do you reach for two pointers?",
+        "a": "When you process a sorted array or string from both ends or in tandem — reversing in place, checking palindromes, finding pairs that sum to a target in sorted data, or merging — to achieve O(n) without extra space."
+      },
+      {
+        "q": "What problems suit a sliding window?",
+        "a": "Finding the longest or shortest contiguous substring/subarray that satisfies a condition (no repeats, sum ≤ k, contains all required characters). You expand and shrink the window as you scan, keeping it O(n)."
+      },
+      {
+        "q": "How does the longest-unique-substring solution stay O(n)?",
+        "a": "It tracks the last index of each character in a map and moves the window start past any repeat, so each character is processed a constant number of times — one pass overall."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real, runnable JavaScript using two-pointer and sliding-window patterns. The Node demo below runs reverse and longest-unique-substring and verifies the results.",
+      "source": "// Arrays & strings — two pointers and sliding window are the workhorse patterns.\n\n// Two pointers: check if a string is a palindrome in O(n), O(1) space.\nfunction isPalindrome(s) {\n  let i = 0, j = s.length - 1;\n  while (i < j) { if (s[i] !== s[j]) return false; i++; j--; }\n  return true;\n}\n\n// Sliding window: length of the longest substring without repeating characters, O(n).\nfunction lengthOfLongestSubstring(s) {\n  const lastSeen = new Map();\n  let start = 0, best = 0;\n  for (let end = 0; end < s.length; end++) {\n    const c = s[end];\n    if (lastSeen.has(c) && lastSeen.get(c) >= start) start = lastSeen.get(c) + 1;\n    lastSeen.set(c, end);\n    best = Math.max(best, end - start + 1);\n  }\n  return best;\n}\n\n// Two pointers shrink a range from both ends; sliding window grows/shrinks a contiguous\n// range while maintaining a running condition. Both convert many O(n^2) brute forces to O(n).",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Arrays & strings — two-pointer and sliding-window patterns solve many problems efficiently\n// Two pointers: reverse a string in place (conceptually) in O(n).\nfunction reverse(str) {\n  const a = [...str]; let i = 0, j = a.length - 1;\n  while (i < j) { [a[i], a[j]] = [a[j], a[i]]; i++; j--; }\n  return a.join(\"\");\n}\n// Sliding window: longest substring without repeating characters, O(n).\nfunction longestUnique(s) {\n  const seen = new Map(); let start = 0, best = 0;\n  for (let end = 0; end < s.length; end++) {\n    if (seen.has(s[end]) && seen.get(s[end]) >= start) start = seen.get(s[end]) + 1;\n    seen.set(s[end], end);\n    best = Math.max(best, end - start + 1);\n  }\n  return best;\n}\nconsole.log(\"reverse('hello') ->\", reverse(\"hello\"));\nconsole.log(\"longestUnique('abcabcbb') ->\", longestUnique(\"abcabcbb\"));\nconsole.log(\"longestUnique('bbbbb') ->\", longestUnique(\"bbbbb\"));\nconsole.assert(reverse(\"hello\") === \"olleh\", \"reverse\");\nconsole.assert(longestUnique(\"abcabcbb\") === 3, \"abc = 3\");\nconsole.assert(longestUnique(\"bbbbb\") === 1, \"single char\");\nconsole.log(\"Two pointers and sliding windows turn many O(n^2) brute forces into O(n) solutions.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "reverse('hello') -> olleh\nlongestUnique('abcabcbb') -> 3\nlongestUnique('bbbbb') -> 1\nTwo pointers and sliding windows turn many O(n^2) brute forces into O(n) solutions.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

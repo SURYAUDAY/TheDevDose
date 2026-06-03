@@ -1,0 +1,69 @@
+{
+  "id": "p3-030",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 30,
+  "orderInPhase": 30,
+  "slug": "pagination-queries",
+  "title": "Pagination queries",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "pagination",
+    "queries"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A product listing shows 20 items per page."
+  },
+  "sections": {
+    "simple_en": "Pagination returns large result sets in smaller pages instead of all at once, protecting both the server and the client from huge payloads. The classic approach is offset-based: LIMIT sets the page size and OFFSET skips the previous pages' rows, often returned alongside a total count so the UI can show page numbers.\n\nOffset pagination is simple and supports jumping to any page, but it degrades for deep pages (the database must scan and discard all skipped rows) and can show duplicates or gaps if rows are inserted between requests. For large or fast-changing data, cursor pagination is preferred.",
+    "hinglish": "Pagination bade result sets ko ek saath dene ke bajaye chhote pages mein deta hai, server aur client dono ko huge payloads se bachata hai. Classic tarika offset-based hai: LIMIT page size set karta hai aur OFFSET pichhle pages ki rows skip karta hai, aksar total count ke saath taaki UI page numbers dikha sake.\n\nOffset pagination simple hai aur kisi bhi page par jump support karta hai, par deep pages ke liye degrade hota hai (DB saari skipped rows scan karke discard karta hai) aur requests ke beech rows insert hon to duplicates/gaps dikha sakta hai. Bade ya tezi se badalte data ke liye cursor pagination behtar hai.",
+    "keyPoints": [
+      "LIMIT sets page size; OFFSET skips earlier pages' rows.",
+      "Often paired with a COUNT(*) total for page-number UIs.",
+      "Simple and supports jumping to an arbitrary page.",
+      "Slow for deep pages: the DB scans & discards all skipped rows.",
+      "Can show duplicates/gaps if data changes between page loads."
+    ],
+    "real_world": "A product listing shows 20 items per page. Page 3 runs LIMIT 20 OFFSET 40 plus a total count so the UI renders '1 2 3 ... 12'. It works great for catalogs of moderate size where users browse by page number.",
+    "followups": [
+      {
+        "q": "Why does offset pagination slow down on deep pages?",
+        "a": "The database must read and discard every row up to the offset before returning the page, so OFFSET 100000 scans 100000+ rows even though it returns only a few."
+      },
+      {
+        "q": "How can offset pagination show duplicates or gaps?",
+        "a": "If rows are inserted or deleted between requests, the offsets shift, so an item can appear on two pages or be skipped entirely. Cursor pagination avoids this."
+      },
+      {
+        "q": "Should you always return a total count?",
+        "a": "Counts enable page-number UIs but add a second (sometimes expensive) query. For huge tables, consider approximate counts or cursor-based 'load more' UIs that don't need a total."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + node-postgres code. The Node-runnable demo below verifies LIMIT/OFFSET paging math so the output is verifiable here.",
+      "source": "// Pagination queries — offset-based pagination with a total count (Express + pg).\nconst express = require(\"express\");\nconst { Pool } = require(\"pg\");\nconst app = express();\nconst pool = new Pool();\n\napp.get(\"/products\", async (req, res) => {\n  const page = Math.max(1, Number(req.query.page) || 1);\n  const pageSize = Math.min(100, Number(req.query.pageSize) || 20);\n  const offset = (page - 1) * pageSize;\n\n  const [data, count] = await Promise.all([\n    pool.query(\"SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2\", [pageSize, offset]),\n    pool.query(\"SELECT COUNT(*) FROM products\"),\n  ]);\n\n  const total = Number(count.rows[0].count);\n  res.json({\n    page,\n    pageSize,\n    total,\n    totalPages: Math.ceil(total / pageSize),\n    data: data.rows,\n  });\n});\n\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Pagination queries — LIMIT / OFFSET to return pages\nconst rows = Array.from({ length: 23 }, (_, i) => ({ id: i + 1 }));\nfunction paginate(rows, page, pageSize){\n  const offset = (page - 1) * pageSize;          // OFFSET\n  const data = rows.slice(offset, offset + pageSize); // LIMIT\n  return { page, pageSize, total: rows.length, totalPages: Math.ceil(rows.length / pageSize), data: data.map(r => r.id) };\n}\nconsole.log(\"Page 1:\", JSON.stringify(paginate(rows, 1, 10)));\nconsole.log(\"Page 3:\", JSON.stringify(paginate(rows, 3, 10)));\nconst p3 = paginate(rows, 3, 10);\nconsole.assert(p3.data.length === 3 && p3.data[0] === 21, \"page 3 has the last 3 rows\");\nconsole.assert(p3.totalPages === 3, \"23 rows / 10 = 3 pages\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Page 1: {\"page\":1,\"pageSize\":10,\"total\":23,\"totalPages\":3,\"data\":[1,2,3,4,5,6,7,8,9,10]}\nPage 3: {\"page\":3,\"pageSize\":10,\"total\":23,\"totalPages\":3,\"data\":[21,22,23]}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

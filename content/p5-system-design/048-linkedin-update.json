@@ -1,0 +1,69 @@
+{
+  "id": "p5-048",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 48,
+  "orderInPhase": 48,
+  "slug": "linkedin-update",
+  "title": "LinkedIn update",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "linkedin",
+    "update"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "A developer changes their headline from 'Software Engineer' to 'Full-Stack + GenAI Engineer | React, Node, RAG' and completes every section."
+  },
+  "sections": {
+    "simple_en": "LinkedIn is a discovery tool: recruiters search it by keywords and favor complete profiles, so optimizing it directly affects how often you're found. The essentials are a keyword-rich headline (mirror the job titles you want, like 'Full-Stack + GenAI Engineer'), a clear About section, detailed experience framed by impact, relevant skills, and a professional photo.\n\nBecause recruiter search ranks on keywords and completeness, a profile missing key sections or with a vague headline gets surfaced far less. Treat the headline and About like a resume summary tuned for search, and use the same impact-driven, quantified bullets in your experience as you would on your resume.",
+    "hinglish": "LinkedIn ek discovery tool hai: recruiters ise keywords se search karte hain aur complete profiles ko favor karte hain, to use optimize karna directly affect karta hai ki aap kitni baar found hote ho. Essentials hain ek keyword-rich headline (un job titles ko mirror karo jo aap chahte ho, jaise 'Full-Stack + GenAI Engineer'), ek clear About section, impact se framed detailed experience, relevant skills, aur ek professional photo.\n\nKyunki recruiter search keywords aur completeness par rank karti hai, ek profile jisme key sections missing hon ya vague headline ho wo bahut kam surface hota hai. Headline aur About ko ek resume summary ki tarah treat karo jo search ke liye tuned ho, aur apne experience mein wahi impact-driven, quantified bullets use karo jo aap resume par karte.",
+    "keyPoints": [
+      "LinkedIn is a recruiter discovery tool ranked on keywords + completeness.",
+      "Keyword-rich headline mirroring the job titles you want.",
+      "Clear About, detailed impact-framed experience, relevant skills, photo.",
+      "Missing sections or a vague headline reduce discoverability.",
+      "Reuse resume-style impact bullets; tune for search."
+    ],
+    "real_world": "A developer changes their headline from 'Software Engineer' to 'Full-Stack + GenAI Engineer | React, Node, RAG' and completes every section. Recruiter searches for 'GenAI engineer' now surface their profile, and inbound messages noticeably increase — the same person, just more discoverable.",
+    "followups": [
+      {
+        "q": "Why optimize a LinkedIn headline?",
+        "a": "Recruiters search by keywords, and the headline is heavily weighted. A headline mirroring your target job titles and key skills makes you appear in more relevant searches — vague ones get filtered out."
+      },
+      {
+        "q": "What makes a LinkedIn profile recruiter-ready?",
+        "a": "Completeness (headline, About, detailed experience, skills, photo) and keyword relevance to your target roles, with impact-driven experience bullets. Recruiter search ranks on both keywords and how complete the profile is."
+      },
+      {
+        "q": "Should LinkedIn match your resume?",
+        "a": "Largely yes — consistent titles, dates, and impact-driven bullets. LinkedIn can be slightly broader/narrative, but it should reinforce the same story and keywords as your resume for both recruiters and search."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo scoring a LinkedIn profile for completeness and a keyword-rich headline, verifying what drives recruiter discoverability.",
+      "source": "# LinkedIn update — optimize for recruiter search and a strong first impression.\n\nREQUIRED_SECTIONS = [\"headline\", \"about\", \"experience\", \"skills\", \"photo\"]\n\ndef audit_profile(profile: dict) -> dict:\n    present = [s for s in REQUIRED_SECTIONS if profile.get(s)]\n    missing = [s for s in REQUIRED_SECTIONS if not profile.get(s)]\n    headline = (profile.get(\"headline\") or \"\").lower()\n    keyword_rich = any(k in headline for k in (\"engineer\", \"developer\", \"full-stack\", \"genai\"))\n    return {\"completeness\": round(100 * len(present) / len(REQUIRED_SECTIONS)),\n            \"missing\": missing, \"keyword_rich_headline\": keyword_rich}\n\n# Checklist:\n#   - Headline: role + key skills (recruiters search by keywords) — e.g. \"Full-Stack + GenAI Engineer\".\n#   - About: a concise story of what you build and your impact.\n#   - Experience: bullets with quantified results (mirror your resume).\n#   - Skills: list the technologies you want to be found for; get endorsements.\n#   - Photo + banner: professional and approachable.\n#   - Set \"Open to work\" and connect/engage to grow reach.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# LinkedIn update — check profile completeness for recruiter discoverability\nREQUIRED = [\"headline\", \"about\", \"experience\", \"skills\", \"photo\"]\ndef profile_score(profile):\n    present = [f for f in REQUIRED if profile.get(f)]\n    missing = [f for f in REQUIRED if not profile.get(f)]\n    keyword_rich = isinstance(profile.get(\"headline\"), str) and any(\n        kw in profile[\"headline\"].lower() for kw in (\"engineer\", \"developer\", \"genai\", \"full-stack\"))\n    return {\"score\": round(100 * len(present) / len(REQUIRED)), \"missing\": missing, \"keyword_rich_headline\": keyword_rich}\n\nprofile = {\"headline\": \"Full-Stack + GenAI Engineer\", \"about\": \"...\", \"experience\": \"...\",\n           \"skills\": [\"React\", \"Node\", \"RAG\"], \"photo\": True}\nr = profile_score(profile)\nprint(\"Completeness:\", r[\"score\"], \"% | missing:\", r[\"missing\"] or \"none\")\nprint(\"Keyword-rich headline?\", r[\"keyword_rich_headline\"])\nassert r[\"score\"] == 100 and r[\"keyword_rich_headline\"]\nweak = profile_score({\"about\": \"...\", \"skills\": [\"x\"]})\nassert weak[\"score\"] < 100 and \"headline\" in weak[\"missing\"]\nprint(\"\\nLinkedIn: a keyword-rich headline, a clear About, detailed experience with impact, relevant skills, and a photo\")\nprint(\"drive recruiter search ranking. Mirror the job titles you want; recruiters search by keywords and completeness.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Completeness: 100 % | missing: none\nKeyword-rich headline? True\n\nLinkedIn: a keyword-rich headline, a clear About, detailed experience with impact, relevant skills, and a photo\ndrive recruiter search ranking. Mirror the job titles you want; recruiters search by keywords and completeness.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

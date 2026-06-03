@@ -1,0 +1,65 @@
+{
+  "id": "p1b-014",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 14,
+  "orderInPhase": 14,
+  "slug": "union-types",
+  "title": "Union Types",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "union",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An API result typed as `{ status: \"ok\"; data: T } | { status: \"error\"; message: string }` lets the compiler force you to handle both cases — you can't read `…"
+  },
+  "sections": {
+    "simple_en": "A union type means a value can be one of several types, written with `|`: `string | number` accepts either. Unions model 'this OR that' — a value that could legitimately take different forms (e.g. an id that's a number or a string).\n\nBefore using a union value's type-specific members, you must NARROW it (with `typeof`, `instanceof`, property checks, or discriminant fields) so TypeScript knows which member you're dealing with. Discriminated unions (a shared literal `kind` field) are an especially powerful pattern.",
+    "hinglish": "Union type ka matlab ek value kai types me se ek ho sakti hai, `|` se likhte hain: `string | number` dono accept karta hai. Unions 'ye YA woh' model karte hain — ek value jo legitimately alag forms le sakti hai (jaise ek id jo number ya string ho).\nUnion value ke type-specific members use karne se pehle aapko use NARROW karna padta hai (`typeof`, `instanceof`, property checks, ya discriminant fields se) taaki TypeScript jaane aap kis member se deal kar rahe ho. Discriminated unions (ek shared literal `kind` field) ek khaaskar powerful pattern hai.",
+    "keyPoints": [
+      "`A | B` means the value is one of the listed types.",
+      "Models 'this OR that' alternatives.",
+      "Narrow before using type-specific members (typeof/instanceof/checks).",
+      "Discriminated unions use a shared literal field (e.g. `kind`) to narrow.",
+      "Common for ids, results, and shape variants."
+    ],
+    "real_world": "An API result typed as `{ status: \"ok\"; data: T } | { status: \"error\"; message: string }` lets the compiler force you to handle both cases — you can't read `.data` without first checking `status === \"ok\"`.",
+    "followups": [
+      {
+        "q": "Why must you narrow a union before using it?",
+        "a": "Because TypeScript only lets you access members common to all union members until you narrow. Narrowing (typeof, instanceof, discriminant checks) tells the compiler which specific type you have."
+      },
+      {
+        "q": "What is a discriminated union?",
+        "a": "A union where each member has a shared literal field (like `kind` or `status`). Checking that field narrows the union to a single member, enabling safe, exhaustive handling."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — union + narrowing, and a discriminated union.\n\nexport function formatId(id: string | number): string {\n  // narrow with typeof\n  return typeof id === \"number\" ? \"#\" + id : id.toUpperCase();\n}\n\ntype Result =\n  | { status: \"ok\"; data: number }\n  | { status: \"error\"; message: string };\n\nexport function handle(result: Result): string {\n  if (result.status === \"ok\") return \"value:\" + result.data; // narrowed\n  return \"error:\" + result.message;                          // narrowed\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { formatId, handle } from \"./solution\";\n\nconsole.log(formatId(42));    // #42\nconsole.log(formatId(\"abc\")); // ABC\nconsole.log(handle({ status: \"ok\", data: 10 }));            // value:10\nconsole.log(handle({ status: \"error\", message: \"bad\" }));  // error:bad\n\nconsole.assert(formatId(42) === \"#42\", \"number id\");\nconsole.assert(formatId(\"abc\") === \"ABC\", \"string id\");\nconsole.assert(handle({ status: \"ok\", data: 10 }) === \"value:10\", \"ok branch\");\nconsole.assert(handle({ status: \"error\", message: \"bad\" }) === \"error:bad\", \"error branch\");\nconsole.log(\"union-types assertions passed.\");",
+      "expectedOutput": "#42\nABC\nvalue:10\nerror:bad\nunion-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

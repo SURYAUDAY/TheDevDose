@@ -1,0 +1,69 @@
+{
+  "id": "p4-031",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 31,
+  "orderInPhase": 31,
+  "slug": "pinecone-basics",
+  "title": "Pinecone basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "pinecone",
+    "basics"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A SaaS product gives each customer their own namespace in a Pinecone index, upserts their document embeddings with metadata, and queries with metadata filter…"
+  },
+  "sections": {
+    "simple_en": "Pinecone is a fully-managed, cloud vector database. You create an index sized to your embedding dimensions, upsert vectors (each with an id and optional metadata), and query with a vector to get the top-k most similar items. It handles the ANN indexing, scaling, persistence, and availability so you run zero infrastructure.\n\nKey features include metadata filtering (restrict results by fields like topic or date), namespaces (isolate data within an index, e.g., per tenant), and hybrid search. Because it's managed and scales to billions of vectors, Pinecone is a popular choice for production RAG when you don't want to operate a vector store yourself.",
+    "hinglish": "Pinecone ek fully-managed, cloud vector database hai. Aap apne embedding dimensions ke hisaab se ek index banate ho, vectors upsert karte ho (har ek id aur optional metadata ke saath), aur ek vector se query karke top-k sabse similar items lete ho. Ye ANN indexing, scaling, persistence aur availability handle karta hai taaki aap zero infrastructure chalao.\n\nKey features: metadata filtering (results ko topic ya date jaise fields se restrict karna), namespaces (index ke andar data isolate karna, jaise per tenant), aur hybrid search. Kyunki ye managed hai aur billions vectors tak scale karta hai, Pinecone production RAG ke liye popular choice hai jab aap khud vector store operate nahi karna chahte.",
+    "keyPoints": [
+      "Fully-managed cloud vector DB — zero infrastructure to run.",
+      "Create an index, upsert (id, vector, metadata), query top-k.",
+      "Metadata filtering restricts results by fields (topic, date, ...).",
+      "Namespaces isolate data within an index (e.g., per tenant).",
+      "Scales to billions of vectors with managed ANN indexing."
+    ],
+    "real_world": "A SaaS product gives each customer their own namespace in a Pinecone index, upserts their document embeddings with metadata, and queries with metadata filters so search results never leak across tenants — all without the team running any database servers.",
+    "followups": [
+      {
+        "q": "What is Pinecone and when would you use it?",
+        "a": "A managed cloud vector database. Use it for production RAG/semantic search when you want scalable similarity search without operating your own vector store or ANN infrastructure."
+      },
+      {
+        "q": "What are namespaces used for?",
+        "a": "Partitioning data within an index — for example, isolating each tenant's vectors — so queries can be scoped and data stays separated within the same index."
+      },
+      {
+        "q": "How does metadata filtering help?",
+        "a": "It restricts similarity search to vectors matching given fields (e.g., topic='returns', lang='en'), combining semantic relevance with precise structured constraints."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real Pinecone + OpenAI code (needs API keys). The Python-runnable demo below simulates upsert, top-k query, and metadata filtering so the API model is verifiable here.",
+      "source": "# Pinecone basics — managed, serverless vector database.\nfrom pinecone import Pinecone, ServerlessSpec\nfrom openai import OpenAI\n\npc = Pinecone(api_key=\"YOUR_PINECONE_KEY\")\nclient = OpenAI()\n\n# Create an index (once): name, vector dimension, and similarity metric.\nif \"docs\" not in [i.name for i in pc.list_indexes()]:\n    pc.create_index(name=\"docs\", dimension=1536, metric=\"cosine\",\n                    spec=ServerlessSpec(cloud=\"aws\", region=\"us-east-1\"))\nindex = pc.Index(\"docs\")\n\ndef embed(text):\n    return client.embeddings.create(model=\"text-embedding-3-small\", input=text).data[0].embedding\n\n# Upsert vectors with ids and metadata.\nindex.upsert(vectors=[\n    {\"id\": \"doc1\", \"values\": embed(\"Returns within 30 days.\"), \"metadata\": {\"topic\": \"returns\"}},\n    {\"id\": \"doc2\", \"values\": embed(\"Free shipping over $50.\"), \"metadata\": {\"topic\": \"shipping\"}},\n])\n\n# Query top-k, optionally filtering on metadata.\nres = index.query(vector=embed(\"return policy\"), top_k=2,\n                  filter={\"topic\": \"returns\"}, include_metadata=True)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Pinecone basics — a managed vector DB: upsert vectors with metadata, then query top-k\nimport math\ndef cosine(a, b):\n    d=sum(x*y for x,y in zip(a,b)); na=math.sqrt(sum(x*x for x in a)); nb=math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\n\nclass FakePineconeIndex:\n    def __init__(self): self.store = {}\n    def upsert(self, vectors):\n        for vid, vec, meta in vectors:\n            self.store[vid] = {\"values\": vec, \"metadata\": meta}\n    def query(self, vector, top_k=2, filter=None):\n        items = self.store.items()\n        if filter:  # metadata filtering, like Pinecone supports\n            items = [(i, d) for i, d in items if all(d[\"metadata\"].get(k) == v for k, v in filter.items())]\n        scored = [{\"id\": i, \"score\": round(cosine(vector, d[\"values\"]), 3), \"metadata\": d[\"metadata\"]}\n                  for i, d in items]\n        scored.sort(key=lambda x: x[\"score\"], reverse=True)\n        return {\"matches\": scored[:top_k]}\n\nidx = FakePineconeIndex()\nidx.upsert([\n    (\"a\", [0.9, 0.1], {\"topic\": \"ml\"}),\n    (\"b\", [0.8, 0.2], {\"topic\": \"ml\"}),\n    (\"c\", [0.1, 0.9], {\"topic\": \"cooking\"}),\n])\nres = idx.query([0.85, 0.15], top_k=2, filter={\"topic\": \"ml\"})\nfor m in res[\"matches\"]:\n    print(m[\"id\"], m[\"score\"], m[\"metadata\"])\nassert all(m[\"metadata\"][\"topic\"] == \"ml\" for m in res[\"matches\"]), \"metadata filter applied\"\nassert res[\"matches\"][0][\"id\"] in (\"a\", \"b\")\nprint(\"Pinecone: managed, serverless vector DB. Core ops: upsert(id, vector, metadata) and query(top_k).\")\nprint(\"Supports metadata filtering, namespaces, and scales to billions of vectors with ANN indexes.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "a 0.998 {'topic': 'ml'}\nb 0.998 {'topic': 'ml'}\nPinecone: managed, serverless vector DB. Core ops: upsert(id, vector, metadata) and query(top_k).\nSupports metadata filtering, namespaces, and scales to billions of vectors with ANN indexes.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

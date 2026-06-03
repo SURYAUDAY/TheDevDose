@@ -1,0 +1,69 @@
+{
+  "id": "p3-062",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 62,
+  "orderInPhase": 62,
+  "slug": "background-jobs",
+  "title": "Background jobs",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "background",
+    "jobs"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "On signup, the API enqueues a 'send welcome email' job and instantly returns 201 to the user."
+  },
+  "sections": {
+    "simple_en": "Background jobs move slow or non-urgent work out of the request/response cycle so the API responds quickly. Instead of, say, generating a report or sending email during a request, you enqueue a job and return immediately; a separate worker process picks it up and runs it asynchronously.\n\nThis improves responsiveness, smooths load spikes, and adds resilience through automatic retries with backoff. In Node, BullMQ (backed by Redis) is a common choice, providing queues, concurrent workers, retries, scheduling, and failure handling. Typical uses: emails, image/video processing, report generation, and third-party API calls.",
+    "hinglish": "Background jobs slow ya non-urgent kaam ko request/response cycle se bahar le jaate hain taaki API jaldi respond kare. Request ke dauraan report generate karne ya email bhejne ke bajaye, aap ek job enqueue karke turant return karte ho; ek alag worker process use uthata hai aur asynchronously chalata hai.\n\nIsse responsiveness behtar hoti hai, load spikes smooth hote hain, aur automatic retries with backoff se resilience aati hai. Node mein BullMQ (Redis-backed) common choice hai, jo queues, concurrent workers, retries, scheduling aur failure handling deti hai. Typical uses: emails, image/video processing, report generation, third-party API calls.",
+    "keyPoints": [
+      "Move slow/non-urgent work out of the request cycle; respond fast.",
+      "Enqueue a job, return immediately; a worker processes it asynchronously.",
+      "Improves responsiveness, smooths spikes, adds retries/resilience.",
+      "BullMQ (Redis) provides queues, concurrency, retries, scheduling.",
+      "Common uses: email, media processing, reports, external API calls."
+    ],
+    "real_world": "On signup, the API enqueues a 'send welcome email' job and instantly returns 201 to the user. A worker sends the email moments later, retrying with exponential backoff if the email provider is briefly unavailable — the user never waits on email delivery.",
+    "followups": [
+      {
+        "q": "Why use background jobs instead of doing the work in the request?",
+        "a": "Slow tasks (email, media processing, reports) would make requests sluggish or time out. Offloading them keeps responses fast and lets work be retried and scaled independently."
+      },
+      {
+        "q": "How do background job systems add resilience?",
+        "a": "Jobs can be retried automatically with backoff on failure, persisted so they survive restarts, and dead-lettered after repeated failures — so transient errors don't lose work."
+      },
+      {
+        "q": "What backs a job queue like BullMQ?",
+        "a": "Redis — it stores the queue and job state. Producers add jobs; one or more worker processes consume them concurrently, separate from the web server."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real BullMQ code (Node + Redis). The Node-runnable demo below simulates enqueue plus worker processing so the flow is verifiable here.",
+      "source": "// Background jobs — offload slow work to a worker with BullMQ (Redis-backed).\nconst { Queue, Worker } = require(\"bullmq\");\nconst connection = { host: \"localhost\", port: 6379 };\n\n// Producer side (in your API): enqueue and return immediately.\nconst emailQueue = new Queue(\"emails\", { connection });\n\nasync function requestPasswordReset(userEmail) {\n  await emailQueue.add(\n    \"sendReset\",\n    { to: userEmail },\n    { attempts: 3, backoff: { type: \"exponential\", delay: 1000 } } // auto-retry\n  );\n  return { status: \"queued\" }; // respond fast; the email is sent out-of-band\n}\n\n// Worker side (separate process): consume and process jobs.\nnew Worker(\"emails\", async (job) => {\n  if (job.name === \"sendReset\") {\n    await sendEmail(job.data.to, \"Reset your password\");\n  }\n}, { connection });\n\nasync function sendEmail(to, subject) { /* call email provider */ }\nmodule.exports = { requestPasswordReset };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Background jobs — offload slow work; respond fast, process later\nfunction createJobSystem(){\n  const queue = []; const done = [];\n  return {\n    enqueue(type, payload){ const job = { id: queue.length + done.length + 1, type, payload, status: \"queued\" };\n      queue.push(job); return job.id; },\n    async processAll(handlers){\n      while (queue.length){\n        const job = queue.shift(); job.status = \"processing\";\n        await handlers[job.type](job.payload);\n        job.status = \"done\"; done.push(job);\n      }\n    },\n    done,\n  };\n}\n(async () => {\n  const jobs = createJobSystem();\n  // The request handler returns immediately after enqueuing:\n  const id = jobs.enqueue(\"sendEmail\", { to: \"asha@x.com\" });\n  jobs.enqueue(\"generateReport\", { userId: 1 });\n  console.log(\"Request returned fast; job id queued:\", id);\n  // A worker processes jobs out-of-band:\n  const log = [];\n  await jobs.processAll({\n    sendEmail: async (p) => log.push(`emailed ${p.to}`),\n    generateReport: async (p) => log.push(`report for user ${p.userId}`),\n  });\n  console.log(\"Worker processed:\", JSON.stringify(log));\n  console.assert(jobs.done.length === 2, \"both jobs completed by worker\");\n  console.log(\"Offload slow tasks (email, reports, image processing) to background workers.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Request returned fast; job id queued: 1\nWorker processed: [\"emailed asha@x.com\",\"report for user 1\"]\nOffload slow tasks (email, reports, image processing) to background workers.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

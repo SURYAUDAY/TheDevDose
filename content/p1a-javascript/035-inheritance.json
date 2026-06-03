@@ -1,0 +1,64 @@
+{
+  "id": "p1a-035",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 35,
+  "orderInPhase": 35,
+  "slug": "inheritance",
+  "title": "Inheritance",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "inheritance"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `Manager` extends `Employee`: it inherits `getSalary()` and adds `approveLeave()`."
+  },
+  "sections": {
+    "simple_en": "Inheritance lets one object or class reuse properties and methods of another. In JavaScript this is achieved through the prototype chain: a child's prototype is linked to a parent's prototype, so children get the parent's shared methods automatically.\n\nWith constructor functions you set this up manually (`Child.prototype = Object.create(Parent.prototype)` and call `Parent.call(this, ...)`). With ES6 classes you use `extends` and `super`, which does the same wiring under the hood far more cleanly.",
+    "hinglish": "Inheritance ek object ya class ko doosre ki properties aur methods reuse karne deta hai. JavaScript me ye prototype chain se hota hai: child ka prototype parent ke prototype se link hota hai, isliye children ko parent ke shared methods automatically mil jaate hain.\nConstructor functions me ye manually set karte ho (`Child.prototype = Object.create(Parent.prototype)` aur `Parent.call(this, ...)`). ES6 classes me `extends` aur `super` use hota hai, jo andar se yahi wiring bohot saaf tarike se karta hai.",
+    "keyPoints": [
+      "Inheritance reuses a parent's properties/methods in a child.",
+      "Implemented via the prototype chain (child's prototype → parent's prototype).",
+      "Constructor style: `Object.create(Parent.prototype)` + `Parent.call(this, ...)`.",
+      "Class style: `class Child extends Parent` + `super(...)`.",
+      "Children can override parent methods; `super.method()` calls the parent version."
+    ],
+    "real_world": "A `Manager` extends `Employee`: it inherits `getSalary()` and adds `approveLeave()`. You reuse all the common employee behaviour and only write what's special about managers.",
+    "followups": [
+      {
+        "q": "What does `super` do?",
+        "a": "In a constructor, `super(...)` calls the parent constructor (required before using `this`). In a method, `super.method()` calls the parent's version of an overridden method."
+      },
+      {
+        "q": "How is class inheritance related to prototypes?",
+        "a": "`extends` sets up the same prototype chain you'd build manually with constructor functions — the child's prototype is linked to the parent's prototype — so it's prototype-based inheritance with cleaner syntax."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Inheritance with ES6 classes (extends + super) and method override.\n\nclass Employee {\n  constructor(name, salary) { this.name = name; this.salary = salary; }\n  describe() { return this.name + \" earns \" + this.salary; }\n}\n\nclass Manager extends Employee {\n  constructor(name, salary, team) {\n    super(name, salary);   // call parent constructor\n    this.team = team;\n  }\n  // override + extend parent behaviour\n  describe() { return super.describe() + \", leads \" + this.team; }\n  approve() { return this.name + \" approved the request\"; }\n}\n\nmodule.exports = { Employee, Manager };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { Employee, Manager } = require(\"./solution\");\n\nconst e = new Employee(\"Asha\", 5000);\nconst m = new Manager(\"Ravi\", 9000, \"Platform\");\n\nconsole.log(e.describe());  // Asha earns 5000\nconsole.log(m.describe());  // Ravi earns 9000, leads Platform\nconsole.log(m.approve());   // Ravi approved the request\n\nconsole.assert(e.describe() === \"Asha earns 5000\", \"parent method\");\nconsole.assert(m.describe() === \"Ravi earns 9000, leads Platform\", \"override + super\");\nconsole.assert(m instanceof Employee, \"Manager is also an Employee\");\nconsole.assert(typeof m.approve === \"function\", \"child-only method\");\nconsole.log(\"inheritance assertions passed.\");",
+      "expectedOutput": "Asha earns 5000\nRavi earns 9000, leads Platform\nRavi approved the request\ninheritance assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

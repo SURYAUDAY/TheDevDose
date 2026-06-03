@@ -1,0 +1,69 @@
+{
+  "id": "p3-085",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 85,
+  "orderInPhase": 85,
+  "slug": "jenkins-basics",
+  "title": "Jenkins basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "jenkins",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A company running its own infrastructure uses Jenkins so builds happen inside their network with access to internal systems."
+  },
+  "sections": {
+    "simple_en": "Jenkins is a long-standing, open-source, self-hosted automation server for CI/CD. You define jobs that are triggered by SCM webhooks, timers (cron), or manually, and run on the Jenkins controller or distributed build 'agents'. A huge plugin ecosystem integrates Git, Docker, Kubernetes, Slack, and more.\n\nJenkins reports build status (SUCCESS/FAILURE/UNSTABLE) and can notify teams. Compared to hosted CI like GitHub Actions, Jenkins is highly flexible and runs on your own infrastructure — which also means you operate, secure, and maintain the server yourself. Modern Jenkins favors Pipeline jobs defined as code in a Jenkinsfile (next topic).",
+    "hinglish": "Jenkins ek purana, open-source, self-hosted automation server hai CI/CD ke liye. Aap jobs define karte ho jo SCM webhooks, timers (cron), ya manually trigger hote hain, aur Jenkins controller ya distributed build 'agents' par chalte hain. Ek bada plugin ecosystem Git, Docker, Kubernetes, Slack aur zyada integrate karta hai.\n\nJenkins build status (SUCCESS/FAILURE/UNSTABLE) report karta hai aur teams ko notify kar sakta hai. GitHub Actions jaise hosted CI ke comparison mein, Jenkins highly flexible hai aur aapke apne infrastructure par chalta hai — jiska matlab aap server khud operate, secure aur maintain karte ho. Modern Jenkins Pipeline jobs ko prefer karta hai jo Jenkinsfile mein code ke roop mein define hote hain (agla topic).",
+    "keyPoints": [
+      "Open-source, self-hosted CI/CD automation server.",
+      "Jobs triggered by SCM webhooks, cron, or manually; run on controller/agents.",
+      "Large plugin ecosystem (Git, Docker, Kubernetes, Slack, ...).",
+      "Reports build status and notifies; very flexible.",
+      "You operate/secure the server yourself (vs hosted CI like Actions)."
+    ],
+    "real_world": "A company running its own infrastructure uses Jenkins so builds happen inside their network with access to internal systems. A push triggers a job that checks out code, builds, tests, and deploys, with results posted to Slack — all on servers they fully control.",
+    "followups": [
+      {
+        "q": "How does Jenkins differ from GitHub Actions?",
+        "a": "Jenkins is self-hosted and highly customizable via plugins, but you run and maintain the server. GitHub Actions is hosted and integrated into GitHub with minimal setup, at the cost of less control over the environment."
+      },
+      {
+        "q": "What triggers a Jenkins job?",
+        "a": "SCM webhooks (on push/PR), timers (cron-like schedules), upstream jobs, or manual runs. Webhooks enable CI on every commit."
+      },
+      {
+        "q": "What are Jenkins agents?",
+        "a": "Worker machines (or containers) that run build jobs, distributing load away from the controller. This lets Jenkins scale builds and run them in different environments."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Jenkins scripted-pipeline configuration (not Node application code). The Node-runnable demo below simulates a job running build steps and reporting status so the flow is verifiable here.",
+      "source": "// Jenkins basics — a self-hosted automation server running jobs.\n// Jenkins jobs are triggered by SCM webhooks, timers (cron), or manually,\n// and run on the controller or distributed \"agents\". Plugins add capabilities\n// (Git, Docker, Kubernetes, Slack, etc.).\n\n// A \"freestyle\" job is configured in the UI; modern Jenkins prefers Pipeline\n// (code in a Jenkinsfile, see next topic). A minimal scripted example:\nconst scriptedPipeline = `\nnode {                                   // allocate an agent\n  stage('Checkout') { checkout scm }\n  stage('Build')    { sh 'npm ci' }\n  stage('Test')     { sh 'npm test' }\n  stage('Deploy')   { sh './deploy.sh' }\n}\n`;\n// Build status (SUCCESS/FAILURE/UNSTABLE) is reported back to the commit and\n// can notify Slack/email. Jenkins is flexible and self-hosted (vs hosted CI\n// like GitHub Actions), which means you also operate the server yourself.\nmodule.exports = scriptedPipeline;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Jenkins basics — a job triggered (e.g., by SCM), runs steps, reports build status\nfunction createJenkinsJob(name, steps){\n  const builds = [];\n  return {\n    trigger(trigger){\n      const build = { number: builds.length + 1, trigger, steps: [], result: \"SUCCESS\" };\n      for (const step of steps){\n        const ok = step.run();\n        build.steps.push({ name: step.name, ok });\n        if (!ok){ build.result = \"FAILURE\"; break; }     // stop on first failure\n      }\n      builds.push(build);\n      return build;\n    },\n    builds,\n  };\n}\nconst job = createJenkinsJob(\"my-app\", [\n  { name: \"Checkout\", run: () => true },\n  { name: \"Build\", run: () => true },\n  { name: \"Test\", run: () => true },\n  { name: \"Deploy\", run: () => true },\n]);\nconst b1 = job.trigger(\"SCM push\");\nconsole.log(`#${b1.number} (${b1.trigger}): ${b1.result}`);\nb1.steps.forEach(s => console.log(`   ${s.ok ? \"\\u2713\" : \"\\u2717\"} ${s.name}`));\nconsole.assert(b1.result === \"SUCCESS\" && b1.number === 1, \"build ran all steps successfully\");\nconsole.log(\"Jenkins: self-hosted automation server; jobs triggered by SCM/cron/webhook, with plugins.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "#1 (SCM push): SUCCESS\n   ✓ Checkout\n   ✓ Build\n   ✓ Test\n   ✓ Deploy\nJenkins: self-hosted automation server; jobs triggered by SCM/cron/webhook, with plugins.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

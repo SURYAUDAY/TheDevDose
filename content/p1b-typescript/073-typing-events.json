@@ -1,0 +1,65 @@
+{
+  "id": "p1b-073",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 73,
+  "orderInPhase": 73,
+  "slug": "typing-events",
+  "title": "Typing Events",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "typing",
+    "events"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A controlled input's `onChange={(e) => setValue(e.target.value)}` is type-safe because `e` is `ChangeEvent<HTMLInputElement>`, so `e.target.value` is known t…"
+  },
+  "sections": {
+    "simple_en": "React event handlers receive typed synthetic events. The correct types are generic over the element, e.g. `React.ChangeEvent<HTMLInputElement>` for an input's change, `React.MouseEvent<HTMLButtonElement>` for a button click, and `React.FormEvent<HTMLFormElement>` for form submit.\n\nTyping events gives you safe access to `event.target.value`, `event.preventDefault()`, and element-specific properties. If you write the handler inline in JSX, TypeScript often infers the event type from the element, so explicit types are mainly needed for standalone handler functions.",
+    "hinglish": "React event handlers typed synthetic events receive karte hain. Sahi types element par generic hote hain, jaise input ke change ke liye `React.ChangeEvent<HTMLInputElement>`, button click ke liye `React.MouseEvent<HTMLButtonElement>`, aur form submit ke liye `React.FormEvent<HTMLFormElement>`.\nEvents ko type karna `event.target.value`, `event.preventDefault()`, aur element-specific properties tak safe access deta hai. Agar aap handler ko JSX me inline likhte ho, to TypeScript aksar element se event type infer kar leta hai, isliye explicit types mainly standalone handler functions ke liye chahiye.",
+    "keyPoints": [
+      "Event types are generic over the element type.",
+      "Input change: `React.ChangeEvent<HTMLInputElement>`.",
+      "Button click: `React.MouseEvent<HTMLButtonElement>`.",
+      "Form submit: `React.FormEvent<HTMLFormElement>`.",
+      "Inline JSX handlers usually infer the event type automatically."
+    ],
+    "real_world": "A controlled input's `onChange={(e) => setValue(e.target.value)}` is type-safe because `e` is `ChangeEvent<HTMLInputElement>`, so `e.target.value` is known to be a string.",
+    "followups": [
+      {
+        "q": "What type is a React input change event?",
+        "a": "`React.ChangeEvent<HTMLInputElement>`, which makes `event.target.value` correctly typed as a string and gives access to input-specific properties."
+      },
+      {
+        "q": "Do you always need to annotate event types?",
+        "a": "No — for handlers written inline in JSX, TypeScript usually infers the event type from the element. Explicit annotations are mainly needed for standalone handler functions."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// React usage (in a .tsx file):\n//\n//   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {\n//     setValue(e.target.value);\n//   }\n//   <input onChange={handleChange} />\n//\n// Runnable stand-in: a minimal change-event shape + a typed handler.\n\nexport interface ChangeEvent<T extends { value: string }> {\n  target: T;\n}\n\nexport function handleChange(\n  e: ChangeEvent<{ value: string }>,\n  setValue: (v: string) => void\n): void {\n  setValue(e.target.value); // safely typed as string\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { handleChange } from \"./solution\";\n\nlet value = \"\";\nhandleChange({ target: { value: \"hello\" } }, (v) => { value = v; });\nconsole.log(value); // hello\n\nconsole.assert(value === \"hello\", \"typed event handler read target.value\");\nconsole.log(\"typing-events assertions passed.\");",
+      "expectedOutput": "hello\ntyping-events assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1b-041",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 41,
+  "orderInPhase": 41,
+  "slug": "generic-interfaces",
+  "title": "Generic Interfaces",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "generic",
+    "interfaces"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An `ApiResponse<T>` interface (`{ status: number; data: T }`) is reused for every endpoint — `ApiResponse<User>`, `ApiResponse<Order[]>` — so the `data` fiel…"
+  },
+  "sections": {
+    "simple_en": "A generic interface takes type parameters so it can describe shapes that vary by type — like a container, response wrapper, or key-value store. You write `interface Box<T> { value: T }` and then use `Box<string>`, `Box<number>`, etc.\n\nGeneric interfaces are ideal for reusable data structures and API contracts: an `ApiResponse<T>` can wrap any payload type while keeping `data: T` precise. The same idea applies to generic type aliases and generic classes.",
+    "hinglish": "Generic interface type parameters leta hai taaki woh aise shapes describe kar sake jo type se vary karein — jaise container, response wrapper, ya key-value store. Aap `interface Box<T> { value: T }` likhte ho phir `Box<string>`, `Box<number>` use karte ho.\nGeneric interfaces reusable data structures aur API contracts ke liye ideal hain: ek `ApiResponse<T>` kisi bhi payload type ko wrap kar sakta hai jabki `data: T` precise rahe. Yahi idea generic type aliases aur generic classes par bhi lagta hai.",
+    "keyPoints": [
+      "Interfaces can take type parameters: `interface Box<T> { value: T }`.",
+      "Use as `Box<string>`, `Box<User>`, etc.",
+      "Perfect for containers, wrappers, and API response types.",
+      "Keeps payload types precise across reuse.",
+      "Same idea works for generic type aliases and classes."
+    ],
+    "real_world": "An `ApiResponse<T>` interface (`{ status: number; data: T }`) is reused for every endpoint — `ApiResponse<User>`, `ApiResponse<Order[]>` — so the `data` field is always correctly typed for each call.",
+    "followups": [
+      {
+        "q": "What's a common use for a generic interface?",
+        "a": "Reusable containers and API wrappers — e.g. `ApiResponse<T>` or `Box<T>` — where the structure is fixed but the contained data type varies per use."
+      },
+      {
+        "q": "Can a generic interface have multiple type parameters?",
+        "a": "Yes — e.g. `interface KeyValue<K, V> { key: K; value: V }`. You can declare as many as you need, and they can have constraints and defaults."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — a generic interface used with different types.\n\nexport interface ApiResponse<T> {\n  status: number;\n  data: T;\n}\n\nexport interface KeyValue<K, V> {\n  key: K;\n  value: V;\n}\n\nexport function ok<T>(data: T): ApiResponse<T> {\n  return { status: 200, data };\n}\n\nexport function entry<K, V>(key: K, value: V): KeyValue<K, V> {\n  return { key, value };\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { ok, entry, ApiResponse } from \"./solution\";\n\nconst userResp: ApiResponse<{ name: string }> = ok({ name: \"Asha\" });\nconsole.log(userResp);            // { status: 200, data: { name: 'Asha' } }\nconsole.log(ok([1, 2, 3]).data);  // [1,2,3]\nconsole.log(entry(\"age\", 30));    // { key: 'age', value: 30 }\n\nconsole.assert(userResp.status === 200 && userResp.data.name === \"Asha\", \"generic ApiResponse\");\nconsole.assert(JSON.stringify(ok([1, 2]).data) === \"[1,2]\", \"wraps array payload\");\nconsole.assert(entry(\"age\", 30).value === 30, \"generic KeyValue\");\nconsole.log(\"generic-interfaces assertions passed.\");",
+      "expectedOutput": "{ status: 200, data: { name: 'Asha' } }\n[ 1, 2, 3 ]\n{ key: 'age', value: 30 }\ngeneric-interfaces assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "p1a-037",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 37,
+  "orderInPhase": 37,
+  "slug": "getters-setters",
+  "title": "Getters & Setters",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "getters",
+    "setters"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `temperature` object exposing `.celsius` and `.fahrenheit` as getters/setters: setting one automatically keeps the other consistent, so the rest of the app…"
+  },
+  "sections": {
+    "simple_en": "Getters and setters are special methods that let you access and assign a property using normal property syntax while actually running code behind the scenes. A getter (`get x()`) runs when you read `obj.x`; a setter (`set x(value)`) runs when you assign `obj.x = value`.\n\nThey're useful for computed properties, validation on assignment, and keeping a clean API while hiding internal representation. The caller writes `obj.fullName` instead of `obj.getFullName()`, but you still control the logic.",
+    "hinglish": "Getters aur setters special methods hain jo aapko normal property syntax se property access/assign karne dete hain jabki andar code chalta hai. Getter (`get x()`) tab chalta hai jab aap `obj.x` padhte ho; setter (`set x(value)`) tab jab `obj.x = value` assign karte ho.\nYe computed properties, assignment par validation, aur internal representation chhupa kar saaf API rakhne ke liye useful hain. Caller `obj.getFullName()` ki jagah `obj.fullName` likhta hai, par logic aapke control me rehta hai.",
+    "keyPoints": [
+      "`get prop()` runs on read; `set prop(v)` runs on assignment.",
+      "Accessed with normal property syntax (no parentheses).",
+      "Great for computed/derived values and validation on set.",
+      "Often paired with a backing private field (`#value`).",
+      "A getter without a setter makes a read-only property."
+    ],
+    "real_world": "A `temperature` object exposing `.celsius` and `.fahrenheit` as getters/setters: setting one automatically keeps the other consistent, so the rest of the app reads either unit without conversion code scattered everywhere.",
+    "followups": [
+      {
+        "q": "How do you call a getter?",
+        "a": "With normal property-access syntax and no parentheses: `obj.fullName`. The getter function runs automatically and returns the value."
+      },
+      {
+        "q": "How do you create a read-only property?",
+        "a": "Define a getter without a corresponding setter. Reads work; assignments are ignored in sloppy mode or throw in strict mode."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Getter/setter with validation and a computed property.\n\nclass Temperature {\n  #c = 0;\n  get celsius() { return this.#c; }\n  set celsius(value) {\n    if (typeof value !== \"number\") throw new Error(\"number required\");\n    this.#c = value;\n  }\n  get fahrenheit() { return this.#c * 9 / 5 + 32; }   // computed\n  set fahrenheit(f) { this.#c = (f - 32) * 5 / 9; }\n}\n\nmodule.exports = { Temperature };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { Temperature } = require(\"./solution\");\n\nconst t = new Temperature();\nt.celsius = 25;\nconsole.log(\"F:\", t.fahrenheit); // 77\nt.fahrenheit = 212;\nconsole.log(\"C:\", t.celsius);    // 100\n\nconsole.assert(t.celsius === 100, \"fahrenheit setter updates celsius\");\nconsole.assert(new Temperature().fahrenheit === 32, \"0C = 32F via getter\");\nlet threw = false; try { t.celsius = \"hot\"; } catch { threw = true; }\nconsole.assert(threw, \"setter validates type\");\nconsole.log(\"getter/setter assertions passed.\");",
+      "expectedOutput": "F: 77\nC: 100\ngetter/setter assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

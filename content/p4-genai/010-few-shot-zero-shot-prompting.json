@@ -1,0 +1,70 @@
+{
+  "id": "p4-010",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 10,
+  "orderInPhase": 10,
+  "slug": "few-shot-zero-shot-prompting",
+  "title": "Few-shot / zero-shot prompting",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "few-shot",
+    "zero-shot",
+    "prompting"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "To classify support tickets into exact categories, a team includes five labeled example tickets in the prompt (few-shot)."
+  },
+  "sections": {
+    "simple_en": "Zero-shot prompting asks the model to perform a task using instructions alone, with no examples. Few-shot prompting includes a handful of input/output examples in the prompt to demonstrate exactly what you want — the format, the style, the decision boundary — before giving the real input.\n\nExamples 'teach' the task in-context (no retraining), which improves accuracy and enforces consistent output format, especially for nuanced or format-sensitive tasks. The trade-off is that examples consume tokens. Zero-shot is simpler and cheaper; few-shot is more reliable when the task is tricky or the output must follow a precise pattern.",
+    "hinglish": "Zero-shot prompting model ko sirf instructions se task perform karne ko kehta hai, bina examples ke. Few-shot prompting prompt mein kuch input/output examples include karta hai taaki exactly dikhaye ki aap kya chahte ho — format, style, decision boundary — real input dene se pehle.\n\nExamples task ko in-context 'sikhaate' hain (bina retraining), jo accuracy improve karta hai aur consistent output format enforce karta hai, khaaskar nuanced ya format-sensitive tasks ke liye. Trade-off ye hai ki examples tokens consume karte hain. Zero-shot simpler aur cheaper hai; few-shot zyada reliable hai jab task tricky ho ya output ek precise pattern follow kare.",
+    "keyPoints": [
+      "Zero-shot: instructions only, no examples.",
+      "Few-shot: include a few input/output examples to demonstrate the task.",
+      "Examples teach format/style/decision boundary in-context (no retraining).",
+      "Few-shot improves accuracy and output consistency on tricky tasks.",
+      "Trade-off: examples cost tokens; zero-shot is simpler and cheaper."
+    ],
+    "real_world": "To classify support tickets into exact categories, a team includes five labeled example tickets in the prompt (few-shot). The model then mirrors the pattern precisely — far more consistent than a zero-shot 'classify this ticket' that sometimes invents its own categories.",
+    "followups": [
+      {
+        "q": "When should you use few-shot over zero-shot?",
+        "a": "When the task is nuanced, the output must follow a specific format, or zero-shot results are inconsistent. Examples demonstrate exactly what you want and improve reliability — at the cost of extra tokens."
+      },
+      {
+        "q": "Does few-shot retrain the model?",
+        "a": "No. It's in-context learning — the examples only guide the model within that single prompt. The weights don't change; it's not fine-tuning."
+      },
+      {
+        "q": "How many examples should few-shot use?",
+        "a": "Usually a small handful (often 2–5) chosen to be representative and diverse. More can help but cost tokens and eventually hit diminishing returns or context limits."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI zero-shot and few-shot code (needs an API key). The Python-runnable demo below shows few-shot examples improving classification accuracy, verifiable here.",
+      "source": "# Few-shot vs zero-shot prompting — include examples to teach the task/format.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\n# ZERO-SHOT: instructions only.\ndef zero_shot(review: str) -> str:\n    return client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        messages=[{\"role\": \"user\", \"content\": f\"Classify the sentiment (positive/negative): {review}\"}],\n    ).choices[0].message.content\n\n# FEW-SHOT: demonstrate the exact input/output pattern with examples.\ndef few_shot(review: str) -> str:\n    messages = [\n        {\"role\": \"system\", \"content\": \"Classify sentiment as exactly 'positive' or 'negative'.\"},\n        {\"role\": \"user\", \"content\": \"Review: The food was amazing!\"},\n        {\"role\": \"assistant\", \"content\": \"positive\"},\n        {\"role\": \"user\", \"content\": \"Review: Terrible service, never again.\"},\n        {\"role\": \"assistant\", \"content\": \"negative\"},\n        {\"role\": \"user\", \"content\": f\"Review: {review}\"},   # the real query\n    ]\n    return client.chat.completions.create(model=\"gpt-4o-mini\", messages=messages).choices[0].message.content\n\n# Few-shot improves accuracy and enforces output format; zero-shot is simpler and\n# uses fewer tokens. Use few-shot for tricky or format-sensitive tasks.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Few-shot vs zero-shot — examples in the prompt steer the model's behavior\n# Task: classify sentiment. Zero-shot uses rules only; few-shot learns the pattern from examples.\ndef zero_shot(text):\n    # No examples: a naive keyword guess (often misses nuance)\n    return \"positive\" if \"good\" in text else \"negative\"\n\ndef few_shot(text, examples):\n    # Examples teach the mapping; we mimic \"pattern matching\" to nearest example\n    def feats(t): return set(t.lower().split())\n    best_label, best_overlap = \"negative\", -1\n    for ex_text, ex_label in examples:\n        overlap = len(feats(text) & feats(ex_text))\n        if overlap > best_overlap:\n            best_overlap, best_label = overlap, ex_label\n    return best_label\n\nexamples = [(\"the movie was fantastic and fun\", \"positive\"),\n            (\"a boring and dull experience\", \"negative\"),\n            (\"absolutely loved every minute\", \"positive\")]\ntest = \"what a fun and fantastic ride\"\nprint(\"Zero-shot:\", zero_shot(test), \"(no 'good' keyword -> wrong)\")\nprint(\"Few-shot: \", few_shot(test, examples), \"(matched the positive examples)\")\nassert zero_shot(test) == \"negative\"        # naive rule fails\nassert few_shot(test, examples) == \"positive\"  # examples fix it\nprint(\"Zero-shot: instructions only. Few-shot: include input/output examples to demonstrate the task.\")\nprint(\"Few-shot improves accuracy on tricky/format-sensitive tasks at the cost of more tokens.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Zero-shot: negative (no 'good' keyword -> wrong)\nFew-shot:  positive (matched the positive examples)\nZero-shot: instructions only. Few-shot: include input/output examples to demonstrate the task.\nFew-shot improves accuracy on tricky/format-sensitive tasks at the cost of more tokens.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

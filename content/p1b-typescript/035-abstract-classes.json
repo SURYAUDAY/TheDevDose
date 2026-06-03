@@ -1,0 +1,65 @@
+{
+  "id": "p1b-035",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 35,
+  "orderInPhase": 35,
+  "slug": "abstract-classes",
+  "title": "Abstract Classes",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "abstract",
+    "classes"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `Shape` abstract class implements a shared `describe()` but declares `abstract area()`, forcing `Circle` and `Square` subclasses to provide their own area…"
+  },
+  "sections": {
+    "simple_en": "An abstract class is a base class that cannot be instantiated directly — it's meant to be extended. It can define implemented methods (shared behaviour) AND abstract methods, which have no body and must be implemented by every concrete subclass.\n\nAbstract classes model a common template with mandatory hooks: the base provides shared logic and declares the pieces subclasses must fill in. This is the OOP 'template method' pattern, giving you partial implementation plus enforced contracts.",
+    "hinglish": "Abstract class ek base class hai jise directly instantiate nahi kar sakte — ye extend karne ke liye hai. Ye implemented methods (shared behaviour) AUR abstract methods, jinki koi body nahi hoti aur jo har concrete subclass me implement karne padte hain, dono define kar sakti hai.\nAbstract classes ek common template model karti hain mandatory hooks ke saath: base shared logic deta hai aur woh pieces declare karta hai jo subclasses ko bharne hain. Ye OOP ka 'template method' pattern hai, jo partial implementation plus enforced contracts deta hai.",
+    "keyPoints": [
+      "Cannot be instantiated directly — only extended.",
+      "Can mix implemented methods with `abstract` (body-less) methods.",
+      "Subclasses MUST implement all abstract members.",
+      "Models a shared template with mandatory hooks (template method pattern).",
+      "Abstract methods/properties can't be `private`."
+    ],
+    "real_world": "A `Shape` abstract class implements a shared `describe()` but declares `abstract area()`, forcing `Circle` and `Square` subclasses to provide their own area while reusing the common description logic.",
+    "followups": [
+      {
+        "q": "Can you instantiate an abstract class?",
+        "a": "No. `new` on an abstract class is a compile error. You instantiate a concrete subclass that implements all abstract members."
+      },
+      {
+        "q": "What's the point of an abstract method?",
+        "a": "It declares a required method with no implementation, forcing every concrete subclass to provide one — while the abstract base can still share other implemented logic that calls it."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — abstract base with an abstract method.\n\nexport abstract class Shape {\n  abstract area(): number;          // must be implemented by subclasses\n  describe(): string {              // shared, implemented method\n    return \"Area is \" + this.area().toFixed(2);\n  }\n}\n\nexport class Circle extends Shape {\n  constructor(private r: number) { super(); }\n  area(): number { return Math.PI * this.r * this.r; }\n}\n\nexport class Square extends Shape {\n  constructor(private s: number) { super(); }\n  area(): number { return this.s * this.s; }\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { Circle, Square } from \"./solution\";\n\nconst c = new Circle(2);\nconst s = new Square(3);\nconsole.log(c.describe()); // Area is 12.57\nconsole.log(s.describe()); // Area is 9.00\n// new Shape(); // compile error: cannot instantiate an abstract class\n\nconsole.assert(Math.round(c.area()) === 13, \"circle area\");\nconsole.assert(s.area() === 9, \"square area\");\nconsole.assert(s.describe() === \"Area is 9.00\", \"shared describe uses subclass area\");\nconsole.log(\"abstract-classes assertions passed.\");",
+      "expectedOutput": "Area is 12.57\nArea is 9.00\nabstract-classes assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p4-008",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 8,
+  "orderInPhase": 8,
+  "slug": "system-prompts",
+  "title": "System prompts",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "system",
+    "prompts"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A customer-support bot's system prompt says: 'You are Acme's support agent."
+  },
+  "sections": {
+    "simple_en": "A system prompt is a special, high-priority instruction — usually the first message — that sets the assistant's role, persona, rules, tone, and constraints for the entire conversation. It defines who the assistant is and how it should behave before the user ever speaks.\n\nUnlike a single user turn, the system prompt shapes every response: output format, safety boundaries, domain focus, and style. It's where you encode behavior like 'always answer in JSON', 'decline off-topic questions', or 'act as a senior Python tutor'. A well-crafted system prompt is one of the most powerful levers for controlling an LLM app.",
+    "hinglish": "System prompt ek special, high-priority instruction hai — aksar pehla message — jo poori conversation ke liye assistant ka role, persona, rules, tone aur constraints set karta hai. Ye define karta hai assistant kaun hai aur kaise behave kare, user ke bolne se pehle hi.\n\nEk single user turn ke ulta, system prompt har response ko shape karta hai: output format, safety boundaries, domain focus, aur style. Yahan aap behavior encode karte ho jaise 'hamesha JSON mein answer do', 'off-topic questions decline karo', ya 'senior Python tutor ki tarah act karo'. Ek achha system prompt LLM app control karne ke sabse powerful levers mein se ek hai.",
+    "keyPoints": [
+      "A high-priority first instruction setting role, rules, tone, and constraints.",
+      "Applies to the whole conversation, not just one turn.",
+      "Controls persona, output format, safety boundaries, and domain focus.",
+      "Encodes behavior like 'answer in JSON' or 'decline off-topic questions'.",
+      "One of the strongest levers for shaping LLM app behavior."
+    ],
+    "real_world": "A customer-support bot's system prompt says: 'You are Acme's support agent. Be polite and concise, answer only from the help docs, never discuss competitors, and escalate billing issues.' Every user message is then handled within those rules — set once, applied throughout.",
+    "followups": [
+      {
+        "q": "How is a system prompt different from a user prompt?",
+        "a": "The system prompt is a high-priority instruction that defines the assistant's behavior for the entire conversation; the user prompt is a single request from the human. The system prompt frames how all user prompts are answered."
+      },
+      {
+        "q": "What goes in a good system prompt?",
+        "a": "Role/persona, scope and domain, output format rules, tone, safety/guardrail constraints, and how to handle edge cases (e.g., when to decline or escalate)."
+      },
+      {
+        "q": "Can users override the system prompt?",
+        "a": "Models generally treat system instructions as higher priority, but determined prompt-injection attempts can sometimes conflict with them — which is why guardrails and careful design matter for untrusted input."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI system-prompt code (needs an API key). The Python-runnable demo below shows how a system prompt constrains the assistant's persona and format, verifiable here.",
+      "source": "# System prompts — define persona, rules, and constraints for the whole conversation.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\nSYSTEM_PROMPT = \"\"\"You are CodeHelper, a senior Python tutor.\nRules:\n- Always give a short explanation, then a runnable code example.\n- Prefer standard library solutions.\n- If a question is unsafe or off-topic, politely decline.\n- Keep answers under 150 words.\"\"\"\n\ndef ask(user_message: str) -> str:\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        messages=[\n            {\"role\": \"system\", \"content\": SYSTEM_PROMPT},   # sets behavior for every turn\n            {\"role\": \"user\", \"content\": user_message},\n        ],\n    )\n    return response.choices[0].message.content\n\n# The system prompt is the highest-level instruction: it shapes tone, role, output\n# format, and guardrails consistently across the entire conversation.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# System prompts — set the assistant's role, rules, and persona for the whole chat\ndef build_messages(system, user):\n    return [{\"role\": \"system\", \"content\": system}, {\"role\": \"user\", \"content\": user}]\n\ndef toy_respond(messages):\n    system = next(m[\"content\"] for m in messages if m[\"role\"] == \"system\")\n    user = next(m[\"content\"] for m in messages if m[\"role\"] == \"user\")\n    # The system prompt constrains behavior: persona + format rules\n    persona = \"Pirate\" if \"pirate\" in system.lower() else \"Assistant\"\n    fmt = \"ONE sentence\" if \"one sentence\" in system.lower() else \"normal\"\n    return f\"[{persona}, {fmt}] answering: {user}\"\n\nmsgs = build_messages(\"You are a helpful pirate. Always answer in ONE sentence.\", \"What is Python?\")\nprint(\"Messages sent:\", msgs)\nprint(\"Response:\", toy_respond(msgs))\nassert toy_respond(msgs).startswith(\"[Pirate, ONE sentence]\")\nprint(\"The system prompt is the first message; it shapes tone, role, constraints, and safety rules.\")\nprint(\"It applies to the whole conversation, unlike a single user turn.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Messages sent: [{'role': 'system', 'content': 'You are a helpful pirate. Always answer in ONE sentence.'}, {'role': 'user', 'content': 'What is Python?'}]\nResponse: [Pirate, ONE sentence] answering: What is Python?\nThe system prompt is the first message; it shapes tone, role, constraints, and safety rules.\nIt applies to the whole conversation, unlike a single user turn.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p3-015",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 15,
+  "orderInPhase": 15,
+  "slug": "graphql-vs-rest",
+  "title": "GraphQL vs REST",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "graphql",
+    "rest"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A product detail screen needs product info plus reviews plus seller details."
+  },
+  "sections": {
+    "simple_en": "REST and GraphQL are two API styles with different trade-offs. REST uses multiple endpoints with fixed response shapes; it's simple, leverages HTTP caching well, and is ubiquitous — but can over-fetch (return unneeded fields) or under-fetch (require several requests). GraphQL uses one endpoint where clients select exactly the fields and relations they need in a single request.\n\nGraphQL shines for complex, nested data and varied clients (mobile vs web) by eliminating over/under-fetching and round-trips. REST shines for simplicity, straightforward HTTP caching, and when fixed shapes are fine. Neither is universally better — the choice depends on the data and clients.",
+    "hinglish": "REST aur GraphQL do API styles hain alag trade-offs ke saath. REST multiple endpoints aur fixed response shapes use karta hai; simple hai, HTTP caching achhi karta hai, ubiquitous hai — par over-fetch (extra fields) ya under-fetch (kai requests) kar sakta hai. GraphQL ek endpoint deta hai jahan client ek request mein exact fields/relations select karta hai.\n\nGraphQL complex, nested data aur alag-alag clients (mobile vs web) ke liye accha hai — over/under-fetching aur round-trips khatam karke. REST simplicity, seedhi HTTP caching aur fixed shapes theek hon to accha hai. Koi universally behtar nahi — choice data aur clients par depend karti hai.",
+    "keyPoints": [
+      "REST: many endpoints, fixed shapes, simple, great HTTP caching; can over/under-fetch.",
+      "GraphQL: one endpoint, client-selected fields; avoids over/under-fetching.",
+      "GraphQL reduces round-trips for nested/related data and varied clients.",
+      "REST caching is simpler (per-URL); GraphQL caching needs more work.",
+      "Choose by data complexity, client variety, and caching needs — not hype."
+    ],
+    "real_world": "A product detail screen needs product info plus reviews plus seller details. REST would hit three endpoints; GraphQL gets it all in one tailored query. But a simple public API serving static, fixed resources may be simpler and cache better as plain REST.",
+    "followups": [
+      {
+        "q": "Where does REST still win over GraphQL?",
+        "a": "Simplicity, mature tooling, and straightforward HTTP caching per URL. For fixed, simple resources, REST is often easier to build, cache, and operate."
+      },
+      {
+        "q": "What's a downside of GraphQL?",
+        "a": "More setup and complexity, harder HTTP caching, and risks like expensive nested queries (needs depth limiting/cost analysis) and the N+1 problem (mitigated with DataLoader)."
+      },
+      {
+        "q": "Can you use both?",
+        "a": "Yes — many systems expose REST for simple/public resources and GraphQL for complex client-driven data, even within the same product."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": false,
+      "note": "Illustrative REST and GraphQL code side by side. The Node-runnable demo below compares payload sizes to show over-fetching.",
+      "source": "// GraphQL vs REST — the same data, two styles.\n\n// REST: multiple endpoints, fixed response shapes (often over-fetch).\n// GET /users/1            -> full user object\n// GET /users/1/posts      -> separate request for posts\nconst express = require(\"express\");\nconst app = express();\napp.get(\"/users/:id\", (req, res) =>\n  res.json({ id: req.params.id, name: \"Asha\", email: \"a@x.com\", bio: \"...\", avatar: \"...\" })\n);\napp.get(\"/users/:id/posts\", (req, res) => res.json([{ id: 1, title: \"Hi\" }]));\n\n// GraphQL: ONE endpoint, the client picks fields and related data in one query:\n//   query {\n//     user(id: \"1\") {\n//       name\n//       posts { title }     # fetched in the SAME round-trip\n//     }\n//   }\n// Trade-offs: REST is simpler & caches well over HTTP; GraphQL avoids\n// over/under-fetching and reduces round-trips, at the cost of more setup.\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// GraphQL vs REST — over-fetching (REST) vs precise selection (GraphQL)\nconst fullUser = { id: 1, name: \"Asha\", email: \"a@x.com\", bio: \"x\".repeat(200), avatar: \"url\", settings: { theme: \"dark\" } };\nfunction restEndpoint(){ return fullUser; }                              // returns everything\nfunction graphqlQuery(fields){ return Object.fromEntries(fields.map(f => [f, fullUser[f]])); } // only asked fields\n\nconst restPayload = restEndpoint();\nconst gqlPayload = graphqlQuery([\"id\", \"name\"]);    // a list view only needs these\nconst size = (o) => JSON.stringify(o).length;\nconsole.log(\"REST payload bytes:   \", size(restPayload));\nconsole.log(\"GraphQL payload bytes:\", size(gqlPayload));\nconsole.log(\"Saved:\", size(restPayload) - size(gqlPayload), \"bytes (no over-fetching)\");\nconsole.assert(size(gqlPayload) < size(restPayload), \"GraphQL avoids over-fetching\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "REST payload bytes:    292\nGraphQL payload bytes: 22\nSaved: 270 bytes (no over-fetching)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

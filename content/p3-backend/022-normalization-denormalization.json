@@ -1,0 +1,69 @@
+{
+  "id": "p3-022",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 22,
+  "orderInPhase": 22,
+  "slug": "normalization-denormalization",
+  "title": "Normalization & denormalization",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "normalization",
+    "denormalization"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An e-commerce DB normalizes customers and orders so updating a customer's city changes one row."
+  },
+  "sections": {
+    "simple_en": "Normalization organizes data to eliminate redundancy and update anomalies by splitting it into related tables, each storing a fact once (guided by normal forms like 1NF, 2NF, 3NF). For example, customer details live in a customers table, and orders reference them by foreign key instead of repeating the customer's name and city in every row.\n\nDenormalization is the deliberate reintroduction of redundancy to speed up reads — fewer joins, precomputed aggregates — at the cost of having to keep duplicated data in sync on writes. Real systems balance the two: normalize for integrity, denormalize selectively for performance.",
+    "hinglish": "Normalization data ko aise organize karta hai ki redundancy aur update anomalies khatam ho — data ko related tables mein split karke, har fact ek baar store hota hai (1NF, 2NF, 3NF normal forms ke hisaab se). Jaise customer details customers table mein, aur orders foreign key se unhe reference karte hain, har row mein naam/city repeat nahi karte.\n\nDenormalization jaan-bujh kar redundancy wapas laata hai reads tez karne ke liye — kam joins, precomputed aggregates — par writes par duplicated data sync rakhna padta hai. Real systems dono balance karte hain: integrity ke liye normalize, performance ke liye selectively denormalize.",
+    "keyPoints": [
+      "Normalization removes redundancy/anomalies by splitting into related tables.",
+      "Normal forms (1NF, 2NF, 3NF) guide storing each fact exactly once.",
+      "Foreign keys reference shared data instead of duplicating it.",
+      "Denormalization adds redundancy to speed reads (fewer joins, cached aggregates).",
+      "Trade-off: normalized = integrity & cheap writes; denormalized = fast reads, sync cost."
+    ],
+    "real_world": "An e-commerce DB normalizes customers and orders so updating a customer's city changes one row. For a heavy analytics dashboard, the team denormalizes a daily-sales summary table so reports don't re-join and aggregate millions of order rows on every load.",
+    "followups": [
+      {
+        "q": "What problem does normalization solve?",
+        "a": "Redundancy and the update/insert/delete anomalies it causes. Storing each fact once means an update happens in a single place, keeping data consistent."
+      },
+      {
+        "q": "When is denormalization worth it?",
+        "a": "When read performance is critical and joins/aggregations are expensive at scale. You accept duplicated data and the burden of keeping it in sync on writes."
+      },
+      {
+        "q": "What is 3NF in simple terms?",
+        "a": "Every non-key column depends only on the primary key (not on other non-key columns). It removes transitive dependencies, reducing redundancy further than 1NF/2NF."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real SQL schema and join query (PostgreSQL). The Node-runnable demo below shows the normalize/re-join logic in JS.",
+      "source": "// Normalization & denormalization — 3NF tables vs a read-optimized view.\n// NORMALIZED (avoids duplicate customer data; update in one place):\nconst normalizedSchema = `\n  CREATE TABLE customers (\n    id   SERIAL PRIMARY KEY,\n    name TEXT NOT NULL,\n    city TEXT NOT NULL\n  );\n  CREATE TABLE orders (\n    id          SERIAL PRIMARY KEY,\n    customer_id INT NOT NULL REFERENCES customers(id),\n    item        TEXT NOT NULL\n  );\n`;\n\n// Read it back with a JOIN (denormalize at query time):\nconst joinQuery = `\n  SELECT o.id, o.item, c.name AS customer, c.city\n  FROM orders o\n  JOIN customers c ON c.id = o.customer_id;\n`;\n\n// DENORMALIZATION (deliberate redundancy for read speed) — e.g. store a cached\n// total or duplicate a frequently-read field to avoid expensive joins at scale.\n// Trade-off: faster reads, but you must keep the duplicated data in sync on write.\nmodule.exports = { normalizedSchema, joinQuery };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Normalization & denormalization — split repeated data, then rejoin\nconst denormalized = [\n  { orderId: 1, customer: \"Asha\", customerCity: \"Pune\", item: \"Phone\" },\n  { orderId: 2, customer: \"Asha\", customerCity: \"Pune\", item: \"Case\" },\n  { orderId: 3, customer: \"Ravi\", customerCity: \"Delhi\", item: \"Laptop\" },\n];\n// Normalize: customers stored once, orders reference them (no repetition)\nfunction normalize(rows){\n  const customers = new Map(); const orders = [];\n  for (const r of rows){\n    if (!customers.has(r.customer)) customers.set(r.customer, { id: customers.size + 1, name: r.customer, city: r.customerCity });\n    orders.push({ orderId: r.orderId, customerId: customers.get(r.customer).id, item: r.item });\n  }\n  return { customers: [...customers.values()], orders };\n}\nconst { customers, orders } = normalize(denormalized);\nconsole.log(\"Customers (stored once):\", JSON.stringify(customers));\nconsole.log(\"Orders (reference customer):\", JSON.stringify(orders));\n// Denormalize (join back) for a read-optimized view:\nconst joined = orders.map(o => ({ ...o, customer: customers.find(c => c.id === o.customerId).name }));\nconsole.log(\"Re-joined view:\", JSON.stringify(joined));\nconsole.assert(customers.length === 2, \"Asha stored once, not twice\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Customers (stored once): [{\"id\":1,\"name\":\"Asha\",\"city\":\"Pune\"},{\"id\":2,\"name\":\"Ravi\",\"city\":\"Delhi\"}]\nOrders (reference customer): [{\"orderId\":1,\"customerId\":1,\"item\":\"Phone\"},{\"orderId\":2,\"customerId\":1,\"item\":\"Case\"},{\"orderId\":3,\"customerId\":2,\"item\":\"Laptop\"}]\nRe-joined view: [{\"orderId\":1,\"customerId\":1,\"item\":\"Phone\",\"customer\":\"Asha\"},{\"orderId\":2,\"customerId\":1,\"item\":\"Case\",\"customer\":\"Asha\"},{\"orderId\":3,\"customerId\":2,\"item\":\"Laptop\",\"customer\":\"Ravi\"}]\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

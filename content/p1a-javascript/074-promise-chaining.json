@@ -1,0 +1,65 @@
+{
+  "id": "p1a-074",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 74,
+  "orderInPhase": 74,
+  "slug": "promise-chaining",
+  "title": "Promise Chaining",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "promise",
+    "chaining"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Fetch a user, then fetch that user's orders, then summarise them — three dependent async steps as a clean three-link chain, with one `.catch` covering any fa…"
+  },
+  "sections": {
+    "simple_en": "Because `.then()` returns a new promise, you can chain multiple asynchronous steps in a flat, readable sequence. Each `.then` receives the value returned (or resolved) by the previous one, letting you transform data step by step.\n\nReturning a promise from inside a `.then` makes the chain wait for it before continuing. A single `.catch` at the end handles errors from any step in the chain, which centralises error handling and avoids repetitive checks.",
+    "hinglish": "Kyunki `.then()` ek naya promise return karta hai, aap kai asynchronous steps ko ek flat, readable sequence me chain kar sakte ho. Har `.then` ko pichle ka return (ya resolve) kiya value milta hai, jisse data step-by-step transform hota hai.\n`.then` ke andar se promise return karne par chain use complete hone tak wait karti hai. Chain ke end me ek hi `.catch` kisi bhi step ke errors ko handle kar leta hai, jisse error handling centralise ho jaati hai aur baar-baar checks se bachte ho.",
+    "keyPoints": [
+      "`.then` returns a new promise → chain steps in a flat sequence.",
+      "Each `.then` receives the previous step's returned/resolved value.",
+      "Return a promise inside `.then` to wait for it before continuing.",
+      "A single trailing `.catch` handles errors from any earlier step.",
+      "Throwing inside a `.then` jumps to the nearest `.catch`."
+    ],
+    "real_world": "Fetch a user, then fetch that user's orders, then summarise them — three dependent async steps as a clean three-link chain, with one `.catch` covering any failure along the way.",
+    "followups": [
+      {
+        "q": "How does a single `.catch` handle errors from multiple steps?",
+        "a": "A rejection or thrown error skips the remaining `.then` handlers and jumps to the next `.catch` in the chain, so one trailing catch covers any earlier step."
+      },
+      {
+        "q": "What happens if you return a promise inside `.then`?",
+        "a": "The chain waits for that returned promise to settle, and the next `.then` receives its resolved value — this is how you sequence dependent async operations."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// A transforming promise chain with centralised error handling.\n\nconst asyncStep = (fn, value) => Promise.resolve().then(() => fn(value));\n\nfunction pipeline(start) {\n  return asyncStep((x) => x + 1, start)   // +1\n    .then((x) => x * 2)                    // *2\n    .then((x) => \"result:\" + x)            // format\n    .catch((err) => \"error:\" + err.message);\n}\n\nfunction failingPipeline() {\n  return Promise.resolve(5)\n    .then((x) => { if (x === 5) throw new Error(\"boom\"); return x; })\n    .then((x) => x * 10) // skipped\n    .catch((err) => \"caught:\" + err.message);\n}\n\nmodule.exports = { pipeline, failingPipeline };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { pipeline, failingPipeline } = require(\"./solution\");\n\npipeline(3).then((r) => {\n  console.log(r); // result:8  ((3+1)*2)\n  console.assert(r === \"result:8\", \"chain transforms step by step\");\n\n  failingPipeline().then((r2) => {\n    console.log(r2); // caught:boom\n    console.assert(r2 === \"caught:boom\", \"trailing catch handles thrown error\");\n    console.log(\"promise chaining assertions passed.\");\n  });\n});",
+      "expectedOutput": "result:8\ncaught:boom\npromise chaining assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

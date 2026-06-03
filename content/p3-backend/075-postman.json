@@ -1,0 +1,68 @@
+{
+  "id": "p3-075",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 75,
+  "orderInPhase": 75,
+  "slug": "postman",
+  "title": "Postman",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "postman"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A backend team keeps a Postman collection for their API with tests on each request (status 200, returns an id)."
+  },
+  "sections": {
+    "simple_en": "Postman is a widely used tool for developing, testing, and documenting APIs. You build requests (method, URL, headers, body), organize them into collections, and use environments/variables for things like base URLs and auth tokens — so the same collection runs against dev, staging, or production by switching environments.\n\nBeyond manual calls, Postman lets you write test scripts that assert on responses (status codes, body fields) and chain requests by saving values from one response for the next. Collections can run headlessly in CI with Newman, turning your API tests into an automated pipeline step. It's a staple for API development, QA, and team collaboration.",
+    "hinglish": "Postman APIs develop, test aur document karne ka ek widely used tool hai. Aap requests banate ho (method, URL, headers, body), unhe collections mein organize karte ho, aur base URLs aur auth tokens jaise cheezon ke liye environments/variables use karte ho — taaki same collection environments switch karke dev, staging ya production ke against chale.\n\nManual calls ke alawa, Postman aapko test scripts likhne deta hai jo responses par assert karein (status codes, body fields) aur ek response se values save karke agle ke liye requests chain karein. Collections Newman se CI mein headlessly chal sakti hain, aapke API tests ko ek automated pipeline step bana kar. Ye API development, QA aur team collaboration ke liye staple hai.",
+    "keyPoints": [
+      "Build, organize (collections), and document API requests.",
+      "Environments/variables swap base URLs, tokens across dev/staging/prod.",
+      "Write test scripts asserting status codes and response fields.",
+      "Chain requests by saving values from one response to the next.",
+      "Run collections in CI headlessly with Newman for automated API tests."
+    ],
+    "real_world": "A backend team keeps a Postman collection for their API with tests on each request (status 200, returns an id). New members import it to explore the API instantly, and CI runs the collection via Newman on every deploy — catching broken endpoints before they reach production.",
+    "followups": [
+      {
+        "q": "What are Postman collections and environments?",
+        "a": "A collection groups related requests (often with tests); an environment is a set of variables (base URL, tokens) you switch between, so one collection targets dev, staging, or production without edits."
+      },
+      {
+        "q": "How do you automate Postman tests?",
+        "a": "Write test scripts on requests using pm.test/pm.expect, then run the collection headlessly with Newman (Postman's CLI) in CI — turning manual API checks into an automated pipeline step."
+      },
+      {
+        "q": "How do you chain requests in Postman?",
+        "a": "Save a value from one response into a variable (e.g., pm.collectionVariables.set) in a test script, then reference it in a later request — e.g., create a resource, capture its id, then fetch it."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Postman test-script and Newman CI usage (Postman is a GUI/CLI tool, not application code). The Node-runnable demo below simulates running a request collection with assertions so the workflow is verifiable here.",
+      "source": "// Postman — author requests, write tests, and run them in CI with Newman.\n// (Postman is a GUI/CLI tool; below is its test-script and CI usage.)\n\n// A \"test\" script attached to a request, run after the response arrives:\n//   pm.test(\"status is 200\", () => pm.response.to.have.status(200));\n//   pm.test(\"returns a user\", () => {\n//     const body = pm.response.json();\n//     pm.expect(body).to.have.property(\"id\");\n//   });\n//   // Save a value for the next request (collection variable / chaining):\n//   pm.collectionVariables.set(\"userId\", pm.response.json().id);\n\n// Use environments for base URLs and tokens:\n//   {{baseUrl}}/users/{{userId}}  with {{authToken}} in the Authorization header.\n\n// Run the whole collection headlessly in CI with Newman:\n//   npx newman run UserAPI.postman_collection.json \\\n//       -e production.postman_environment.json \\\n//       --reporters cli,junit\n\n// Postman organizes requests into shareable collections, supports scripting,\n// mock servers, and automated testing — a staple for API development and QA.\nmodule.exports = {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Postman — build a request collection and run assertions on responses\nfunction createCollection(name){\n  const requests = [];\n  return {\n    add(req){ requests.push(req); return this; },\n    async run(send){\n      const results = [];\n      for (const req of requests){\n        const res = await send(req);                  // perform the request\n        const failures = (req.tests || []).map(t => ({ name: t.name, pass: t.check(res) }))\n                                          .filter(t => !t.pass);\n        results.push({ name: req.name, status: res.status, passed: failures.length === 0, failures });\n      }\n      return results;\n    },\n  };\n}\n// A fake server so the demo is self-contained (Postman would hit a real API):\nconst fakeSend = async (req) =>\n  req.path === \"/users\" ? { status: 200, body: [{ id: 1 }] } : { status: 404, body: {} };\n\nconst collection = createCollection(\"User API\")\n  .add({ name: \"List users\", method: \"GET\", path: \"/users\",\n    tests: [\n      { name: \"status is 200\", check: (r) => r.status === 200 },\n      { name: \"returns array\", check: (r) => Array.isArray(r.body) },\n    ] })\n  .add({ name: \"Missing route 404\", method: \"GET\", path: \"/nope\",\n    tests: [{ name: \"status is 404\", check: (r) => r.status === 404 }] });\n\n(async () => {\n  const results = await collection.run(fakeSend);\n  results.forEach(r => console.log(`${r.passed ? \"PASS\" : \"FAIL\"} ${r.name} (${r.status})`));\n  console.assert(results.every(r => r.passed), \"all collection tests pass\");\n  console.log(\"Postman: organize requests into collections, add tests, share, and run in CI (Newman).\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "PASS List users (200)\nPASS Missing route 404 (404)\nPostman: organize requests into collections, add tests, share, and run in CI (Newman).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

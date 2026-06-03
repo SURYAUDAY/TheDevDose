@@ -1,0 +1,70 @@
+{
+  "id": "p5-042",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 42,
+  "orderInPhase": 42,
+  "slug": "machine-coding-rounds",
+  "title": "Machine coding rounds",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "machine",
+    "coding",
+    "rounds"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Asked to build a todo feature in 45 minutes, a strong candidate first clarifies the requirements, models a TodoStore with add/toggle/remove/filter methods, v…"
+  },
+  "sections": {
+    "simple_en": "A machine coding round asks you to build a small but working feature in a limited time, judged on design, clean code, and correctness rather than cleverness. Typical tasks: a todo app, a cart, a snake game, an autocomplete, or a small component — something you model, structure, and make run end to end.\n\nThe winning approach is process: clarify requirements first, model the data and state, expose clear methods/components, handle edge cases (empty input, missing ids), and build incrementally so you always have something working. Graders value readable structure and naming, validation, and a runnable result over fancy abstractions.",
+    "hinglish": "Ek machine coding round aapse ek limited time mein ek chhota par working feature banane ko kehta hai, jo design, clean code, aur correctness par judge hota hai cleverness ke bajaye. Typical tasks: ek todo app, ek cart, ek snake game, ek autocomplete, ya ek chhota component — kuch jise aap model, structure, aur end to end run karte ho.\n\nWinning approach process hai: pehle requirements clarify karo, data aur state model karo, clear methods/components expose karo, edge cases handle karo (empty input, missing ids), aur incrementally build karo taaki aapke paas hamesha kuch working ho. Graders readable structure aur naming, validation, aur ek runnable result ko fancy abstractions se zyada value karte hain.",
+    "keyPoints": [
+      "Build a small, working feature under time pressure.",
+      "Judged on design, clean code, and correctness — not cleverness.",
+      "Process: clarify -> model data/state -> clear methods -> edge cases.",
+      "Validate inputs and handle edge cases (empty, missing, duplicates).",
+      "Build incrementally; keep it runnable; prioritize structure and naming."
+    ],
+    "real_world": "Asked to build a todo feature in 45 minutes, a strong candidate first clarifies the requirements, models a TodoStore with add/toggle/remove/filter methods, validates empty input, and builds it step by step — ending with clean, runnable, well-named code rather than a half-finished clever abstraction.",
+    "followups": [
+      {
+        "q": "What do machine coding rounds actually test?",
+        "a": "Your ability to translate requirements into clean, working, well-structured code under time pressure — data modeling, clear interfaces, edge-case handling, and correctness — more than algorithmic trickiness."
+      },
+      {
+        "q": "How should you approach the round?",
+        "a": "Clarify requirements and scope first, model the data/state, define clear methods or components, handle edge cases, and build incrementally so you always have a runnable slice. Communicate your decisions as you go."
+      },
+      {
+        "q": "What do graders value most?",
+        "a": "Readable, well-organized code with good naming, sensible structure, input validation, and correct behavior — plus a working result. Over-engineering or unfinished cleverness scores worse than a clean, complete basic solution."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript building a small Todo store with validation and filtering — a typical machine-coding deliverable. The Node demo below exercises it and verifies behavior including input rejection.",
+      "source": "// Machine coding rounds — how to approach building a feature under time pressure.\n\n// A clean, testable Todo store: model the data, expose clear methods, validate input,\n// and handle edge cases. (Graders reward structure + correctness over cleverness.)\nclass TodoStore {\n  constructor() { this.todos = []; this.nextId = 1; }\n  add(text) {\n    if (!text || !text.trim()) throw new Error(\"text required\");\n    const todo = { id: this.nextId++, text: text.trim(), done: false };\n    this.todos.push(todo);\n    return todo;\n  }\n  toggle(id) { const t = this.todos.find((t) => t.id === id); if (t) t.done = !t.done; return !!t; }\n  remove(id) { const n = this.todos.length; this.todos = this.todos.filter((t) => t.id !== id); return this.todos.length < n; }\n  filter(status) {\n    if (status === \"active\") return this.todos.filter((t) => !t.done);\n    if (status === \"done\") return this.todos.filter((t) => t.done);\n    return this.todos;\n  }\n}\n\n// Approach: 1) clarify requirements and edge cases, 2) model the data, 3) implement core methods\n// incrementally, 4) validate inputs, 5) keep it runnable and test as you go, 6) refactor for\n// readable names and separation of concerns. Communicate your plan out loud as you build.\nmodule.exports = { TodoStore };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Machine coding rounds — build a small, working feature with clean structure (here: a Todo store)\n// Machine coding tests design + working code under time: model state, expose clear methods, handle edge cases.\nclass TodoStore {\n  constructor() { this.todos = []; this.nextId = 1; }\n  add(text) {\n    if (!text || !text.trim()) throw new Error(\"text required\");   // validate input\n    const todo = { id: this.nextId++, text: text.trim(), done: false };\n    this.todos.push(todo);\n    return todo;\n  }\n  toggle(id) {\n    const t = this.todos.find((t) => t.id === id);\n    if (!t) return false;\n    t.done = !t.done;\n    return true;\n  }\n  remove(id) { const n = this.todos.length; this.todos = this.todos.filter((t) => t.id !== id); return this.todos.length < n; }\n  filter(status) {                                  // \"all\" | \"active\" | \"done\"\n    if (status === \"active\") return this.todos.filter((t) => !t.done);\n    if (status === \"done\") return this.todos.filter((t) => t.done);\n    return this.todos;\n  }\n}\nconst store = new TodoStore();\nconst a = store.add(\"Write resume\"); store.add(\"Apply to jobs\");\nstore.toggle(a.id);\nconsole.log(\"all:\", store.filter(\"all\").map((t) => `${t.text}:${t.done}`));\nconsole.log(\"active:\", store.filter(\"active\").map((t) => t.text));\nconsole.log(\"done:\", store.filter(\"done\").map((t) => t.text));\nconsole.assert(store.filter(\"done\").length === 1 && store.filter(\"active\").length === 1, \"filtering works\");\nlet threw = false; try { store.add(\"  \"); } catch { threw = true; }\nconsole.assert(threw, \"empty input is rejected\");\nconsole.log(\"Machine coding tips: clarify requirements, model the data, write clean modular methods, handle edge cases,\");\nconsole.log(\"and keep it runnable. Graders value structure, naming, and correctness over cleverness — build incrementally.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "all: [ 'Write resume:true', 'Apply to jobs:false' ]\nactive: [ 'Apply to jobs' ]\ndone: [ 'Write resume' ]\nMachine coding tips: clarify requirements, model the data, write clean modular methods, handle edge cases,\nand keep it runnable. Graders value structure, naming, and correctness over cleverness — build incrementally.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

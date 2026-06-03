@@ -1,0 +1,65 @@
+{
+  "id": "p1b-010",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 10,
+  "orderInPhase": 10,
+  "slug": "never-vs-void",
+  "title": "never vs void",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "never",
+    "void"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An exhaustive `switch` over a union of shapes uses a `never` default case so that if someone later adds a new shape and forgets to handle it, the build fails…"
+  },
+  "sections": {
+    "simple_en": "`void` is the return type of a function that doesn't return a useful value (it returns `undefined` implicitly) — like a function that just logs something. `never` is the type of a value that NEVER occurs: the return type of a function that never finishes normally (always throws or loops forever).\n\n`never` is also what's left after you've narrowed away every possible type, which makes it perfect for exhaustiveness checks in `switch` statements — if a new case is added and unhandled, assigning it to `never` becomes a compile error.",
+    "hinglish": "`void` us function ka return type hai jo koi useful value return nahi karta (implicitly `undefined` return karta hai) — jaise sirf kuch log karne wala function. `never` us value ka type hai jo KABHI occur nahi hoti: us function ka return type jo kabhi normally khatam hi nahi hota (hamesha throw ya infinite loop).\n`never` woh bhi hai jo har possible type narrow karne ke baad bachta hai, jisse ye `switch` statements me exhaustiveness checks ke liye perfect hai — agar naya case add ho aur unhandled rahe, to use `never` me assign karna compile error ban jaata hai.",
+    "keyPoints": [
+      "`void`: function returns no useful value (effectively undefined).",
+      "`never`: a value that never occurs (function always throws or never ends).",
+      "`never` is the result of narrowing away all possibilities.",
+      "Use `never` for exhaustiveness checks in switch/discriminated unions.",
+      "A function returning `never` can't reach a normal `return`."
+    ],
+    "real_world": "An exhaustive `switch` over a union of shapes uses a `never` default case so that if someone later adds a new shape and forgets to handle it, the build fails — catching the omission at compile time.",
+    "followups": [
+      {
+        "q": "Difference between void and never?",
+        "a": "`void` means the function returns no useful value (it completes and yields undefined). `never` means the function never returns at all — it always throws or loops forever — or a value that can't exist."
+      },
+      {
+        "q": "How does never enable exhaustiveness checks?",
+        "a": "After handling all union members, the remaining type narrows to `never`. Assigning the value to a `never` variable in the default case forces a compile error if any case is left unhandled."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — void, never, and exhaustiveness checking.\n\nexport function logMessage(msg: string): void {\n  console.log(\"LOG: \" + msg); // returns nothing useful\n}\n\nexport function fail(message: string): never {\n  throw new Error(message); // never returns normally\n}\n\ntype Shape = { kind: \"circle\"; r: number } | { kind: \"square\"; s: number };\n\nexport function area(shape: Shape): number {\n  switch (shape.kind) {\n    case \"circle\": return Math.PI * shape.r * shape.r;\n    case \"square\": return shape.s * shape.s;\n    default: {\n      const _exhaustive: never = shape; // compile error if a case is missed\n      return _exhaustive;\n    }\n  }\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { logMessage, fail, area } from \"./solution\";\n\nlogMessage(\"hello\"); // LOG: hello\nconsole.log(Math.round(area({ kind: \"circle\", r: 2 }))); // 13\nconsole.log(area({ kind: \"square\", s: 4 }));             // 16\n\nlet threw = false;\ntry { fail(\"boom\"); } catch (e) { threw = e instanceof Error; }\n\nconsole.assert(Math.round(area({ kind: \"circle\", r: 2 })) === 13, \"circle area\");\nconsole.assert(area({ kind: \"square\", s: 4 }) === 16, \"square area\");\nconsole.assert(threw, \"fail() always throws (never)\");\nconsole.log(\"never-vs-void assertions passed.\");",
+      "expectedOutput": "LOG: hello\n13\n16\nnever-vs-void assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

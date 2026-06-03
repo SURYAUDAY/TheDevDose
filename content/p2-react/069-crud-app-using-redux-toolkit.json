@@ -1,0 +1,71 @@
+{
+  "id": "p2-069",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 69,
+  "orderInPhase": 69,
+  "slug": "crud-app-using-redux-toolkit",
+  "title": "CRUD App using Redux Toolkit",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "crud",
+    "app",
+    "redux",
+    "toolkit"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A todo app keeps tasks in a Redux todos slice: addTodo creates, the list view reads via useSelector, toggleTodo/editTodo update, and removeTodo deletes."
+  },
+  "sections": {
+    "simple_en": "A CRUD app exercises the four basic operations — Create, Read, Update, Delete — over a collection. With Redux Toolkit you model this as a slice: the state holds the list, and reducers handle adding, editing, toggling, and removing items, with action creators generated automatically.\n\nThis is a classic interview project because it ties together global state, immutable updates (via Immer), and a clean action-driven data flow. Components read with useSelector and write by dispatching the slice's actions.",
+    "hinglish": "CRUD app chaar basic operations — Create, Read, Update, Delete — ek collection par karta hai. Redux Toolkit se ise ek slice ki tarah model karte hain: state list rakhti hai, aur reducers add, edit, toggle, remove handle karte hain, action creators automatically ban jaate hain.\n\nYe classic interview project hai kyunki ye global state, immutable updates (Immer se), aur clean action-driven data flow ko jodta hai. Components useSelector se read karte hain aur slice ke actions dispatch karke write karte hain.",
+    "keyPoints": [
+      "Models a collection with the four operations: create, read, update, delete.",
+      "RTK slice: state holds the list; reducers handle each operation.",
+      "Immer enables 'mutating' reducer code that produces immutable updates.",
+      "Action creators are auto-generated; use prepare for derived payloads (ids).",
+      "Components read via useSelector, write by dispatching slice actions."
+    ],
+    "real_world": "A todo app keeps tasks in a Redux todos slice: addTodo creates, the list view reads via useSelector, toggleTodo/editTodo update, and removeTodo deletes. All state transitions live in one slice file, making the data flow predictable and easy to test.",
+    "followups": [
+      {
+        "q": "What does the prepare callback do in a reducer?",
+        "a": "It customizes the action payload before it reaches the reducer — e.g., generating an id with nanoid — so components can call addTodo(title) without building the full object."
+      },
+      {
+        "q": "How is Read handled in a Redux CRUD app?",
+        "a": "Components select the data from the store with useSelector. The 'read' isn't an action — it's reading current state; loading from an API would use a thunk."
+      },
+      {
+        "q": "Why is this a common interview exercise?",
+        "a": "It demonstrates global state design, immutable updates, action-driven flow, and connecting components — a compact test of practical Redux knowledge."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "A real Redux Toolkit slice (.jsx). The Node-runnable demo below verifies the full create/read/update/delete logic.",
+      "source": "// CRUD App using Redux Toolkit — a complete todos slice with all 4 operations.\nimport { createSlice, nanoid } from \"@reduxjs/toolkit\";\n\nconst todosSlice = createSlice({\n  name: \"todos\",\n  initialState: { items: [] },\n  reducers: {\n    // CREATE\n    addTodo: {\n      reducer: (state, action) => { state.items.push(action.payload); },\n      prepare: (title) => ({ payload: { id: nanoid(), title, done: false } }),\n    },\n    // UPDATE\n    toggleTodo: (state, action) => {\n      const t = state.items.find((i) => i.id === action.payload);\n      if (t) t.done = !t.done;\n    },\n    editTodo: (state, action) => {\n      const t = state.items.find((i) => i.id === action.payload.id);\n      if (t) t.title = action.payload.title;\n    },\n    // DELETE\n    removeTodo: (state, action) => {\n      state.items = state.items.filter((i) => i.id !== action.payload);\n    },\n  },\n});\n\nexport const { addTodo, toggleTodo, editTodo, removeTodo } = todosSlice.actions;\nexport default todosSlice.reducer;\n\n// READ happens in components via useSelector((s) => s.todos.items)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CRUD App using Redux Toolkit — full create/read/update/delete reducer\nfunction crudReducer(state, action){\n  switch (action.type){\n    case \"create\": return { items: [...state.items, action.payload], nextId: state.nextId + 1 };\n    case \"update\": return { ...state, items: state.items.map(i => i.id === action.payload.id ? { ...i, ...action.payload } : i) };\n    case \"delete\": return { ...state, items: state.items.filter(i => i.id !== action.payload) };\n    default: return state;\n  }\n}\nlet state = { items: [], nextId: 1 };\nconst dispatch = (a) => { state = crudReducer(state, a); };\n\ndispatch({ type: \"create\", payload: { id: 1, title: \"Learn React\" } });\ndispatch({ type: \"create\", payload: { id: 2, title: \"Learn Redux\" } });\nconsole.log(\"After create:\", JSON.stringify(state.items));\ndispatch({ type: \"update\", payload: { id: 1, title: \"Master React\" } });\nconsole.log(\"After update:\", JSON.stringify(state.items.find(i => i.id === 1)));\ndispatch({ type: \"delete\", payload: 2 });\nconsole.log(\"After delete:\", JSON.stringify(state.items));\nconsole.assert(state.items.length === 1, \"one item left\");\nconsole.assert(state.items[0].title === \"Master React\", \"update applied\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "After create: [{\"id\":1,\"title\":\"Learn React\"},{\"id\":2,\"title\":\"Learn Redux\"}]\nAfter update: {\"id\":1,\"title\":\"Master React\"}\nAfter delete: [{\"id\":1,\"title\":\"Master React\"}]\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

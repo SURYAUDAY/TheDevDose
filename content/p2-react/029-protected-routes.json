@@ -1,0 +1,69 @@
+{
+  "id": "p2-029",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 29,
+  "orderInPhase": 29,
+  "slug": "protected-routes",
+  "title": "Protected routes",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "protected",
+    "routes"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An online banking app wraps every account page in a ProtectedRoute."
+  },
+  "sections": {
+    "simple_en": "A protected route restricts access to authenticated (or authorized) users. Instead of rendering the page, a guard component checks auth state and redirects unauthenticated users to a login page, usually remembering where they were headed so they can return after signing in.\n\nIn React Router this is typically a wrapper route that renders an <Outlet> when allowed or a <Navigate to=\"/login\"> when not. Remember that client-side guards are for UX only — the server must still enforce real authorization on every request.",
+    "hinglish": "Protected route sirf authenticated ya authorized users ko access deta hai. Page render karne ke bajaye ek guard component auth state check karta hai aur unauthenticated user ko login page par bhej deta hai, aksar yaad rakhte hue ki wo kahan jaana chahta tha.\n\nReact Router mein ye ek wrapper route hota hai jo allowed hone par <Outlet> render karta hai, warna <Navigate to=\"/login\">. Yaad rakho: client-side guard sirf UX ke liye hai — real authorization server par hi enforce hoti hai.",
+    "keyPoints": [
+      "Guard checks auth/role state and either renders the page or redirects to login.",
+      "Implemented as a wrapper route rendering <Outlet> (allowed) or <Navigate> (denied).",
+      "Preserve the intended destination (via location state) to redirect back after login.",
+      "Use replace on the redirect so the protected URL doesn't pollute browser history.",
+      "Client guards are UX only — the API must enforce authorization server-side too."
+    ],
+    "real_world": "An online banking app wraps every account page in a ProtectedRoute. If a session expires, the user is bounced to /login; after re-authenticating, they land back on the exact page they were viewing thanks to the saved location state.",
+    "followups": [
+      {
+        "q": "Why aren't client-side route guards enough for security?",
+        "a": "Because the client code and data can be inspected and bypassed. Guards improve UX, but the server must independently verify auth on every protected request."
+      },
+      {
+        "q": "How do you return users to where they were after login?",
+        "a": "Pass the current location in the redirect's state, then after login read it and navigate back: navigate(from || '/')."
+      },
+      {
+        "q": "Why use replace when redirecting?",
+        "a": "So the protected URL doesn't stay in history; otherwise the back button could send the user back to a page they can't access."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Protected routes: redirect unauthenticated users to /login.\nimport React from \"react\";\nimport { Navigate, Outlet, useLocation } from \"react-router-dom\";\n\nfunction useAuth() {\n  return { user: null }; // return { user: {...} } when logged in\n}\n\nfunction ProtectedRoute() {\n  const { user } = useAuth();\n  const location = useLocation();\n  if (!user) {\n    // remember where they were headed so we can return after login\n    return <Navigate to=\"/login\" replace state={{ from: location }} />;\n  }\n  return <Outlet />; // render the protected child routes\n}\n\nexport default ProtectedRoute;\n// Usage:\n// <Route element={<ProtectedRoute />}>\n//   <Route path=\"/dashboard\" element={<Dashboard />} />\n// </Route>",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Protected routes — redirect to /login when not authenticated\nfunction ProtectedRoute({ isAuthed, target }){\n  if (!isAuthed) return { redirect: \"/login\", from: target };\n  return { render: target };\n}\nconst guest = ProtectedRoute({ isAuthed: false, target: \"/dashboard\" });\nconst user  = ProtectedRoute({ isAuthed: true,  target: \"/dashboard\" });\nconsole.log(\"Guest ->\", JSON.stringify(guest));\nconsole.log(\"User  ->\", JSON.stringify(user));\nconsole.assert(guest.redirect === \"/login\", \"guest redirected\");\nconsole.assert(user.render === \"/dashboard\", \"user sees page\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Guest -> {\"redirect\":\"/login\",\"from\":\"/dashboard\"}\nUser  -> {\"render\":\"/dashboard\"}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

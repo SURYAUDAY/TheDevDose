@@ -1,0 +1,66 @@
+{
+  "id": "p1b-075",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 75,
+  "orderInPhase": 75,
+  "slug": "typing-redux-toolkit",
+  "title": "Typing Redux Toolkit",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "typing",
+    "redux",
+    "toolkit"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A counter slice typed with `PayloadAction<number>` for `incrementBy` ensures dispatching `incrementBy(\"x\")` is a compile error, and `useAppSelector(s => s.co…"
+  },
+  "sections": {
+    "simple_en": "Redux Toolkit (RTK) is designed for TypeScript: `createSlice` infers action types from your reducers, and you derive `RootState`/`AppDispatch` from the store. Action creators are fully typed, and `PayloadAction<T>` types a reducer's action payload.\n\nBest practices: type the slice's initial state, use `PayloadAction<T>` in reducers, and export typed hooks (`useAppDispatch`, `useAppSelector`) derived from the store types. This gives end-to-end type safety across state, actions, and selectors.",
+    "hinglish": "Redux Toolkit (RTK) TypeScript ke liye banaya gaya hai: `createSlice` aapke reducers se action types infer karta hai, aur aap store se `RootState`/`AppDispatch` derive karte ho. Action creators fully typed hote hain, aur `PayloadAction<T>` ek reducer ke action payload ko type karta hai.\nBest practices: slice ki initial state type karo, reducers me `PayloadAction<T>` use karo, aur store types se derive typed hooks (`useAppDispatch`, `useAppSelector`) export karo. Isse state, actions, aur selectors me end-to-end type safety milti hai.",
+    "keyPoints": [
+      "`createSlice` infers action types from reducers.",
+      "`PayloadAction<T>` types a reducer's action payload.",
+      "Derive `RootState` and `AppDispatch` from the store.",
+      "Export typed `useAppSelector`/`useAppDispatch` hooks.",
+      "Gives end-to-end typing across state, actions, selectors."
+    ],
+    "real_world": "A counter slice typed with `PayloadAction<number>` for `incrementBy` ensures dispatching `incrementBy(\"x\")` is a compile error, and `useAppSelector(s => s.counter.value)` is correctly typed as a number.",
+    "followups": [
+      {
+        "q": "What does `PayloadAction<T>` do?",
+        "a": "It types a Redux Toolkit reducer's action so `action.payload` is `T`. This makes dispatching and handling the action fully type-safe."
+      },
+      {
+        "q": "How do you get the store's state/dispatch types?",
+        "a": "Derive them: `type RootState = ReturnType<typeof store.getState>` and `type AppDispatch = typeof store.dispatch`, then build typed `useAppSelector`/`useAppDispatch` hooks from them."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// Redux Toolkit usage:\n//\n//   const slice = createSlice({\n//     name: \"counter\",\n//     initialState: { value: 0 } as { value: number },\n//     reducers: {\n//       increment: (s) => { s.value++; },\n//       incrementBy: (s, action: PayloadAction<number>) => { s.value += action.payload; },\n//     },\n//   });\n//   type RootState = ReturnType<typeof store.getState>;\n//\n// Runnable stand-in: a typed reducer mirroring the same logic.\n\ninterface CounterState { value: number; }\ntype CounterAction =\n  | { type: \"increment\" }\n  | { type: \"incrementBy\"; payload: number };\n\nexport function counterReducer(state: CounterState, action: CounterAction): CounterState {\n  switch (action.type) {\n    case \"increment\": return { value: state.value + 1 };\n    case \"incrementBy\": return { value: state.value + action.payload };\n  }\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { counterReducer } from \"./solution\";\n\nlet state = { value: 0 };\nstate = counterReducer(state, { type: \"increment\" });\nstate = counterReducer(state, { type: \"incrementBy\", payload: 5 });\nconsole.log(state.value); // 6\n\nconsole.assert(state.value === 6, \"typed reducer with payload action\");\nconsole.log(\"typing-redux-toolkit assertions passed.\");",
+      "expectedOutput": "6\ntyping-redux-toolkit assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

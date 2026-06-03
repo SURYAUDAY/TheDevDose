@@ -1,0 +1,69 @@
+{
+  "id": "p4-050",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 50,
+  "orderInPhase": 50,
+  "slug": "prompt-templates",
+  "title": "Prompt Templates",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "prompt",
+    "templates"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A multi-feature app defines one chat template with role/language/question variables."
+  },
+  "sections": {
+    "simple_en": "Prompt templates separate the fixed wording of a prompt from its variable parts, defining placeholders that get filled with inputs at runtime. This makes prompts reusable, consistent, and testable — you write the structure once and supply different values (role, language, question) each call instead of building strings by hand.\n\nChat templates additionally structure system/user/assistant roles and can embed few-shot examples and format instructions. Partials let you pre-fill common variables so callers only provide what changes. In LangChain, templates plug directly into chains via the pipe, forming the first stage of most LLM pipelines.",
+    "hinglish": "Prompt templates ek prompt ke fixed wording ko uske variable parts se alag karte hain, placeholders define karke jo runtime par inputs se bharte hain. Ye prompts ko reusable, consistent, aur testable banata hai — aap structure ek baar likhte ho aur har call par alag values (role, language, question) dete ho, haath se strings banane ke bajaye.\n\nChat templates additionally system/user/assistant roles structure karte hain aur few-shot examples aur format instructions embed kar sakte hain. Partials aapko common variables pre-fill karne dete hain taaki callers sirf wo de jo badalta hai. LangChain mein, templates pipe ke through seedhe chains mein plug hote hain, zyada LLM pipelines ka pehla stage banakar.",
+    "keyPoints": [
+      "Separate fixed wording from variables via placeholders.",
+      "Make prompts reusable, consistent, and testable.",
+      "Chat templates structure roles and embed few-shot examples/format instructions.",
+      "Partials pre-fill common variables; callers supply only what changes.",
+      "Plug into chains via the pipe — the first stage of most pipelines."
+    ],
+    "real_world": "A multi-feature app defines one chat template with role/language/question variables. The tutoring feature partials in role='tutor', language='English'; the legal feature partials in role='lawyer' — reusing the same tested structure while only the question changes per request.",
+    "followups": [
+      {
+        "q": "Why use prompt templates instead of string formatting?",
+        "a": "They make prompts reusable, consistent, and testable by separating fixed structure from variables, and they integrate with chains and parsers — cleaner and less error-prone than hand-built strings."
+      },
+      {
+        "q": "What are partials in prompt templates?",
+        "a": "Pre-filled variables that lock in common values (e.g., role and language) so callers only supply the parts that change (like the question), simplifying reuse."
+      },
+      {
+        "q": "What's special about chat prompt templates?",
+        "a": "They structure messages by role (system/user/assistant) and can include few-shot examples and format instructions, producing the message list chat models expect rather than a single string."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain PromptTemplate / ChatPromptTemplate code. The Python-runnable demo below formats templates with variables and partials so reuse is verifiable here.",
+      "source": "# Prompt Templates — reusable, parameterized prompts (with partials and roles).\nfrom langchain_core.prompts import ChatPromptTemplate, PromptTemplate\n\n# Simple string template with variables:\nsimple = PromptTemplate.from_template(\"Translate to {language}: {text}\")\n# simple.format(language=\"French\", text=\"Hello\")\n\n# Chat template with roles (system + human), plus a partial to lock stable fields:\nchat = ChatPromptTemplate.from_messages([\n    (\"system\", \"You are a {role} who answers in {language}.\"),\n    (\"human\", \"{question}\"),\n])\nsupport = chat.partial(role=\"support agent\", language=\"English\")  # fix once, reuse\n# messages = support.format_messages(question=\"How do I reset my password?\")\n\n# Templates separate fixed instructions from variable inputs \\u2014 reusable, consistent,\n# and testable. Partials pre-fill values so each call only supplies what changes.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Prompt Templates — parameterized, reusable prompts with variables (and partials)\nclass PromptTemplate:\n    def __init__(self, template, partials=None):\n        self.template = template\n        self.partials = partials or {}\n    def partial(self, **kw):\n        return PromptTemplate(self.template, {**self.partials, **kw})\n    def format(self, **kw):\n        return self.template.format(**{**self.partials, **kw})\n\ntmpl = PromptTemplate(\"You are a {role}. Answer in {language}.\\nQuestion: {question}\")\n# Pre-fill (partial) the stable fields once, then reuse for many questions.\nsupport = tmpl.partial(role=\"support agent\", language=\"English\")\np1 = support.format(question=\"How do I reset my password?\")\np2 = support.format(question=\"Where are my orders?\")\nprint(p1)\nprint(\"---\")\nprint(p2)\nassert \"support agent\" in p1 and \"reset my password\" in p1\nassert \"Where are my orders\" in p2 and \"support agent\" in p2\nprint(\"\\nPrompt templates separate fixed instructions from variable inputs \\u2014 reusable and consistent.\")\nprint(\"Partials lock in stable values (role, format) so each call only supplies what changes.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "You are a support agent. Answer in English.\nQuestion: How do I reset my password?\n---\nYou are a support agent. Answer in English.\nQuestion: Where are my orders?\n\nPrompt templates separate fixed instructions from variable inputs — reusable and consistent.\nPartials lock in stable values (role, format) so each call only supplies what changes.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

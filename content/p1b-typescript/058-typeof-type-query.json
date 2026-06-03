@@ -1,0 +1,66 @@
+{
+  "id": "p1b-058",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 58,
+  "orderInPhase": 58,
+  "slug": "typeof-type-query",
+  "title": "typeof (type query)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "typeof",
+    "type",
+    "query"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "Deriving a union of valid config keys from the config object itself: `type ConfigKey = keyof typeof config` means the key type updates automatically whenever…"
+  },
+  "sections": {
+    "simple_en": "In TYPE position, `typeof x` queries the type of an existing value or variable and uses it as a type. This is different from JavaScript's runtime `typeof` (which returns a string). The type-query `typeof` lets you derive types from values you've already written.\n\nIt's frequently combined with other operators: `typeof obj` to reuse an object's inferred type, `keyof typeof obj` to get its keys, and `ReturnType<typeof fn>` to get a function's return type — deriving types from a single source of truth.",
+    "hinglish": "TYPE position me, `typeof x` ek existing value ya variable ka type query karta hai aur use type ki tarah use karta hai. Ye JavaScript ke runtime `typeof` (jo string return karta hai) se alag hai. Type-query `typeof` aapko already likhi gayi values se types derive karne deta hai.\nIse aksar doosre operators ke saath mila kar use karte hain: `typeof obj` ek object ka inferred type reuse karne ko, `keyof typeof obj` uski keys lene ko, aur `ReturnType<typeof fn>` function ka return type lene ko — ek single source of truth se types derive karke.",
+    "keyPoints": [
+      "In type position, `typeof value` yields that value's type.",
+      "Different from JS runtime `typeof` (which returns a string).",
+      "Derive types from existing values/variables.",
+      "Common combos: `keyof typeof obj`, `ReturnType<typeof fn>`.",
+      "Keeps types in sync with the values they describe."
+    ],
+    "real_world": "Deriving a union of valid config keys from the config object itself: `type ConfigKey = keyof typeof config` means the key type updates automatically whenever you add or remove a config entry.",
+    "followups": [
+      {
+        "q": "How does type-position `typeof` differ from runtime `typeof`?",
+        "a": "Runtime `typeof` returns a string describing a value's type at execution. Type-position `typeof` (used in type annotations) extracts the static type of a value to use as a type."
+      },
+      {
+        "q": "What's a common `typeof` combination?",
+        "a": "`keyof typeof obj` to derive the union of an object's keys, and `ReturnType<typeof fn>` to derive a function's return type — both keep types tied to existing values/functions."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — typeof type query + keyof combo.\n\nexport const config = { host: \"localhost\", port: 8080, secure: false };\n\nexport type Config = typeof config;            // { host:string; port:number; secure:boolean }\nexport type ConfigKey = keyof typeof config;   // \"host\" | \"port\" | \"secure\"\n\nexport function getConfig<K extends ConfigKey>(key: K): Config[K] {\n  return config[key];\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { getConfig } from \"./solution\";\n\nconsole.log(getConfig(\"host\")); // localhost\nconsole.log(getConfig(\"port\")); // 8080\nconsole.log(getConfig(\"secure\")); // false\n\nconsole.assert(getConfig(\"host\") === \"localhost\", \"typeof-derived access (host)\");\nconsole.assert(getConfig(\"port\") === 8080, \"typeof-derived access (port)\");\nconsole.log(\"typeof assertions passed.\");",
+      "expectedOutput": "localhost\n8080\nfalse\ntypeof assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p5-016",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 16,
+  "orderInPhase": 16,
+  "slug": "authentication-flow",
+  "title": "Authentication flow",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "authentication",
+    "flow"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "After you log into a web app, the server hands your browser a signed token."
+  },
+  "sections": {
+    "simple_en": "An authentication flow verifies who a user is and then carries that identity across requests. A common stateless approach: the user logs in, the server issues a signed token (like a JWT), the client sends that token on each subsequent request, and the server verifies the signature to trust the identity — no server-side session store required.\n\nThe signature (an HMAC or asymmetric signature over the payload) makes the token tamper-proof: any change invalidates it. Because it's stateless, it scales across servers easily, but you must protect the signing secret, use short expiries, and pair access tokens with refresh tokens to limit the damage if one leaks.",
+    "hinglish": "Ek authentication flow verify karta hai ki user kaun hai aur phir us identity ko requests ke across carry karta hai. Ek common stateless approach: user log in karta hai, server ek signed token issue karta hai (jaise ek JWT), client wo token har subsequent request par bhejta hai, aur server signature verify karke identity par trust karta hai — koi server-side session store nahi chahiye.\n\nSignature (payload ke upar ek HMAC ya asymmetric signature) token ko tamper-proof banata hai: koi bhi change use invalid kar deta hai. Kyunki ye stateless hai, ye servers ke across aasaani se scale karta hai, par aapko signing secret protect karna, short expiries use karna, aur access tokens ko refresh tokens ke saath pair karna padta hai taaki ek leak hone par damage limit ho.",
+    "keyPoints": [
+      "Flow: log in -> server issues a signed token -> client sends it each request -> server verifies.",
+      "JWT-style tokens are stateless: no server-side session store.",
+      "The signature makes tokens tamper-proof (any change invalidates).",
+      "Stateless tokens scale easily across servers.",
+      "Protect the secret; use short expiries + refresh tokens."
+    ],
+    "real_world": "After you log into a web app, the server hands your browser a signed token. Every API call includes it, and each server instance independently verifies the signature — so you stay logged in even as a load balancer routes you to different servers, with no shared session database.",
+    "followups": [
+      {
+        "q": "Why are JWTs called stateless?",
+        "a": "The token itself carries the identity and is verified by signature, so the server needs no session store to recognize the user. Any server with the secret can validate the token, which scales well horizontally."
+      },
+      {
+        "q": "How does a signature make a token tamper-proof?",
+        "a": "The server signs the payload with a secret (HMAC) or private key. If anyone alters the payload, the recomputed signature won't match, so verification fails — the token is rejected."
+      },
+      {
+        "q": "Why use short expiries and refresh tokens?",
+        "a": "Stateless tokens can't be easily revoked, so a leaked long-lived token is dangerous. Short-lived access tokens limit exposure, and a separate refresh token (revocable, stored securely) issues new access tokens without forcing frequent logins."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript implementing JWT-style signing/verification with Node's crypto (HMAC). The Node demo below issues a token and verifies both a genuine and a tampered token.",
+      "source": "// Authentication flow — login issues a signed JWT; middleware verifies it on each request.\nimport express from \"express\";\nimport jwt from \"jsonwebtoken\";\nconst app = express();\napp.use(express.json());\nconst SECRET = process.env.JWT_SECRET;            // never hardcode secrets\n\n// 1) Login: verify credentials, then issue a short-lived signed token.\napp.post(\"/login\", async (req, res) => {\n  const user = await authenticate(req.body.email, req.body.password); // check hash, etc.\n  if (!user) return res.status(401).json({ error: \"invalid credentials\" });\n  const token = jwt.sign({ sub: user.id, role: user.role }, SECRET, { expiresIn: \"15m\" });\n  res.json({ token });                            // client stores it (httpOnly cookie ideal)\n});\n\n// 2) Middleware: verify the token on protected routes (stateless — no session store).\nfunction requireAuth(req, res, next) {\n  const header = req.headers.authorization || \"\";\n  const token = header.startsWith(\"Bearer \") ? header.slice(7) : null;\n  try {\n    req.user = jwt.verify(token, SECRET);         // throws if invalid/expired/tampered\n    next();\n  } catch {\n    res.status(401).json({ error: \"unauthorized\" });\n  }\n}\napp.get(\"/me\", requireAuth, (req, res) => res.json({ id: req.user.sub }));\n\nasync function authenticate(email, password) { /* look up user, compare password hash */ return null; }\n\n// Flow: credentials -> signed token -> token sent on each request -> verified server-side.\n// Use short-lived access tokens + refresh tokens, store secrets safely, and prefer httpOnly cookies.\nexport default app;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Authentication flow — verify identity, then carry it statelessly with a signed token (JWT-style)\nconst crypto = require(\"crypto\");\nconst SECRET = \"server-secret\";\nfunction sign(payload) {\n  const body = Buffer.from(JSON.stringify(payload)).toString(\"base64url\");\n  const sig = crypto.createHmac(\"sha256\", SECRET).update(body).digest(\"base64url\");\n  return `${body}.${sig}`;                       // token = payload.signature\n}\nfunction verify(token) {\n  const [body, sig] = token.split(\".\");\n  const expected = crypto.createHmac(\"sha256\", SECRET).update(body).digest(\"base64url\");\n  if (sig !== expected) return { valid: false };  // tamper-proof: signature must match\n  return { valid: true, payload: JSON.parse(Buffer.from(body, \"base64url\").toString()) };\n}\n// Login -> issue token; subsequent requests -> verify token (no server session needed).\nconst token = sign({ userId: 1, role: \"admin\" });\nconsole.log(\"Issued token:\", token.slice(0, 24) + \"...\");\nconsole.log(\"Verify valid token:\", verify(token));\nconsole.log(\"Verify tampered token:\", verify(token.slice(0, -2) + \"xx\"));\nconsole.assert(verify(token).valid === true, \"genuine token verifies\");\nconsole.assert(verify(token.slice(0, -2) + \"xx\").valid === false, \"tampered token rejected\");\nconsole.log(\"Auth flow: user logs in -> server issues a signed token -> client sends it on each request -> server verifies.\");\nconsole.log(\"JWTs are stateless (no server-side session store); protect the secret and use short expiries + refresh tokens.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Issued token: eyJ1c2VySWQiOjEsInJvbGUi...\nVerify valid token: { valid: true, payload: { userId: 1, role: 'admin' } }\nVerify tampered token: { valid: false }\nAuth flow: user logs in -> server issues a signed token -> client sends it on each request -> server verifies.\nJWTs are stateless (no server-side session store); protect the secret and use short expiries + refresh tokens.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

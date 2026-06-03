@@ -1,0 +1,70 @@
+{
+  "id": "p3-040",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 40,
+  "orderInPhase": 40,
+  "slug": "aggregation-pipeline-basics",
+  "title": "Aggregation pipeline basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "aggregation",
+    "pipeline",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "pipeline",
+    "seedText": "To find top customers by spend, a pipeline runs $match (paid orders) -> $group (sum amount per customer) -> $sort (descending) -> $limit (top 5) -> $project…"
+  },
+  "sections": {
+    "simple_en": "MongoDB's aggregation pipeline processes documents through a sequence of stages, each transforming the stream and passing results to the next — like an assembly line. Common stages are $match (filter), $group (aggregate), $sort, $project (reshape fields), $limit, and $lookup (join another collection).\n\nIt's how you compute summaries and analytics in MongoDB: totals per group, top-N rankings, joined and reshaped results. Putting $match early reduces the documents flowing downstream, and the pipeline runs in the database, returning only the final shaped output to the application.",
+    "hinglish": "MongoDB ki aggregation pipeline documents ko stages ke ek sequence se process karti hai, har stage stream ko transform karke agle ko deta hai — ek assembly line ki tarah. Common stages: $match (filter), $group (aggregate), $sort, $project (fields reshape), $limit, aur $lookup (doosri collection join).\n\nMongoDB mein summaries aur analytics aise compute karte ho: per group totals, top-N rankings, joined aur reshaped results. $match ko jaldi rakhne se aage bahne wale documents kam hote hain, aur pipeline database mein chalti hai, sirf final shaped output app ko deti hai.",
+    "keyPoints": [
+      "Documents flow through ordered stages, each transforming the stream.",
+      "Key stages: $match, $group, $sort, $project, $limit, $lookup.",
+      "$group with accumulators ($sum/$avg/$max) computes per-group summaries.",
+      "Put $match (and $limit) early to reduce downstream work.",
+      "Runs in the DB; returns only the final reshaped result."
+    ],
+    "real_world": "To find top customers by spend, a pipeline runs $match (paid orders) -> $group (sum amount per customer) -> $sort (descending) -> $limit (top 5) -> $project (clean shape). The database does all the work and returns just five summary documents.",
+    "followups": [
+      {
+        "q": "Why does stage order matter in a pipeline?",
+        "a": "Each stage feeds the next, so placing $match/$limit early shrinks the document stream and improves performance, while $sort/$group later operate on fewer documents."
+      },
+      {
+        "q": "What does $lookup do?",
+        "a": "It performs a left outer join to another collection, attaching matching documents — MongoDB's way of combining related collections within a pipeline."
+      },
+      {
+        "q": "Pipeline vs simple find()?",
+        "a": "find() filters and returns documents; the aggregation pipeline transforms, groups, joins, and reshapes data across multiple stages — use it for analytics and complex computations."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real MongoDB aggregation code (runs against MongoDB). The Node-runnable demo below runs a $match → $group → $sort pipeline in JS so the output is verifiable here.",
+      "source": "// Aggregation pipeline — multi-stage data processing in MongoDB.\nconst { MongoClient } = require(\"mongodb\");\nconst client = new MongoClient(process.env.MONGO_URL);\n\nasync function topCustomers() {\n  await client.connect();\n  const orders = client.db(\"shop\").collection(\"orders\");\n\n  // Documents flow through stages, each transforming the stream.\n  const result = await orders.aggregate([\n    { $match: { status: \"paid\" } },                         // filter\n    { $group: {                                             // group + aggregate\n        _id: \"$customer\",\n        total: { $sum: \"$amount\" },\n        orders: { $sum: 1 },\n        avg: { $avg: \"$amount\" },\n    } },\n    { $sort: { total: -1 } },                               // sort descending\n    { $limit: 5 },                                          // top 5\n    { $project: { customer: \"$_id\", total: 1, orders: 1, _id: 0 } }, // reshape\n  ]).toArray();\n\n  return result;\n}\nmodule.exports = { topCustomers };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Aggregation pipeline — $match -> $group -> $sort stages\nconst orders = [\n  { customer: \"Asha\", amount: 120, status: \"paid\" },\n  { customer: \"Asha\", amount: 80,  status: \"paid\" },\n  { customer: \"Ravi\", amount: 200, status: \"paid\" },\n  { customer: \"Ravi\", amount: 50,  status: \"refunded\" },\n  { customer: \"Mira\", amount: 60,  status: \"paid\" },\n];\nconst pipeline = {\n  $match: (rows, cond) => rows.filter(r => Object.entries(cond).every(([k, v]) => r[k] === v)),\n  $group: (rows, { by, total }) => {\n    const g = {};\n    rows.forEach(r => { g[r[by]] = (g[r[by]] || 0) + r[total]; });\n    return Object.entries(g).map(([k, v]) => ({ _id: k, total: v }));\n  },\n  $sort: (rows, by) => [...rows].sort((a, b) => b[by] - a[by]),\n};\n// aggregate([{ $match: {status:'paid'} }, { $group: {_id:'$customer', total:{$sum:'$amount'}} }, { $sort: {total:-1} }])\nlet stage = pipeline.$match(orders, { status: \"paid\" });\nstage = pipeline.$group(stage, { by: \"customer\", total: \"amount\" });\nstage = pipeline.$sort(stage, \"total\");\nconsole.log(\"Pipeline result:\", JSON.stringify(stage));\nconsole.assert(stage[0]._id === \"Asha\" && stage[0].total === 200, \"Asha top with 200 paid\");\nconsole.log(\"Pipelines transform documents stage by stage, like an assembly line.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Pipeline result: [{\"_id\":\"Asha\",\"total\":200},{\"_id\":\"Ravi\",\"total\":200},{\"_id\":\"Mira\",\"total\":60}]\nPipelines transform documents stage by stage, like an assembly line.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

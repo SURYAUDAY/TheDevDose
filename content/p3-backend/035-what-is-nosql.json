@@ -1,0 +1,68 @@
+{
+  "id": "p3-035",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 35,
+  "orderInPhase": 35,
+  "slug": "what-is-nosql",
+  "title": "What is NoSQL",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "nosql"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A product catalog where each category has different attributes (phones have RAM, shirts have sizes) fits a document store: each product is a document with wh…"
+  },
+  "sections": {
+    "simple_en": "NoSQL ('not only SQL') databases store data in non-relational models built for flexibility and horizontal scale. The main families are document (MongoDB — JSON-like documents), key-value (Redis), wide-column (Cassandra), and graph (Neo4j). They typically relax the rigid schema and joins of relational databases.\n\nDocument databases let records in the same collection have different shapes, so the schema can evolve without migrations, and related data is often embedded to avoid joins. The trade-off is weaker built-in relational integrity and (traditionally) eventual consistency — you choose NoSQL when flexibility, scale, or a non-tabular data shape fits better than SQL.",
+    "hinglish": "NoSQL ('not only SQL') databases data ko non-relational models mein store karte hain jo flexibility aur horizontal scale ke liye bane hain. Main families: document (MongoDB — JSON-like documents), key-value (Redis), wide-column (Cassandra), aur graph (Neo4j). Ye aksar relational ki rigid schema aur joins ko relax karte hain.\n\nDocument databases mein ek hi collection ke records alag shape ke ho sakte hain, isliye schema bina migrations evolve hota hai, aur related data aksar embed hota hai joins se bachne ke liye. Trade-off: kamzor built-in relational integrity aur (traditionally) eventual consistency — NoSQL tab choose karo jab flexibility, scale, ya non-tabular data shape SQL se behtar fit ho.",
+    "keyPoints": [
+      "Non-relational stores built for flexibility and horizontal scale.",
+      "Families: document (MongoDB), key-value (Redis), wide-column (Cassandra), graph (Neo4j).",
+      "Flexible/dynamic schema — records can vary; embed related data.",
+      "Often relaxes joins and strict relational integrity.",
+      "Choose for scale, flexible shapes, or data that isn't naturally tabular."
+    ],
+    "real_world": "A product catalog where each category has different attributes (phones have RAM, shirts have sizes) fits a document store: each product is a document with whatever fields it needs, no sparse columns or schema changes required as new product types are added.",
+    "followups": [
+      {
+        "q": "SQL vs NoSQL — how do you choose?",
+        "a": "SQL for structured, relational data needing strong consistency and complex joins; NoSQL for flexible/variable shapes, very high scale, or non-tabular models. Many systems use both."
+      },
+      {
+        "q": "What are the main NoSQL types?",
+        "a": "Document (MongoDB), key-value (Redis), wide-column (Cassandra), and graph (Neo4j) — each optimized for different access patterns and data shapes."
+      },
+      {
+        "q": "Does NoSQL mean no schema at all?",
+        "a": "No — the database may not enforce one, but applications usually still impose structure (e.g., via Mongoose). It's a flexible/implicit schema, not the absence of structure."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real MongoDB driver code (Node + mongodb, runs against MongoDB). The Node-runnable demo below simulates a flexible document store so the behavior is verifiable here.",
+      "source": "// What is NoSQL — document model with the MongoDB Node driver.\nconst { MongoClient } = require(\"mongodb\");\nconst client = new MongoClient(process.env.MONGO_URL);\n\nasync function demo() {\n  await client.connect();\n  const db = client.db(\"shop\");\n  const products = db.collection(\"products\");\n\n  // Documents in the same collection can have different shapes — no fixed schema.\n  await products.insertMany([\n    { name: \"Phone\", price: 699, specs: { ram: \"8GB\", storage: \"128GB\" } },\n    { name: \"Shirt\", price: 25, sizes: [\"S\", \"M\", \"L\"], color: \"blue\" }, // different fields\n  ]);\n\n  // Rich query operators instead of SQL:\n  const cheap = await products.find({ price: { $lt: 100 } }).toArray();\n  const blue = await products.find({ color: \"blue\" }).toArray();\n\n  return { cheap, blue };\n}\n// NoSQL families: document (MongoDB), key-value (Redis), wide-column\n// (Cassandra), graph (Neo4j). Chosen for flexibility and horizontal scaling.\nmodule.exports = { demo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// What is NoSQL — flexible documents (no fixed schema) vs rigid rows\nconst collection = [];           // a NoSQL collection holds documents of varying shape\nfunction insert(doc){ collection.push({ _id: collection.length + 1, ...doc }); }\n\ninsert({ name: \"Asha\", age: 25 });\ninsert({ name: \"Ravi\", contact: { email: \"r@x.com\", phone: \"123\" }, tags: [\"vip\"] }); // different shape, OK\ninsert({ name: \"Mira\", age: 22, address: { city: \"Pune\" } });\n\nconsole.log(\"Documents (heterogeneous):\");\ncollection.forEach(d => console.log(\" \", JSON.stringify(d)));\n// Query by a nested/optional field without altering a schema:\nconst vips = collection.filter(d => (d.tags || []).includes(\"vip\"));\nconsole.log(\"VIPs:\", vips.map(d => d.name));\nconsole.assert(collection.length === 3, \"stored 3 docs of different shapes\");\nconsole.assert(collection[1].contact.email === \"r@x.com\", \"nested data stored freely\");\nconsole.log(\"NoSQL trades rigid schema/joins for flexibility and horizontal scale.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Documents (heterogeneous):\n  {\"_id\":1,\"name\":\"Asha\",\"age\":25}\n  {\"_id\":2,\"name\":\"Ravi\",\"contact\":{\"email\":\"r@x.com\",\"phone\":\"123\"},\"tags\":[\"vip\"]}\n  {\"_id\":3,\"name\":\"Mira\",\"age\":22,\"address\":{\"city\":\"Pune\"}}\nVIPs: [ 'Ravi' ]\nNoSQL trades rigid schema/joins for flexibility and horizontal scale.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "p2-064",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 64,
+  "orderInPhase": 64,
+  "slug": "cookie-storage-caching-strategy",
+  "title": "Cookie storage & caching strategy",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "cookie",
+    "storage",
+    "caching",
+    "strategy"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "An app stores its session token in an HttpOnly, Secure, SameSite=Strict cookie so it travels with API requests automatically and can't be stolen by injected…"
+  },
+  "sections": {
+    "simple_en": "Cookies are small key-value pairs the browser stores and automatically sends with every request to the matching domain — which makes them the natural home for session/auth tokens. Important attributes include Max-Age/Expires, Secure (HTTPS only), HttpOnly (not readable by JS, protecting against XSS theft), and SameSite (CSRF protection).\n\nFor client-only data, localStorage (persists across sessions) and sessionStorage (cleared when the tab closes) are simpler and larger, but never sent to the server. A good strategy: HttpOnly cookies for auth, localStorage for UI preferences, sessionStorage for temporary per-tab state.",
+    "hinglish": "Cookies chhote key-value pairs hain jo browser store karke har matching-domain request ke saath automatically bhejta hai — isliye session/auth tokens ka natural ghar. Important attributes: Max-Age/Expires, Secure (sirf HTTPS), HttpOnly (JS se nahi padhi ja sakti, XSS se bachav), aur SameSite (CSRF protection).\n\nClient-only data ke liye localStorage (sessions ke beech persist) aur sessionStorage (tab band hote hi clear) simpler aur bade hain, par server ko kabhi nahi jaate. Achhi strategy: auth ke liye HttpOnly cookies, UI prefs ke liye localStorage, temporary per-tab state ke liye sessionStorage.",
+    "keyPoints": [
+      "Cookies are auto-sent to the server with each request — ideal for auth/session.",
+      "Key flags: Secure (HTTPS), HttpOnly (XSS-safe), SameSite (CSRF defense), Max-Age.",
+      "localStorage: persistent, client-only, ~5MB — good for UI preferences.",
+      "sessionStorage: cleared on tab close — good for temporary per-tab state.",
+      "Strategy: HttpOnly cookie for auth, localStorage for prefs, sessionStorage for temp."
+    ],
+    "real_world": "An app stores its session token in an HttpOnly, Secure, SameSite=Strict cookie so it travels with API requests automatically and can't be stolen by injected scripts. The user's theme choice goes in localStorage, and an in-progress form draft goes in sessionStorage.",
+    "followups": [
+      {
+        "q": "Why store auth tokens in HttpOnly cookies instead of localStorage?",
+        "a": "HttpOnly cookies can't be read by JavaScript, so an XSS attack can't steal the token. localStorage is fully accessible to any script on the page."
+      },
+      {
+        "q": "When use localStorage vs sessionStorage?",
+        "a": "localStorage persists across sessions (use for long-lived prefs); sessionStorage is cleared when the tab closes (use for temporary, per-tab data)."
+      },
+      {
+        "q": "What does SameSite do?",
+        "a": "It controls whether cookies are sent on cross-site requests, mitigating CSRF. Strict/Lax restrict cross-site sending; None requires Secure."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Browser/client storage code. The Node-runnable demo below simulates cookie serialization and parsing.",
+      "source": "// Cookie storage & caching strategy — cookies vs localStorage vs sessionStorage.\nexport function setAuthCookie(token) {\n  // Cookies are sent automatically with every request to the server.\n  // HttpOnly cookies (set by the server) can't be read by JS — safer for auth.\n  document.cookie =\n    `session=${token}; Max-Age=3600; Secure; SameSite=Strict; Path=/`;\n}\n\nexport function saveThemePreference(theme) {\n  // localStorage: persists across sessions, client-only, ~5MB. Good for UI prefs.\n  localStorage.setItem(\"theme\", theme);\n}\n\nexport function saveDraft(draft) {\n  // sessionStorage: cleared when the tab closes. Good for temporary state.\n  sessionStorage.setItem(\"draft\", JSON.stringify(draft));\n}\n\n// Rule of thumb:\n//   auth/session  -> HttpOnly cookie (server-set, auto-sent, XSS-safe)\n//   UI prefs      -> localStorage\n//   temp per-tab  -> sessionStorage",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Cookie storage & caching strategy — parse/serialize cookies; compare stores\nfunction serializeCookie(name, value, opts = {}){\n  let str = `${name}=${encodeURIComponent(value)}`;\n  if (opts.maxAge) str += `; Max-Age=${opts.maxAge}`;\n  if (opts.httpOnly) str += \"; HttpOnly\";\n  if (opts.secure) str += \"; Secure\";\n  if (opts.sameSite) str += `; SameSite=${opts.sameSite}`;\n  return str;\n}\nfunction parseCookies(header){\n  return Object.fromEntries(header.split(\"; \").map(p => {\n    const [k, v] = p.split(\"=\"); return [k, decodeURIComponent(v)];\n  }));\n}\nconst setCookie = serializeCookie(\"session\", \"abc123\", { maxAge: 3600, httpOnly: true, secure: true, sameSite: \"Strict\" });\nconsole.log(\"Set-Cookie:\", setCookie);\nconsole.log(\"Parsed:\", JSON.stringify(parseCookies(\"session=abc123; theme=dark\")));\n// strategy note: cookies auto-sent to server (auth); localStorage is client-only (UI prefs)\nconsole.assert(setCookie.includes(\"HttpOnly\"), \"httpOnly flag set\");\nconsole.assert(parseCookies(\"a=1; b=2\").b === \"2\", \"cookies parsed\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Set-Cookie: session=abc123; Max-Age=3600; HttpOnly; Secure; SameSite=Strict\nParsed: {\"session\":\"abc123\",\"theme\":\"dark\"}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

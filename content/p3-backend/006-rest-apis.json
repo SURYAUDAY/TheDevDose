@@ -1,0 +1,69 @@
+{
+  "id": "p3-006",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 6,
+  "orderInPhase": 6,
+  "slug": "rest-apis",
+  "title": "REST APIs",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "rest",
+    "apis"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A blog API exposes /posts (list/create), /posts/:id (read/update/delete), and /posts/:id/comments for related comments."
+  },
+  "sections": {
+    "simple_en": "REST (Representational State Transfer) is an architectural style for APIs built around resources, identified by URLs, and manipulated with standard HTTP methods. /users is a collection, /users/1 is a specific resource; GET reads, POST creates, PUT/PATCH update, DELETE removes — a uniform, predictable interface.\n\nRESTful APIs are typically stateless (each request carries everything needed), use proper status codes, and return representations (usually JSON). Good REST design uses nouns for resources, plural collections, and nested paths for relationships (/users/1/orders).",
+    "hinglish": "REST (Representational State Transfer) APIs ke liye ek architectural style hai jo resources ke aaspaas bana hai, jo URLs se identify hote hain aur standard HTTP methods se manipulate. /users ek collection hai, /users/1 ek specific resource; GET read, POST create, PUT/PATCH update, DELETE remove — ek uniform, predictable interface.\n\nRESTful APIs aksar stateless hote hain (har request mein sab kuch hota hai), sahi status codes use karte hain, aur representations (aksar JSON) return karte hain. Achha REST design resources ke liye nouns, plural collections, aur relationships ke liye nested paths (/users/1/orders) use karta hai.",
+    "keyPoints": [
+      "Resources identified by URLs; manipulated via standard HTTP methods.",
+      "Collections (/users) vs items (/users/1); use nouns and plurals.",
+      "Stateless: each request is self-contained (no server-side session reliance).",
+      "Return correct status codes and JSON representations.",
+      "Model relationships with nested paths (/users/1/orders)."
+    ],
+    "real_world": "A blog API exposes /posts (list/create), /posts/:id (read/update/delete), and /posts/:id/comments for related comments. A client can predict every operation from the URL and method without reading docs, because it follows REST conventions.",
+    "followups": [
+      {
+        "q": "What does 'stateless' mean in REST?",
+        "a": "Each request contains all the information needed to process it (e.g., an auth token); the server doesn't rely on stored client session state between requests. This aids scalability."
+      },
+      {
+        "q": "How do you model a relationship like a user's orders?",
+        "a": "With a nested path: GET /users/:id/orders. It expresses that orders belong to a specific user while staying resource-oriented."
+      },
+      {
+        "q": "What makes an API 'RESTful' beyond using HTTP verbs?",
+        "a": "Resource-based URLs, statelessness, correct status codes, consistent representations, and ideally HATEOAS (links to related actions) — though many 'REST' APIs are pragmatic and skip strict HATEOAS."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express router code (Node + Express). The Node-runnable demo below verifies the resource-routing logic.",
+      "source": "// REST APIs — resource-oriented routes using standard HTTP verbs.\nconst express = require(\"express\");\nconst router = express.Router();\n\nlet todos = [{ id: 1, text: \"Learn REST\", done: false }];\n\nrouter.get(\"/todos\", (req, res) => res.json(todos));               // list\nrouter.get(\"/todos/:id\", (req, res) => {                           // read one\n  const todo = todos.find((t) => t.id === Number(req.params.id));\n  todo ? res.json(todo) : res.status(404).json({ error: \"Not Found\" });\n});\nrouter.post(\"/todos\", (req, res) => {                              // create\n  const todo = { id: todos.length + 1, text: req.body.text, done: false };\n  todos.push(todo);\n  res.status(201).json(todo);\n});\nrouter.put(\"/todos/:id\", (req, res) => {                           // update\n  const todo = todos.find((t) => t.id === Number(req.params.id));\n  if (!todo) return res.status(404).json({ error: \"Not Found\" });\n  Object.assign(todo, req.body);\n  res.json(todo);\n});\nrouter.delete(\"/todos/:id\", (req, res) => {                        // delete\n  todos = todos.filter((t) => t.id !== Number(req.params.id));\n  res.status(204).end();\n});\n\nmodule.exports = router;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// REST APIs — resource-oriented routing (method + path -> action)\nconst todos = [{ id: 1, text: \"Learn Node\" }];\nfunction rest(method, path, body){\n  const m = path.match(/^\\/todos(?:\\/(\\d+))?$/);\n  if (!m) return { status: 404 };\n  const id = m[1] ? Number(m[1]) : null;\n  if (method === \"GET\" && !id) return { status: 200, body: todos };               // list\n  if (method === \"GET\" && id)  { const t = todos.find(t => t.id === id); return t ? { status: 200, body: t } : { status: 404 }; }\n  if (method === \"POST\" && !id){ const t = { id: todos.length + 1, ...body }; todos.push(t); return { status: 201, body: t }; }\n  if (method === \"DELETE\" && id){ const i = todos.findIndex(t => t.id === id); if (i<0) return {status:404}; todos.splice(i,1); return { status: 204 }; }\n  return { status: 405 };\n}\nconsole.log(\"GET /todos      ->\", JSON.stringify(rest(\"GET\", \"/todos\")));\nconsole.log(\"POST /todos     ->\", JSON.stringify(rest(\"POST\", \"/todos\", { text: \"Build API\" })));\nconsole.log(\"GET /todos/2    ->\", JSON.stringify(rest(\"GET\", \"/todos/2\")));\nconsole.log(\"DELETE /todos/1 ->\", JSON.stringify(rest(\"DELETE\", \"/todos/1\")));\nconsole.assert(rest(\"GET\", \"/todos\").body.length === 1, \"one todo left after ops\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "GET /todos      -> {\"status\":200,\"body\":[{\"id\":1,\"text\":\"Learn Node\"}]}\nPOST /todos     -> {\"status\":201,\"body\":{\"id\":2,\"text\":\"Build API\"}}\nGET /todos/2    -> {\"status\":200,\"body\":{\"id\":2,\"text\":\"Build API\"}}\nDELETE /todos/1 -> {\"status\":204}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

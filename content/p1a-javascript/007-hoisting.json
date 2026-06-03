@@ -1,0 +1,64 @@
+{
+  "id": "p1a-007",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 7,
+  "orderInPhase": 7,
+  "slug": "hoisting",
+  "title": "Hoisting",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "hoisting"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Imagine a meeting agenda printed before the meeting."
+  },
+  "sections": {
+    "simple_en": "Hoisting is JavaScript's behaviour of making certain declarations available before the line where they're written. It happens because of the memory creation phase: declarations are processed before execution, so they 'appear' to be moved to the top of their scope.\n\nCrucially, only declarations are hoisted, not initialisations. Function declarations are hoisted entirely (callable early). `var` is hoisted as `undefined`. `let`/`const` are hoisted but kept uninitialised in the Temporal Dead Zone, so accessing them early throws a ReferenceError.",
+    "hinglish": "Hoisting JavaScript ka woh behaviour hai jisme kuch declarations apni likhi hui line se pehle hi available ho jaate hain. Ye memory creation phase ki wajah se hota hai: declarations execution se pehle process ho jaate hain, isliye lagta hai ki woh scope ke top par chale gaye.\nImportant baat: sirf declarations hoist hote hain, initialisations nahi. Function declarations poore hoist hote hain (pehle call ho sakte hain). `var` `undefined` ke saath hoist hota hai. `let`/`const` hoist to hote hain par TDZ me uninitialised rehte hain, isliye pehle access karne par ReferenceError aata hai.",
+    "keyPoints": [
+      "Declarations are processed before code runs; only declarations hoist, not assignments.",
+      "Function declarations hoist fully — callable before their definition line.",
+      "`var` hoists as `undefined`.",
+      "`let`/`const` hoist into the Temporal Dead Zone — accessing early throws ReferenceError.",
+      "Function expressions/arrow functions are NOT callable before assignment (the variable is hoisted, not the function body)."
+    ],
+    "real_world": "Imagine a meeting agenda printed before the meeting. The topic titles (declarations) are listed in advance so everyone knows they're coming, but the actual discussion (values) only happens when you reach each item.",
+    "followups": [
+      {
+        "q": "Are `let` and `const` hoisted?",
+        "a": "Yes, they are hoisted, but unlike `var` they are not initialised — they sit in the Temporal Dead Zone until their declaration line, so reading them earlier throws a ReferenceError."
+      },
+      {
+        "q": "Is only the function name or the whole function hoisted?",
+        "a": "For a function declaration, the entire function (name + body) is hoisted, so it is callable earlier. For a function expression, only the variable is hoisted (as `undefined`)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrates the three hoisting behaviours in one place.\n\nfunction hoistingDemo() {\n  const results = {};\n\n  // 1) var: hoisted as undefined\n  results.varBefore = typeof v; // \"undefined\" name exists, value not set\n  var v = 5;\n  results.varAfter = v;\n\n  // 2) function declaration: fully hoisted\n  results.fn = early(); // works\n  function early() { return \"called before definition\"; }\n\n  // 3) let/const: TDZ -> ReferenceError if accessed early\n  try {\n    // eslint-disable-next-line no-use-before-define\n    return { ...results, letEarly: l };\n  } catch (e) {\n    results.letEarly = e.name; // \"ReferenceError\"\n  }\n  let l = 10;\n  return results;\n}\n\nmodule.exports = { hoistingDemo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { hoistingDemo } = require(\"./solution\");\n\nconst r = hoistingDemo();\nconsole.log(r);\n\nconsole.assert(r.varBefore === \"undefined\", \"var hoisted as undefined\");\nconsole.assert(r.varAfter === 5, \"var assigned later\");\nconsole.assert(r.fn === \"called before definition\", \"function fully hoisted\");\nconsole.assert(r.letEarly === \"ReferenceError\", \"let in TDZ throws ReferenceError\");\nconsole.log(\"Hoisting assertions passed.\");",
+      "expectedOutput": "{\n  varBefore: 'undefined',\n  varAfter: 5,\n  fn: 'called before definition',\n  letEarly: 'ReferenceError'\n}\nHoisting assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

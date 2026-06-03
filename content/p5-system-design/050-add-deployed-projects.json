@@ -1,0 +1,70 @@
+{
+  "id": "p5-050",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 50,
+  "orderInPhase": 50,
+  "slug": "add-deployed-projects",
+  "title": "Add deployed projects",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "add",
+    "deployed",
+    "projects"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A candidate deploys their RAG PDF-chat app to Vercel and links the live demo at the top of the README."
+  },
+  "sections": {
+    "simple_en": "A live, deployed project beats code-only repos because a recruiter or hiring manager can click a link and actually try it in seconds — far more convincing than reading source. Deploying turns 'here's my code' into 'here's a working product', which signals you can ship end to end.\n\nThe readiness checklist: a working live URL (deploy to Vercel, Netlify, Render, or similar), the app actually loads and works when opened, a demo link prominently in the README, and — critically — no secrets or API keys committed to the repo. Even one or two polished, deployed projects materially strengthen a portfolio.",
+    "hinglish": "Ek live, deployed project code-only repos se behtar hai kyunki ek recruiter ya hiring manager ek link click karke use actually seconds mein try kar sakta hai — source padhne se kahin zyada convincing. Deploy karna 'ye raha mera code' ko 'ye raha ek working product' mein badal deta hai, jo signal karta hai ki aap end to end ship kar sakte ho.\n\nReadiness checklist: ek working live URL (Vercel, Netlify, Render, ya similar par deploy karo), app actually load aur kaam kare jab khola jaaye, README mein prominently ek demo link, aur — critically — koi secrets ya API keys repo mein committed na hon. Ek-do polished, deployed projects bhi ek portfolio ko materially strengthen karte hain.",
+    "keyPoints": [
+      "Deployed projects beat code-only repos — reviewers can try them instantly.",
+      "Deploying shows you can ship end to end, not just write code.",
+      "Need a working live URL (Vercel/Netlify/Render) that actually loads.",
+      "Put the demo link prominently in the README.",
+      "Never commit secrets/API keys; even 1-2 deployed projects help a lot."
+    ],
+    "real_world": "A candidate deploys their RAG PDF-chat app to Vercel and links the live demo at the top of the README. An interviewer clicks it, uploads a PDF, and asks a question — experiencing the project in 30 seconds — which leaves a far stronger impression than scrolling through the source code.",
+    "followups": [
+      {
+        "q": "Why deploy projects instead of just sharing code?",
+        "a": "A live link lets reviewers try the project instantly, which is far more convincing than reading source. Deployment also proves you can ship a working product end to end, not just write code."
+      },
+      {
+        "q": "What does deployment readiness require?",
+        "a": "A working live URL (e.g., Vercel/Netlify/Render), an app that actually loads and functions, a prominent demo link in the README, and no secrets/API keys committed to the repo."
+      },
+      {
+        "q": "How many deployed projects do you need?",
+        "a": "Quality over quantity — even one or two polished, working, deployed projects materially strengthen a portfolio, especially if they demonstrate relevant skills (e.g., a full-stack or GenAI app)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo scoring a project's deployment readiness (live URL, loads, demo link, no committed secrets), verifying the checklist.",
+      "source": "# Add deployed projects — a live URL beats a code-only repo every time.\n\ndef deployment_readiness(project: dict) -> dict:\n    checks = {\n        \"has_live_url\": bool(project.get(\"live_url\")),\n        \"loads_successfully\": project.get(\"status\") == \"up\",\n        \"readme_links_demo\": project.get(\"readme_demo_link\", False),\n        \"no_secrets_committed\": project.get(\"secrets_committed\") is False,\n        \"responsive_and_polished\": project.get(\"polished\", False),\n    }\n    return {\"score\": round(100 * sum(checks.values()) / len(checks)),\n            \"failed\": [k for k, v in checks.items() if not v]}\n\n# Why: recruiters and hiring managers can click a link and try your project in seconds — far\n# more convincing than reading code. Deploy frontends to Vercel/Netlify, full-stack to Render/\n# Railway/Fly, and add the live URL to the README and your resume. Ensure it loads, looks\n# polished, handles errors gracefully, and never ships secrets/keys in the client or repo.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Add deployed projects — check a project is live and presentable, not just code on GitHub\ndef deployment_readiness(project):\n    checks = {\n        \"live_url\": bool(project.get(\"live_url\")),\n        \"works_on_load\": project.get(\"status\") == \"up\",\n        \"readme_has_demo_link\": project.get(\"readme_demo_link\", False),\n        \"no_secrets_committed\": project.get(\"secrets_committed\") is False,\n    }\n    score = round(100 * sum(checks.values()) / len(checks))\n    return {\"score\": score, \"failed\": [k for k, v in checks.items() if not v]}\n\ngood = {\"live_url\": \"https://app.example.com\", \"status\": \"up\",\n        \"readme_demo_link\": True, \"secrets_committed\": False}\nbad = {\"live_url\": \"\", \"status\": \"down\", \"readme_demo_link\": False, \"secrets_committed\": True}\nprint(\"Good project:\", deployment_readiness(good))\nprint(\"Bad project:\", deployment_readiness(bad))\nassert deployment_readiness(good)[\"score\"] == 100\nassert \"live_url\" in deployment_readiness(bad)[\"failed\"]\nprint(\"\\nDeployed projects beat code-only repos: a recruiter can click a live URL and try it in seconds.\")\nprint(\"Deploy to Vercel/Netlify/Render, link the demo in the README, ensure it loads, and never commit secrets.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Good project: {'score': 100, 'failed': []}\nBad project: {'score': 0, 'failed': ['live_url', 'works_on_load', 'readme_has_demo_link', 'no_secrets_committed']}\n\nDeployed projects beat code-only repos: a recruiter can click a live URL and try it in seconds.\nDeploy to Vercel/Netlify/Render, link the demo in the README, ensure it loads, and never commit secrets.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

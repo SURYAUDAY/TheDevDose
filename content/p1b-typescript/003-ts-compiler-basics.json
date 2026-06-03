@@ -1,0 +1,66 @@
+{
+  "id": "p1b-003",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 3,
+  "orderInPhase": 3,
+  "slug": "ts-compiler-basics",
+  "title": "TS Compiler basics",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "ts",
+    "compiler",
+    "basics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "pipeline",
+    "seedText": "A CI pipeline runs `tsc --noEmit` to fail the build if there are any type errors, while the actual bundle is produced by a bundler (esbuild/webpack) that str…"
+  },
+  "sections": {
+    "simple_en": "The TypeScript compiler, `tsc`, reads your `.ts` files, type-checks them, and emits plain `.js` files. You run it from the command line (`tsc file.ts` or just `tsc` to use a project's `tsconfig.json`). It can also report type errors without emitting (`tsc --noEmit`).\n\nTwo important ideas: type checking and code emission are separate (by default tsc still emits JS even if there are type errors, unless configured otherwise), and types are fully erased — the output JS has no type annotations. Tools like `tsx`/`ts-node` run TS directly by compiling on the fly.",
+    "hinglish": "TypeScript compiler, `tsc`, aapki `.ts` files padhta hai, type-check karta hai, aur plain `.js` files emit karta hai. Ise command line se chalate ho (`tsc file.ts` ya sirf `tsc` jo project ki `tsconfig.json` use karta hai). Ye bina emit kiye sirf errors bhi report kar sakta hai (`tsc --noEmit`).\nDo important ideas: type checking aur code emission alag hain (default me tsc type errors hone par bhi JS emit kar deta hai, jab tak config na badlo), aur types poori tarah erase ho jaate hain — output JS me koi type annotations nahi hote. `tsx`/`ts-node` jaise tools TS ko on-the-fly compile karke seedhe chalate hain.",
+    "keyPoints": [
+      "`tsc` type-checks `.ts` and emits `.js`.",
+      "Run `tsc file.ts`, or `tsc` to use `tsconfig.json`.",
+      "Type checking and emitting are separate; `--noEmit` checks only.",
+      "Output JS has all type annotations erased.",
+      "`tsx`/`ts-node` compile-and-run TS directly for development."
+    ],
+    "real_world": "A CI pipeline runs `tsc --noEmit` to fail the build if there are any type errors, while the actual bundle is produced by a bundler (esbuild/webpack) that strips types — separating type-checking from emitting.",
+    "followups": [
+      {
+        "q": "What does `tsc --noEmit` do?",
+        "a": "It type-checks the project and reports errors but does not produce any JavaScript output. It's commonly used in CI to validate types separately from the actual build/bundling step."
+      },
+      {
+        "q": "Does tsc stop emitting JS if there are type errors?",
+        "a": "By default no — it still emits JS even with type errors (a deliberate design choice). You can change this with `noEmitOnError: true` in tsconfig."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// Compiler usage (commands):\n//   tsc app.ts            # emit app.js\n//   tsc                   # compile the whole project via tsconfig.json\n//   tsc --noEmit          # type-check only, emit nothing\n//   npx tsx app.ts        # compile + run in one step (dev)\n//\n// solution.ts — demonstrating type erasure in the emitted output.\n\nexport function double(n: number): number {\n  return n * 2;\n}\n// After 'tsc', the emitted double.js is simply:\n//   function double(n) { return n * 2; }   // ':number' annotations gone",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { double } from \"./solution\";\n\nconsole.log(double(21)); // 42\nconsole.assert(double(21) === 42, \"compiled TS runs as JS\");\nconsole.log(\"TS-compiler-basics assertions passed.\");\nconsole.log(\"Note: 'tsc' emits .js with all type annotations removed.\");",
+      "expectedOutput": "42\nTS-compiler-basics assertions passed.\nNote: 'tsc' emits .js with all type annotations removed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

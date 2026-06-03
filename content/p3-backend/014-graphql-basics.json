@@ -1,0 +1,69 @@
+{
+  "id": "p3-014",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 14,
+  "orderInPhase": 14,
+  "slug": "graphql-basics",
+  "title": "GraphQL basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "graphql",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A mobile app needs a user's name and their posts' titles."
+  },
+  "sections": {
+    "simple_en": "GraphQL is a query language and runtime for APIs where the client specifies exactly which fields it wants, and the server returns precisely that shape — no more, no less. It exposes a single endpoint with a typed schema describing the available types, queries, and mutations.\n\nResolvers are functions that fetch the data for each field. Because clients select fields (and nested relations) in one request, GraphQL avoids the over-fetching and multiple round-trips common in REST. The strong schema also powers tooling, validation, and self-documentation.",
+    "hinglish": "GraphQL APIs ke liye ek query language aur runtime hai jahan client batata hai exactly kaun se fields chahiye, aur server bilkul wahi shape return karta hai — na zyada na kam. Ye ek single endpoint deta hai ek typed schema ke saath jo available types, queries, mutations describe karta hai.\n\nResolvers wo functions hain jo har field ka data fetch karte hain. Client ek hi request mein fields (aur nested relations) select karta hai, isliye GraphQL REST waali over-fetching aur multiple round-trips se bachta hai. Strong schema tooling, validation aur self-documentation bhi deta hai.",
+    "keyPoints": [
+      "Clients request exactly the fields they need; server returns that shape.",
+      "Single endpoint + a typed schema (types, queries, mutations).",
+      "Resolvers fetch data per field, including nested relations.",
+      "Avoids over-fetching and reduces round-trips vs REST.",
+      "Schema enables strong tooling, validation, and self-docs."
+    ],
+    "real_world": "A mobile app needs a user's name and their posts' titles. One GraphQL query fetches exactly that in a single request, while a REST equivalent might require GET /users/:id plus GET /users/:id/posts and return extra fields the app discards.",
+    "followups": [
+      {
+        "q": "What is a resolver?",
+        "a": "A function that returns the data for a particular field in the schema. GraphQL calls resolvers as it walks the query, including for nested fields and relations."
+      },
+      {
+        "q": "How does GraphQL avoid over-fetching?",
+        "a": "The client lists the exact fields it wants, so the server returns only those — unlike REST endpoints that return a fixed (often larger) shape."
+      },
+      {
+        "q": "Query vs mutation in GraphQL?",
+        "a": "Queries read data (no side effects); mutations change data (create/update/delete). Both are defined in the schema with typed inputs and outputs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Apollo Server GraphQL code (Node + @apollo/server). The Node-runnable demo below simulates resolver execution so the output is verifiable here.",
+      "source": "// GraphQL basics — a schema + resolvers with Apollo Server.\nconst { ApolloServer } = require(\"@apollo/server\");\nconst { startStandaloneServer } = require(\"@apollo/server/standalone\");\n\nconst typeDefs = `#graphql\n  type Post { id: ID!, title: String! }\n  type User { id: ID!, name: String!, email: String!, posts: [Post!]! }\n  type Query { user(id: ID!): User }\n`;\n\nconst db = { user: { id: \"1\", name: \"Asha\", email: \"a@x.com\" }, posts: [{ id: \"p1\", title: \"Hi\" }] };\n\nconst resolvers = {\n  Query: {\n    user: (_parent, args) => ({ ...db.user, id: args.id }),\n  },\n  User: {\n    // resolved only if the client asks for `posts`\n    posts: () => db.posts,\n  },\n};\n\nconst server = new ApolloServer({ typeDefs, resolvers });\nstartStandaloneServer(server, { listen: { port: 4000 } });\n// Clients request exactly the fields they need — no over/under-fetching.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// GraphQL basics — resolve only the requested fields from a query\nconst db = { user: { id: 1, name: \"Asha\", email: \"a@x.com\", posts: [{ title: \"Hi\" }] } };\nconst resolvers = {\n  user: () => db.user,\n  \"user.posts\": () => db.user.posts,\n};\nfunction execute(selection){\n  const user = resolvers.user();\n  const result = {};\n  for (const field of selection){\n    if (field === \"posts\") result.posts = resolvers[\"user.posts\"]().map(p => ({ title: p.title }));\n    else result[field] = user[field];\n  }\n  return result;\n}\n// Client asks for exactly what it needs:\nconsole.log(\"query { user { id name } }     ->\", JSON.stringify(execute([\"id\", \"name\"])));\nconsole.log(\"query { user { name posts } }  ->\", JSON.stringify(execute([\"name\", \"posts\"])));\nconst r = execute([\"id\", \"name\"]);\nconsole.assert(!(\"email\" in r), \"unrequested fields are not returned\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "query { user { id name } }     -> {\"id\":1,\"name\":\"Asha\"}\nquery { user { name posts } }  -> {\"name\":\"Asha\",\"posts\":[{\"title\":\"Hi\"}]}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

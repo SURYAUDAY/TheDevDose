@@ -1,0 +1,69 @@
+{
+  "id": "p4-026",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 26,
+  "orderInPhase": 26,
+  "slug": "embedding-generation",
+  "title": "Embedding generation",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "embedding",
+    "generation"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "When building a RAG system over 10,000 docs, a team batches the chunks and generates all embeddings up front, storing them in a vector DB."
+  },
+  "sections": {
+    "simple_en": "Embedding generation is the step of running text through an embedding model to produce its vector representation. For a given model and input, it's deterministic — the same text always yields the same vector — and the output dimension is fixed by the model (e.g., 1536 for text-embedding-3-small).\n\nIn practice you generate embeddings for every document chunk once (then store them) and for each incoming query at search time. Batching many texts in a single request is far cheaper and faster than one call per text. Crucially, you must embed documents and queries with the same model so they live in the same vector space.",
+    "hinglish": "Embedding generation wo step hai jisme text ko ek embedding model se chalakar uska vector representation banate hain. Ek diye gaye model aur input ke liye, ye deterministic hai — same text hamesha same vector deta hai — aur output dimension model se fixed hota hai (jaise text-embedding-3-small ke liye 1536).\n\nPractically aap har document chunk ke liye embeddings ek baar generate karte ho (phir store karte ho) aur har incoming query ke liye search time par. Ek hi request mein bahut saare texts batch karna ek-ek call se kahin cheaper aur faster hai. Khaas baat: documents aur queries ko same model se embed karna chahiye taaki wo same vector space mein hon.",
+    "keyPoints": [
+      "Run text through an embedding model to get its vector.",
+      "Deterministic for a given model+input; fixed output dimension.",
+      "Embed document chunks once (store them); embed queries at search time.",
+      "Batch many texts per request for big cost/speed savings.",
+      "Use the SAME model for documents and queries (same vector space)."
+    ],
+    "real_world": "When building a RAG system over 10,000 docs, a team batches the chunks and generates all embeddings up front, storing them in a vector DB. At query time they embed only the user's question — with the same model — so it can be compared against the stored vectors.",
+    "followups": [
+      {
+        "q": "Why batch embedding requests?",
+        "a": "Sending many texts in one request reduces overhead and cost and is much faster than one request per text — important when embedding thousands of chunks."
+      },
+      {
+        "q": "Must documents and queries use the same embedding model?",
+        "a": "Yes. Vectors are only comparable within the same model's space. Mixing models (or dimensions) makes similarity scores meaningless."
+      },
+      {
+        "q": "Is embedding generation deterministic?",
+        "a": "For a fixed model and input, yes — the same text produces the same vector, which is what lets you store and reliably re-query embeddings."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI embeddings code (needs an API key). The Python-runnable demo below generates deterministic, normalized vectors and batches them, so the process is verifiable here.",
+      "source": "# Embedding generation — create vectors from text with an embeddings API (batched).\nfrom openai import OpenAI\nclient = OpenAI()\n\ndef generate_embeddings(texts: list[str]) -> list[list[float]]:\n    # Batch many texts in one call \\u2014 far cheaper/faster than one call per text.\n    resp = client.embeddings.create(model=\"text-embedding-3-small\", input=texts)\n    return [item.embedding for item in resp.data]\n\n# Open-source alternative (runs locally, no API key) with sentence-transformers:\n# from sentence_transformers import SentenceTransformer\n# model = SentenceTransformer(\"all-MiniLM-L6-v2\")\n# vectors = model.encode(texts, normalize_embeddings=True)\n\nchunks = [\"Refunds take 5 days.\", \"Shipping is free over $50.\"]\n# vectors = generate_embeddings(chunks)   # -> list of 1536-dim vectors\n# Tip: normalize vectors and use the SAME model for documents and queries.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Embedding generation — turning text into a fixed-length vector (deterministic toy model)\nimport hashlib, math\n\ndef embed(text, dim=8):\n    # A toy, deterministic embedding: hash each word into the vector (bag-of-hashed-words).\n    # Real models are neural nets; this just shows text -> fixed-length numeric vector.\n    vec = [0.0] * dim\n    for word in text.lower().split():\n        h = int(hashlib.md5(word.encode()).hexdigest(), 16)\n        vec[h % dim] += 1.0\n    norm = math.sqrt(sum(x * x for x in vec)) or 1.0\n    return [round(x / norm, 3) for x in vec]   # L2-normalized\n\nfor t in [\"the cat sat\", \"the cat sat\", \"a dog ran fast\"]:\n    print(f\"{t!r:24} -> {embed(t)}\")\n\na, b = embed(\"the cat sat\"), embed(\"the cat sat\")\nc = embed(\"a dog ran fast\")\nassert a == b, \"embedding generation is deterministic for the same input\"\nassert a != c, \"different text yields a different vector\"\nassert abs(math.sqrt(sum(x*x for x in a)) - 1.0) < 1e-2, \"vector is ~normalized (rounding aside)\"\nprint(\"Embedding generation maps any text to a fixed-length vector; same input -> same vector.\")\nprint(\"Real embedding models are batched API/model calls; normalize vectors for fair comparison.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "'the cat sat'            -> [0.577, 0.0, 0.0, 0.0, 0.577, 0.0, 0.0, 0.577]\n'the cat sat'            -> [0.577, 0.0, 0.0, 0.0, 0.577, 0.0, 0.0, 0.577]\n'a dog ran fast'         -> [0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0, 0.0]\nEmbedding generation maps any text to a fixed-length vector; same input -> same vector.\nReal embedding models are batched API/model calls; normalize vectors for fair comparison.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "p1a-096",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 96,
+  "orderInPhase": 96,
+  "slug": "localstorage",
+  "title": "LocalStorage",
+  "difficulty": "advanced",
+  "tags": [
+    "p1a",
+    "localstorage"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "Remembering a user's theme preference (light/dark) or a draft form so it survives a page refresh — small, non-sensitive data that should persist between visits."
+  },
+  "sections": {
+    "simple_en": "`localStorage` is a browser API for storing key-value string data that PERSISTS across page reloads and browser restarts (until explicitly cleared). It's synchronous, scoped per origin, and typically limited to about 5–10 MB.\n\nAPI: `setItem(key, value)`, `getItem(key)`, `removeItem(key)`, `clear()`. Values must be strings, so objects are stored with `JSON.stringify` and read back with `JSON.parse`. Don't store sensitive data (it's accessible to any JS on the page) and avoid large/blocking writes since it's synchronous.",
+    "hinglish": "`localStorage` ek browser API hai jo key-value string data store karta hai jo page reloads aur browser restarts ke baad bhi PERSIST karta hai (jab tak explicitly clear na ho). Ye synchronous hai, per origin scoped, aur aam taur par lagbhag 5–10 MB tak limited.\nAPI: `setItem(key, value)`, `getItem(key)`, `removeItem(key)`, `clear()`. Values strings honi chahiye, isliye objects ko `JSON.stringify` se store aur `JSON.parse` se wapas read karte ho. Sensitive data store mat karo (page ki kisi bhi JS ko accessible) aur bade/blocking writes se bacho kyunki ye synchronous hai.",
+    "keyPoints": [
+      "Persistent key-value string storage, scoped per origin (~5–10 MB).",
+      "API: `setItem`, `getItem`, `removeItem`, `clear`.",
+      "Stores strings only → use `JSON.stringify`/`JSON.parse` for objects.",
+      "Synchronous and persistent until cleared (survives restarts).",
+      "Not for sensitive data; accessible to all JS on the page."
+    ],
+    "real_world": "Remembering a user's theme preference (light/dark) or a draft form so it survives a page refresh — small, non-sensitive data that should persist between visits.",
+    "followups": [
+      {
+        "q": "How do you store an object in localStorage?",
+        "a": "Serialize it with `JSON.stringify` on save and parse it with `JSON.parse` on read, since localStorage only stores strings."
+      },
+      {
+        "q": "Should you store auth tokens in localStorage?",
+        "a": "Generally no — it's readable by any JavaScript on the page, making it vulnerable to XSS. Sensitive tokens are better kept in secure, HttpOnly cookies."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Browser code (runs in a browser):\n//\n//   localStorage.setItem(\"theme\", \"dark\");\n//   const theme = localStorage.getItem(\"theme\");   // \"dark\"\n//   localStorage.setItem(\"user\", JSON.stringify({ id: 1 }));\n//   const user = JSON.parse(localStorage.getItem(\"user\"));\n//\n// Node has no localStorage, so we model the same API to demo the logic.\n\nfunction createStorage() {\n  const map = new Map();\n  return {\n    setItem: (k, v) => map.set(k, String(v)),\n    getItem: (k) => (map.has(k) ? map.get(k) : null),\n    removeItem: (k) => map.delete(k),\n    clear: () => map.clear(),\n  };\n}\n\n// JSON helpers mirroring real usage\nfunction saveObject(storage, key, obj) { storage.setItem(key, JSON.stringify(obj)); }\nfunction loadObject(storage, key) {\n  const raw = storage.getItem(key);\n  return raw === null ? null : JSON.parse(raw);\n}\n\nmodule.exports = { createStorage, saveObject, loadObject };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (storage is simulated; browser uses window.localStorage) ---\nconst { createStorage, saveObject, loadObject } = require(\"./solution\");\n\nconst storage = createStorage();\nstorage.setItem(\"theme\", \"dark\");\nconsole.log(storage.getItem(\"theme\"));    // dark\nconsole.log(storage.getItem(\"missing\"));  // null\n\nsaveObject(storage, \"user\", { id: 1, name: \"Asha\" });\nconsole.log(loadObject(storage, \"user\")); // { id:1, name:'Asha' }\n\nstorage.removeItem(\"theme\");\nconsole.log(storage.getItem(\"theme\"));    // null\n\nconsole.assert(loadObject(storage, \"user\").name === \"Asha\", \"object round-trips via JSON\");\nconsole.assert(storage.getItem(\"theme\") === null, \"removeItem works\");\nconsole.assert(storage.getItem(\"missing\") === null, \"missing key returns null\");\nconsole.log(\"localStorage assertions passed.\");",
+      "expectedOutput": "dark\nnull\n{ id: 1, name: 'Asha' }\nnull\nlocalStorage assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

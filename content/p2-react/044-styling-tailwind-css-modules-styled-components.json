@@ -1,0 +1,72 @@
+{
+  "id": "p2-044",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 44,
+  "orderInPhase": 44,
+  "slug": "styling-tailwind-css-modules-styled-components",
+  "title": "Styling (Tailwind / CSS Modules / styled-components)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "styling",
+    "tailwind",
+    "css",
+    "modules",
+    "styled-components"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A startup picks Tailwind for speed and a consistent spacing/color scale across the team."
+  },
+  "sections": {
+    "simple_en": "React supports several styling approaches. Tailwind CSS uses utility classes directly in markup for fast, consistent styling. CSS Modules scope class names to a file (auto-hashed) to avoid global collisions. styled-components (CSS-in-JS) lets you write component-scoped CSS in JavaScript with dynamic props.\n\nEach has trade-offs: Tailwind is fast and consistent but verbose in markup; CSS Modules keep familiar CSS with scoping; CSS-in-JS gives dynamic, co-located styles with some runtime cost. A clsx-style helper is commonly used to compose conditional classes cleanly.",
+    "hinglish": "React mein styling ke kai tarike hain. Tailwind CSS utility classes seedha markup mein use karta hai — fast aur consistent. CSS Modules class names ko file ke scope mein rakhta hai (auto-hashed) taaki global collision na ho. styled-components (CSS-in-JS) JavaScript mein component-scoped CSS likhne deta hai dynamic props ke saath.\n\nHar ek ke trade-offs hain: Tailwind fast par markup verbose; CSS Modules familiar CSS with scoping; CSS-in-JS dynamic co-located styles par thoda runtime cost. Conditional classes compose karne ke liye clsx jaisa helper aam hai.",
+    "keyPoints": [
+      "Tailwind: utility classes in markup — fast, consistent, no naming; markup gets verbose.",
+      "CSS Modules: file-scoped, auto-hashed class names; familiar CSS, no collisions.",
+      "styled-components / CSS-in-JS: component-scoped, dynamic styles via props; runtime cost.",
+      "Use a clsx/classnames helper to compose conditional classes cleanly.",
+      "Choice depends on team preference, performance needs, and design-system style."
+    ],
+    "real_world": "A startup picks Tailwind for speed and a consistent spacing/color scale across the team. A component library that ships to many apps might prefer CSS Modules or CSS-in-JS for stronger encapsulation so its styles never leak into or clash with host apps.",
+    "followups": [
+      {
+        "q": "What problem do CSS Modules solve?",
+        "a": "Global CSS scope collisions. They auto-generate unique, hashed class names per file so styles don't accidentally affect other components."
+      },
+      {
+        "q": "What's a downside of CSS-in-JS?",
+        "a": "Runtime overhead from generating styles in the browser (varies by library), and larger JS bundles. Zero-runtime CSS-in-JS tools aim to reduce this."
+      },
+      {
+        "q": "Why use a clsx helper?",
+        "a": "To compose conditional class names readably: clsx('btn', isActive && 'active') instead of fragile string concatenation."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Styling: Tailwind utility classes + a clsx helper for conditional classes.\nimport React from \"react\";\nimport clsx from \"clsx\";\n// CSS Modules alternative: import styles from \"./Button.module.css\";\n\nexport default function Button({ variant = \"primary\", disabled, children }) {\n  return (\n    <button\n      disabled={disabled}\n      className={clsx(\n        \"px-4 py-2 rounded font-medium\",        // base Tailwind utilities\n        variant === \"primary\" && \"bg-blue-600 text-white\",\n        variant === \"danger\" && \"bg-red-600 text-white\",\n        disabled && \"opacity-50 cursor-not-allowed\"\n      )}\n    >\n      {children}\n    </button>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Styling — className composition (like clsx) used by Tailwind/CSS Modules\nfunction clsx(...args){\n  const out = [];\n  for (const a of args){\n    if (!a) continue;\n    if (typeof a === \"string\") out.push(a);\n    else if (typeof a === \"object\") for (const k in a) if (a[k]) out.push(k);\n  }\n  return out.join(\" \");\n}\nconst isActive = true, isDisabled = false;\nconst cls = clsx(\"btn\", \"px-4\", { \"btn-active\": isActive, \"btn-disabled\": isDisabled });\nconsole.log(\"Computed className:\", cls);\nconsole.assert(cls === \"btn px-4 btn-active\", \"active applied, disabled skipped\");\n\n// CSS Modules: imported class names are hashed to avoid global collisions\nconst styles = { button: \"Button_button__a1b2c\", primary: \"Button_primary__d3e4f\" };\nconsole.log(\"Module class:\", clsx(styles.button, styles.primary));\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Computed className: btn px-4 btn-active\nModule class: Button_button__a1b2c Button_primary__d3e4f\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

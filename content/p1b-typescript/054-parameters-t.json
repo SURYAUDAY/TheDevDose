@@ -1,0 +1,64 @@
+{
+  "id": "p1b-054",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 54,
+  "orderInPhase": 54,
+  "slug": "parameters-t",
+  "title": "Parameters<T>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "parameters"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A generic `withLogging(fn)` wrapper typed `(...args: Parameters<typeof fn>) => ReturnType<typeof fn>` accepts exactly the wrapped function's arguments and re…"
+  },
+  "sections": {
+    "simple_en": "`Parameters<T>` extracts the parameter types of a function type `T` as a TUPLE. Combined with `typeof`, `Parameters<typeof fn>` gives the exact argument-type tuple of an existing function.\n\nThis is useful for wrapping functions (logging, memoising, currying) where you want the wrapper to accept exactly the same arguments. You can index into the tuple (e.g. `Parameters<typeof fn>[0]`) to get a single parameter's type.",
+    "hinglish": "`Parameters<T>` ek function type `T` ke parameter types ko ek TUPLE ki tarah nikaalta hai. `typeof` ke saath, `Parameters<typeof fn>` ek existing function ka exact argument-type tuple deta hai.\nYe functions wrap karne ke liye useful hai (logging, memoising, currying) jahan aap chahte ho ki wrapper bilkul same arguments accept kare. Tuple me index karke (jaise `Parameters<typeof fn>[0]`) ek single parameter ka type le sakte ho.",
+    "keyPoints": [
+      "Extracts a function's parameter types as a tuple.",
+      "Use as `Parameters<typeof fn>`.",
+      "Great for wrappers that mirror the original's arguments.",
+      "Index it for a single parameter: `Parameters<typeof fn>[0]`.",
+      "Built on a conditional type with `infer`."
+    ],
+    "real_world": "A generic `withLogging(fn)` wrapper typed `(...args: Parameters<typeof fn>) => ReturnType<typeof fn>` accepts exactly the wrapped function's arguments and returns its return type — fully type-safe instrumentation.",
+    "followups": [
+      {
+        "q": "What does Parameters<T> return?",
+        "a": "A tuple of the function's parameter types. For `(a: number, b: string) => void` it yields `[number, string]`."
+      },
+      {
+        "q": "How do you get just the first parameter's type?",
+        "a": "Index the tuple: `Parameters<typeof fn>[0]`. This gives the type of the first argument."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Parameters to mirror a function's arguments.\n\nexport function multiply(a: number, b: number): number {\n  return a * b;\n}\n\ntype MulArgs = Parameters<typeof multiply>; // [number, number]\n\nexport function callWith(args: MulArgs): number {\n  return multiply(...args);\n}\n\nexport type FirstArg = Parameters<typeof multiply>[0]; // number",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { callWith } from \"./solution\";\n\nconsole.log(callWith([6, 7])); // 42\nconsole.assert(callWith([6, 7]) === 42, \"Parameters tuple spread into call\");\nconsole.log(\"Parameters assertions passed.\");",
+      "expectedOutput": "42\nParameters assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_51-77.docx.md"
+  }
+}

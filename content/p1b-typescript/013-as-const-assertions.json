@@ -1,0 +1,65 @@
+{
+  "id": "p1b-013",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 13,
+  "orderInPhase": 13,
+  "slug": "as-const-assertions",
+  "title": "as const Assertions",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "const",
+    "assertions"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Defining `const ROLES = [\"admin\", \"user\", \"guest\"] as const` lets you derive `type Role = typeof ROLES[number]` ('admin' | 'user' | 'guest'), keeping the lis…"
+  },
+  "sections": {
+    "simple_en": "`as const` tells TypeScript to infer the narrowest, most specific (and readonly) type for a literal. Instead of widening `\"up\"` to `string` or `{ x: 1 }` to `{ x: number }`, it keeps the exact literal values and marks everything as readonly.\n\nIt's invaluable for creating typed constant objects/arrays where you want the precise literal types preserved — for configuration, action-type constants, or deriving a literal union from an array's values via `typeof arr[number]`.",
+    "hinglish": "`as const` TypeScript ko kehta hai ki literal ke liye sabse narrow, sabse specific (aur readonly) type infer kare. `\"up\"` ko `string` ya `{ x: 1 }` ko `{ x: number }` me widen karne ke bajaye, ye exact literal values rakhta hai aur sab kuch readonly mark karta hai.\nYe typed constant objects/arrays banane ke liye bohot useful hai jahan aap precise literal types preserve karna chahte ho — configuration, action-type constants, ya `typeof arr[number]` se array ki values se literal union derive karne ke liye.",
+    "keyPoints": [
+      "`as const` infers the narrowest literal types and makes them readonly.",
+      "Prevents widening (`\"up\"` stays `\"up\"`, not `string`).",
+      "Great for config objects and constant arrays.",
+      "Derive a union from an array: `typeof arr[number]`.",
+      "Everything becomes deeply readonly (can't be mutated)."
+    ],
+    "real_world": "Defining `const ROLES = [\"admin\", \"user\", \"guest\"] as const` lets you derive `type Role = typeof ROLES[number]` ('admin' | 'user' | 'guest'), keeping the list and the type in perfect sync from a single source.",
+    "followups": [
+      {
+        "q": "What does `as const` do to a literal?",
+        "a": "It infers the narrowest possible (literal) type and marks the whole structure as readonly — so `\"up\"` stays the literal `\"up\"` instead of widening to `string`, and objects/arrays become immutable in the type system."
+      },
+      {
+        "q": "How do you derive a union type from a const array?",
+        "a": "Use `as const` on the array, then `typeof arr[number]` produces a union of its element literal types — keeping the data and the type in sync from one declaration."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — as const preserves literal types and readonly-ness.\n\nexport const ROLES = [\"admin\", \"user\", \"guest\"] as const;\nexport type Role = typeof ROLES[number]; // \"admin\" | \"user\" | \"guest\"\n\nexport function isAdmin(role: Role): boolean {\n  return role === \"admin\";\n}\n\nexport const CONFIG = { retries: 3, mode: \"fast\" } as const;\n// CONFIG.retries is the literal type 3 (readonly), not 'number'.\n\nexport function describeConfig(): string {\n  return \"retries=\" + CONFIG.retries + \", mode=\" + CONFIG.mode;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { ROLES, isAdmin, describeConfig } from \"./solution\";\n\nconsole.log([...ROLES]);          // ['admin','user','guest']\nconsole.log(isAdmin(\"admin\"));    // true\nconsole.log(isAdmin(\"guest\"));    // false\nconsole.log(describeConfig());    // retries=3, mode=fast\n\nconsole.assert(ROLES.length === 3, \"three roles\");\nconsole.assert(isAdmin(\"admin\") === true, \"admin check\");\nconsole.assert(isAdmin(\"guest\") === false, \"guest is not admin\");\nconsole.assert(describeConfig() === \"retries=3, mode=fast\", \"config literal preserved\");\nconsole.log(\"as-const assertions passed.\");",
+      "expectedOutput": "[ 'admin', 'user', 'guest' ]\ntrue\nfalse\nretries=3, mode=fast\nas-const assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

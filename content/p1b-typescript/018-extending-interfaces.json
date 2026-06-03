@@ -1,0 +1,65 @@
+{
+  "id": "p1b-018",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 18,
+  "orderInPhase": 18,
+  "slug": "extending-interfaces",
+  "title": "Extending Interfaces",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "extending",
+    "interfaces"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A base `interface Person { name: string }` extended by `interface Employee extends Person { employeeId: number }` means every Employee automatically has a na…"
+  },
+  "sections": {
+    "simple_en": "Interfaces can build on other interfaces with `extends`, inheriting all their members and adding new ones. This models 'is-a' relationships and lets you compose larger contracts from smaller, reusable pieces without repeating fields.\n\nAn interface can extend multiple interfaces at once (`extends A, B`), effectively merging their members. This is the interface equivalent of intersection types, and is the idiomatic way to share common fields across related object shapes.",
+    "hinglish": "Interfaces `extends` se doosre interfaces par bana sakte hain, unke saare members inherit karke aur naye add karke. Ye 'is-a' relationships model karta hai aur aapko chhote, reusable pieces se bade contracts compose karne deta hai bina fields repeat kiye.\nEk interface ek saath kai interfaces extend kar sakta hai (`extends A, B`), unke members ko effectively merge karke. Ye intersection types ka interface equivalent hai, aur related object shapes me common fields share karne ka idiomatic tarika hai.",
+    "keyPoints": [
+      "`interface B extends A` inherits all of A's members plus B's new ones.",
+      "Can extend multiple interfaces: `extends A, B`.",
+      "Models 'is-a' relationships and composes contracts.",
+      "Interface equivalent of intersection types.",
+      "Avoids repeating shared fields across related shapes."
+    ],
+    "real_world": "A base `interface Person { name: string }` extended by `interface Employee extends Person { employeeId: number }` means every Employee automatically has a name plus employee-specific fields — shared shape, no duplication.",
+    "followups": [
+      {
+        "q": "Can an interface extend more than one interface?",
+        "a": "Yes. `interface C extends A, B` inherits members from both A and B, merging their contracts — similar to an intersection type."
+      },
+      {
+        "q": "How is extending interfaces different from an intersection type?",
+        "a": "They achieve similar composition, but `extends` is interface-specific syntax with better error messages for object shapes and supports class implementation; intersections (`A & B`) work on any types, including non-object ones."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — extending interfaces (single and multiple).\n\ninterface Person { name: string; }\ninterface Timestamps { createdAt: string; }\n\ninterface Employee extends Person, Timestamps {\n  employeeId: number;\n}\n\nexport function makeEmployee(name: string, id: number): Employee {\n  return { name, employeeId: id, createdAt: \"2025-01-01\" };\n}\n\nexport function describe(e: Employee): string {\n  return e.name + \" (#\" + e.employeeId + \") since \" + e.createdAt;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { makeEmployee, describe } from \"./solution\";\n\nconst e = makeEmployee(\"Asha\", 7);\nconsole.log(e);          // { name:'Asha', employeeId:7, createdAt:'2025-01-01' }\nconsole.log(describe(e)); // Asha (#7) since 2025-01-01\n\nconsole.assert(e.name === \"Asha\", \"inherited Person.name\");\nconsole.assert(e.employeeId === 7, \"own field\");\nconsole.assert(typeof e.createdAt === \"string\", \"inherited Timestamps.createdAt\");\nconsole.assert(describe(e) === \"Asha (#7) since 2025-01-01\", \"uses all fields\");\nconsole.log(\"extending-interfaces assertions passed.\");",
+      "expectedOutput": "{ name: 'Asha', employeeId: 7, createdAt: '2025-01-01' }\nAsha (#7) since 2025-01-01\nextending-interfaces assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

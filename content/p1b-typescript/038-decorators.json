@@ -1,0 +1,64 @@
+{
+  "id": "p1b-038",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 38,
+  "orderInPhase": 38,
+  "slug": "decorators",
+  "title": "Decorators",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "decorators"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "In NestJS, `@Controller()` and `@Get()` decorators declaratively register routes; a custom `@Log()` decorator can wrap a method to log its calls and timing w…"
+  },
+  "sections": {
+    "simple_en": "Decorators are special functions, prefixed with `@`, that attach reusable behaviour or metadata to classes, methods, accessors, properties, or parameters. They let you wrap or augment a declaration declaratively — e.g. logging, validation, dependency injection.\n\nA method decorator, for instance, receives the original method and can return a replacement that adds behaviour (like timing or logging) around the original call. Frameworks like Angular and NestJS rely heavily on decorators. Note: enabling them requires the right compiler/runtime configuration.",
+    "hinglish": "Decorators special functions hain, `@` se prefixed, jo classes, methods, accessors, properties, ya parameters ko reusable behaviour ya metadata attach karte hain. Ye aapko ek declaration ko declaratively wrap ya augment karne dete hain — jaise logging, validation, dependency injection.\nEk method decorator, jaise, original method receive karta hai aur ek replacement return kar sakta hai jo original call ke aas-paas behaviour add kare (jaise timing ya logging). Angular aur NestJS jaise frameworks decorators par bohot bharosa karte hain. Note: inhe enable karne ke liye sahi compiler/runtime configuration chahiye.",
+    "keyPoints": [
+      "`@decorator` attaches behaviour/metadata to a declaration.",
+      "Apply to classes, methods, accessors, properties, parameters.",
+      "A method decorator can wrap/replace the original method.",
+      "Heavily used by Angular, NestJS, TypeORM, etc.",
+      "Require enabling (decorators support / experimentalDecorators)."
+    ],
+    "real_world": "In NestJS, `@Controller()` and `@Get()` decorators declaratively register routes; a custom `@Log()` decorator can wrap a method to log its calls and timing without cluttering the method body.",
+    "followups": [
+      {
+        "q": "What can decorators be applied to?",
+        "a": "Classes, methods, accessors, properties, and (with the legacy implementation) parameters. They attach reusable behaviour or metadata declaratively with the `@` syntax."
+      },
+      {
+        "q": "Name a framework that relies on decorators.",
+        "a": "Angular and NestJS use them extensively (e.g. `@Component`, `@Injectable`, `@Controller`, `@Get`), as does TypeORM for entity/column definitions."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// Decorator syntax (TС 5+ stage-3 decorators):\n//\n//   function logged(orig: any, ctx: ClassMethodDecoratorContext) {\n//     return function (this: any, ...args: any[]) {\n//       console.log(\"calling \" + String(ctx.name));\n//       return orig.apply(this, args);\n//     };\n//   }\n//   class Calc { @logged add(a: number, b: number) { return a + b; } }\n//\n// Decorators need build config (and some bundlers differ), so for a runnable\n// demo we show the SAME idea as a plain higher-order wrapper.\n\nexport function logged<A extends any[], R>(name: string, fn: (...a: A) => R) {\n  return (...args: A): R => {\n    // (would console.log in a real decorator)\n    return fn(...args);\n  };\n}\n\nexport class Calc {\n  add = logged(\"add\", (a: number, b: number) => a + b);\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { Calc, logged } from \"./solution\";\n\nconst calc = new Calc();\nconsole.log(calc.add(2, 3)); // 5\n\nconst timesTwo = logged(\"double\", (n: number) => n * 2);\nconsole.log(timesTwo(21));   // 42\n\nconsole.assert(calc.add(2, 3) === 5, \"wrapped method works\");\nconsole.assert(timesTwo(21) === 42, \"wrapper preserves behaviour\");\nconsole.log(\"decorators assertions passed.\");\nconsole.log(\"Note: real @decorators need compiler/runtime config; logic shown via a wrapper.\");",
+      "expectedOutput": "5\n42\ndecorators assertions passed.\nNote: real @decorators need compiler/runtime config; logic shown via a wrapper.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

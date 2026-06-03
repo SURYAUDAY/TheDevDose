@@ -1,0 +1,65 @@
+{
+  "id": "p1b-028",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 28,
+  "orderInPhase": 28,
+  "slug": "array-typing",
+  "title": "Array Typing",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "array",
+    "typing"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "Typing API data as `User[]` ensures every map/filter over the list gets a fully-typed `user`, and prevents accidentally pushing a non-User object into the co…"
+  },
+  "sections": {
+    "simple_en": "Arrays are typed either as `Type[]` (e.g. `number[]`) or equivalently `Array<Type>`. This constrains every element to that type, so pushing a wrong type is a compile error. Multidimensional arrays use repeated brackets (`number[][]`).\n\nFor arrays whose elements shouldn't change, use `readonly Type[]` or `ReadonlyArray<Type>`. Arrays of unions (`(string | number)[]`) hold mixed-but-restricted values. TypeScript infers array element types from literals, so explicit annotations are often optional.",
+    "hinglish": "Arrays ya to `Type[]` (jaise `number[]`) ya equivalently `Array<Type>` se type hote hain. Ye har element ko us type tak seemit karta hai, isliye galat type push karna compile error hai. Multidimensional arrays repeated brackets use karte hain (`number[][]`).\nJin arrays ke elements change nahi hone chahiye unke liye `readonly Type[]` ya `ReadonlyArray<Type>` use karo. Unions ke arrays (`(string | number)[]`) mixed-par-restricted values rakhte hain. TypeScript literals se array element types infer kar leta hai, isliye explicit annotations aksar optional hain.",
+    "keyPoints": [
+      "Two equivalent forms: `T[]` and `Array<T>`.",
+      "Elements are constrained to T (wrong types are errors).",
+      "Multidimensional: `T[][]`; union arrays: `(A | B)[]`.",
+      "Immutable arrays: `readonly T[]` / `ReadonlyArray<T>`.",
+      "Element types are usually inferred from literals."
+    ],
+    "real_world": "Typing API data as `User[]` ensures every map/filter over the list gets a fully-typed `user`, and prevents accidentally pushing a non-User object into the collection.",
+    "followups": [
+      {
+        "q": "What are the two ways to type an array?",
+        "a": "`T[]` (e.g. `number[]`) and `Array<T>` (e.g. `Array<number>`). They're equivalent; `T[]` is more common."
+      },
+      {
+        "q": "How do you make an array immutable in the type system?",
+        "a": "Use `readonly T[]` or `ReadonlyArray<T>`, which disallow mutating methods (push/splice) and element reassignment at compile time."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — array typing variants.\n\nexport function sum(nums: number[]): number {\n  return nums.reduce((a, b) => a + b, 0);\n}\n\nexport function flatten(matrix: number[][]): number[] {\n  return matrix.reduce<number[]>((acc, row) => acc.concat(row), []);\n}\n\nexport function firstString(values: (string | number)[]): string | undefined {\n  return values.find((v): v is string => typeof v === \"string\");\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { sum, flatten, firstString } from \"./solution\";\n\nconsole.log(sum([1, 2, 3]));                 // 6\nconsole.log(flatten([[1, 2], [3], [4, 5]])); // [1,2,3,4,5]\nconsole.log(firstString([1, \"two\", 3]));     // two\n\nconsole.assert(sum([1, 2, 3]) === 6, \"number[] sum\");\nconsole.assert(JSON.stringify(flatten([[1,2],[3]])) === \"[1,2,3]\", \"number[][] flatten\");\nconsole.assert(firstString([1, \"two\"]) === \"two\", \"union array find\");\nconsole.log(\"array-typing assertions passed.\");",
+      "expectedOutput": "6\n[ 1, 2, 3, 4, 5 ]\ntwo\narray-typing assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

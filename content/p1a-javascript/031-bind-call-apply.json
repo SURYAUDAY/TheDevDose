@@ -1,0 +1,66 @@
+{
+  "id": "p1a-031",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 31,
+  "orderInPhase": 31,
+  "slug": "bind-call-apply",
+  "title": "bind / call / apply",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "bind",
+    "call",
+    "apply"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Borrowing array methods on an array-like object: `Array.prototype.slice.call(arguments)` converts the old `arguments` object into a real array."
+  },
+  "sections": {
+    "simple_en": "These three methods let you explicitly control what `this` is inside a function. `call` invokes the function immediately with a given `this` and arguments listed individually. `apply` is the same but takes arguments as an array. `bind` does not invoke — it returns a new function permanently bound to the given `this`.\n\nMnemonic: call = Comma-separated args, apply = Array of args, bind = Bound copy for later. They're essential for borrowing methods, fixing `this` in callbacks, and partial application via `bind`.",
+    "hinglish": "Ye teen methods aapko explicitly control dete hain ki function ke andar `this` kya hoga. `call` function ko turant call karta hai given `this` aur arguments alag-alag deke. `apply` same hai par arguments array me leta hai. `bind` call nahi karta — woh ek naya function return karta hai jo permanently given `this` se bound hota hai.\nYaad rakhne ka tarika: call = Comma-separated args, apply = Array of args, bind = Bound copy baad ke liye. Ye method borrowing, callbacks me `this` fix karne, aur `bind` se partial application ke liye zaruri hain.",
+    "keyPoints": [
+      "`call(thisArg, a, b)` — invoke now, args listed individually.",
+      "`apply(thisArg, [a, b])` — invoke now, args as an array.",
+      "`bind(thisArg, ...presetArgs)` — returns a new bound function (does NOT invoke).",
+      "All three set `this` explicitly (explicit binding).",
+      "Uses: method borrowing, fixing callback `this`, partial application with bind."
+    ],
+    "real_world": "Borrowing array methods on an array-like object: `Array.prototype.slice.call(arguments)` converts the old `arguments` object into a real array. Or `bind` to make an event handler that always has the right `this`.",
+    "followups": [
+      {
+        "q": "What's the difference between call and apply?",
+        "a": "Both invoke immediately with an explicit `this`; `call` takes arguments individually (comma-separated), while `apply` takes them as a single array."
+      },
+      {
+        "q": "How is bind different from call/apply?",
+        "a": "`bind` does not call the function — it returns a new function permanently bound to the given `this` (and optionally preset arguments), to be invoked later."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// call / apply / bind in action.\n\nfunction introduce(greeting, punctuation) {\n  return greeting + \", I'm \" + this.name + punctuation;\n}\n\nconst person = { name: \"Asha\" };\n\nfunction demo() {\n  const viaCall = introduce.call(person, \"Hi\", \"!\");        // immediate, comma args\n  const viaApply = introduce.apply(person, [\"Hello\", \".\"]); // immediate, array args\n  const bound = introduce.bind(person, \"Hey\");              // returns new fn\n  const viaBind = bound(\"?\");                               // supply rest later\n  return { viaCall, viaApply, viaBind };\n}\n\n// Method borrowing: max of an array-like using apply\nfunction maxOf(arrayLike) {\n  return Math.max.apply(null, Array.prototype.slice.call(arrayLike));\n}\n\nmodule.exports = { demo, maxOf };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { demo, maxOf } = require(\"./solution\");\n\nconsole.log(demo());\nconsole.log(\"max:\", maxOf({ 0: 3, 1: 9, 2: 5, length: 3 })); // 9\n\nconst d = demo();\nconsole.assert(d.viaCall === \"Hi, I'm Asha!\", \"call works\");\nconsole.assert(d.viaApply === \"Hello, I'm Asha.\", \"apply works\");\nconsole.assert(d.viaBind === \"Hey, I'm Asha?\", \"bind + later arg works\");\nconsole.assert(maxOf({ 0: 3, 1: 9, 2: 5, length: 3 }) === 9, \"method borrowing via apply\");\nconsole.log(\"bind/call/apply assertions passed.\");",
+      "expectedOutput": "{ viaCall: \"Hi, I'm Asha!\", viaApply: \"Hello, I'm Asha.\", viaBind: \"Hey, I'm Asha?\" }\nmax: 9\nbind/call/apply assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

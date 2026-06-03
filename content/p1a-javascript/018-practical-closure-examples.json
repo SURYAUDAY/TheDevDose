@@ -1,0 +1,66 @@
+{
+  "id": "p1a-018",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 18,
+  "orderInPhase": 18,
+  "slug": "practical-closure-examples",
+  "title": "Practical Closure Examples",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "practical",
+    "closure",
+    "examples"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Memoising an expensive API/price calculation: the first call computes and caches; repeated calls with the same input return instantly from the cache held in…"
+  },
+  "sections": {
+    "simple_en": "Beyond the theory, closures solve real, everyday problems. The most common patterns are: function factories (build customised functions), memoisation (cache expensive results), the module pattern (private state with a public API), and once-only functions (run something a single time).\n\nAll of these rely on the same mechanic — an inner function retaining access to outer variables after the outer function has returned. Being able to write these from memory in an interview demonstrates real fluency, not just a textbook definition.",
+    "hinglish": "Theory ke alawa, closures real, rozmarra problems solve karte hain. Sabse common patterns hain: function factories (customised functions banao), memoisation (mehnga result cache karo), module pattern (private state + public API), aur once-only functions (kuch ek hi baar chalao).\nYe sab same mechanic par chalte hain — inner function outer variables ka access outer function return hone ke baad bhi rakhta hai. Interview me inhe yaad se likhna asli fluency dikhata hai, sirf definition ratna nahi.",
+    "keyPoints": [
+      "Function factory: a function that returns customised functions (e.g. `makeAdder(5)`).",
+      "Memoisation: cache results in a closed-over object/Map to skip repeat work.",
+      "Module pattern: expose a public API while keeping helpers/state private.",
+      "Once: wrap a function so it runs only the first time.",
+      "All use the same idea: retained access to outer scope after return."
+    ],
+    "real_world": "Memoising an expensive API/price calculation: the first call computes and caches; repeated calls with the same input return instantly from the cache held in the closure — a real performance win in dashboards and search-as-you-type.",
+    "followups": [
+      {
+        "q": "How does memoisation use closures?",
+        "a": "The cache (an object/Map) is declared in the outer function and captured by the returned inner function, so it persists across calls and stays private to that memoised function."
+      },
+      {
+        "q": "Why might too many closures be a concern?",
+        "a": "Each retains its captured variables in memory; capturing large objects unnecessarily can keep them alive and contribute to memory leaks if the closures themselves are long-lived."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Three classic closure utilities.\n\n// 1) Function factory\nfunction makeAdder(x) {\n  return (y) => x + y;\n}\n\n// 2) Memoise a single-argument pure function\nfunction memoize(fn) {\n  const cache = new Map(); // private cache via closure\n  return function (arg) {\n    if (cache.has(arg)) return { value: cache.get(arg), cached: true };\n    const value = fn(arg);\n    cache.set(arg, value);\n    return { value, cached: false };\n  };\n}\n\n// 3) once(): run a function only the first time\nfunction once(fn) {\n  let called = false, result;\n  return function (...args) {\n    if (!called) { called = true; result = fn(...args); }\n    return result;\n  };\n}\n\nmodule.exports = { makeAdder, memoize, once };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { makeAdder, memoize, once } = require(\"./solution\");\n\nconst add10 = makeAdder(10);\nconsole.log(add10(5)); // 15\n\nlet calls = 0;\nconst square = memoize((n) => { calls++; return n * n; });\nconsole.log(square(4)); // { value: 16, cached: false }\nconsole.log(square(4)); // { value: 16, cached: true }\n\nconst init = once(() => ++calls);\ninit(); init(); init();\n\nconsole.assert(add10(5) === 15, \"factory works\");\nconsole.assert(square(4).cached === true, \"memo returns cached on repeat\");\nconsole.assert(calls === 2, \"square called once + once-init called once\");\nconsole.log(\"practical closure assertions passed.\");",
+      "expectedOutput": "15\n{ value: 16, cached: false }\n{ value: 16, cached: true }\npractical closure assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p4-047",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 47,
+  "orderInPhase": 47,
+  "slug": "rag-evaluation-ragas",
+  "title": "RAG evaluation (RAGAS)",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "rag",
+    "evaluation",
+    "ragas"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "pipeline",
+    "seedText": "A team tweaking their RAG pipeline runs RAGAS to compare chunk sizes: the 500-char config scores higher on context precision and faithfulness than the 2000-c…"
+  },
+  "sections": {
+    "simple_en": "RAG systems need objective evaluation, not just eyeballing. RAGAS is a framework that scores RAG quality across both retrieval and generation. Retrieval metrics include context precision (are retrieved chunks relevant?) and context recall (were all the needed chunks retrieved?). Generation metrics include faithfulness (is the answer grounded in the context, with no hallucination?) and answer relevancy (does it address the question?).\n\nThese scores let you compare configurations objectively — different chunking strategies, embedding models, k values, or rerankers — and improve the system systematically. Evaluation turns 'this looks good' into measurable progress, which is essential for trusting and iterating on a production RAG pipeline.",
+    "hinglish": "RAG systems ko objective evaluation chahiye, sirf eyeballing nahi. RAGAS ek framework hai jo RAG quality ko retrieval aur generation dono ke across score karta hai. Retrieval metrics mein context precision (kya retrieved chunks relevant hain?) aur context recall (kya saare zaroori chunks retrieve hue?) shamil hain. Generation metrics mein faithfulness (kya answer context mein grounded hai, bina hallucination?) aur answer relevancy (kya ye question address karta hai?) shamil hain.\n\nYe scores aapko configurations objectively compare karne dete hain — alag chunking strategies, embedding models, k values, ya rerankers — aur system ko systematically improve karne dete hain. Evaluation 'ye achha lag raha hai' ko measurable progress mein badal deta hai, jo ek production RAG pipeline par trust aur iterate karne ke liye essential hai.",
+    "keyPoints": [
+      "Evaluate RAG objectively across retrieval AND generation.",
+      "Context precision: are retrieved chunks relevant?",
+      "Context recall: were all needed chunks retrieved?",
+      "Faithfulness: is the answer grounded (no hallucination)?",
+      "Answer relevancy: does the answer address the question? Compare configs to improve."
+    ],
+    "real_world": "A team tweaking their RAG pipeline runs RAGAS to compare chunk sizes: the 500-char config scores higher on context precision and faithfulness than the 2000-char one, giving them data-driven justification to ship the smaller chunks instead of guessing.",
+    "followups": [
+      {
+        "q": "Why evaluate RAG with metrics instead of manual review?",
+        "a": "Manual review doesn't scale and isn't reproducible. Metrics like those in RAGAS give objective, comparable scores so you can systematically tune and prove improvements."
+      },
+      {
+        "q": "What's the difference between faithfulness and answer relevancy?",
+        "a": "Faithfulness measures whether the answer is grounded in the retrieved context (no hallucination). Answer relevancy measures whether the answer actually addresses the user's question."
+      },
+      {
+        "q": "What do context precision and recall tell you?",
+        "a": "They measure retrieval quality: precision is how many retrieved chunks are relevant; recall is how many of the relevant chunks were actually retrieved. Low scores point to retrieval (not generation) problems."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real RAGAS evaluation code. The Python-runnable demo below computes context precision/recall and faithfulness so the metrics are verifiable here.",
+      "source": "# RAG evaluation (RAGAS) — measure retrieval and generation quality with metrics.\nfrom ragas import evaluate\nfrom ragas.metrics import (\n    context_precision, context_recall, faithfulness, answer_relevancy,\n)\nfrom datasets import Dataset\n\n# Build an evaluation dataset of question / retrieved-contexts / answer / ground-truth.\ndata = {\n    \"question\": [\"What is the return window?\"],\n    \"contexts\": [[\"Returns are accepted within 30 days of purchase.\"]],\n    \"answer\": [\"You can return items within 30 days.\"],\n    \"ground_truth\": [\"The return window is 30 days.\"],\n}\ndataset = Dataset.from_dict(data)\n\nresult = evaluate(dataset, metrics=[\n    context_precision,   # are retrieved chunks relevant?\n    context_recall,      # did we retrieve all needed info?\n    faithfulness,        # is the answer supported by the context (no hallucination)?\n    answer_relevancy,    # does the answer address the question?\n])\n# print(result)  # -> per-metric scores you can track and tune against\n\n# RAGAS turns \"the RAG feels better\" into numbers, so you can tune chunking, k,\n# the embedding model, and prompts with real before/after measurements.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# RAG evaluation (RAGAS) — quantify retrieval & generation quality with core metrics\n# Context Precision: fraction of retrieved chunks that are relevant.\n# Context Recall: fraction of needed (ground-truth) info that was retrieved.\n# Faithfulness: fraction of answer claims supported by the retrieved context.\ndef context_precision(retrieved_relevant_flags):\n    return round(sum(retrieved_relevant_flags) / len(retrieved_relevant_flags), 2)\ndef context_recall(needed, retrieved):\n    return round(len(set(needed) & set(retrieved)) / len(set(needed)), 2)\ndef faithfulness(claims, supported_flags):\n    return round(sum(supported_flags) / len(claims), 2)\n\n# Example: 3 chunks retrieved, 2 relevant; needed 2 facts, both retrieved; 3 claims all supported.\ncp = context_precision([1, 1, 0])\ncr = context_recall(needed=[\"fact_a\", \"fact_b\"], retrieved=[\"fact_a\", \"fact_b\", \"noise\"])\nfa = faithfulness(claims=[\"c1\", \"c2\", \"c3\"], supported_flags=[1, 1, 1])\nprint(f\"Context Precision: {cp}\")\nprint(f\"Context Recall:    {cr}\")\nprint(f\"Faithfulness:      {fa}\")\nassert cp == 0.67 and cr == 1.0 and fa == 1.0\nprint(\"RAGAS scores a RAG system on retrieval (precision/recall) and generation (faithfulness/relevancy).\")\nprint(\"It enables data-driven tuning of chunking, k, and prompts instead of guessing.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Context Precision: 0.67\nContext Recall:    1.0\nFaithfulness:      1.0\nRAGAS scores a RAG system on retrieval (precision/recall) and generation (faithfulness/relevancy).\nIt enables data-driven tuning of chunking, k, and prompts instead of guessing.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

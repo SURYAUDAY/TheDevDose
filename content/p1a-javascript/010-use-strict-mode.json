@@ -1,0 +1,65 @@
+{
+  "id": "p1a-010",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 10,
+  "orderInPhase": 10,
+  "slug": "use-strict-mode",
+  "title": "'use strict' Mode",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "strict",
+    "mode"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "It's like a code linter built into the language."
+  },
+  "sections": {
+    "simple_en": "Strict mode is an opt-in stricter variant of JavaScript, enabled by writing the string `'use strict';` at the top of a script or function. It changes some silent errors into thrown errors and disallows certain unsafe or confusing syntax.\n\nKey effects: assigning to undeclared variables throws (instead of creating a global), duplicate parameter names are illegal, `this` inside a plain function call is `undefined` (not the global object), and writing to read-only properties throws. ES modules and class bodies are strict by default.",
+    "hinglish": "Strict mode JavaScript ka ek stricter version hai jo `'use strict';` likhkar enable hota hai (script ya function ke top par). Ye kuch silent errors ko actual errors bana deta hai aur kuch unsafe/confusing syntax ko band kar deta hai.\nMain effects: undeclared variable ko assign karne par error (global nahi banta), duplicate parameter names illegal, plain function call me `this` `undefined` ho jaata hai (global nahi), aur read-only property par likhne par error. ES modules aur class bodies by default strict hote hain.",
+    "keyPoints": [
+      "Enabled via `'use strict';` at the top of a file or function (must be the first statement).",
+      "Assigning to an undeclared variable throws ReferenceError instead of creating a global.",
+      "`this` in a plain function call is `undefined`, not the global object.",
+      "Disallows duplicate parameter names and silent failed writes to read-only properties.",
+      "ES modules and `class` bodies are always in strict mode automatically."
+    ],
+    "real_world": "It's like a code linter built into the language. A junior dev accidentally typing `total = 5` (forgetting `let`) would silently create a global in sloppy mode; strict mode turns that typo into an immediate, debuggable error.",
+    "followups": [
+      {
+        "q": "Do you need to write 'use strict' in ES modules?",
+        "a": "No. ES modules (and class bodies) are strict by default, so the directive is redundant there. It's mainly relevant in classic scripts and non-module functions."
+      },
+      {
+        "q": "Name two things strict mode changes.",
+        "a": "Assigning to an undeclared variable throws (instead of creating a global), and `this` in a plain function call is `undefined` instead of the global object."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "\"use strict\";\n// In strict mode, assigning to an undeclared variable throws.\n\nfunction strictAssignThrows() {\n  try {\n    // 'undeclared' was never declared\n    eval('\"use strict\"; undeclaredXYZ = 10;');\n    return \"no error\";\n  } catch (e) {\n    return e.name; // ReferenceError\n  }\n}\n\nfunction strictThis() {\n  // plain call -> 'this' is undefined in strict mode\n  return this; // undefined\n}\n\nmodule.exports = { strictAssignThrows, strictThis };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { strictAssignThrows, strictThis } = require(\"./solution\");\n\nconsole.log(\"assign:\", strictAssignThrows());\nconsole.log(\"this:\", strictThis());\n\nconsole.assert(strictAssignThrows() === \"ReferenceError\", \"undeclared assign throws\");\nconsole.assert(strictThis() === undefined, \"this is undefined in strict plain call\");\nconsole.log(\"strict mode assertions passed.\");",
+      "expectedOutput": "assign: ReferenceError\nthis: undefined\nstrict mode assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p5-013",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 13,
+  "orderInPhase": 13,
+  "slug": "caching-strategy",
+  "title": "Caching strategy",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "caching",
+    "strategy"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A weather API caches each city's forecast for 10 minutes."
+  },
+  "sections": {
+    "simple_en": "A caching strategy stores the results of expensive work so future requests are served fast instead of recomputed or refetched. The classic trade-off is freshness versus speed: a cache speeds things up but can serve stale data, so the two hard problems are invalidation (when to drop or refresh entries) and choosing a TTL (time-to-live).\n\nCaches exist at many layers — the browser, a CDN, the application (in-memory or Redis), and the database query cache — each with its own policy. A TTL cache automatically expires entries after a set duration, balancing freshness and load. Designing what to cache, where, and for how long is a core system-design skill.",
+    "hinglish": "Ek caching strategy expensive work ke results store karti hai taaki future requests recompute ya refetch karne ke bajaye fast serve hon. Classic trade-off freshness versus speed hai: ek cache cheezein speed up karta hai par stale data serve kar sakta hai, isliye do hard problems hain invalidation (entries kab drop ya refresh karein) aur ek TTL (time-to-live) choose karna.\n\nCaches kai layers par hote hain — browser, ek CDN, application (in-memory ya Redis), aur database query cache — har ek ki apni policy. Ek TTL cache entries ko ek set duration ke baad automatically expire kar deta hai, freshness aur load balance karke. Kya cache karna hai, kahan, aur kitni der ke liye — ye design karna ek core system-design skill hai.",
+    "keyPoints": [
+      "Cache expensive results so future requests are fast.",
+      "Core trade-off: speed vs freshness (caches can serve stale data).",
+      "The hard parts: invalidation and choosing a TTL.",
+      "Layers: browser, CDN, app/in-memory (Redis), DB query cache.",
+      "A TTL cache auto-expires entries after a set duration."
+    ],
+    "real_world": "A weather API caches each city's forecast for 10 minutes. Thousands of requests in that window are served instantly from cache instead of hammering the slow upstream service — and the 10-minute TTL keeps the data fresh enough that nobody notices.",
+    "followups": [
+      {
+        "q": "Why is cache invalidation hard?",
+        "a": "You must drop or refresh cached data exactly when the underlying data changes — too late serves stale results, too eager wastes the cache. Knowing precisely when data becomes invalid across a distributed system is genuinely difficult."
+      },
+      {
+        "q": "What is a TTL and how do you choose it?",
+        "a": "Time-to-live is how long a cache entry stays valid before expiring. Choose it by how often data changes and how much staleness is acceptable — short TTLs for volatile data, longer for stable data."
+      },
+      {
+        "q": "What are the common caching layers?",
+        "a": "Browser cache, CDN edge cache, application-level cache (in-memory or Redis/Memcached), and database query/result caches. Each sits at a different point and has its own invalidation and TTL policy."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript implementing a TTL cache (entries expire after a time-to-live). The Node demo below shows fresh hits, expiry, and re-seeding, verifying the TTL logic.",
+      "source": "// Caching strategy — cache expensive results at the right layer; plan TTL + invalidation.\nimport Redis from \"ioredis\";\nconst redis = new Redis();\n\n// Cache-aside pattern: check cache, on miss compute + store with a TTL.\nasync function getUser(id, db) {\n  const key = `user:${id}`;\n  const cached = await redis.get(key);\n  if (cached) return JSON.parse(cached);              // cache hit\n\n  const user = await db.users.findById(id);           // miss -> source of truth\n  await redis.set(key, JSON.stringify(user), \"EX\", 300); // store with 5-min TTL\n  return user;\n}\n\n// Invalidate on write so stale data doesn't linger.\nasync function updateUser(id, changes, db) {\n  const user = await db.users.update(id, changes);\n  await redis.del(`user:${id}`);                      // or re-set the fresh value\n  return user;\n}\n\n// Layers: browser cache, CDN (static), application cache (Redis/in-memory), DB query cache.\n// The hard problems are invalidation (keep data fresh) and TTL choice (freshness vs hit rate).\nexport { getUser, updateUser };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Caching strategy — store results to avoid repeated expensive work; mind invalidation + TTL\nclass TTLCache {\n  constructor(ttlMs) { this.ttl = ttlMs; this.store = new Map(); }\n  set(key, value, now) { this.store.set(key, { value, expires: now + this.ttl }); }\n  get(key, now) {\n    const entry = this.store.get(key);\n    if (!entry) return { hit: false };\n    if (now > entry.expires) { this.store.delete(key); return { hit: false, reason: \"expired\" }; }\n    return { hit: true, value: entry.value };\n  }\n}\nconst cache = new TTLCache(1000);   // 1s TTL\nlet t = 0;\ncache.set(\"user:1\", { name: \"Ravi\" }, t);\nconsole.log(\"get at t=0:\", cache.get(\"user:1\", t));        // fresh hit\nconsole.log(\"get at t=500:\", cache.get(\"user:1\", 500));    // still fresh\nconsole.log(\"get at t=1500:\", cache.get(\"user:1\", 1500));  // expired -> miss\ncache.set(\"user:1\", { name: \"Ravi\" }, 2000);               // re-seed for the assertions below\nconsole.assert(cache.get(\"user:1\", 2000).hit === true, \"fresh hit\");\nconsole.assert(cache.get(\"user:1\", 3500).hit === false, \"expired after TTL\");\nconsole.log(\"Caching trades freshness for speed; the hard parts are invalidation and choosing a TTL.\");\nconsole.log(\"Layers: browser, CDN, app/in-memory (Redis), and DB query caches — each with its own policy.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "get at t=0: { hit: true, value: { name: 'Ravi' } }\nget at t=500: { hit: true, value: { name: 'Ravi' } }\nget at t=1500: { hit: false, reason: 'expired' }\nCaching trades freshness for speed; the hard parts are invalidation and choosing a TTL.\nLayers: browser, CDN, app/in-memory (Redis), and DB query caches — each with its own policy.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p2-032",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 32,
+  "orderInPhase": 32,
+  "slug": "redux-toolkit",
+  "title": "Redux Toolkit",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "redux",
+    "toolkit"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A multi-step checkout shares cart, shipping, and payment state across many components."
+  },
+  "sections": {
+    "simple_en": "Redux Toolkit (RTK) is the official, recommended way to write Redux. It removes the old boilerplate: configureStore sets up the store with good defaults (thunk middleware, devtools), and createSlice generates actions and reducers together. Immer lets you write 'mutating' reducer code that's actually immutable under the hood.\n\nYou connect components with the react-redux Provider and the useSelector/useDispatch hooks. RTK is the standard choice when you need predictable global state with time-travel debugging, middleware, and a single source of truth across many components.",
+    "hinglish": "Redux Toolkit (RTK) Redux likhne ka official recommended tarika hai. Ye purana boilerplate hata deta hai: configureStore store ko achhe defaults ke saath set karta hai, aur createSlice actions aur reducers ek saath bana deta hai. Immer ki wajah se aap 'mutating' code likh sakte ho jo andar se immutable hota hai.\n\nComponents ko react-redux ke Provider aur useSelector/useDispatch hooks se connect karte ho. Jab predictable global state, devtools aur middleware chahiye to RTK standard choice hai.",
+    "keyPoints": [
+      "RTK is the official, batteries-included way to use Redux — far less boilerplate.",
+      "configureStore: store + thunk middleware + Redux DevTools by default.",
+      "createSlice: define state + reducers, get action creators auto-generated.",
+      "Immer lets reducers 'mutate' a draft while producing immutable updates.",
+      "Connect via <Provider store>, then useSelector (read) and useDispatch (write)."
+    ],
+    "real_world": "A multi-step checkout shares cart, shipping, and payment state across many components. RTK holds it in one store: any component reads totals with useSelector and dispatches actions like addItem, and DevTools lets you replay the exact sequence when debugging an order issue.",
+    "followups": [
+      {
+        "q": "Why use Redux Toolkit instead of plain Redux?",
+        "a": "It eliminates boilerplate (action types, switch reducers, immutable spreads), bakes in good defaults (thunk, devtools), and uses Immer so reducers are simpler and less error-prone."
+      },
+      {
+        "q": "How does Immer help in reducers?",
+        "a": "It lets you write code that looks like mutation (state.value += 1) while producing a new immutable state behind the scenes, preventing accidental direct mutation bugs."
+      },
+      {
+        "q": "When do you actually need Redux?",
+        "a": "When state is global, complex, updated from many places, or benefits from middleware and devtools. For simple local or low-frequency global state, useState/Context may suffice."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// Redux Toolkit: configure a store and connect it with the Provider + hooks.\nimport React from \"react\";\nimport { configureStore, createSlice } from \"@reduxjs/toolkit\";\nimport { Provider, useSelector, useDispatch } from \"react-redux\";\n\nconst counterSlice = createSlice({\n  name: \"counter\",\n  initialState: { value: 0 },\n  reducers: {\n    increment: (state) => { state.value += 1; },      // Immer makes this safe\n    incrementBy: (state, action) => { state.value += action.payload; },\n  },\n});\n\nconst store = configureStore({ reducer: { counter: counterSlice.reducer } });\n\nfunction Counter() {\n  const value = useSelector((s) => s.counter.value);\n  const dispatch = useDispatch();\n  return (\n    <div>\n      <h2>{value}</h2>\n      <button onClick={() => dispatch(counterSlice.actions.increment())}>+1</button>\n      <button onClick={() => dispatch(counterSlice.actions.incrementBy(5))}>+5</button>\n    </div>\n  );\n}\n\nexport default function App() {\n  return <Provider store={store}><Counter /></Provider>;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Redux Toolkit — minimal store: reducer + dispatch + getState + subscribe\nfunction configureStore(reducer, preloaded){\n  let state = preloaded;\n  const listeners = [];\n  return {\n    getState: () => state,\n    dispatch: (action) => { state = reducer(state, action); listeners.forEach(l => l()); },\n    subscribe: (l) => listeners.push(l),\n  };\n}\nfunction counterReducer(state = { value: 0 }, action){\n  switch(action.type){\n    case \"counter/increment\": return { value: state.value + 1 };\n    case \"counter/incrementBy\": return { value: state.value + action.payload };\n    default: return state;\n  }\n}\nconst store = configureStore(counterReducer, { value: 0 });\nlet renders = 0;\nstore.subscribe(() => renders++);\nstore.dispatch({ type: \"counter/increment\" });\nstore.dispatch({ type: \"counter/incrementBy\", payload: 5 });\nconsole.log(\"State:\", JSON.stringify(store.getState()));\nconsole.log(\"Subscriber notified times:\", renders);\nconsole.assert(store.getState().value === 6, \"0 +1 +5 = 6\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "State: {\"value\":6}\nSubscriber notified times: 2\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

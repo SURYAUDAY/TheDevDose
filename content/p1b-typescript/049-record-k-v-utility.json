@@ -1,0 +1,65 @@
+{
+  "id": "p1b-049",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 49,
+  "orderInPhase": 49,
+  "slug": "record-k-v-utility",
+  "title": "Record<K, V> (utility)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "record",
+    "utility"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A `Record<Status, string>` mapping each order status to a display label guarantees every status has a label — so introducing a new status to the union won't…"
+  },
+  "sections": {
+    "simple_en": "As a utility type, `Record<K, V>` builds an object type whose keys are of type `K` and whose values are of type `V`. With a literal-union `K` it requires exactly those keys; with `string`/`number` it models an open dictionary.\n\nIt's frequently used to map a fixed set of keys to values — config tables, status-to-label maps, or enum-to-handler dictionaries. Because the key set is enforced, adding a key to the union forces you to provide its value, keeping maps exhaustive.",
+    "hinglish": "Utility type ki tarah, `Record<K, V>` ek object type banata hai jiski keys `K` type ki aur values `V` type ki hoti hain. Literal-union `K` ke saath ye bilkul un keys ki maang karta hai; `string`/`number` ke saath ye ek open dictionary model karta hai.\nYe ek fixed set of keys ko values se map karne ke liye aksar use hota hai — config tables, status-to-label maps, ya enum-to-handler dictionaries. Kyunki key set enforce hota hai, union me key add karne par uski value deni padti hai, jisse maps exhaustive rehte hain.",
+    "keyPoints": [
+      "`Record<K, V>` → object type with keys K and values V.",
+      "Literal-union K enforces an exact, exhaustive key set.",
+      "`Record<string, V>` models an open dictionary.",
+      "Adding a key to the union forces providing its value.",
+      "Common for label maps, config tables, handler dictionaries."
+    ],
+    "real_world": "A `Record<Status, string>` mapping each order status to a display label guarantees every status has a label — so introducing a new status to the union won't compile until you add its label.",
+    "followups": [
+      {
+        "q": "How does Record enforce exhaustiveness?",
+        "a": "When K is a literal union, the object must include every key in the union, so adding a new member to the union causes a compile error until you provide its value."
+      },
+      {
+        "q": "Record<string, V> vs Record<'a'|'b', V>?",
+        "a": "`Record<string, V>` is an open dictionary allowing any string key; `Record<'a'|'b', V>` requires exactly keys `a` and `b`, giving exhaustive, typo-proof maps."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Record mapping a fixed key set to values.\n\ntype Status = \"pending\" | \"shipped\" | \"delivered\";\n\nconst LABELS: Record<Status, string> = {\n  pending: \"Pending\",\n  shipped: \"Shipped\",\n  delivered: \"Delivered\",\n};\n\nexport function labelFor(status: Status): string {\n  return LABELS[status];\n}\n\n// Record as an exhaustive handler map:\nexport const handlers: Record<Status, () => string> = {\n  pending: () => \"waiting\",\n  shipped: () => \"on the way\",\n  delivered: () => \"done\",\n};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { labelFor, handlers } from \"./solution\";\n\nconsole.log(labelFor(\"shipped\"));    // Shipped\nconsole.log(labelFor(\"delivered\"));  // Delivered\nconsole.log(handlers.pending());     // waiting\n\nconsole.assert(labelFor(\"shipped\") === \"Shipped\", \"record label lookup\");\nconsole.assert(handlers.delivered() === \"done\", \"record handler map\");\nconsole.log(\"Record-utility assertions passed.\");",
+      "expectedOutput": "Shipped\nDelivered\nwaiting\nRecord-utility assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

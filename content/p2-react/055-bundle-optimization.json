@@ -1,0 +1,69 @@
+{
+  "id": "p2-055",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 55,
+  "orderInPhase": 55,
+  "slug": "bundle-optimization",
+  "title": "Bundle optimization",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "bundle",
+    "optimization"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "An app importing all of lodash ships ~70KB even when it uses one function."
+  },
+  "sections": {
+    "simple_en": "Bundle optimization reduces the JavaScript users download, improving load time. Core techniques include tree-shaking (dropping unused exports), code splitting (loading code on demand), minification, and choosing lighter dependencies (e.g., date-fns over moment).\n\nWriting tree-shakeable code matters: use named ES module exports, import only what you need, and avoid side-effectful modules. Combine this with lazy loading heavy or rarely-used features so the initial bundle stays small.",
+    "hinglish": "Bundle optimization wo JavaScript kam karta hai jo users download karte hain, jisse load time better hota hai. Core techniques: tree-shaking (unused exports hatana), code splitting (on-demand load), minification, aur halki dependencies choose karna (date-fns vs moment).\n\nTree-shakeable code likhna zaroori hai: named ES module exports use karo, sirf jo chahiye wahi import karo, aur side-effect waale modules avoid karo. Iske saath heavy features lazy-load karo taaki initial bundle chhota rahe.",
+    "keyPoints": [
+      "Tree-shaking removes unused exports — enabled by named ESM imports.",
+      "Code splitting + lazy loading keep the initial bundle small.",
+      "Minification strips whitespace, comments, and shortens names.",
+      "Pick lighter dependencies; audit before adding heavy libraries.",
+      "Avoid side-effectful modules and default-importing whole libraries."
+    ],
+    "real_world": "An app importing all of lodash ships ~70KB even when it uses one function. Switching to per-function imports (or lodash-es with tree-shaking) plus lazy-loading the charting library cuts the initial bundle substantially, speeding up first load on mobile.",
+    "followups": [
+      {
+        "q": "What makes code tree-shakeable?",
+        "a": "Named ES module exports, importing only what you use, and modules free of side effects. CommonJS and side-effectful modules are harder to shake."
+      },
+      {
+        "q": "How do you find what to optimize?",
+        "a": "Run a bundle analyzer to see which modules dominate size, then tree-shake, replace heavy deps, or lazy-load them."
+      },
+      {
+        "q": "Is a smaller bundle always the goal?",
+        "a": "Smaller initial load matters most. Splitting code into well-cached chunks can beat one tiny bundle, since unchanged vendor chunks don't need re-downloading."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Tree-shakeable module code (named ESM exports). The Node-runnable demo below shows how unused exports are dropped.",
+      "source": "// Bundle optimization: write tree-shakeable code (named ESM exports).\n// utils.js — each export can be removed if unused.\nexport const formatCurrency = (n) => `$${n.toFixed(2)}`;\nexport const formatDate = (d) => new Date(d).toLocaleDateString();\nexport const slugify = (s) => s.toLowerCase().replace(/\\s+/g, \"-\");\n\n// App.jsx — import ONLY what you use, so the bundler drops the rest.\nimport { formatCurrency } from \"./utils\"; // formatDate & slugify are tree-shaken away\n\nexport default function Price({ amount }) {\n  return <span>{formatCurrency(amount)}</span>;\n}\n// Tip: prefer `import { x } from 'lib'` over `import lib from 'lib'`\n// and avoid side-effectful modules so tree-shaking can work.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Bundle optimization — tree-shaking removes unused exports\nconst library = {\n  add:    { used: false, size: 5 },\n  sub:    { used: false, size: 5 },\n  format: { used: true,  size: 20 },   // only this is imported\n  parse:  { used: false, size: 18 },\n};\nfunction treeShake(lib){\n  const kept = {}; let removed = 0, before = 0, after = 0;\n  for (const name in lib){\n    before += lib[name].size;\n    if (lib[name].used){ kept[name] = lib[name]; after += lib[name].size; }\n    else removed++;\n  }\n  return { kept: Object.keys(kept), before, after, removed };\n}\nconst r = treeShake(library);\nconsole.log(\"Kept exports:\", r.kept.join(\", \"));\nconsole.log(`Size before: ${r.before}KB -> after: ${r.after}KB (removed ${r.removed} unused)`);\nconsole.assert(r.after < r.before, \"tree-shaking reduced size\");\nconsole.assert(!r.kept.includes(\"parse\"), \"unused export dropped\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Kept exports: format\nSize before: 48KB -> after: 20KB (removed 3 unused)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

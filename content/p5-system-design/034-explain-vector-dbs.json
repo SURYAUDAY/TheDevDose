@@ -1,0 +1,70 @@
+{
+  "id": "p5-034",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 34,
+  "orderInPhase": 34,
+  "slug": "explain-vector-dbs",
+  "title": "Explain vector DBs",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "explain",
+    "vector",
+    "dbs"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A RAG app over 10 million document chunks stores their embeddings in a vector DB."
+  },
+  "sections": {
+    "simple_en": "A vector database stores embeddings (plus metadata) and is optimized for fast nearest-neighbor search — given a query vector, it quickly returns the most similar stored vectors. That's the retrieval engine behind semantic search and RAG, where you need to find the closest chunks among potentially millions.\n\nTo stay fast at scale, vector DBs use Approximate Nearest Neighbor (ANN) indexes like HNSW or IVF, trading a tiny bit of accuracy for huge speed gains. They also support metadata filtering and high write/query throughput. Common options include Pinecone (managed), Chroma (local/open-source), Qdrant and Weaviate (dedicated), and pgvector (Postgres extension).",
+    "hinglish": "Ek vector database embeddings (plus metadata) store karta hai aur fast nearest-neighbor search ke liye optimized hai — ek query vector diye, ye jaldi sabse similar stored vectors return karta hai. Ye semantic search aur RAG ke peeche ka retrieval engine hai, jahan aapko potentially millions mein se closest chunks dhoondhne hote hain.\n\nScale par fast rehne ke liye, vector DBs Approximate Nearest Neighbor (ANN) indexes use karte hain jaise HNSW ya IVF, thodi si accuracy ko bade speed gains ke liye trade karke. Wo metadata filtering aur high write/query throughput bhi support karte hain. Common options: Pinecone (managed), Chroma (local/open-source), Qdrant aur Weaviate (dedicated), aur pgvector (Postgres extension).",
+    "keyPoints": [
+      "Stores embeddings + metadata; optimized for nearest-neighbor search.",
+      "The retrieval engine behind semantic search and RAG.",
+      "Uses ANN indexes (HNSW, IVF) for fast search at scale.",
+      "Supports metadata filtering and high throughput.",
+      "Options: Pinecone, Chroma, Qdrant, Weaviate, pgvector."
+    ],
+    "real_world": "A RAG app over 10 million document chunks stores their embeddings in a vector DB. Each user question is embedded and the DB returns the top few most similar chunks in milliseconds via an HNSW index — something a brute-force scan over 10 million vectors couldn't do fast enough.",
+    "followups": [
+      {
+        "q": "What is a vector database for?",
+        "a": "Storing embeddings and performing fast similarity (nearest-neighbor) search over them — the retrieval step in semantic search and RAG. It finds the most similar vectors to a query among potentially millions."
+      },
+      {
+        "q": "How do vector DBs stay fast at scale?",
+        "a": "They use Approximate Nearest Neighbor indexes (HNSW, IVF) instead of brute force, trading a small amount of recall for sub-linear search speed, so queries stay fast even with millions of vectors."
+      },
+      {
+        "q": "Do you always need a dedicated vector DB?",
+        "a": "No — for small datasets an in-memory library (FAISS) or a Postgres extension (pgvector) may suffice. Dedicated/managed DBs (Pinecone, Qdrant, Weaviate) help at larger scale or when you want managed operations and rich filtering."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo implementing a tiny vector DB with upsert and top-k cosine query, so the store-and-search behavior is verifiable here.",
+      "source": "# Explain vector DBs — what they are and how you use one (Chroma example).\nimport chromadb\nclient = chromadb.Client()\ncollection = client.create_collection(\"docs\")   # can auto-embed documents for you\n\n# Upsert documents (embedded under the hood) with ids and metadata.\ncollection.add(\n    ids=[\"d1\", \"d2\", \"d3\"],\n    documents=[\"cats are great pets\", \"stock market basics\", \"kittens love to play\"],\n    metadatas=[{\"topic\": \"pets\"}, {\"topic\": \"finance\"}, {\"topic\": \"pets\"}],\n)\n# Query by similarity, optionally filtering by metadata.\n# results = collection.query(query_texts=[\"pet animals\"], n_results=2, where={\"topic\": \"pets\"})\n\n# Interview definition: a vector database stores embeddings plus metadata and performs fast\n# approximate nearest-neighbor (ANN) search (HNSW/IVF) to find the most similar vectors. It's\n# the retrieval engine behind RAG/semantic search. Examples: Pinecone (managed), Chroma (local),\n# Qdrant, Weaviate, and pgvector (Postgres extension).",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Explain vector DBs — store embeddings and do fast nearest-neighbor (similarity) search\nimport math\ndef cosine(a, b):\n    d = sum(x*y for x, y in zip(a, b)); na = math.sqrt(sum(x*x for x in a)); nb = math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\nclass VectorDB:\n    def __init__(self): self.items = []   # (id, vector, metadata)\n    def upsert(self, id_, vector, metadata): self.items.append((id_, vector, metadata))\n    def query(self, vector, top_k=2):\n        scored = [(i, round(cosine(vector, v), 3), m) for i, v, m in self.items]\n        return sorted(scored, key=lambda t: t[1], reverse=True)[:top_k]\ndb = VectorDB()\ndb.upsert(\"d1\", [0.9, 0.1], {\"topic\": \"pets\"})\ndb.upsert(\"d2\", [0.1, 0.9], {\"topic\": \"finance\"})\ndb.upsert(\"d3\", [0.8, 0.2], {\"topic\": \"pets\"})\nresults = db.query([0.85, 0.15], top_k=2)\nprint(\"Top-2 nearest:\", [(i, s) for i, s, _ in results])\nassert results[0][0] in (\"d1\", \"d3\"), \"nearest neighbors are the pet vectors\"\nprint(\"\\nInterview answer: a vector DB stores embeddings + metadata and does fast approximate\")\nprint(\"nearest-neighbor search (HNSW/IVF). Examples: Pinecone, Chroma, Qdrant, pgvector. It's the retrieval engine for RAG.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Top-2 nearest: [('d1', 0.998), ('d3', 0.998)]\n\nInterview answer: a vector DB stores embeddings + metadata and does fast approximate\nnearest-neighbor search (HNSW/IVF). Examples: Pinecone, Chroma, Qdrant, pgvector. It's the retrieval engine for RAG.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

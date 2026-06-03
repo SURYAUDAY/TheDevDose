@@ -1,0 +1,68 @@
+{
+  "id": "p3-008",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 8,
+  "orderInPhase": 8,
+  "slug": "validation",
+  "title": "Validation",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "validation"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A signup endpoint runs the request body through a Zod schema: name (min 2), email (valid format), age (optional, >= 18)."
+  },
+  "sections": {
+    "simple_en": "Validation ensures incoming data meets your rules before it's processed or stored — required fields, correct types, formats (email), ranges, and lengths. On the backend it's a security and integrity requirement, not just UX: never trust client input, since it can be malformed, malicious, or bypass the frontend entirely.\n\nA clean approach is schema-based validation (Zod, Joi, Yup) applied as middleware, returning 400 with structured error messages when input is invalid. The same schema can also infer types, keeping validation and typing in sync.",
+    "hinglish": "Validation ensure karta hai ki incoming data process ya store hone se pehle aapke rules pura kare — required fields, sahi types, formats (email), ranges, lengths. Backend par ye security aur integrity ki zaroorat hai, sirf UX nahi: client input par kabhi bharosa mat karo, kyunki wo malformed, malicious ya frontend bypass kiya hua ho sakta hai.\n\nAchha tarika hai schema-based validation (Zod, Joi, Yup) ko middleware ki tarah lagana, jo invalid input par 400 structured errors ke saath return kare. Wahi schema types bhi infer kar sakta hai, validation aur typing sync mein rehte hain.",
+    "keyPoints": [
+      "Validate all client input on the server — never trust the frontend.",
+      "Check required fields, types, formats, ranges, and lengths.",
+      "Use a schema library (Zod/Joi/Yup) as middleware for clean, reusable rules.",
+      "Return 400 Bad Request with structured field-level error messages.",
+      "Schema can also infer/validate types, keeping code and rules aligned."
+    ],
+    "real_world": "A signup endpoint runs the request body through a Zod schema: name (min 2), email (valid format), age (optional, >= 18). Invalid requests get a 400 with per-field errors before any database call, protecting data integrity and giving the client clear feedback.",
+    "followups": [
+      {
+        "q": "Why validate on the server if the frontend already validates?",
+        "a": "Frontend validation is for UX and can be bypassed (curl, scripts, tampered clients). The server must validate to protect data integrity and security."
+      },
+      {
+        "q": "What status code for failed validation?",
+        "a": "400 Bad Request, typically with a structured body listing which fields failed and why, so the client can correct the request."
+      },
+      {
+        "q": "Benefit of schema-based validation over manual checks?",
+        "a": "It's declarative, reusable, less error-prone, often gives type inference, and centralizes rules instead of scattering if-checks across handlers."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + Zod validation code. The Node-runnable demo below verifies the validation logic.",
+      "source": "// Validation — validate request bodies with a schema library (Zod) middleware.\nconst express = require(\"express\");\nconst { z } = require(\"zod\");\nconst app = express();\napp.use(express.json());\n\nconst createUserSchema = z.object({\n  name: z.string().min(2),\n  email: z.string().email(),\n  age: z.number().int().min(18).optional(),\n});\n\n// Reusable validation middleware factory.\nconst validate = (schema) => (req, res, next) => {\n  const result = schema.safeParse(req.body);\n  if (!result.success) {\n    return res.status(400).json({ errors: result.error.flatten().fieldErrors });\n  }\n  req.body = result.data; // parsed + typed\n  next();\n};\n\napp.post(\"/users\", validate(createUserSchema), (req, res) => {\n  res.status(201).json({ id: 1, ...req.body });\n});\n\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Validation — validate a request body against a typed schema\nfunction validateBody(body, schema){\n  const errors = {};\n  for (const field in schema){\n    const rule = schema[field], value = body[field];\n    if (rule.required && (value === undefined || value === \"\")) { errors[field] = \"required\"; continue; }\n    if (value !== undefined && rule.type && typeof value !== rule.type) { errors[field] = `must be ${rule.type}`; continue; }\n    if (rule.min && typeof value === \"string\" && value.length < rule.min) errors[field] = `min ${rule.min} chars`;\n    if (rule.min && typeof value === \"number\" && value < rule.min) errors[field] = `min ${rule.min}`;\n  }\n  return { valid: Object.keys(errors).length === 0, errors };\n}\nconst schema = { name: { required: true, type: \"string\", min: 2 }, age: { type: \"number\", min: 18 } };\nconsole.log(JSON.stringify(validateBody({ name: \"A\", age: 15 }, schema)));\nconsole.log(JSON.stringify(validateBody({ name: \"Asha\", age: 25 }, schema)));\nconst bad = validateBody({ age: 15 }, schema);\nconsole.assert(!bad.valid && bad.errors.name === \"required\", \"missing name flagged\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "{\"valid\":false,\"errors\":{\"name\":\"min 2 chars\",\"age\":\"min 18\"}}\n{\"valid\":true,\"errors\":{}}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

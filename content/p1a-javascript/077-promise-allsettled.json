@@ -1,0 +1,64 @@
+{
+  "id": "p1a-077",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 77,
+  "orderInPhase": 77,
+  "slug": "promise-allsettled",
+  "title": "Promise.allSettled",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "promise.allsettled"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Uploading several files at once and reporting which succeeded and which failed: `allSettled` gives you the full per-file outcome so you can show '3 uploaded,…"
+  },
+  "sections": {
+    "simple_en": "`Promise.allSettled([...])` waits for ALL input promises to settle (whether fulfilled or rejected) and never short-circuits. It fulfils with an array of result objects, each describing one promise's outcome.\n\nEach result is `{ status: 'fulfilled', value }` or `{ status: 'rejected', reason }`. This is the right choice when you want every result regardless of individual failures — unlike `Promise.all`, which rejects the moment any one fails.",
+    "hinglish": "`Promise.allSettled([...])` SAARE input promises ke settle hone ka wait karta hai (chahe fulfil ho ya reject) aur kabhi short-circuit nahi karta. Ye result objects ke array ke saath fulfil hota hai, har ek kisi ek promise ka outcome batata hai.\nHar result ya `{ status: 'fulfilled', value }` hota hai ya `{ status: 'rejected', reason }`. Ye tab sahi choice hai jab aapko individual failures ke bawajood har result chahiye — `Promise.all` ke विपरीत, jo koi ek fail hote hi reject ho jaata hai.",
+    "keyPoints": [
+      "Waits for ALL promises to settle; never rejects/short-circuits.",
+      "Fulfils with an array of `{status, value}` or `{status, reason}` objects.",
+      "Use when you want every outcome, including failures.",
+      "Contrast with `Promise.all` (fail-fast on first rejection).",
+      "Great for batch operations where partial success is acceptable."
+    ],
+    "real_world": "Uploading several files at once and reporting which succeeded and which failed: `allSettled` gives you the full per-file outcome so you can show '3 uploaded, 1 failed' instead of aborting the whole batch on the first error.",
+    "followups": [
+      {
+        "q": "How does allSettled differ from all?",
+        "a": "`all` rejects as soon as any promise rejects (fail-fast). `allSettled` always waits for every promise and reports each outcome as fulfilled or rejected — it never rejects itself."
+      },
+      {
+        "q": "What shape are allSettled's results?",
+        "a": "An array of objects: `{ status: 'fulfilled', value }` for successes and `{ status: 'rejected', reason }` for failures, in input order."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Promise.allSettled collects every outcome.\n\nconst ok = (v) => Promise.resolve(v);\nconst fail = (m) => Promise.reject(new Error(m));\n\nfunction batch() {\n  return Promise.allSettled([ok(\"a\"), fail(\"bad\"), ok(\"c\")])\n    .then((results) => results.map((r) =>\n      r.status === \"fulfilled\" ? \"ok:\" + r.value : \"err:\" + r.reason.message\n    ));\n}\n\nmodule.exports = { batch };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { batch } = require(\"./solution\");\n\nbatch().then((summary) => {\n  console.log(summary); // ['ok:a','err:bad','ok:c']\n  console.assert(JSON.stringify(summary) === '[\"ok:a\",\"err:bad\",\"ok:c\"]', \"all outcomes collected\");\n  console.assert(summary.length === 3, \"no short-circuit; every promise reported\");\n  console.log(\"Promise.allSettled assertions passed.\");\n});",
+      "expectedOutput": "[ 'ok:a', 'err:bad', 'ok:c' ]\nPromise.allSettled assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

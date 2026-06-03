@@ -1,0 +1,69 @@
+{
+  "id": "p2-072",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 72,
+  "orderInPhase": 72,
+  "slug": "dashboard-ui",
+  "title": "Dashboard UI",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "dashboard",
+    "ui"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An analytics dashboard turns a list of orders into KPI cards (total revenue, order count, AOV) and a bar chart of orders per day."
+  },
+  "sections": {
+    "simple_en": "A dashboard UI presents key metrics and visualizations at a glance — KPI cards (revenue, orders, average order value) plus charts (bars, lines, pie). The hard part is usually not the rendering but the data: aggregating raw records into the summary numbers and series the widgets display.\n\nIn React you compute these aggregations (often memoized with useMemo so they don't recompute on every render), feed them to a charting library like Recharts or Chart.js, and lay everything out responsively. Good dashboards also handle loading, empty, and error states gracefully.",
+    "hinglish": "Dashboard UI key metrics aur visualizations ek nazar mein dikhata hai — KPI cards (revenue, orders, average order value) aur charts (bars, lines, pie). Mushkil hissa aksar rendering nahi balki data hota hai: raw records ko summary numbers aur series mein aggregate karna jo widgets dikhate hain.\n\nReact mein ye aggregations compute karte ho (aksar useMemo se memoized taaki har render par dobara na ho), Recharts ya Chart.js jaisi library ko dete ho, aur sab responsively layout karte ho. Achhe dashboards loading, empty aur error states bhi handle karte hain.",
+    "keyPoints": [
+      "Surfaces KPIs + charts so users grasp the state at a glance.",
+      "The real work is data aggregation: raw records -> summary metrics/series.",
+      "Memoize aggregations (useMemo) so they don't recompute every render.",
+      "Use a charting lib (Recharts, Chart.js) and a responsive layout.",
+      "Handle loading, empty, and error states for a polished result."
+    ],
+    "real_world": "An analytics dashboard turns a list of orders into KPI cards (total revenue, order count, AOV) and a bar chart of orders per day. The aggregation runs in a memoized function, so resizing the window or toggling a filter re-renders the layout without recomputing the stats unnecessarily.",
+    "followups": [
+      {
+        "q": "What's usually the hardest part of a dashboard?",
+        "a": "The data layer — aggregating and shaping raw records into the metrics and series the widgets need — not the chart rendering itself."
+      },
+      {
+        "q": "Why memoize the aggregations?",
+        "a": "Aggregating large datasets is expensive; useMemo recomputes only when the underlying data changes, avoiding wasted work on unrelated re-renders (resize, hover, filter UI)."
+      },
+      {
+        "q": "What states should a robust dashboard handle?",
+        "a": "Loading (skeletons), empty (no data yet), and error (failed fetch) — plus the normal data state — so it never shows a broken or blank screen."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "A real React component (.jsx) using Recharts. The Node-runnable demo below verifies the data-aggregation/KPI logic.",
+      "source": "// Dashboard UI — KPI cards + a chart built from aggregated data.\nimport React, { useMemo } from \"react\";\nimport { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from \"recharts\";\n\nexport default function Dashboard({ orders }) {\n  const stats = useMemo(() => {\n    const paid = orders.filter((o) => o.status === \"paid\");\n    const revenue = paid.reduce((s, o) => s + o.amount, 0);\n    const byDay = Object.values(\n      orders.reduce((acc, o) => {\n        acc[o.date] = acc[o.date] || { date: o.date, count: 0 };\n        acc[o.date].count++;\n        return acc;\n      }, {})\n    );\n    return { revenue, paid: paid.length, total: orders.length, aov: Math.round(revenue / paid.length), byDay };\n  }, [orders]);\n\n  return (\n    <div className=\"dashboard\">\n      <div className=\"kpis\">\n        <KPI label=\"Revenue\" value={`$${stats.revenue}`} />\n        <KPI label=\"Orders\" value={stats.total} />\n        <KPI label=\"Avg Order\" value={`$${stats.aov}`} />\n      </div>\n      <ResponsiveContainer width=\"100%\" height={240}>\n        <BarChart data={stats.byDay}>\n          <XAxis dataKey=\"date\" /><YAxis /><Tooltip />\n          <Bar dataKey=\"count\" fill=\"#2E75B6\" />\n        </BarChart>\n      </ResponsiveContainer>\n    </div>\n  );\n}\n\nfunction KPI({ label, value }) {\n  return <div className=\"kpi\"><span>{label}</span><strong>{value}</strong></div>;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Dashboard UI — aggregate raw data into KPI widget metrics\nconst orders = [\n  { id: 1, amount: 120, status: \"paid\",    date: \"2026-05-01\" },\n  { id: 2, amount: 80,  status: \"paid\",    date: \"2026-05-01\" },\n  { id: 3, amount: 200, status: \"refunded\",date: \"2026-05-02\" },\n  { id: 4, amount: 50,  status: \"paid\",    date: \"2026-05-02\" },\n];\nfunction buildDashboard(orders){\n  const paid = orders.filter(o => o.status === \"paid\");\n  const revenue = paid.reduce((s, o) => s + o.amount, 0);\n  const aov = Math.round(revenue / paid.length);\n  const byDay = orders.reduce((acc, o) => { acc[o.date] = (acc[o.date] || 0) + 1; return acc; }, {});\n  return { totalOrders: orders.length, paidOrders: paid.length, revenue, aov, byDay };\n}\nconst d = buildDashboard(orders);\nconsole.log(\"Total orders:\", d.totalOrders);\nconsole.log(\"Revenue (paid):\", \"$\" + d.revenue);\nconsole.log(\"Avg order value:\", \"$\" + d.aov);\nconsole.log(\"Orders by day:\", JSON.stringify(d.byDay));\nconsole.assert(d.revenue === 250, \"120 + 80 + 50 = 250\");\nconsole.assert(d.aov === 83, \"avg of 3 paid orders\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Total orders: 4\nRevenue (paid): $250\nAvg order value: $83\nOrders by day: {\"2026-05-01\":2,\"2026-05-02\":2}\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

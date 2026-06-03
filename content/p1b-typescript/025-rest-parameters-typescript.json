@@ -1,0 +1,66 @@
+{
+  "id": "p1b-025",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 25,
+  "orderInPhase": 25,
+  "slug": "rest-parameters-typescript",
+  "title": "Rest Parameters (TypeScript)",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "rest",
+    "parameters",
+    "typescript"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A typed `sum(...nums: number[])` or a logger `log(level: string, ...messages: string[])` accepts a variable number of strongly-typed arguments, so passing a…"
+  },
+  "sections": {
+    "simple_en": "A rest parameter collects an indefinite number of trailing arguments into a typed array, written `(...nums: number[])`. It lets a function accept any number of arguments while keeping full type safety on each one.\n\nThe rest parameter must be last, and its type is always an array type. With tuple types you can even type variadic functions precisely (e.g. `(...args: [string, number])`). This is the typed version of JavaScript's rest operator for parameters.",
+    "hinglish": "Rest parameter trailing arguments ki indefinite sankhya ko ek typed array me collect karta hai, `(...nums: number[])` likhte hain. Ye function ko kisi bhi sankhya me arguments accept karne deta hai jabki har ek par poori type safety bani rehti hai.\nRest parameter last me hona chahiye, aur uska type hamesha ek array type hota hai. Tuple types ke saath aap variadic functions ko precisely type kar sakte ho (jaise `(...args: [string, number])`). Ye JavaScript ke rest operator ka typed version hai parameters ke liye.",
+    "keyPoints": [
+      "`(...name: T[])` collects trailing args into a typed array.",
+      "Accepts any number of arguments with full type checking.",
+      "Must be the LAST parameter; its type is an array (or tuple).",
+      "Tuple types enable precise variadic signatures.",
+      "The typed counterpart of JS rest parameters."
+    ],
+    "real_world": "A typed `sum(...nums: number[])` or a logger `log(level: string, ...messages: string[])` accepts a variable number of strongly-typed arguments, so passing a wrong type is caught at compile time.",
+    "followups": [
+      {
+        "q": "What type does a rest parameter have?",
+        "a": "An array type (e.g. `number[]`) — or a tuple type for precise variadic signatures. It gathers all remaining arguments into that typed array."
+      },
+      {
+        "q": "Where must a rest parameter appear in the parameter list?",
+        "a": "Last. There can be only one rest parameter and nothing can follow it, since it absorbs all remaining arguments."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — typed rest parameters.\n\nexport function sum(...nums: number[]): number {\n  return nums.reduce((a, b) => a + b, 0);\n}\n\nexport function joinWith(separator: string, ...parts: string[]): string {\n  return parts.join(separator);\n}\n\n// Tuple rest type for a precise variadic signature.\nexport function pair(...args: [string, number]): string {\n  const [label, value] = args;\n  return label + \"=\" + value;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { sum, joinWith, pair } from \"./solution\";\n\nconsole.log(sum(1, 2, 3, 4));               // 10\nconsole.log(sum());                          // 0\nconsole.log(joinWith(\"-\", \"2025\", \"01\", \"01\")); // 2025-01-01\nconsole.log(pair(\"age\", 30));                // age=30\n\nconsole.assert(sum(1, 2, 3, 4) === 10, \"rest sum\");\nconsole.assert(sum() === 0, \"rest with no args\");\nconsole.assert(joinWith(\"-\", \"a\", \"b\") === \"a-b\", \"rest strings joined\");\nconsole.assert(pair(\"age\", 30) === \"age=30\", \"tuple rest\");\nconsole.log(\"rest-parameters assertions passed.\");",
+      "expectedOutput": "10\n0\n2025-01-01\nage=30\nrest-parameters assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

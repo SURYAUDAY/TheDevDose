@@ -1,0 +1,65 @@
+{
+  "id": "p1a-100",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 100,
+  "orderInPhase": 100,
+  "slug": "polyfills-basics",
+  "title": "Polyfills Basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p1a",
+    "polyfills",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Supporting `Array.prototype.includes` on an old browser: a small polyfill defines it only if missing, so your app code can use `arr.includes(x)` everywhere w…"
+  },
+  "sections": {
+    "simple_en": "A polyfill is code that implements a modern feature in older environments that lack it, so the same code runs everywhere. You typically check whether the feature exists and, only if it doesn't, define your own implementation with the same behaviour.\n\nPolyfills target APIs/methods (e.g. `Array.prototype.includes`, `Promise`, `fetch`), whereas transpilers like Babel convert new SYNTAX (e.g. arrow functions) to older syntax. The common pattern is feature detection: `if (!Something.method) { Something.method = function(){...} }`.",
+    "hinglish": "Polyfill woh code hai jo kisi modern feature ko un purane environments me implement karta hai jisme woh nahi hai, taaki same code har jagah chale. Aam taur par aap check karte ho ki feature exist karta hai ya nahi, aur sirf na hone par apni implementation define karte ho same behaviour ke saath.\nPolyfills APIs/methods ko target karte hain (jaise `Array.prototype.includes`, `Promise`, `fetch`), jabki Babel jaise transpilers nayi SYNTAX (jaise arrow functions) ko purani syntax me convert karte hain. Common pattern feature detection hai: `if (!Something.method) { Something.method = function(){...} }`.",
+    "keyPoints": [
+      "Polyfill = implement a missing feature so old environments support it.",
+      "Pattern: feature-detect first, then define only if absent.",
+      "Polyfills add APIs/methods; transpilers (Babel) convert new syntax.",
+      "Add methods on the prototype with the correct name and behaviour.",
+      "Avoid overwriting native implementations that already exist."
+    ],
+    "real_world": "Supporting `Array.prototype.includes` on an old browser: a small polyfill defines it only if missing, so your app code can use `arr.includes(x)` everywhere without worrying about browser support.",
+    "followups": [
+      {
+        "q": "Difference between a polyfill and a transpiler?",
+        "a": "A polyfill provides a missing runtime API/method (e.g. `Promise`, `includes`); a transpiler (like Babel) rewrites new syntax (e.g. arrow functions, optional chaining) into older equivalent syntax."
+      },
+      {
+        "q": "Why feature-detect before defining a polyfill?",
+        "a": "To avoid overwriting the (usually faster and spec-correct) native implementation when it already exists, and to only patch environments that actually need it."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Polyfill pattern: define a method only if it doesn't already exist.\n\nfunction installArrayLastPolyfill() {\n  if (!Array.prototype.myLast) {\n    Array.prototype.myLast = function () {\n      return this[this.length - 1];\n    };\n  }\n}\n\n// A polyfill for String.prototype.padStart (simplified)\nfunction installPadStartPolyfill() {\n  if (!String.prototype.myPadStart) {\n    String.prototype.myPadStart = function (targetLen, padStr = \" \") {\n      let str = String(this);\n      while (str.length < targetLen) str = (padStr + str).slice(-Math.max(targetLen, str.length + padStr.length));\n      return str.length > targetLen ? str.slice(str.length - targetLen) : str;\n    };\n  }\n}\n\nmodule.exports = { installArrayLastPolyfill, installPadStartPolyfill };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { installArrayLastPolyfill, installPadStartPolyfill } = require(\"./solution\");\n\ninstallArrayLastPolyfill();\ninstallPadStartPolyfill();\n\nconsole.log([1, 2, 3].myLast());        // 3\nconsole.log(\"5\".myPadStart(3, \"0\"));    // 005\n\nconsole.assert([1, 2, 3].myLast() === 3, \"array last polyfill\");\nconsole.assert(\"5\".myPadStart(3, \"0\") === \"005\", \"padStart polyfill\");\nconsole.assert(typeof [].myLast === \"function\", \"method installed on prototype\");\nconsole.log(\"polyfill assertions passed.\");",
+      "expectedOutput": "3\n005\npolyfill assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

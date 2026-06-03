@@ -1,0 +1,67 @@
+{
+  "id": "p1a-080",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 80,
+  "orderInPhase": 80,
+  "slug": "error-handling-in-async-await",
+  "title": "Error Handling in async/await",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "error",
+    "handling",
+    "async",
+    "await"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "An API handler that awaits a DB call inside try/catch: on failure it logs the error and returns a 500 response instead of crashing the server — the same shap…"
+  },
+  "sections": {
+    "simple_en": "With async/await you handle errors using ordinary `try...catch`. An `await`ed promise that rejects throws inside the async function, so the rejection is caught by the surrounding `catch` block — making async error handling look just like synchronous error handling.\n\nPatterns: wrap awaits in try/catch; remember that a rejected promise you don't await (or catch) becomes an unhandled rejection; and for parallel work, decide between `Promise.all` (fail-fast) and `allSettled` (collect all). You can also `.catch()` on the call site of an async function.",
+    "hinglish": "async/await ke saath aap errors ko aam `try...catch` se handle karte ho. Ek `await` kiya hua promise jo reject hota hai, async function ke andar throw karta hai, isliye rejection surrounding `catch` block pakad leta hai — jisse async error handling bilkul synchronous jaisa dikhta hai.\nPatterns: awaits ko try/catch me wrap karo; yaad rakho jise await/catch nahi karte woh rejected promise unhandled rejection ban jaata hai; aur parallel work ke liye `Promise.all` (fail-fast) ya `allSettled` (sab collect) choose karo. Async function ke call site par `.catch()` bhi laga sakte ho.",
+    "keyPoints": [
+      "Use `try...catch` around `await`ed calls — rejections throw locally.",
+      "A rejected awaited promise behaves like a thrown error.",
+      "Unawaited/uncaught rejections become unhandled rejections.",
+      "`finally` works too — for cleanup after success or failure.",
+      "Choose Promise.all vs allSettled for parallel error semantics."
+    ],
+    "real_world": "An API handler that awaits a DB call inside try/catch: on failure it logs the error and returns a 500 response instead of crashing the server — the same shape as synchronous error handling.",
+    "followups": [
+      {
+        "q": "How do you catch errors from an awaited promise?",
+        "a": "Wrap the `await` in a `try...catch`. A rejected awaited promise throws inside the async function, so the `catch` block handles it like any synchronous error."
+      },
+      {
+        "q": "What is an unhandled promise rejection?",
+        "a": "A rejected promise that's never awaited or `.catch()`-ed. It triggers an 'unhandledRejection' warning/event and, in modern Node, can crash the process if unaddressed."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// try/catch with await, plus a safe wrapper utility.\n\nconst get = (v, ms = 0, fail = false) => new Promise((res, rej) =>\n  setTimeout(() => (fail ? rej(new Error(v)) : res(v)), ms));\n\nasync function load(fail) {\n  try {\n    const data = await get(\"data\", 0, fail);\n    return { ok: true, data };\n  } catch (err) {\n    return { ok: false, error: err.message };\n  } finally {\n    // cleanup always runs (omitted side effect here)\n  }\n}\n\n// \"errors-as-values\" helper: never throws, returns [error, result]\nasync function to(promise) {\n  try { return [null, await promise]; }\n  catch (err) { return [err, null]; }\n}\n\nmodule.exports = { get, load, to };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { get, load, to } = require(\"./solution\");\n\n(async () => {\n  console.log(await load(false)); // { ok:true, data:'data' }\n  console.log(await load(true));  // { ok:false, error:'data' }\n\n  const [err, val] = await to(get(\"v\", 0));\n  console.log(err, val); // null v\n  const [err2] = await to(get(\"boom\", 0, true));\n  console.log(err2.message); // boom\n\n  console.assert((await load(false)).ok === true, \"success path\");\n  console.assert((await load(true)).ok === false, \"catch handles rejection\");\n  console.assert((await to(get(\"v\", 0)))[1] === \"v\", \"to() returns value\");\n  console.log(\"async error handling assertions passed.\");\n})();",
+      "expectedOutput": "{ ok: true, data: 'data' }\n{ ok: false, error: 'data' }\nnull v\nboom\nasync error handling assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

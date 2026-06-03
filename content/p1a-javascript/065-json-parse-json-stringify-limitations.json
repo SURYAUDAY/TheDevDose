@@ -1,0 +1,66 @@
+{
+  "id": "p1a-065",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 65,
+  "orderInPhase": 65,
+  "slug": "json-parse-json-stringify-limitations",
+  "title": "JSON.parse(JSON.stringify()) Limitations",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "json.parse",
+    "json.stringify",
+    "limitations"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A bug report where 'the copied object lost its timestamp methods' — the team used the JSON trick on state containing Dates and functions, silently corrupting…"
+  },
+  "sections": {
+    "simple_en": "The classic deep-copy trick `JSON.parse(JSON.stringify(obj))` works for plain JSON-safe data, but it has serious limitations because JSON can only represent a subset of JavaScript values.\n\nIt silently drops `undefined`, functions, and symbols; converts `Date` objects to ISO strings (not Dates); turns `NaN`/`Infinity` into `null`; loses `Map`/`Set` (they become `{}`); and throws on circular references. Prefer `structuredClone` or a dedicated deep-clone for anything non-trivial.",
+    "hinglish": "Classic deep-copy trick `JSON.parse(JSON.stringify(obj))` plain JSON-safe data ke liye chalta hai, par iski serious limitations hain kyunki JSON JavaScript values ke sirf ek subset ko represent kar sakta hai.\nYe `undefined`, functions, aur symbols silently drop kar deta hai; `Date` ko ISO string me badal deta hai (Date nahi); `NaN`/`Infinity` ko `null` bana deta hai; `Map`/`Set` kho deta hai (woh `{}` ban jaate hain); aur circular references par throw karta hai. Kisi bhi non-trivial cheez ke liye `structuredClone` ya dedicated deep-clone use karo.",
+    "keyPoints": [
+      "Drops `undefined`, functions, and symbol values entirely.",
+      "Converts `Date` → ISO string; you lose the Date type.",
+      "`NaN` and `Infinity` become `null`.",
+      "`Map`/`Set` become empty `{}`; class instances lose their prototype.",
+      "Throws on circular references; use `structuredClone` instead."
+    ],
+    "real_world": "A bug report where 'the copied object lost its timestamp methods' — the team used the JSON trick on state containing Dates and functions, silently corrupting them. Switching to `structuredClone` fixed it.",
+    "followups": [
+      {
+        "q": "Name three things the JSON deep-copy trick loses.",
+        "a": "It drops `undefined`/functions/symbols, converts Dates to strings (and NaN/Infinity to null), and loses Map/Set and class prototypes; it also throws on circular references."
+      },
+      {
+        "q": "What should you use instead?",
+        "a": "`structuredClone()` for most cases, or a library like Lodash's `cloneDeep`, or a custom recursive clone that handles your specific types."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrating what the JSON trick loses.\n\nfunction jsonTrickLimits() {\n  const original = {\n    keep: 1,\n    gone: undefined,           // dropped\n    fn: () => 1,               // dropped\n    when: new Date(\"2025-01-01T00:00:00Z\"), // -> string\n    bad: NaN,                  // -> null\n    sym: Symbol(\"x\"),          // dropped\n  };\n  const copy = JSON.parse(JSON.stringify(original));\n  return {\n    hasGone: \"gone\" in copy,        // false\n    hasFn: \"fn\" in copy,            // false\n    whenType: typeof copy.when,     // \"string\"\n    badIsNull: copy.bad === null,   // true\n    hasSym: \"sym\" in copy,          // false\n    keep: copy.keep,                // 1\n  };\n}\n\nmodule.exports = { jsonTrickLimits };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { jsonTrickLimits } = require(\"./solution\");\n\nconsole.log(jsonTrickLimits());\n\nconst r = jsonTrickLimits();\nconsole.assert(r.hasGone === false, \"undefined dropped\");\nconsole.assert(r.hasFn === false, \"function dropped\");\nconsole.assert(r.whenType === \"string\", \"Date became string\");\nconsole.assert(r.badIsNull === true, \"NaN became null\");\nconsole.assert(r.hasSym === false, \"symbol dropped\");\nconsole.assert(r.keep === 1, \"plain value kept\");\nconsole.log(\"JSON trick limitation assertions passed.\");",
+      "expectedOutput": "{\n  hasGone: false,\n  hasFn: false,\n  whenType: 'string',\n  badIsNull: true,\n  hasSym: false,\n  keep: 1\n}\nJSON trick limitation assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

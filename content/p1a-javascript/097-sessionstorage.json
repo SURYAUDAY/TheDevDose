@@ -1,0 +1,64 @@
+{
+  "id": "p1a-097",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 97,
+  "orderInPhase": 97,
+  "slug": "sessionstorage",
+  "title": "SessionStorage",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "sessionstorage"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A multi-step checkout where each tab should track its own progress and reset if the tab closes — sessionStorage keeps the steps isolated per tab and auto-cle…"
+  },
+  "sections": {
+    "simple_en": "`sessionStorage` is a browser storage API with the same interface as `localStorage` (`setItem`, `getItem`, `removeItem`, `clear`), but its data lives only for the duration of the page session. It is cleared when the tab is closed.\n\nEach tab has its own separate sessionStorage (it isn't shared between tabs, even on the same origin), whereas localStorage IS shared across all tabs of an origin and persists. Use sessionStorage for per-tab, temporary data like a multi-step form's progress within one visit.",
+    "hinglish": "`sessionStorage` ek browser storage API hai jiska interface `localStorage` jaisa hi hai (`setItem`, `getItem`, `removeItem`, `clear`), par iska data sirf page session ke dauraan rehta hai. Tab band hote hi ye clear ho jaata hai.\nHar tab ka apna alag sessionStorage hota hai (same origin par bhi tabs me share nahi hota), jabki localStorage ek origin ke saare tabs me SHARED hota hai aur persist karta hai. Per-tab, temporary data ke liye sessionStorage use karo, jaise ek hi visit me multi-step form ki progress.",
+    "keyPoints": [
+      "Same API as localStorage, but data is per-tab and temporary.",
+      "Cleared when the tab/window is closed.",
+      "NOT shared between tabs (localStorage is shared and persistent).",
+      "Stores strings → use JSON for objects.",
+      "Use for per-session, per-tab state (e.g. wizard progress)."
+    ],
+    "real_world": "A multi-step checkout where each tab should track its own progress and reset if the tab closes — sessionStorage keeps the steps isolated per tab and auto-clears, unlike localStorage which would persist and leak between sessions.",
+    "followups": [
+      {
+        "q": "Key difference between sessionStorage and localStorage?",
+        "a": "sessionStorage is per-tab and cleared when the tab closes; localStorage is shared across all tabs of the same origin and persists until explicitly cleared."
+      },
+      {
+        "q": "Is sessionStorage shared between tabs?",
+        "a": "No. Each tab (and window) gets its own isolated sessionStorage, even for the same origin. localStorage, by contrast, is shared across tabs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Browser: window.sessionStorage has the same methods as localStorage,\n// but is per-tab and cleared on tab close.\n//\n//   sessionStorage.setItem(\"step\", \"2\");\n//   sessionStorage.getItem(\"step\"); // \"2\" (only in this tab, this session)\n//\n// Node demo: same simulated API; we just illustrate the contract.\n\nfunction createSessionStorage() {\n  const map = new Map();\n  return {\n    setItem: (k, v) => map.set(k, String(v)),\n    getItem: (k) => (map.has(k) ? map.get(k) : null),\n    removeItem: (k) => map.delete(k),\n    clear: () => map.clear(),\n    // emulate \"tab closed\" -> everything gone\n    _closeTab: () => map.clear(),\n  };\n}\n\nmodule.exports = { createSessionStorage };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (simulation; browser uses window.sessionStorage) ---\nconst { createSessionStorage } = require(\"./solution\");\n\nconst s = createSessionStorage();\ns.setItem(\"step\", \"2\");\nconsole.log(s.getItem(\"step\")); // 2\n\ns._closeTab(); // simulate closing the tab\nconsole.log(s.getItem(\"step\")); // null (session ended)\n\nconsole.assert(s.getItem(\"step\") === null, \"session cleared on tab close\");\nconsole.log(\"sessionStorage assertions passed.\");",
+      "expectedOutput": "2\nnull\nsessionStorage assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

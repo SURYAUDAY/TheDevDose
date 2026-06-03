@@ -1,0 +1,69 @@
+{
+  "id": "p3-045",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 45,
+  "orderInPhase": 45,
+  "slug": "session-vs-jwt",
+  "title": "Session vs JWT",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "session",
+    "jwt"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A traditional server-rendered web app uses sessions (with a Redis store) so admins can force-logout a user instantly."
+  },
+  "sections": {
+    "simple_en": "Session-based auth is stateful: on login the server creates a session (stored in memory, Redis, or a DB) and gives the client a cookie holding only an opaque session id. Each request, the server looks up the session. Revoking access is easy — delete the session — but the server must store and share session state.\n\nJWT auth is stateless: the signed token itself carries identity, so any server can verify it without shared storage, which scales well for APIs and microservices. The trade-off is revocation is harder (no central session to delete). Rule of thumb: sessions for classic web apps needing easy revocation; JWTs for stateless APIs, mobile, and distributed systems.",
+    "hinglish": "Session-based auth stateful hai: login par server ek session banata hai (memory, Redis ya DB mein) aur client ko ek cookie deta hai jisme sirf ek opaque session id hoti hai. Har request par server session lookup karta hai. Access revoke karna aasaan — session delete karo — par server ko session state store aur share karni padti hai.\n\nJWT auth stateless hai: signed token hi identity carry karta hai, isliye koi bhi server use bina shared storage ke verify kar sakta hai, jo APIs aur microservices ke liye achha scale karta hai. Trade-off: revocation mushkil (delete karne ko central session nahi). Rule: classic web apps jinhe easy revoke chahiye — sessions; stateless APIs, mobile, distributed systems — JWTs.",
+    "keyPoints": [
+      "Session: stateful — server stores session, client holds an opaque id cookie.",
+      "Sessions revoke instantly (delete server-side) but need shared storage to scale.",
+      "JWT: stateless — token carries identity; any server verifies it, no lookup.",
+      "JWTs scale across servers but are harder to revoke before expiry.",
+      "Sessions for classic web apps; JWTs for APIs, mobile, and microservices."
+    ],
+    "real_world": "A traditional server-rendered web app uses sessions (with a Redis store) so admins can force-logout a user instantly. A separate public API and mobile backend use JWTs so any of several stateless servers can authenticate a request without a shared session lookup.",
+    "followups": [
+      {
+        "q": "Which is easier to revoke, sessions or JWTs?",
+        "a": "Sessions — deleting the server-side session immediately invalidates it. JWTs remain valid until expiry unless you add a denylist or use short-lived tokens with refresh."
+      },
+      {
+        "q": "Why do JWTs scale well for distributed systems?",
+        "a": "Verification needs only the secret and the token — no shared session store — so any server (or microservice) can authenticate a request independently."
+      },
+      {
+        "q": "Can you combine the two?",
+        "a": "Yes — e.g., short-lived JWT access tokens plus server-stored refresh tokens you can revoke, getting JWT scalability with session-like control over long-term access."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express code (express-session and jsonwebtoken). The Node-runnable demo below contrasts a server-side session with stateless JWT verification (real crypto) so the trade-off is verifiable here.",
+      "source": "// Session vs JWT — two approaches to keeping a user logged in.\n\n// 1) SESSION-BASED (stateful): server stores session; client holds a cookie id.\nconst express = require(\"express\");\nconst session = require(\"express-session\");\nconst app = express();\n\napp.use(session({\n  secret: process.env.SESSION_SECRET,\n  resave: false,\n  saveUninitialized: false,\n  cookie: { httpOnly: true, secure: true, maxAge: 3600000 },\n  // store: new RedisStore(...) in production for scalability\n}));\n\napp.post(\"/login\", (req, res) => {\n  req.session.userId = 1;          // state lives on the server\n  res.json({ ok: true });\n});\napp.post(\"/logout\", (req, res) => {\n  req.session.destroy(() => res.json({ ok: true })); // instant revocation\n});\n\n// 2) JWT-BASED (stateless): no server storage; the signed token carries identity.\n//    Scales horizontally (any server can verify) but is harder to revoke\n//    before expiry (needs a denylist or short lifetimes + refresh tokens).\n//\n// Rule of thumb: sessions for classic web apps needing easy revocation;\n// JWT for stateless APIs, mobile clients, and microservices.\napp.listen(3000);",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Session vs JWT — server-side session store vs stateless token verification\nconst crypto = require(\"crypto\");\n\n// SESSION: server stores state; client holds only an opaque session id\nconst sessions = new Map();\nfunction sessionLogin(userId){ const sid = \"sess_\" + crypto.randomBytes(4).toString(\"hex\"); sessions.set(sid, { userId }); return sid; }\nfunction sessionAuth(sid){ return sessions.get(sid) || null; }     // requires a server lookup\nfunction sessionLogout(sid){ sessions.delete(sid); }              // easy to revoke\n\n// JWT: server stores nothing; the token itself carries (signed) state\nconst SECRET = \"k\";\nconst jwt = (payload) => { const b = Buffer.from(JSON.stringify(payload)).toString(\"base64url\");\n  const s = crypto.createHmac(\"sha256\", SECRET).update(b).digest(\"base64url\"); return `${b}.${s}`; };\nfunction jwtAuth(token){ const [b, s] = token.split(\".\"); return crypto.createHmac(\"sha256\", SECRET).update(b).digest(\"base64url\") === s ? JSON.parse(Buffer.from(b, \"base64url\").toString()) : null; }\n\nconst sid = sessionLogin(1);\nconsole.log(\"Session auth:\", JSON.stringify(sessionAuth(sid)), \"(server lookup)\");\nsessionLogout(sid);\nconsole.log(\"After logout:\", sessionAuth(sid), \"(revoked instantly)\");\nconst token = jwt({ userId: 2 });\nconsole.log(\"JWT auth:\", JSON.stringify(jwtAuth(token)), \"(no server state)\");\nconsole.assert(sessionAuth(sid) === null, \"session revoked server-side\");\nconsole.assert(jwtAuth(token).userId === 2, \"JWT verified statelessly\");\nconsole.log(\"Sessions: easy revoke, server memory. JWT: stateless, scales, harder to revoke.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Session auth: {\"userId\":1} (server lookup)\nAfter logout: null (revoked instantly)\nJWT auth: {\"userId\":2} (no server state)\nSessions: easy revoke, server memory. JWT: stateless, scales, harder to revoke.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

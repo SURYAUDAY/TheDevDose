@@ -1,0 +1,69 @@
+{
+  "id": "p5-015",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 15,
+  "orderInPhase": 15,
+  "slug": "api-architecture",
+  "title": "API architecture",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "api",
+    "architecture"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A public API exposes /api/v1/users with GET (list), POST (create), and /users/:id with GET/PATCH/DELETE."
+  },
+  "sections": {
+    "simple_en": "API architecture is about designing clear, consistent, and durable contracts between clients and servers. In a RESTful model, paths name resources as nouns (/users, /users/:id) and HTTP verbs convey the action (GET to read, POST to create, PATCH to update, DELETE to remove), with versioning (/v1/) to evolve without breaking clients.\n\nBeyond REST you might choose GraphQL (flexible client-driven queries) or gRPC (fast, typed service-to-service calls). Whatever the style, the goals are the same: predictable naming, consistent error formats, versioning for backward compatibility, and good documentation, so clients can depend on the contract.",
+    "hinglish": "API architecture clients aur servers ke beech clear, consistent, aur durable contracts design karne ke baare mein hai. Ek RESTful model mein, paths resources ko nouns ke roop mein naam dete hain (/users, /users/:id) aur HTTP verbs action convey karte hain (GET read karne ko, POST create, PATCH update, DELETE remove), versioning (/v1/) ke saath taaki clients ko break kiye bina evolve kiya ja sake.\n\nREST ke alawa aap GraphQL (flexible client-driven queries) ya gRPC (fast, typed service-to-service calls) choose kar sakte ho. Style koi bhi ho, goals same hain: predictable naming, consistent error formats, backward compatibility ke liye versioning, aur achhi documentation, taaki clients contract par depend kar sakein.",
+    "keyPoints": [
+      "RESTful: resources as nouns, HTTP verbs as actions.",
+      "Version the API (/v1/) to evolve without breaking clients.",
+      "Keep naming predictable and error formats consistent.",
+      "Alternatives: GraphQL (client-driven queries), gRPC (fast typed RPC).",
+      "Document contracts and keep them backward-compatible."
+    ],
+    "real_world": "A public API exposes /api/v1/users with GET (list), POST (create), and /users/:id with GET/PATCH/DELETE. Because actions live in HTTP verbs and the path stays a noun, any developer can guess the endpoints — and /v1/ lets the team ship /v2/ later without breaking existing clients.",
+    "followups": [
+      {
+        "q": "What makes an API RESTful?",
+        "a": "Resources named as nouns in the path, HTTP verbs (GET/POST/PATCH/DELETE) expressing the action, statelessness, consistent conventions, and proper status codes — so the same resource URL supports different operations via different verbs."
+      },
+      {
+        "q": "Why version an API?",
+        "a": "So you can change or remove behavior without breaking existing clients. Versioning (e.g., /v1/, /v2/) lets old and new contracts coexist while clients migrate at their own pace."
+      },
+      {
+        "q": "When would you choose GraphQL or gRPC over REST?",
+        "a": "GraphQL when clients need flexible, precise data fetching to avoid over/under-fetching; gRPC for fast, strongly-typed, high-throughput service-to-service communication. REST remains a great default for public, resource-oriented APIs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript defining a RESTful route table and a checker for REST conventions. The Node demo below verifies the routes use nouns + HTTP verbs and are versioned.",
+      "source": "// API architecture — design a clear, consistent, versioned contract (REST with Express).\nimport express from \"express\";\nconst router = express.Router();\n\n// Resources are NOUNS; HTTP verbs convey the action; the path is versioned (/v1).\nrouter.get(\"/api/v1/users\", listUsers);          // collection\nrouter.post(\"/api/v1/users\", createUser);        // create in collection\nrouter.get(\"/api/v1/users/:id\", getUser);        // single resource\nrouter.patch(\"/api/v1/users/:id\", updateUser);   // partial update\nrouter.delete(\"/api/v1/users/:id\", deleteUser);  // remove\n\nasync function listUsers(req, res) {\n  const { page = 1, limit = 20 } = req.query;     // pagination via query params\n  res.json({ data: [], page: Number(page), limit: Number(limit) });\n}\nasync function createUser(req, res) {\n  // validate input, create, return 201 + the created resource\n  res.status(201).json({ id: 1, ...req.body });\n}\nasync function getUser(req, res) { res.json({ id: req.params.id }); }\nasync function updateUser(req, res) { res.json({ id: req.params.id, ...req.body }); }\nasync function deleteUser(req, res) { res.status(204).end(); }\n\n// Principles: consistent naming, correct status codes, pagination/filtering, versioning,\n// uniform error shape, and documentation (OpenAPI). Pick REST/GraphQL/gRPC to fit the use case.\nexport default router;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// API architecture — design clear, consistent, versioned contracts (REST resource model here)\nconst routes = [\n  { method: \"GET\",    path: \"/api/v1/users\",      action: \"list users\" },\n  { method: \"POST\",   path: \"/api/v1/users\",      action: \"create user\" },\n  { method: \"GET\",    path: \"/api/v1/users/:id\",  action: \"get one user\" },\n  { method: \"PATCH\",  path: \"/api/v1/users/:id\",  action: \"update user\" },\n  { method: \"DELETE\", path: \"/api/v1/users/:id\",  action: \"delete user\" },\n];\nfunction isRestful(route) {\n  // RESTful: nouns (resources) in the path, HTTP verbs convey the action, versioned.\n  const verbInPath = /\\/(get|create|update|delete|make)/i.test(route.path);\n  return route.path.includes(\"/v1/\") && !verbInPath;\n}\nroutes.forEach((r) => console.log(`${r.method.padEnd(6)} ${r.path.padEnd(22)} -> ${r.action}`));\nconsole.log(\"All routes RESTful?\", routes.every(isRestful));\nconsole.assert(routes.every(isRestful), \"resources as nouns, verbs as HTTP methods, versioned\");\nconsole.assert(routes.filter((r) => r.path === \"/api/v1/users\").length === 2, \"same resource, different verbs\");\nconsole.log(\"Good API design: resources as nouns, HTTP verbs for actions, consistent naming, versioning, clear errors.\");\nconsole.log(\"Decide style (REST/GraphQL/gRPC), then keep contracts predictable, documented, and backward-compatible.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "GET    /api/v1/users          -> list users\nPOST   /api/v1/users          -> create user\nGET    /api/v1/users/:id      -> get one user\nPATCH  /api/v1/users/:id      -> update user\nDELETE /api/v1/users/:id      -> delete user\nAll routes RESTful? true\nGood API design: resources as nouns, HTTP verbs for actions, consistent naming, versioning, clear errors.\nDecide style (REST/GraphQL/gRPC), then keep contracts predictable, documented, and backward-compatible.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

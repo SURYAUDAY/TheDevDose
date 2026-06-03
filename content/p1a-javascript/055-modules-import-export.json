@@ -1,0 +1,66 @@
+{
+  "id": "p1a-055",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 55,
+  "orderInPhase": 55,
+  "slug": "modules-import-export",
+  "title": "Modules (import / export)",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "modules",
+    "import",
+    "export"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Every React/Node project: `import { useState } from 'react'` (named) and `import App from './App'` (default)."
+  },
+  "sections": {
+    "simple_en": "ES Modules (ESM) let you split code across files and share functionality via `export` and `import`. You can have named exports (many per file) and one default export per file. Imports are static, hoisted, and resolved before execution, enabling tooling like tree-shaking.\n\nNode also has the older CommonJS system (`module.exports` / `require`) used in `.js` files by default. ESM is enabled via `\"type\": \"module\"` in package.json or `.mjs` files. Key ESM traits: modules run in strict mode, have their own scope, and are singletons (loaded once and cached).",
+    "hinglish": "ES Modules (ESM) aapko code ko files me baant kar `export` aur `import` se share karne dete hain. Named exports (per file kai) aur per file ek default export ho sakta hai. Imports static, hoisted, aur execution se pehle resolve hote hain, jisse tree-shaking jaise tooling possible hote hain.\nNode me purana CommonJS system bhi hai (`module.exports` / `require`) jo `.js` files me default use hota hai. ESM `\"type\": \"module\"` (package.json) ya `.mjs` files se enable hota hai. ESM traits: modules strict mode me chalte hain, apna scope rakhte hain, aur singletons hote hain (ek baar load, phir cached).",
+    "keyPoints": [
+      "Named exports: `export const x` / `import { x }`. Default: `export default` / `import x`.",
+      "ESM imports are static and hoisted; resolved before the module body runs.",
+      "Each module has its own scope and runs in strict mode automatically.",
+      "Modules are singletons — evaluated once and cached on subsequent imports.",
+      "CommonJS (`require`/`module.exports`) is the older Node system; ESM needs `type:module` or `.mjs`."
+    ],
+    "real_world": "Every React/Node project: `import { useState } from 'react'` (named) and `import App from './App'` (default). Splitting code into modules is how real codebases stay organised and how bundlers tree-shake unused exports.",
+    "followups": [
+      {
+        "q": "Difference between named and default exports?",
+        "a": "A module can have many named exports (imported by exact name in braces) but only one default export (imported with any name, no braces). You can mix both in one module."
+      },
+      {
+        "q": "How do ESM and CommonJS differ?",
+        "a": "ESM (`import`/`export`) is static, hoisted, strict-by-default, and supports tree-shaking; CommonJS (`require`/`module.exports`) is dynamic and synchronous. Node uses CommonJS by default in `.js` and ESM with `type:module` or `.mjs`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// ESM syntax (how you'd write it in a .mjs / \"type\":\"module\" project):\n//\n//   // math.mjs\n//   export const add = (a, b) => a + b;        // named export\n//   export default function mul(a, b){return a*b;} // default export\n//\n//   // app.mjs\n//   import mul, { add } from \"./math.mjs\";\n//\n// Below is a runnable CommonJS equivalent demonstrating the same idea.\n\nconst add = (a, b) => a + b;          // would be a named export\nconst mul = (a, b) => a * b;          // would be the default export\n\n// CommonJS export (named-like + default-like)\nmodule.exports = { add, default: mul };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\n// Importing the CommonJS equivalent:\nconst math = require(\"./solution\");\nconst add = math.add;       // like: import { add }\nconst mul = math.default;   // like: import mul from \"./solution\"\n\nconsole.log(add(2, 3)); // 5\nconsole.log(mul(2, 3)); // 6\n\nconsole.assert(add(2, 3) === 5, \"named export works\");\nconsole.assert(mul(2, 3) === 6, \"default export works\");\nconsole.log(\"modules assertions passed.\");\nconsole.log(\"Note: real ESM uses 'import/export'; this demo uses CommonJS so it runs as a single .js file.\");",
+      "expectedOutput": "5\n6\nmodules assertions passed.\nNote: real ESM uses 'import/export'; this demo uses CommonJS so it runs as a single .js file.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

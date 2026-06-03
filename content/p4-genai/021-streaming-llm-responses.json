@@ -1,0 +1,70 @@
+{
+  "id": "p4-021",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 21,
+  "orderInPhase": 21,
+  "slug": "streaming-llm-responses",
+  "title": "Streaming LLM responses",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "streaming",
+    "llm",
+    "responses"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A chat assistant streams its answer so the user reads along as it's written, rather than waiting several seconds for a long reply to appear all at once — mak…"
+  },
+  "sections": {
+    "simple_en": "Streaming returns the model's output incrementally — token by token — as it's generated, instead of waiting for the entire response to finish. Technically the API sends a stream of chunks (server-sent events) that the client renders immediately, producing the familiar 'typewriter' effect.\n\nThe big win is perceived latency: users see words appear within a fraction of a second rather than staring at a spinner for the whole generation. In Python you set stream=True and iterate over the response chunks, appending each delta to build the full text. Streaming is standard for chat UIs and any long-form generation.",
+    "hinglish": "Streaming model ka output incrementally return karta hai — token by token — jaise wo generate hota hai, poore response ke khatam hone ka wait kiye bina. Technically API chunks ka ek stream (server-sent events) bhejta hai jise client turant render karta hai, jaana-pehchana 'typewriter' effect produce karke.\n\nBada faayda perceived latency hai: users words ko ek second ke fraction mein appear hote dekhte hain, poore generation ke liye spinner ghoorne ke bajaye. Python mein aap stream=True set karte ho aur response chunks par iterate karte ho, har delta ko append karke full text banate ho. Streaming chat UIs aur kisi bhi long-form generation ke liye standard hai.",
+    "keyPoints": [
+      "Returns output incrementally (token by token) as it's generated.",
+      "API sends chunks (server-sent events); client renders immediately.",
+      "Dramatically improves perceived latency (typewriter effect).",
+      "Python: set stream=True and iterate over response chunks.",
+      "Standard for chat UIs and long-form generation."
+    ],
+    "real_world": "A chat assistant streams its answer so the user reads along as it's written, rather than waiting several seconds for a long reply to appear all at once — making the app feel fast and alive even when total generation time is unchanged.",
+    "followups": [
+      {
+        "q": "What's the main benefit of streaming?",
+        "a": "Lower perceived latency and a responsive UX — users see output appear immediately (token by token) instead of waiting for the full response, even though total generation time is the same."
+      },
+      {
+        "q": "How do you consume a stream in Python?",
+        "a": "Set stream=True on the request and iterate over the returned chunks, reading each delta (partial content) and appending it; the UI renders each piece as it arrives."
+      },
+      {
+        "q": "What transport does streaming typically use?",
+        "a": "Server-sent events (SSE) over HTTP — the server pushes a sequence of chunks on one long-lived response, which the client reads incrementally."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI streaming code (needs an API key). The Python-runnable demo below consumes a token stream so the incremental behavior is verifiable here.",
+      "source": "# Streaming LLM responses — render tokens as they arrive (lower perceived latency).\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef stream_answer(prompt: str):\n    stream = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n        stream=True,   # yield partial chunks instead of waiting for the full reply\n    )\n    full = []\n    for chunk in stream:\n        delta = chunk.choices[0].delta.content\n        if delta:\n            print(delta, end=\"\", flush=True)  # render immediately (typewriter effect)\n            full.append(delta)\n    return \"\".join(full)\n\n# Streaming sends tokens incrementally (server-sent events). The UI updates live,\n# greatly improving responsiveness for long answers.\n# stream_answer(\"Write a short story about a robot.\")",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Streaming LLM responses — yield tokens as they're generated for instant feedback\nimport time\ndef stream_response(text):\n    # A generator that yields tokens one at a time (like an SSE/stream from the API).\n    for token in text.split():\n        yield token + \" \"\n\n# Consumer accumulates the stream (a UI would render each chunk immediately).\ncollected = \"\"\nchunks = 0\nfor chunk in stream_response(\"Streaming shows tokens as they arrive\"):\n    collected += chunk\n    chunks += 1\n    # print(chunk, end=\"\", flush=True)  # real UI: render incrementally\nprint(\"Received\", chunks, \"streamed chunks\")\nprint(\"Final text:\", collected.strip())\nassert chunks == 6 and collected.strip() == \"Streaming shows tokens as they arrive\"\nprint(\"\\nStreaming sends partial output token-by-token (server-sent events) instead of waiting for the full reply.\")\nprint(\"Benefits: lower perceived latency and a responsive, typewriter-style UX.\")\nprint(\"In Python: set stream=True and iterate the response chunks; the client renders them as they come.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Received 6 streamed chunks\nFinal text: Streaming shows tokens as they arrive\n\nStreaming sends partial output token-by-token (server-sent events) instead of waiting for the full reply.\nBenefits: lower perceived latency and a responsive, typewriter-style UX.\nIn Python: set stream=True and iterate the response chunks; the client renders them as they come.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

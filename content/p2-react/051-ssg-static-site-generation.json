@@ -1,0 +1,71 @@
+{
+  "id": "p2-051",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 51,
+  "orderInPhase": 51,
+  "slug": "ssg-static-site-generation",
+  "title": "SSG (Static Site Generation)",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "ssg",
+    "static",
+    "site",
+    "generation"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A documentation site builds every page once at deploy time."
+  },
+  "sections": {
+    "simple_en": "Static Site Generation pre-renders pages into HTML at build time, before any user requests them. The result is a set of static files that can be served from a CDN, giving extremely fast loads, great SEO, and low server cost because no rendering happens per request.\n\nSSG is ideal for content that doesn't change per user or per request — marketing pages, blogs, docs. When content updates periodically, Incremental Static Regeneration (ISR) re-builds pages on a schedule or on demand so they stay reasonably fresh without a full rebuild.",
+    "hinglish": "Static Site Generation pages ko build time par hi HTML mein pre-render kar deta hai, user ke request karne se pehle. Result ek set of static files hai jo CDN se serve hoti hain — bahut fast load, achhi SEO, aur low server cost kyunki har request par rendering nahi hoti.\n\nSSG un cheezon ke liye best hai jo per user ya per request nahi badalti — marketing pages, blogs, docs. Jab content kabhi-kabhi update ho to ISR pages ko schedule par ya on-demand dobara build kar deta hai taaki fresh rahein.",
+    "keyPoints": [
+      "Pages are pre-rendered to HTML at build time, not per request.",
+      "Served as static files from a CDN — very fast, cheap, and SEO-friendly.",
+      "Best for content that's the same for everyone (blogs, docs, marketing).",
+      "Next.js: generateStaticParams + a server component fetches data at build.",
+      "ISR re-generates pages periodically/on-demand to avoid stale content."
+    ],
+    "real_world": "A documentation site builds every page once at deploy time. Visitors worldwide get instant, CDN-cached HTML, and Google indexes complete content. When docs change, a new build (or ISR) regenerates only what's needed.",
+    "followups": [
+      {
+        "q": "SSG vs SSR — when choose SSG?",
+        "a": "Choose SSG when content is the same for all users and doesn't need per-request data; it's faster and cheaper. Use SSR when pages depend on the request (user, time, query)."
+      },
+      {
+        "q": "What is ISR?",
+        "a": "Incremental Static Regeneration: SSG that re-generates individual pages after a set interval or on demand, so you get static speed with periodically fresh content — no full rebuild."
+      },
+      {
+        "q": "Can SSG pages still be interactive?",
+        "a": "Yes — the static HTML loads first, then JavaScript hydrates it (or client components run) to add interactivity, just like other React rendering modes."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Next.js code that runs at BUILD time (and on the server). The Node-runnable demo below illustrates the build-time pre-rendering step.",
+      "source": "// SSG: generate pages at BUILD time with Next.js generateStaticParams.\n// app/blog/[slug]/page.jsx\n\n// Runs at build time: tells Next which slugs to pre-render.\nexport async function generateStaticParams() {\n  const posts = await fetch(\"https://api.site.com/posts\").then((r) => r.json());\n  return posts.map((p) => ({ slug: p.slug })); // one static page per slug\n}\n\nexport default async function BlogPost({ params }) {\n  const post = await fetch(`https://api.site.com/posts/${params.slug}`).then((r) => r.json());\n  // This HTML is produced once at build and served as a static file (CDN-cacheable).\n  return (\n    <article>\n      <h1>{post.title}</h1>\n      <p>{post.body}</p>\n    </article>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// SSG — pre-render each route to a static HTML file at BUILD time\nfunction buildStaticSite(routes, getData, template){\n  const pages = {};\n  for (const route of routes){\n    const data = getData(route);            // fetched once, at build time\n    pages[route] = template(route, data);   // produced as static HTML\n  }\n  return pages;\n}\nconst routes = [\"/\", \"/about\", \"/blog/hello\"];\nconst getData = (r) => ({ title: r === \"/\" ? \"Home\" : r.split(\"/\").pop() });\nconst template = (route, data) => `<html><h1>${data.title}</h1><!-- ${route} --></html>`;\n\nconst site = buildStaticSite(routes, getData, template);\nObject.keys(site).forEach(r => console.log(`${r}  ->  ${site[r].length} bytes of pre-rendered HTML`));\nconsole.log(\"Sample /about:\", site[\"/about\"]);\nconsole.assert(Object.keys(site).length === 3, \"all routes pre-rendered\");\nconsole.assert(site[\"/\"].includes(\"Home\"), \"home rendered at build time\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "/  ->  36 bytes of pre-rendered HTML\n/about  ->  42 bytes of pre-rendered HTML\n/blog/hello  ->  47 bytes of pre-rendered HTML\nSample /about: <html><h1>about</h1><!-- /about --></html>\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

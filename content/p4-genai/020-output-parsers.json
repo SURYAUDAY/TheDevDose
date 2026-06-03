@@ -1,0 +1,69 @@
+{
+  "id": "p4-020",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 20,
+  "orderInPhase": 20,
+  "slug": "output-parsers",
+  "title": "Output parsers",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "output",
+    "parsers"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "kitchen",
+    "seedText": "A recipe app asks the model for a recipe and uses a PydanticOutputParser: format instructions tell the model exactly how to structure title/ingredients/steps…"
+  },
+  "sections": {
+    "simple_en": "Output parsers take an LLM's text response and convert it into structured data your program can use — extracting JSON, parsing a list, or mapping fields into a typed object. They handle the messy reality that models sometimes wrap JSON in prose or code fences, so parsing must be robust with fallbacks.\n\nFrameworks like LangChain provide parsers (e.g., PydanticOutputParser) that do two things: inject format instructions into the prompt so the model knows the expected shape, and parse (and even auto-fix or retry on) the response into the target type. They're the glue between free-form generation and structured application logic.",
+    "hinglish": "Output parsers ek LLM ke text response ko structured data mein convert karte hain jo aapka program use kar sake — JSON extract karke, list parse karke, ya fields ko ek typed object mein map karke. Wo us messy reality ko handle karte hain ki models kabhi JSON ko prose ya code fences mein wrap karte hain, isliye parsing robust honi chahiye fallbacks ke saath.\n\nLangChain jaise frameworks parsers dete hain (jaise PydanticOutputParser) jo do cheezein karte hain: prompt mein format instructions inject karna taaki model expected shape jaane, aur response ko target type mein parse (aur auto-fix ya retry bhi) karna. Wo free-form generation aur structured application logic ke beech ka glue hain.",
+    "keyPoints": [
+      "Convert LLM text into structured data (JSON, lists, typed objects).",
+      "Handle messiness: JSON wrapped in prose or code fences.",
+      "LangChain parsers inject format instructions AND parse the response.",
+      "Can auto-fix or retry when the output doesn't match.",
+      "The glue between free-form generation and structured app logic."
+    ],
+    "real_world": "A recipe app asks the model for a recipe and uses a PydanticOutputParser: format instructions tell the model exactly how to structure title/ingredients/steps, and the parser turns the reply into a typed Recipe object — retrying automatically if the model's first attempt is malformed.",
+    "followups": [
+      {
+        "q": "What do output parsers do?",
+        "a": "They transform an LLM's text into structured data (e.g., a Pydantic object or list), often injecting format instructions into the prompt and robustly parsing — with fallbacks/retries — the response."
+      },
+      {
+        "q": "Why not just call json.loads on the response?",
+        "a": "Models may add prose, code fences, or slightly malformed JSON. Parsers handle extraction and error recovery, and can re-prompt the model to fix output that doesn't match the schema."
+      },
+      {
+        "q": "How do parsers relate to structured outputs / JSON mode?",
+        "a": "Structured outputs constrain the model to emit conforming JSON; parsers handle turning responses into typed objects and recovering from imperfections. They're complementary — used together for maximum reliability."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real LangChain output-parser code (needs an API key). The Python-runnable demo below parses model text into structured data with fallbacks so the behavior is verifiable here.",
+      "source": "# Output parsers — convert LLM text into structured objects (LangChain).\nfrom langchain_openai import ChatOpenAI\nfrom langchain_core.prompts import ChatPromptTemplate\nfrom langchain_core.output_parsers import PydanticOutputParser\nfrom pydantic import BaseModel, Field\n\nclass Recipe(BaseModel):\n    title: str = Field(description=\"recipe name\")\n    ingredients: list[str] = Field(description=\"list of ingredients\")\n    steps: list[str] = Field(description=\"ordered steps\")\n\nparser = PydanticOutputParser(pydantic_object=Recipe)\n\nprompt = ChatPromptTemplate.from_messages([\n    (\"system\", \"Return a recipe.\\n{format_instructions}\"),\n    (\"user\", \"{dish}\"),\n]).partial(format_instructions=parser.get_format_instructions())\n\nllm = ChatOpenAI(model=\"gpt-4o-mini\", temperature=0)\nchain = prompt | llm | parser   # the parser turns the reply into a Recipe object\n\n# Output parsers inject format instructions into the prompt and parse (and can\n# auto-retry/fix) the response into typed Python objects.\n# recipe = chain.invoke({\"dish\": \"simple pancakes\"})  # -> Recipe(...)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Output parsers — turn free-form LLM text into structured data, robustly\nimport json, re\n\ndef parse_json_output(text):\n    # Models sometimes wrap JSON in prose or ```json fences; extract it safely.\n    fenced = re.search(r\"```(?:json)?\\s*(\\{.*?\\}|\\[.*?\\])\\s*```\", text, re.DOTALL)\n    candidate = fenced.group(1) if fenced else None\n    if candidate is None:\n        m = re.search(r\"(\\{.*\\}|\\[.*\\])\", text, re.DOTALL)  # first JSON-looking blob\n        candidate = m.group(1) if m else None\n    try:\n        return json.loads(candidate) if candidate else None\n    except json.JSONDecodeError:\n        return None\n\ndef parse_list_output(text):\n    # Parse a bullet/numbered list into a Python list.\n    return [re.sub(r\"^[\\-\\*\\d\\.\\)\\s]+\", \"\", ln).strip()\n            for ln in text.splitlines() if re.match(r\"^\\s*[\\-\\*\\d]\", ln)]\n\nmsg = \"Sure! Here is the data:\\n```json\\n{\\\"city\\\": \\\"Pune\\\", \\\"temp\\\": 30}\\n```\"\nlistmsg = \"Top languages:\\n1. Python\\n2. JavaScript\\n- Go\"\nprint(\"Parsed JSON:\", parse_json_output(msg))\nprint(\"Parsed list:\", parse_list_output(listmsg))\nassert parse_json_output(msg) == {\"city\": \"Pune\", \"temp\": 30}\nassert parse_list_output(listmsg) == [\"Python\", \"JavaScript\", \"Go\"]\nprint(\"\\nOutput parsers extract structured data (JSON, lists, key-values) from model text, with fallbacks.\")\nprint(\"Frameworks like LangChain provide parsers (e.g., PydanticOutputParser) that also fix/retry on errors.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Parsed JSON: {'city': 'Pune', 'temp': 30}\nParsed list: ['Python', 'JavaScript', 'Go']\n\nOutput parsers extract structured data (JSON, lists, key-values) from model text, with fallbacks.\nFrameworks like LangChain provide parsers (e.g., PydanticOutputParser) that also fix/retry on errors.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p3-037",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 37,
+  "orderInPhase": 37,
+  "slug": "collections-documents",
+  "title": "Collections & documents",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "collections",
+    "documents"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A blog stores each post as a document with an embedded author object, a tags array, and an array of comment sub-documents."
+  },
+  "sections": {
+    "simple_en": "In MongoDB a document is a single record stored as BSON — a JSON-like structure that can contain nested objects and arrays. A collection is a group of documents, roughly analogous to a table in SQL, but without a fixed schema: documents in one collection can have different fields.\n\nBecause documents can embed sub-documents and arrays, related data is often stored together and read in a single query (no joins). You query into nested fields with dot notation ('author.name') and can match array membership directly. This document model maps naturally onto application objects.",
+    "hinglish": "MongoDB mein ek document ek single record hai jo BSON ke roop mein store hota hai — ek JSON-like structure jisme nested objects aur arrays ho sakte hain. Ek collection documents ka group hai, SQL ki table jaisa, par fixed schema ke bina: ek collection ke documents alag fields rakh sakte hain.\n\nKyunki documents sub-documents aur arrays embed kar sakte hain, related data aksar saath store hota hai aur ek hi query mein read hota hai (koi joins nahi). Nested fields ko dot notation ('author.name') se query karte ho aur array membership directly match kar sakte ho. Ye document model application objects par naturally map hota hai.",
+    "keyPoints": [
+      "Document = a BSON (JSON-like) record with nested objects/arrays.",
+      "Collection = a group of documents (like a table, but schema-flexible).",
+      "Documents in one collection can have different fields.",
+      "Embed related data to read it in one query (no joins).",
+      "Query nested fields with dot notation; match array membership directly."
+    ],
+    "real_world": "A blog stores each post as a document with an embedded author object, a tags array, and an array of comment sub-documents. Loading a post's full content — including its comments — is a single read, with no joins across tables.",
+    "followups": [
+      {
+        "q": "How is a collection different from a SQL table?",
+        "a": "Both group records, but a collection doesn't enforce a fixed schema — documents can have varying fields — and documents can nest arrays and sub-documents that a flat table can't."
+      },
+      {
+        "q": "How do you query a nested field?",
+        "a": "Use dot notation in the filter, e.g., find({ 'author.name': 'Asha' }). For arrays, matching the field against a value checks membership."
+      },
+      {
+        "q": "What's BSON?",
+        "a": "Binary JSON — MongoDB's storage/transport format. It extends JSON with extra types (like Date and ObjectId) and is efficient to parse and traverse."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real MongoDB driver code (runs against MongoDB). The Node-runnable demo below models documents and collections in JS so the structure is verifiable here.",
+      "source": "// Collections & documents — the core MongoDB data model.\nconst { MongoClient } = require(\"mongodb\");\nconst client = new MongoClient(process.env.MONGO_URL);\n\nasync function demo() {\n  await client.connect();\n  const db = client.db(\"blog\");\n\n  // A COLLECTION is like a table; a DOCUMENT is a BSON (JSON-like) record.\n  const posts = db.collection(\"posts\");\n\n  // Documents can nest arrays and sub-documents — no joins needed to read them.\n  await posts.insertOne({\n    title: \"Hello Mongo\",\n    author: { name: \"Asha\", id: 1 },          // embedded sub-document\n    tags: [\"mongodb\", \"nosql\"],               // array field\n    comments: [{ by: \"Ravi\", text: \"nice!\" }],// array of sub-documents\n    createdAt: new Date(),\n  });\n\n  // Query into nested fields with dot notation:\n  const byAuthor = await posts.find({ \"author.name\": \"Asha\" }).toArray();\n  const tagged = await posts.find({ tags: \"nosql\" }).toArray(); // matches array membership\n\n  return { byAuthor, tagged };\n}\nmodule.exports = { demo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Collections & documents — a collection groups BSON-like documents\nconst database = { collections: {} };\nfunction getCollection(name){ return (database.collections[name] ||= []); }\n\nconst posts = getCollection(\"posts\");\nposts.push({ _id: 1, title: \"Hello Mongo\", author: \"Asha\", comments: [{ by: \"Ravi\", text: \"nice\" }] });\nposts.push({ _id: 2, title: \"NoSQL 101\", author: \"Mira\", likes: 42 }); // different fields, same collection\n\nconsole.log(\"Collections:\", Object.keys(database.collections));\nconsole.log(\"Documents in 'posts':\", posts.length);\nconsole.log(\"Doc 1 nested comment:\", posts[0].comments[0].text);\nconsole.log(\"Doc 2 has 'likes', doc 1 does not:\", \"likes\" in posts[1], \"/\", \"likes\" in posts[0]);\nconsole.assert(posts.length === 2, \"two documents in the collection\");\nconsole.log(\"A document is a JSON-like record; a collection is a group of documents.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Collections: [ 'posts' ]\nDocuments in 'posts': 2\nDoc 1 nested comment: nice\nDoc 2 has 'likes', doc 1 does not: true / false\nA document is a JSON-like record; a collection is a group of documents.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

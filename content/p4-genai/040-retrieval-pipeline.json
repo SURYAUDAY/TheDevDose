@@ -1,0 +1,69 @@
+{
+  "id": "p4-040",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 40,
+  "orderInPhase": 40,
+  "slug": "retrieval-pipeline",
+  "title": "Retrieval pipeline",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "retrieval",
+    "pipeline"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A support bot's retriever is configured with k=4 and a metadata filter for the user's product."
+  },
+  "sections": {
+    "simple_en": "The retrieval pipeline turns a user query into the most relevant chunks. It embeds the query with the same model used for the documents, searches the index for the nearest vectors, and returns the top-k chunks. A retriever object usually wraps this with a search configuration (k, search type, filters).\n\nRetrieval quality caps the quality of the whole RAG system — if the right context isn't retrieved, the LLM can't answer well no matter how good it is. Options like the number of chunks (k), MMR for diversity, and metadata filters tune what gets retrieved. The returned chunks become the context for generation.",
+    "hinglish": "Retrieval pipeline ek user query ko sabse relevant chunks mein badalti hai. Ye query ko usi model se embed karti hai jo documents ke liye use hua, index mein nearest vectors search karti hai, aur top-k chunks wapas karti hai. Ek retriever object aksar ise ek search configuration (k, search type, filters) ke saath wrap karta hai.\n\nRetrieval quality poore RAG system ki quality ko cap karti hai — agar sahi context retrieve nahi hua, to LLM achha answer nahi de sakta chahe wo kitna bhi achha ho. Options jaise chunks ki sankhya (k), diversity ke liye MMR, aur metadata filters tune karte hain ki kya retrieve ho. Returned chunks generation ke liye context ban jaate hain.",
+    "keyPoints": [
+      "Query -> embed (same model as docs) -> search index -> return top-k.",
+      "A retriever wraps this with config (k, search type, filters).",
+      "Retrieval quality caps the whole RAG system's quality.",
+      "Tune k, use MMR for diversity, and metadata filters for precision.",
+      "Returned chunks become the generation context."
+    ],
+    "real_world": "A support bot's retriever is configured with k=4 and a metadata filter for the user's product. For each question it embeds the query, pulls the four most relevant chunks for that product, and passes them to the LLM — so answers stay relevant and product-specific.",
+    "followups": [
+      {
+        "q": "What are the steps of a retrieval pipeline?",
+        "a": "Embed the query with the same model as the documents, search the vector index for nearest neighbors, and return the top-k most relevant chunks to use as context."
+      },
+      {
+        "q": "Why is retrieval the bottleneck for RAG quality?",
+        "a": "The LLM can only answer from the context it's given. If retrieval misses the relevant chunks, even the best model will produce a poor or hallucinated answer."
+      },
+      {
+        "q": "What is MMR in retrieval?",
+        "a": "Maximal Marginal Relevance — a search mode that balances relevance with diversity, reducing near-duplicate chunks so the retrieved set covers more distinct, useful information."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain retriever code. The Python-runnable demo below runs query → embed → search → top-k so the end-to-end retrieval flow is verifiable here.",
+      "source": "# Retrieval pipeline — load -> split -> embed/index -> retrieve, as a reusable retriever.\nfrom langchain_community.document_loaders import PyPDFLoader\nfrom langchain_text_splitters import RecursiveCharacterTextSplitter\nfrom langchain_openai import OpenAIEmbeddings\nfrom langchain_community.vectorstores import FAISS\n\ndef build_retriever(pdf_path, k=4):\n    docs = PyPDFLoader(pdf_path).load()                                  # 1) load\n    chunks = RecursiveCharacterTextSplitter(\n        chunk_size=1000, chunk_overlap=200).split_documents(docs)       # 2) split\n    store = FAISS.from_documents(chunks, OpenAIEmbeddings())            # 3) embed + index\n    return store.as_retriever(search_kwargs={\"k\": k})                   # 4) retriever\n\n# retriever = build_retriever(\"handbook.pdf\")\n# relevant_docs = retriever.invoke(\"What is the refund policy?\")  # top-k chunks\n\n# This retriever is the \"R\" in RAG; its output feeds the prompt for generation.\n# Common upgrades: metadata filters, MMR for diversity, and a reranking stage.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Retrieval pipeline — the end-to-end flow: load -> chunk -> embed/index -> retrieve\nimport hashlib, math\ndef embed(text, dim=8):\n    v=[0.0]*dim\n    for w in text.lower().split():\n        v[int(hashlib.md5(w.encode()).hexdigest(),16)%dim]+=1.0\n    n=math.sqrt(sum(x*x for x in v)) or 1.0\n    return [x/n for x in v]\ndef cosine(a,b):\n    d=sum(x*y for x,y in zip(a,b)); na=math.sqrt(sum(x*x for x in a)); nb=math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\n\ndef pipeline(raw_text, query, chunk_size=4, k=2):\n    # 1) chunk\n    words = raw_text.split()\n    chunks = [\" \".join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]\n    # 2) embed + index\n    index = [(c, embed(c)) for c in chunks]\n    # 3) embed query and retrieve top-k\n    qv = embed(query)\n    ranked = sorted(index, key=lambda ce: cosine(qv, ce[1]), reverse=True)\n    return [c for c, _ in ranked[:k]]\n\ntext = \"python is great python is fast cooking pasta needs water boil the pasta\"\nresults = pipeline(text, \"tell me about python\", k=2)\nprint(\"Retrieved chunks:\", results)\nassert any(\"python\" in c for c in results), \"retrieves the relevant chunks\"\nprint(\"Retrieval pipeline: load -> chunk -> embed & index -> embed query -> top-k similarity.\")\nprint(\"This is the 'R' in RAG; its output becomes the context for generation.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Retrieved chunks: ['needs water boil the', 'python is great python']\nRetrieval pipeline: load -> chunk -> embed & index -> embed query -> top-k similarity.\nThis is the 'R' in RAG; its output becomes the context for generation.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

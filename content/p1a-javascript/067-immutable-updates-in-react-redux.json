@@ -1,0 +1,67 @@
+{
+  "id": "p1a-067",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 67,
+  "orderInPhase": 67,
+  "slug": "immutable-updates-in-react-redux",
+  "title": "Immutable Updates in React/Redux",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "immutable",
+    "updates",
+    "react",
+    "redux"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A todo app's reducer: toggling a todo returns a brand-new todos array with one replaced item, so React re-renders correctly and Redux DevTools can time-trave…"
+  },
+  "sections": {
+    "simple_en": "React and Redux expect state to be treated as immutable: you never modify existing state objects, you produce new ones. This lets them detect changes cheaply via reference equality (`prev !== next`) and keeps updates predictable and debuggable.\n\nPatterns: replace arrays/objects instead of mutating (`[...arr, item]`, `arr.filter`, `arr.map`, `{...obj, key: value}`), and spread each nested level you change. Libraries like Immer let you 'write mutations' that are applied immutably under the hood.",
+    "hinglish": "React aur Redux expect karte hain ki state ko immutable maana jaaye: aap existing state objects ko kabhi modify nahi karte, naye banate ho. Isse woh reference equality (`prev !== next`) se changes saste me detect kar lete hain aur updates predictable aur debuggable rehte hain.\nPatterns: arrays/objects ko mutate karne ke bajaye replace karo (`[...arr, item]`, `arr.filter`, `arr.map`, `{...obj, key: value}`), aur jis nested level ko change karo use spread karo. Immer jaise libraries aapko 'mutations likhne' dete hain jo andar se immutably apply hote hain.",
+    "keyPoints": [
+      "Never mutate state; always return a new object/array.",
+      "Add: `[...arr, item]`; remove: `arr.filter`; update: `arr.map`.",
+      "Object update: `{...obj, key: value}`; spread each nested level changed.",
+      "Reference equality (`prev !== next`) is how React/Redux detect changes.",
+      "Immer enables mutation-style code that produces immutable results."
+    ],
+    "real_world": "A todo app's reducer: toggling a todo returns a brand-new todos array with one replaced item, so React re-renders correctly and Redux DevTools can time-travel through each immutable state snapshot.",
+    "followups": [
+      {
+        "q": "Why does React/Redux require immutable updates?",
+        "a": "They detect state changes via reference comparison (`prev !== next`). New references signal a change, enabling efficient re-renders and features like time-travel debugging; mutation would defeat this."
+      },
+      {
+        "q": "How do you immutably remove an item from an array?",
+        "a": "Use `filter` to return a new array excluding it: `arr.filter(x => x.id !== id)`. For adding, use spread; for updating, use map."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Reducer-style immutable operations.\n\nfunction addTodo(todos, todo) {\n  return [...todos, todo];                 // immutable add\n}\n\nfunction removeTodo(todos, id) {\n  return todos.filter((t) => t.id !== id); // immutable remove\n}\n\nfunction toggleTodo(todos, id) {\n  return todos.map((t) =>                  // immutable update\n    t.id === id ? { ...t, done: !t.done } : t\n  );\n}\n\nfunction updateUserCity(state, city) {\n  return { ...state, user: { ...state.user, city } }; // nested immutable\n}\n\nmodule.exports = { addTodo, removeTodo, toggleTodo, updateUserCity };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { addTodo, removeTodo, toggleTodo, updateUserCity } = require(\"./solution\");\n\nlet todos = [{ id: 1, done: false }];\ntodos = addTodo(todos, { id: 2, done: false });\nconsole.log(\"after add:\", todos.length); // 2\n\nconst toggled = toggleTodo(todos, 1);\nconsole.log(\"toggled[0].done:\", toggled[0].done); // true\nconsole.log(\"original[0].done:\", todos[0].done);  // false (unchanged)\n\nconst removed = removeTodo(todos, 1);\nconsole.log(\"after remove:\", removed.map((t) => t.id)); // [2]\n\nconst state = { user: { name: \"Asha\", city: \"Pune\" } };\nconst moved = updateUserCity(state, \"Mumbai\");\nconsole.log(\"moved city:\", moved.user.city, \"| original:\", state.user.city);\n\nconsole.assert(todos.length === 2, \"immutable add\");\nconsole.assert(toggled[0].done === true && todos[0].done === false, \"toggle is immutable\");\nconsole.assert(JSON.stringify(removed.map((t) => t.id)) === \"[2]\", \"immutable remove\");\nconsole.assert(moved.user.city === \"Mumbai\" && state.user.city === \"Pune\", \"nested immutable update\");\nconsole.log(\"immutable updates assertions passed.\");",
+      "expectedOutput": "after add: 2\ntoggled[0].done: true\noriginal[0].done: false\nafter remove: [ 2 ]\nmoved city: Mumbai | original: Pune\nimmutable updates assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

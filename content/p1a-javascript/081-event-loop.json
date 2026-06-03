@@ -1,0 +1,65 @@
+{
+  "id": "p1a-081",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 81,
+  "orderInPhase": 81,
+  "slug": "event-loop",
+  "title": "Event Loop",
+  "difficulty": "advanced",
+  "tags": [
+    "p1a",
+    "event",
+    "loop"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A subtle bug where a promise-based state update appears to happen 'before' a setTimeout-based one, regardless of delays — understanding the microtask-before-…"
+  },
+  "sections": {
+    "simple_en": "The event loop is the mechanism that lets single-threaded JavaScript handle asynchronous work without blocking. When the call stack is empty, the event loop pulls queued callbacks and runs them, one at a time.\n\nThe key rule of ordering: after each synchronous task (and after the current stack empties), ALL microtasks (promise callbacks) are drained before the next macrotask (like a `setTimeout` callback) runs. This is why promise `.then` callbacks fire before `setTimeout(...,0)` callbacks.",
+    "hinglish": "Event loop woh mechanism hai jo single-threaded JavaScript ko asynchronous work bina block kiye handle karne deta hai. Jab call stack khaali hota hai, event loop queued callbacks utha kar ek-ek karke chalata hai.\nOrdering ka key rule: har synchronous task ke baad (aur current stack khaali hone ke baad), SAARE microtasks (promise callbacks) drain hote hain agle macrotask (jaise `setTimeout` callback) se pehle. Isiliye promise `.then` callbacks `setTimeout(...,0)` callbacks se pehle chalti hain.",
+    "keyPoints": [
+      "Coordinates async callbacks on JS's single thread.",
+      "Runs queued callbacks only when the call stack is empty.",
+      "After each task, ALL microtasks drain before the next macrotask.",
+      "Microtasks: promise callbacks, queueMicrotask, MutationObserver.",
+      "Macrotasks: setTimeout/setInterval, I/O, UI events."
+    ],
+    "real_world": "A subtle bug where a promise-based state update appears to happen 'before' a setTimeout-based one, regardless of delays — understanding the microtask-before-macrotask rule explains the ordering and prevents incorrect timing assumptions.",
+    "followups": [
+      {
+        "q": "Why does a promise callback run before setTimeout(fn, 0)?",
+        "a": "Promise callbacks are microtasks, and the event loop drains the entire microtask queue after the current task before running the next macrotask (the setTimeout callback). Microtasks always have priority."
+      },
+      {
+        "q": "When does the event loop run queued callbacks?",
+        "a": "When the call stack is empty. It then processes microtasks fully, then one macrotask, then microtasks again, repeating this cycle."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Demonstrating event-loop ordering deterministically.\n\nfunction ordering() {\n  return new Promise((resolve) => {\n    const order = [];\n    order.push(\"sync-1\");\n    setTimeout(() => order.push(\"macro-timeout\"), 0);   // macrotask\n    Promise.resolve().then(() => order.push(\"micro-promise\")); // microtask\n    queueMicrotask(() => order.push(\"micro-queue\"));     // microtask\n    order.push(\"sync-2\");\n    // allow the loop to drain micro then macro:\n    setTimeout(() => resolve(order), 5);\n  });\n}\n\nmodule.exports = { ordering };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { ordering } = require(\"./solution\");\n\nordering().then((order) => {\n  console.log(order);\n  // sync first, then microtasks, then the macrotask\n  console.assert(order[0] === \"sync-1\" && order[1] === \"sync-2\", \"sync runs first\");\n  const microP = order.indexOf(\"micro-promise\");\n  const microQ = order.indexOf(\"micro-queue\");\n  const macro = order.indexOf(\"macro-timeout\");\n  console.assert(microP < macro && microQ < macro, \"microtasks before macrotask\");\n  console.log(\"event loop assertions passed.\");\n});",
+      "expectedOutput": "[ 'sync-1', 'sync-2', 'micro-promise', 'micro-queue', 'macro-timeout' ]\nevent loop assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

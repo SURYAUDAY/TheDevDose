@@ -1,0 +1,65 @@
+{
+  "id": "p1a-057",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 57,
+  "orderInPhase": 57,
+  "slug": "map-weakmap",
+  "title": "Map & WeakMap",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "map",
+    "weakmap"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "Caching computed results keyed by an object (e.g."
+  },
+  "sections": {
+    "simple_en": "A `Map` is a key-value collection where keys can be of any type (objects, functions, primitives) — unlike plain objects whose keys are coerced to strings. Maps preserve insertion order, expose a `size`, are directly iterable, and offer `set`, `get`, `has`, `delete`.\n\nA `WeakMap` has object-only keys held weakly: when a key object is no longer referenced elsewhere, its entry can be garbage-collected. WeakMaps aren't iterable and have no `size`. They're ideal for attaching private/auxiliary data to objects without leaking memory.",
+    "hinglish": "`Map` ek key-value collection hai jisme keys kisi bhi type ki ho sakti hain (objects, functions, primitives) — plain objects ke विपरीत jinki keys strings me coerce ho jaati hain. Maps insertion order preserve karte hain, `size` dete hain, directly iterable hain, aur `set`, `get`, `has`, `delete` dete hain.\n`WeakMap` me sirf object keys hoti hain jo weakly hold hoti hain: jab key object kahin aur referenced na ho to uski entry garbage-collect ho sakti hai. WeakMaps iterable nahi hote aur `size` nahi hota. Ye objects ke saath private/auxiliary data attach karne ke liye ideal hain bina memory leak.",
+    "keyPoints": [
+      "`Map` allows ANY key type; preserves insertion order; has `size`; is iterable.",
+      "Methods: `set`, `get`, `has`, `delete`, `clear`; iterate with for...of / entries().",
+      "Better than objects for frequent additions/removals and non-string keys.",
+      "`WeakMap` keys are objects held weakly (GC-friendly); not iterable, no `size`.",
+      "WeakMap is great for private per-object data and caches keyed by objects."
+    ],
+    "real_world": "Caching computed results keyed by an object (e.g. memoising per-DOM-node measurements) uses a WeakMap so entries vanish when the node is removed. A Map is used for an ordered lookup table with non-string keys.",
+    "followups": [
+      {
+        "q": "Why use a Map instead of a plain object?",
+        "a": "Maps allow any key type (not just strings/symbols), preserve insertion order, have a direct `size`, are iterable, and perform better for frequent add/remove operations."
+      },
+      {
+        "q": "What problem does WeakMap solve?",
+        "a": "It lets you associate data with an object without preventing that object from being garbage-collected — perfect for private fields or per-object caches that should clean up automatically."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Map with object keys + WeakMap for private data.\n\nfunction mapWithObjectKeys() {\n  const m = new Map();\n  const keyObj = { id: 1 };\n  m.set(keyObj, \"value-for-object\");\n  m.set(\"str\", 123);\n  return { byObject: m.get(keyObj), size: m.size, hasStr: m.has(\"str\") };\n}\n\n// WeakMap to store private data associated with an object\nconst privateData = new WeakMap();\nfunction setSecret(obj, secret) { privateData.set(obj, secret); }\nfunction getSecret(obj) { return privateData.get(obj); }\n\nmodule.exports = { mapWithObjectKeys, setSecret, getSecret };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { mapWithObjectKeys, setSecret, getSecret } = require(\"./solution\");\n\nconsole.log(mapWithObjectKeys()); // { byObject:'value-for-object', size:2, hasStr:true }\n\nconst user = { name: \"Asha\" };\nsetSecret(user, \"token-123\");\nconsole.log(getSecret(user)); // token-123\n\nconst m = mapWithObjectKeys();\nconsole.assert(m.byObject === \"value-for-object\", \"object key works\");\nconsole.assert(m.size === 2, \"map size\");\nconsole.assert(getSecret(user) === \"token-123\", \"weakmap private data\");\nconsole.assert(getSecret({}) === undefined, \"unknown object has no data\");\nconsole.log(\"Map/WeakMap assertions passed.\");",
+      "expectedOutput": "{ byObject: 'value-for-object', size: 2, hasStr: true }\ntoken-123\nMap/WeakMap assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p3-021",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 21,
+  "orderInPhase": 21,
+  "slug": "tables-schema-design",
+  "title": "Tables & schema design",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "tables",
+    "schema",
+    "design"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Designing a users table, you set email as VARCHAR NOT NULL UNIQUE, age as SMALLINT with CHECK (age >= 0), and created_at with a DEFAULT now()."
+  },
+  "sections": {
+    "simple_en": "Schema design means defining your tables, columns, data types, keys, and constraints so the database accurately models your domain and enforces integrity. Choosing the right types (the narrowest that fits), marking columns NOT NULL/UNIQUE, adding CHECK constraints, and setting sensible defaults all prevent bad data at the source.\n\nGood design also considers relationships (foreign keys), surrogate vs natural keys, and which columns to index for the queries you'll run. A clean schema makes queries simpler, faster, and safer; a poor one leads to anomalies and brittle application code.",
+    "hinglish": "Schema design matlab tables, columns, data types, keys aur constraints define karna taaki database aapke domain ko accurately model kare aur integrity enforce kare. Sahi types choose karna (jo fit ho usme sabse narrow), columns ko NOT NULL/UNIQUE karna, CHECK constraints aur sensible defaults — ye sab source par hi bad data rokte hain.\n\nAchha design relationships (foreign keys), surrogate vs natural keys, aur kaun se columns index karne hain (queries ke hisaab se) bhi consider karta hai. Saaf schema queries ko simpler, faster, safer banata hai; kharab schema anomalies aur brittle code deta hai.",
+    "keyPoints": [
+      "Pick the narrowest correct data type for each column.",
+      "Enforce integrity with NOT NULL, UNIQUE, CHECK, and DEFAULT.",
+      "Use primary keys (often a surrogate SERIAL/UUID) and foreign keys for relations.",
+      "Index columns you frequently filter, sort, or join on.",
+      "A good schema prevents anomalies and keeps queries simple and fast."
+    ],
+    "real_world": "Designing a users table, you set email as VARCHAR NOT NULL UNIQUE, age as SMALLINT with CHECK (age >= 0), and created_at with a DEFAULT now(). The database now rejects duplicate emails and negative ages automatically — invalid data can't get in.",
+    "followups": [
+      {
+        "q": "Surrogate vs natural primary key?",
+        "a": "A surrogate key is a system-generated id (SERIAL/UUID) with no business meaning; a natural key is real data (like email). Surrogate keys are stable and simple; natural keys can change, which complicates references."
+      },
+      {
+        "q": "Why enforce constraints in the database, not just the app?",
+        "a": "The database is the last line of defense and is shared by many clients/services. Constraints guarantee integrity even if application code has bugs or is bypassed."
+      },
+      {
+        "q": "Which columns should you index?",
+        "a": "Those frequently used in WHERE filters, JOIN conditions, and ORDER BY. Avoid over-indexing, since each index adds write overhead and storage."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real SQL DDL (runs against PostgreSQL). The Node-runnable demo below validates a row against the schema so the output is verifiable here.",
+      "source": "// Tables & schema design — DDL with appropriate types, keys, and constraints.\n// schema.sql (run via a migration or psql)\nconst schema = `\n  CREATE TABLE users (\n    id         SERIAL PRIMARY KEY,                 -- surrogate primary key\n    email      VARCHAR(255) NOT NULL UNIQUE,       -- unique constraint\n    name       VARCHAR(100) NOT NULL,\n    age        SMALLINT CHECK (age >= 0),          -- domain constraint\n    created_at TIMESTAMPTZ NOT NULL DEFAULT now()  -- sensible default\n  );\n\n  CREATE TABLE orders (\n    id          SERIAL PRIMARY KEY,\n    user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- FK\n    total_cents INT NOT NULL CHECK (total_cents >= 0),\n    status      VARCHAR(20) NOT NULL DEFAULT 'pending'\n  );\n\n  CREATE INDEX idx_orders_user_id ON orders(user_id); -- speed up lookups by user\n`;\n\n// Design tips: pick the narrowest correct type, enforce invariants with\n// constraints (NOT NULL/UNIQUE/CHECK/FK), and index columns you filter/join on.\nmodule.exports = schema;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Tables & schema design — define columns/constraints, validate a row\nconst schema = {\n  table: \"users\",\n  columns: {\n    id:    { type: \"number\", primaryKey: true },\n    email: { type: \"string\", notNull: true, unique: true },\n    age:   { type: \"number\", check: (v) => v >= 0 },\n  },\n};\nfunction validateRow(row, schema){\n  const errors = [];\n  for (const col in schema.columns){\n    const def = schema.columns[col], val = row[col];\n    if (def.notNull && (val === undefined || val === null)) errors.push(`${col} cannot be NULL`);\n    if (val !== undefined && typeof val !== def.type) errors.push(`${col} must be ${def.type}`);\n    if (def.check && val !== undefined && !def.check(val)) errors.push(`${col} failed CHECK`);\n  }\n  return errors;\n}\nconsole.log(\"Valid row:  \", JSON.stringify(validateRow({ id: 1, email: \"a@x.com\", age: 25 }, schema)));\nconsole.log(\"Invalid row:\", JSON.stringify(validateRow({ id: 2, age: -3 }, schema)));\nconst errs = validateRow({ id: 2, age: -3 }, schema);\nconsole.assert(errs.includes(\"email cannot be NULL\"), \"NOT NULL enforced\");\nconsole.assert(errs.includes(\"age failed CHECK\"), \"CHECK constraint enforced\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Valid row:   []\nInvalid row: [\"email cannot be NULL\",\"age failed CHECK\"]\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

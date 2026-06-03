@@ -1,0 +1,66 @@
+{
+  "id": "p1a-068",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 68,
+  "orderInPhase": 68,
+  "slug": "try-catch-finally",
+  "title": "try / catch / finally",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "try",
+    "catch",
+    "finally"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Parsing user-supplied JSON: wrap `JSON.parse` in try/catch to show a friendly error instead of crashing, and use `finally` to always hide the loading spinner…"
+  },
+  "sections": {
+    "simple_en": "`try...catch...finally` is JavaScript's synchronous error-handling construct. Code that might throw goes in `try`; if an error is thrown, control jumps to `catch` (which receives the error object); `finally` runs afterwards regardless of whether an error occurred.\n\n`finally` is ideal for cleanup (closing files, releasing locks, hiding spinners) because it runs even if `try` or `catch` returns or re-throws. Note that plain try/catch only catches synchronous errors — for async code you use `try/catch` with `await`, or `.catch()` on promises.",
+    "hinglish": "`try...catch...finally` JavaScript ka synchronous error-handling construct hai. Jo code throw kar sakta hai woh `try` me jaata hai; agar error throw ho to control `catch` me chala jaata hai (jise error object milta hai); `finally` baad me chalta hai chahe error aaya ho ya nahi.\n`finally` cleanup ke liye ideal hai (files band karna, locks release karna, spinner hide karna) kyunki ye tab bhi chalta hai jab `try`/`catch` return ya re-throw kare. Dhyaan do: plain try/catch sirf synchronous errors pakadta hai — async code ke liye `await` ke saath `try/catch`, ya promises par `.catch()` use karo.",
+    "keyPoints": [
+      "`try` wraps risky code; `catch(err)` handles a thrown error; `finally` always runs.",
+      "`finally` runs even after a return or re-throw — perfect for cleanup.",
+      "Only synchronous errors are caught (and async errors awaited inside try).",
+      "You can omit the catch binding: `catch { }` (optional catch binding).",
+      "Re-throw with `throw err` to let an outer handler deal with it."
+    ],
+    "real_world": "Parsing user-supplied JSON: wrap `JSON.parse` in try/catch to show a friendly error instead of crashing, and use `finally` to always hide the loading spinner whether parsing succeeded or failed.",
+    "followups": [
+      {
+        "q": "Does `finally` run if `try` returns a value?",
+        "a": "Yes. `finally` runs after the return is evaluated but before control leaves the function — which is why it's perfect for cleanup that must always happen."
+      },
+      {
+        "q": "Does try/catch catch asynchronous errors?",
+        "a": "Only if you `await` the async operation inside the try. A bare callback/promise rejection won't be caught; use `.catch()` on the promise or await it inside try/catch."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// try/catch/finally with cleanup and safe parsing.\n\nfunction safeParse(json) {\n  const steps = [];\n  try {\n    steps.push(\"try\");\n    const data = JSON.parse(json); // may throw\n    steps.push(\"parsed\");\n    return { ok: true, data, steps };\n  } catch (err) {\n    steps.push(\"catch:\" + err.name);\n    return { ok: false, error: err.message, steps };\n  } finally {\n    steps.push(\"finally\"); // always runs (cleanup)\n  }\n}\n\nmodule.exports = { safeParse };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { safeParse } = require(\"./solution\");\n\nconst good = safeParse('{\"a\":1}');\nconst bad = safeParse(\"{not json}\");\nconsole.log(good);\nconsole.log(bad);\n\nconsole.assert(good.ok === true && good.data.a === 1, \"valid json parsed\");\nconsole.assert(good.steps.includes(\"finally\"), \"finally runs on success\");\nconsole.assert(bad.ok === false, \"invalid json caught\");\nconsole.assert(bad.steps.includes(\"catch:SyntaxError\"), \"catch received SyntaxError\");\nconsole.assert(bad.steps[bad.steps.length - 1] === \"finally\", \"finally runs last on error\");\nconsole.log(\"try/catch/finally assertions passed.\");",
+      "expectedOutput": "{ ok: true, data: { a: 1 }, steps: [ 'try', 'parsed', 'finally' ] }\n{ ok: false, error: ..., steps: [ 'try', 'catch:SyntaxError', 'finally' ] }\ntry/catch/finally assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

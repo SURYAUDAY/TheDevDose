@@ -1,0 +1,69 @@
+{
+  "id": "p5-005",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 5,
+  "orderInPhase": 5,
+  "slug": "recursion-backtracking",
+  "title": "Recursion & backtracking",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "recursion",
+    "backtracking"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "A file-system search that descends into every subfolder is recursion; a Sudoku solver that fills a cell, recurses, and erases the guess if it leads to a dead…"
+  },
+  "sections": {
+    "simple_en": "Recursion solves a problem by reducing it to smaller instances of the same problem, with a base case that stops the recursion. Factorial, tree traversals, and divide-and-conquer algorithms are natural fits. The key is a correct base case (or it recurses forever) and a recursive case that makes progress toward it.\n\nBacktracking is recursion that explores choices: at each step you choose an option, recurse to explore the consequences, then un-choose (backtrack) to try the next option. It systematically searches all possibilities — generating subsets/permutations, solving mazes, N-queens, or Sudoku — pruning branches that can't lead to a solution.",
+    "hinglish": "Recursion ek problem ko usi problem ke chhote instances mein reduce karke solve karta hai, ek base case ke saath jo recursion ko rokta hai. Factorial, tree traversals, aur divide-and-conquer algorithms natural fits hain. Key hai ek correct base case (warna ye hamesha recurse karta rahega) aur ek recursive case jo uski taraf progress kare.\n\nBacktracking recursion hai jo choices explore karti hai: har step par aap ek option choose karte ho, consequences explore karne ko recurse karte ho, phir un-choose (backtrack) karke agla option try karte ho. Ye systematically saari possibilities search karta hai — subsets/permutations generate karna, mazes solve karna, N-queens, ya Sudoku — un branches ko prune karke jo solution tak nahi le ja sakti.",
+    "keyPoints": [
+      "Recursion: solve via smaller instances; needs a base case to terminate.",
+      "Recursive case must make progress toward the base case.",
+      "Backtracking: choose -> explore (recurse) -> un-choose to try alternatives.",
+      "Systematically searches all possibilities; prune dead branches early.",
+      "Fits subsets/permutations, mazes, N-queens, Sudoku, tree problems."
+    ],
+    "real_world": "A file-system search that descends into every subfolder is recursion; a Sudoku solver that fills a cell, recurses, and erases the guess if it leads to a dead end is backtracking. Both express 'try, go deeper, undo if needed' naturally.",
+    "followups": [
+      {
+        "q": "What makes recursion correct?",
+        "a": "A base case that stops recursion and a recursive case that moves toward it. Without a reachable base case you get infinite recursion (and a stack overflow); each call must shrink the problem."
+      },
+      {
+        "q": "How is backtracking different from plain recursion?",
+        "a": "Backtracking adds the 'un-choose' step: after exploring a choice, it undoes that choice to try alternatives, systematically searching a space of possibilities and abandoning (pruning) branches that can't succeed."
+      },
+      {
+        "q": "When might recursion be a poor choice?",
+        "a": "When depth is large (risking stack overflow) or subproblems overlap heavily (recomputation). Then use iteration, an explicit stack, or memoization/dynamic programming to avoid redundant work."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real, runnable JavaScript: factorial (recursion) and subsets (backtracking). The Node demo below runs both and verifies the counts.",
+      "source": "// Recursion & backtracking — break a problem into smaller copies; explore choices and undo.\n\n// Recursion: needs a base case (stop) and a recursive case (shrink toward the base).\nfunction fibonacci(n, memo = new Map()) {\n  if (n <= 1) return n;\n  if (memo.has(n)) return memo.get(n);            // memoize to avoid exponential blowup\n  const result = fibonacci(n - 1, memo) + fibonacci(n - 2, memo);\n  memo.set(n, result);\n  return result;\n}\n\n// Backtracking: permutations via choose -> explore -> un-choose.\nfunction permutations(nums) {\n  const result = [];\n  function backtrack(current, remaining) {\n    if (remaining.length === 0) { result.push([...current]); return; }\n    for (let i = 0; i < remaining.length; i++) {\n      current.push(remaining[i]);                                   // choose\n      backtrack(current, [...remaining.slice(0, i), ...remaining.slice(i + 1)]); // explore\n      current.pop();                                                // un-choose\n    }\n  }\n  backtrack([], nums);\n  return result;\n}\n\n// Backtracking solves constraint/search problems (permutations, subsets, N-queens, sudoku)\n// by building candidates incrementally and abandoning ones that can't lead to a solution.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Recursion & backtracking — solve by self-similar subproblems; backtrack explores choices\n// Recursion: factorial via a base case + recursive case.\nfunction factorial(n) { return n <= 1 ? 1 : n * factorial(n - 1); }\n// Backtracking: generate all subsets (the power set) by include/exclude choices.\nfunction subsets(nums) {\n  const result = [];\n  function backtrack(start, current) {\n    result.push([...current]);                  // record the current choice\n    for (let i = start; i < nums.length; i++) {\n      current.push(nums[i]);                     // choose\n      backtrack(i + 1, current);                 // explore\n      current.pop();                             // un-choose (backtrack)\n    }\n  }\n  backtrack(0, []);\n  return result;\n}\nconsole.log(\"factorial(5) ->\", factorial(5));\nconst subs = subsets([1, 2, 3]);\nconsole.log(\"subsets([1,2,3]) count ->\", subs.length, subs);\nconsole.assert(factorial(5) === 120, \"5! = 120\");\nconsole.assert(subs.length === 8, \"2^3 = 8 subsets\");\nconsole.log(\"Recursion solves a problem via smaller instances of itself (need a base case!).\");\nconsole.log(\"Backtracking = choose, explore, un-choose — systematically searching all possibilities.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "factorial(5) -> 120\nsubsets([1,2,3]) count -> 8 [\n  [],       [ 1 ],\n  [ 1, 2 ], [ 1, 2, 3 ],\n  [ 1, 3 ], [ 2 ],\n  [ 2, 3 ], [ 3 ]\n]\nRecursion solves a problem via smaller instances of itself (need a base case!).\nBacktracking = choose, explore, un-choose — systematically searching all possibilities.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

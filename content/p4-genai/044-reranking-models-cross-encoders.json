@@ -1,0 +1,70 @@
+{
+  "id": "p4-044",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 44,
+  "orderInPhase": 44,
+  "slug": "reranking-models-cross-encoders",
+  "title": "Reranking models (cross-encoders)",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "reranking",
+    "models",
+    "cross-encoders"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A production RAG uses a bi-encoder to retrieve the top 50 chunks fast, then a cross-encoder reranker (like ms-marco-MiniLM) to score those 50 query-chunk pai…"
+  },
+  "sections": {
+    "simple_en": "There are two ways to score query-document relevance. A bi-encoder embeds the query and the document separately and compares the vectors — fast and scalable, so it's used for first-stage retrieval over the whole corpus. A cross-encoder feeds the query and document together into the model, letting it directly model their interaction — much more accurate, but far slower.\n\nBecause cross-encoders are too slow to run over an entire corpus, they're used as rerankers on the small set of top candidates from the bi-encoder stage. The pipeline — bi-encoder retrieves top-N, cross-encoder reranks to top-k — combines the bi-encoder's speed with the cross-encoder's precision, reliably improving the context fed to the LLM.",
+    "hinglish": "Query-document relevance score karne ke do tareeke hain. Ek bi-encoder query aur document ko alag-alag embed karke vectors compare karta hai — fast aur scalable, isliye poore corpus par first-stage retrieval ke liye use hota hai. Ek cross-encoder query aur document ko saath model mein feed karta hai, use direct unka interaction model karne dekar — bahut zyada accurate, par kahin slower.\n\nKyunki cross-encoders poore corpus par chalane ke liye bahut slow hain, wo bi-encoder stage ke top candidates ke chhote set par rerankers ke roop mein use hote hain. Pipeline — bi-encoder top-N retrieve kare, cross-encoder top-k tak rerank kare — bi-encoder ki speed ko cross-encoder ki precision ke saath combine karta hai, LLM ko diye context ko reliably improve karke.",
+    "keyPoints": [
+      "Bi-encoder: embeds query and doc separately, compares vectors (fast, scalable).",
+      "Cross-encoder: encodes query+doc together, models interaction (accurate, slow).",
+      "Bi-encoders power first-stage retrieval over the whole corpus.",
+      "Cross-encoders rerank the small set of top candidates.",
+      "Pipeline: bi-encoder top-N -> cross-encoder top-k (speed + precision)."
+    ],
+    "real_world": "A production RAG uses a bi-encoder to retrieve the top 50 chunks fast, then a cross-encoder reranker (like ms-marco-MiniLM) to score those 50 query-chunk pairs jointly and keep the best 5 — getting accurate context without running the slow model over millions of vectors.",
+    "followups": [
+      {
+        "q": "Bi-encoder vs cross-encoder — the key difference?",
+        "a": "A bi-encoder embeds query and document independently and compares vectors (fast). A cross-encoder processes them together, modeling their interaction for higher accuracy but at much greater compute cost."
+      },
+      {
+        "q": "Why not use a cross-encoder for retrieval directly?",
+        "a": "It must score every query-document pair jointly, which is far too slow over a large corpus. It's reserved for reranking the small candidate set from fast bi-encoder retrieval."
+      },
+      {
+        "q": "What does the combined pipeline look like?",
+        "a": "Bi-encoder retrieves the top-N candidates quickly; the cross-encoder reranks them to the top-k most relevant. You get the bi-encoder's scalability plus the cross-encoder's precision."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real sentence-transformers CrossEncoder code. The Python-runnable demo below contrasts bi-encoder and cross-encoder scoring so the accuracy difference is verifiable here.",
+      "source": "# Reranking models (cross-encoders) — why they beat bi-encoders for precision.\nfrom sentence_transformers import SentenceTransformer, CrossEncoder\n\n# Bi-encoder: encodes query and doc SEPARATELY into vectors -> compare by cosine.\n# Fast and scalable (precompute doc vectors), but less precise on subtle relevance.\nbi_encoder = SentenceTransformer(\"all-MiniLM-L6-v2\")\n\n# Cross-encoder: feeds (query, doc) TOGETHER through the model -> one relevance score.\n# Much more accurate, but cannot precompute, so it's too slow to score the whole corpus.\ncross_encoder = CrossEncoder(\"cross-encoder/ms-marco-MiniLM-L-6-v2\")\n\ndef two_stage(query, documents, k=50, top_n=5):\n    # 1) bi-encoder retrieves k candidates quickly from the full corpus\n    # 2) cross-encoder reranks just those k for final precision\n    pairs = [(query, d) for d in documents[:k]]\n    scores = cross_encoder.predict(pairs)\n    order = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)\n    return [documents[i] for i in order[:top_n]]\n\n# Rule of thumb: bi-encoder for fast recall at scale; cross-encoder to rerank the top-k.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Reranking models (cross-encoders) — bi-encoder vs cross-encoder trade-off\n# Bi-encoder: embed query and doc SEPARATELY, compare vectors (fast, scalable, less precise).\n# Cross-encoder: feed (query, doc) TOGETHER into the model for a precise relevance score (slow).\nimport math\ndef bi_encoder_score(q_vec, d_vec):\n    d=sum(x*y for x,y in zip(q_vec,d_vec)); na=math.sqrt(sum(x*x for x in q_vec)); nb=math.sqrt(sum(y*y for y in d_vec))\n    return round(d/(na*nb),3) if na and nb else 0.0\ndef cross_encoder_score(query, doc):\n    # Sees query+doc jointly: rewards term overlap AND order/phrase match (toy proxy).\n    q, d = query.lower(), doc.lower()\n    overlap = len(set(q.split()) & set(d.split())) / (len(q.split()) or 1)\n    phrase_bonus = 0.3 if q in d else 0.0\n    return round(min(1.0, overlap + phrase_bonus), 3)\n\nquery = \"machine learning\"\ndocs = [\"intro to machine learning\", \"machine parts catalog\", \"learning to cook\"]\nqv = [1,1]; dvecs = [[1,1],[1,0],[0,1]]   # toy bi-encoder vectors\nprint(\"Bi-encoder scores:   \", [bi_encoder_score(qv, dv) for dv in dvecs])\ncross = [cross_encoder_score(query, d) for d in docs]\nprint(\"Cross-encoder scores:\", cross)\nprint(\"Cross-encoder picks: \", docs[cross.index(max(cross))])\nassert cross[0] == max(cross), \"cross-encoder ranks the true match highest\"\nprint(\"Pipeline: bi-encoder retrieves fast at scale; cross-encoder reranks the top-k for accuracy.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Bi-encoder scores:    [1.0, 0.707, 0.707]\nCross-encoder scores: [1.0, 0.5, 0.5]\nCross-encoder picks:  intro to machine learning\nPipeline: bi-encoder retrieves fast at scale; cross-encoder reranks the top-k for accuracy.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

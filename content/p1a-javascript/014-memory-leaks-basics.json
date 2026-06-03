@@ -1,0 +1,66 @@
+{
+  "id": "p1a-014",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 14,
+  "orderInPhase": 14,
+  "slug": "memory-leaks-basics",
+  "title": "Memory Leaks Basics",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "memory",
+    "leaks",
+    "basics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A single-page dashboard that opens a chart, sets a `setInterval` to refresh it, but never calls `clearInterval` when you navigate away."
+  },
+  "sections": {
+    "simple_en": "A memory leak happens when memory that is no longer needed is never released because something still references it. In a garbage-collected language this means you've unintentionally kept an object reachable, so GC can't reclaim it.\n\nCommon causes: forgotten global variables, timers/intervals that are never cleared, event listeners not removed, closures that capture large objects, and growing caches with no eviction. Over time these inflate memory usage and can crash long-running apps (servers, single-page apps).",
+    "hinglish": "Memory leak tab hota hai jab zarurat khatam hone ke baad bhi memory release nahi hoti kyunki koi cheez abhi bhi use reference kar rahi hai. GC wali language me iska matlab aapne anjaane me koi object reachable rakh diya, isliye GC use free nahi kar paata.\nCommon causes: bhoole hue global variables, timers/intervals jo clear nahi kiye, event listeners jo remove nahi kiye, closures jo bade objects pakad lete hain, aur badhte caches bina eviction ke. Dheere-dheere ye memory badha dete hain aur long-running apps (servers, SPAs) crash kara sakte hain.",
+    "keyPoints": [
+      "A leak = unneeded memory kept alive by a lingering reference.",
+      "Top causes: stray globals, uncleared timers, un-removed event listeners, retaining closures, unbounded caches.",
+      "Detached DOM nodes still referenced in JS are a classic browser leak.",
+      "Fixes: clear intervals, remove listeners, null out big references, bound your caches (or use WeakMap).",
+      "Diagnose with heap snapshots / memory profilers in DevTools or Node's --inspect."
+    ],
+    "real_world": "A single-page dashboard that opens a chart, sets a `setInterval` to refresh it, but never calls `clearInterval` when you navigate away. Each visit stacks another timer holding the old chart in memory — after an hour the tab is sluggish and bloated.",
+    "followups": [
+      {
+        "q": "Name three common sources of memory leaks in JS.",
+        "a": "Uncleared timers/intervals, event listeners that are never removed, and references retained in closures, globals, or unbounded caches (including detached DOM nodes in browsers)."
+      },
+      {
+        "q": "How can WeakMap help prevent leaks?",
+        "a": "WeakMap holds keys weakly — if the only reference to a key object is the WeakMap entry, it can be garbage-collected, so caches keyed by objects don't keep them alive indefinitely."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// A leaky pattern vs a fixed one.\n\nfunction makeLeakyTimer(store) {\n  // BUG: interval keeps 'payload' alive forever, never cleared\n  const payload = new Array(1000).fill(\"data\");\n  const id = setInterval(() => { store.push(payload.length); }, 1000);\n  return id; // caller has no easy handle to stop it cleanly\n}\n\nfunction makeSafeTimer(store) {\n  const payload = new Array(1000).fill(\"data\");\n  const id = setInterval(() => { store.push(payload.length); }, 1000);\n  // return a disposer that clears the timer (prevents the leak)\n  return function dispose() { clearInterval(id); };\n}\n\nmodule.exports = { makeSafeTimer };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { makeSafeTimer } = require(\"./solution\");\n\nconst store = [];\nconst dispose = makeSafeTimer(store);\nconsole.log(\"disposer is a function:\", typeof dispose === \"function\");\ndispose(); // clean up immediately to avoid leaking in this test\n\nconsole.assert(typeof dispose === \"function\", \"must return a disposer\");\nconsole.log(\"memory-leak assertions passed.\");\nprocess.exit(0); // ensure the test process ends",
+      "expectedOutput": "disposer is a function: true\nmemory-leak assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

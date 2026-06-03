@@ -1,0 +1,65 @@
+{
+  "id": "p1a-099",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 99,
+  "orderInPhase": 99,
+  "slug": "cors-basics",
+  "title": "CORS Basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p1a",
+    "cors",
+    "basics"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A React app at `app.example.com` calling an API at `api.example.com` gets a CORS error until the API responds with `Access-Control-Allow-Origin: https://app.…"
+  },
+  "sections": {
+    "simple_en": "CORS (Cross-Origin Resource Sharing) is a browser security mechanism that controls whether a web page from one origin may make requests to a different origin. By default the Same-Origin Policy blocks cross-origin reads; CORS lets a server explicitly opt in by sending the right response headers.\n\nThe key header is `Access-Control-Allow-Origin` (which origins are allowed). For certain requests the browser first sends a 'preflight' `OPTIONS` request to check `Access-Control-Allow-Methods`/`-Headers`. Crucially, CORS is enforced by the browser, not the server — and not by tools like curl.",
+    "hinglish": "CORS (Cross-Origin Resource Sharing) ek browser security mechanism hai jo control karta hai ki ek origin ka web page doosre origin ko request kar sakta hai ya nahi. Default me Same-Origin Policy cross-origin reads block karti hai; CORS server ko sahi response headers bhej kar explicitly opt-in karne deta hai.\nKey header `Access-Control-Allow-Origin` hai (kaunse origins allowed hain). Kuch requests ke liye browser pehle ek 'preflight' `OPTIONS` request bhejta hai `Access-Control-Allow-Methods`/`-Headers` check karne. Important: CORS browser enforce karta hai, server nahi — aur curl jaise tools se nahi.",
+    "keyPoints": [
+      "Browser policy controlling cross-origin requests (default: same-origin only).",
+      "Server opts in via `Access-Control-Allow-Origin` (and related headers).",
+      "Preflight `OPTIONS` checks allowed methods/headers for some requests.",
+      "Enforced by the BROWSER — curl/Postman aren't subject to CORS.",
+      "Credentialed requests need `Allow-Credentials` and a specific origin (not `*`)."
+    ],
+    "real_world": "A React app at `app.example.com` calling an API at `api.example.com` gets a CORS error until the API responds with `Access-Control-Allow-Origin: https://app.example.com` — a daily reality for front-end developers.",
+    "followups": [
+      {
+        "q": "Who enforces CORS — the browser or the server?",
+        "a": "The browser. The server only declares what's allowed via headers; the browser blocks the response if the rules aren't met. Non-browser clients like curl/Postman ignore CORS entirely."
+      },
+      {
+        "q": "What is a CORS preflight request?",
+        "a": "An automatic `OPTIONS` request the browser sends before certain cross-origin requests to check the server's `Access-Control-Allow-Methods`/`-Headers`, confirming the actual request is permitted."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Model the browser's CORS decision (educational, runnable).\n\nfunction isAllowed(requestOrigin, allowOriginHeader) {\n  if (!allowOriginHeader) return false;       // no CORS header -> blocked\n  if (allowOriginHeader === \"*\") return true; // wildcard allows all (non-credentialed)\n  return allowOriginHeader === requestOrigin;  // exact match required\n}\n\nfunction needsPreflight(method, headers = []) {\n  const simpleMethods = [\"GET\", \"POST\", \"HEAD\"];\n  const hasCustomHeaders = headers.some((h) => h.toLowerCase() === \"authorization\" || h.toLowerCase() === \"x-custom\");\n  return !simpleMethods.includes(method) || hasCustomHeaders;\n}\n\nmodule.exports = { isAllowed, needsPreflight };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js (models browser CORS logic) ---\nconst { isAllowed, needsPreflight } = require(\"./solution\");\n\nconsole.log(isAllowed(\"https://app.example.com\", \"https://app.example.com\")); // true\nconsole.log(isAllowed(\"https://evil.com\", \"https://app.example.com\"));        // false\nconsole.log(isAllowed(\"https://any.com\", \"*\"));                               // true\nconsole.log(needsPreflight(\"GET\"));                                           // false\nconsole.log(needsPreflight(\"DELETE\"));                                        // true\nconsole.log(needsPreflight(\"POST\", [\"Authorization\"]));                       // true\n\nconsole.assert(isAllowed(\"https://a.com\", \"https://a.com\") === true, \"matching origin allowed\");\nconsole.assert(isAllowed(\"https://a.com\", \"https://b.com\") === false, \"mismatched origin blocked\");\nconsole.assert(needsPreflight(\"DELETE\") === true, \"non-simple method needs preflight\");\nconsole.assert(needsPreflight(\"GET\") === false, \"simple GET needs no preflight\");\nconsole.log(\"CORS assertions passed.\");",
+      "expectedOutput": "true\nfalse\ntrue\nfalse\ntrue\ntrue\nCORS assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_76-103.docx.md"
+  }
+}

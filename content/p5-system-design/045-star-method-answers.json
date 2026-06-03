@@ -1,0 +1,70 @@
+{
+  "id": "p5-045",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 45,
+  "orderInPhase": 45,
+  "slug": "star-method-answers",
+  "title": "STAR method answers",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "star",
+    "method",
+    "answers"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Asked about improving performance, a candidate answers in STAR: the API was slow at peak (Situation), they had to get p95 under 200ms (Task), they profiled,…"
+  },
+  "sections": {
+    "simple_en": "STAR is the structure for answering behavioral questions clearly: Situation (set the context), Task (your responsibility or goal), Action (the specific steps you personally took), and Result (the outcome). It keeps answers focused and complete instead of rambling, and it ensures you actually answer what was asked.\n\nTwo things make a STAR answer strong: emphasizing your individual Actions (use 'I', not just 'we', to show your contribution) and quantifying the Result with concrete numbers — percentages, time saved, revenue, scale. 'Reduced p95 latency from 800ms to 150ms' lands far harder than 'made it faster'.",
+    "hinglish": "STAR behavioral questions ko clearly answer karne ki structure hai: Situation (context set karo), Task (aapki responsibility ya goal), Action (specific steps jo aapne personally liye), aur Result (outcome). Ye answers ko focused aur complete rakhta hai rambling ke bajaye, aur ensure karta hai ki aap actually wahi answer karo jo poocha gaya.\n\nDo cheezein ek STAR answer ko strong banati hain: apne individual Actions ko emphasize karna ('I' use karo, sirf 'we' nahi, apna contribution dikhane ke liye) aur Result ko concrete numbers se quantify karna — percentages, time saved, revenue, scale. 'p95 latency 800ms se 150ms tak reduce ki' 'use faster banaya' se kahin zyada strongly lands karta hai.",
+    "keyPoints": [
+      "STAR: Situation, Task, Action, Result — a clear answer structure.",
+      "Keeps answers focused and complete; you actually answer the question.",
+      "Emphasize YOUR actions ('I', not just 'we').",
+      "Quantify the Result with numbers (%, time, revenue, scale).",
+      "A quantified result is far more convincing than 'it got better'."
+    ],
+    "real_world": "Asked about improving performance, a candidate answers in STAR: the API was slow at peak (Situation), they had to get p95 under 200ms (Task), they profiled, added caching, and batched DB calls (Action), and p95 dropped from 800ms to 150ms (Result) — concrete, structured, and quantified.",
+    "followups": [
+      {
+        "q": "What does STAR stand for?",
+        "a": "Situation (the context), Task (your goal/responsibility), Action (the specific steps you took), and Result (the outcome). It's a structure for delivering complete, focused behavioral answers."
+      },
+      {
+        "q": "Why quantify the Result?",
+        "a": "Numbers make impact concrete and credible — 'reduced latency 81%' or 'saved 10 hours/week' is far more convincing than 'it improved'. Quantified results show you understand and measure your impact."
+      },
+      {
+        "q": "Why emphasize 'I' over 'we'?",
+        "a": "Interviewers want to know YOUR contribution. Saying 'I profiled and added caching' shows what you personally did, whereas 'we improved it' hides your specific role on the team."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Python-runnable demo that formats a STAR answer and scores it for completeness plus a quantified result, verifying what makes an answer strong.",
+      "source": "# STAR method answers — a structure for clear, impactful behavioral responses.\n\ndef star_answer(situation: str, task: str, action: str, result: str) -> str:\n    \"\"\"Build a STAR-structured answer. Keep each part tight; quantify the Result.\"\"\"\n    return (\n        f\"Situation: {situation}\\n\"\n        f\"Task: {task}\\n\"\n        f\"Action: {action}\\n\"      # emphasize what YOU did, not the team in general\n        f\"Result: {result}\"        # quantify: %, time saved, revenue, latency, scale\n    )\n\n# Example:\n# print(star_answer(\n#     \"Our checkout had a 5% payment-failure rate\",\n#     \"I owned reducing failures for the quarter\",\n#     \"I added idempotency keys and a retry-with-backoff on the payment gateway\",\n#     \"Failures dropped to 0.8% — an 84% reduction — recovering ~$40k/month\",\n# ))\n\n# Why STAR works: it keeps you concise and ensures you cover context, your responsibility, your\n# specific actions, and measurable impact. The Result is what interviewers remember — always\n# quantify it. Tailor the same story's emphasis to the question being asked.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# STAR method answers — structure behavioral answers: Situation, Task, Action, Result\ndef format_star(situation, task, action, result):\n    return (f\"Situation: {situation}\\nTask: {task}\\nAction: {action}\\nResult: {result}\")\ndef is_strong(star):\n    # A strong STAR answer covers all four parts and quantifies the Result.\n    has_all = all(part in star for part in (\"Situation:\", \"Task:\", \"Action:\", \"Result:\"))\n    quantified = any(ch.isdigit() or ch == \"%\" for ch in star.split(\"Result:\")[-1])\n    return has_all and quantified\n\nanswer = format_star(\n    \"Our API latency spiked during peak hours\",\n    \"I was tasked with bringing p95 latency under 200ms\",\n    \"I profiled the hot path, added a Redis cache, and batched DB calls\",\n    \"p95 dropped from 800ms to 150ms, a 81% improvement\",\n)\nprint(answer)\nprint(\"\\nStrong answer?\", is_strong(answer))\nassert is_strong(answer), \"covers all four parts AND quantifies the result\"\nweak = format_star(\"x\", \"y\", \"z\", \"it got better\")   # no number in Result\nassert not is_strong(weak), \"unquantified result is weaker\"\nprint(\"\\nSTAR keeps behavioral answers focused: set the Situation, your Task, the Action YOU took, and the Result.\")\nprint(\"Emphasize your individual actions and quantify the result (numbers, %, time saved) to make impact concrete.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Situation: Our API latency spiked during peak hours\nTask: I was tasked with bringing p95 latency under 200ms\nAction: I profiled the hot path, added a Redis cache, and batched DB calls\nResult: p95 dropped from 800ms to 150ms, a 81% improvement\n\nStrong answer? True\n\nSTAR keeps behavioral answers focused: set the Situation, your Task, the Action YOU took, and the Result.\nEmphasize your individual actions and quantify the result (numbers, %, time saved) to make impact concrete.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

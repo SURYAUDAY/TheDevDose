@@ -1,0 +1,65 @@
+{
+  "id": "p1a-016",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 16,
+  "orderInPhase": 16,
+  "slug": "lexical-scope",
+  "title": "Lexical Scope",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "lexical",
+    "scope"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Think of nested Russian dolls labelled in advance."
+  },
+  "sections": {
+    "simple_en": "Lexical (or static) scope means a variable's accessibility is determined by its physical location in the source code — by where blocks and functions are written, nesting-wise. The engine can determine the scope just by reading the code, before it ever runs.\n\nBecause scope is fixed by structure, an inner function always has access to the variables of the functions it is written inside, no matter where it is later called. JavaScript uses lexical scope (not dynamic scope), and this is precisely why closures behave so predictably.",
+    "hinglish": "Lexical (ya static) scope ka matlab hai variable ki accessibility uske source code me physical location se decide hoti hai — kaun se blocks/functions ke andar likha gaya hai. Engine sirf code padhkar hi scope decide kar sakta hai, run hone se pehle.\nKyunki scope structure se fix hota hai, ek inner function ko hamesha un functions ke variables milte hain jinke andar woh likha gaya hai, chahe baad me kahin se bhi call ho. JavaScript lexical scope use karta hai (dynamic nahi), aur isiliye closures itne predictable hote hain.",
+    "keyPoints": [
+      "Scope is decided by code structure (where things are written), not by runtime call path.",
+      "Also called static scope — determinable by reading the source.",
+      "Inner functions can always access outer (enclosing) variables.",
+      "JavaScript uses lexical scope, NOT dynamic scope.",
+      "This is the theoretical foundation that makes closures work."
+    ],
+    "real_world": "Think of nested Russian dolls labelled in advance. A smaller doll knows exactly which larger dolls surround it because that was set when they were arranged — not based on who picks them up later.",
+    "followups": [
+      {
+        "q": "Difference between lexical and dynamic scope?",
+        "a": "Lexical scope resolves variables by where code is written (structure); dynamic scope would resolve by the runtime call stack. JavaScript uses lexical scope."
+      },
+      {
+        "q": "How does lexical scope enable closures?",
+        "a": "Because an inner function's access to outer variables is fixed by where it was defined, it keeps that access even after the outer function returns — which is exactly a closure."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Lexical scope: the inner function captures 'multiplier' from WHERE it's written.\n\nfunction makeMultiplier(multiplier) {\n  // 'multiply' is defined here, so it lexically sees 'multiplier'\n  return function multiply(n) {\n    return n * multiplier;\n  };\n}\n\n// Even if we pass it around and call it elsewhere, it remembers 'multiplier'.\nfunction runElsewhere(fn, value) {\n  return fn(value); // call site has no 'multiplier' — proves lexical, not dynamic\n}\n\nmodule.exports = { makeMultiplier, runElsewhere };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { makeMultiplier, runElsewhere } = require(\"./solution\");\n\nconst triple = makeMultiplier(3);\nconsole.log(triple(10));                 // 30\nconsole.log(runElsewhere(triple, 4));    // 12 (still uses multiplier=3)\n\nconsole.assert(triple(10) === 30, \"captures multiplier=3\");\nconsole.assert(runElsewhere(triple, 4) === 12, \"lexical scope, not dynamic\");\nconsole.log(\"lexical scope assertions passed.\");",
+      "expectedOutput": "30\n12\nlexical scope assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p3-042",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 42,
+  "orderInPhase": 42,
+  "slug": "mongoose-orm",
+  "title": "Mongoose ORM",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "mongoose",
+    "orm"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A User model defines a schema, a pre-save hook that hashes passwords, an instance method comparePassword, and a static findByEmail."
+  },
+  "sections": {
+    "simple_en": "Mongoose is the most popular ODM (Object Data Modeling library) for MongoDB in Node. It adds an application-level schema with types, validation, and defaults on top of MongoDB's flexible documents, and maps schemas to models you use to query a collection.\n\nBeyond CRUD, Mongoose provides instance methods (on documents), static methods (on models), virtuals (computed fields), middleware/hooks (e.g., hash a password before save), and populate for resolving references. It brings structure and convenience to MongoDB while still exposing the underlying flexibility when needed.",
+    "hinglish": "Mongoose Node mein MongoDB ke liye sabse popular ODM (Object Data Modeling library) hai. Ye MongoDB ke flexible documents ke upar ek application-level schema deta hai types, validation aur defaults ke saath, aur schemas ko models se map karta hai jinse aap collection query karte ho.\n\nCRUD ke alawa Mongoose instance methods (documents par), static methods (models par), virtuals (computed fields), middleware/hooks (jaise save se pehle password hash karna), aur references resolve karne ke liye populate deta hai. Ye MongoDB ko structure aur convenience deta hai aur zaroorat par underlying flexibility bhi.",
+    "keyPoints": [
+      "ODM that adds schemas, types, validation, and defaults over MongoDB.",
+      "Schemas map to models used to query a collection.",
+      "Instance methods (on docs), statics (on models), virtuals (computed fields).",
+      "Middleware/hooks run logic on save/update (e.g., hashing passwords).",
+      "populate resolves references; exposes raw flexibility when needed."
+    ],
+    "real_world": "A User model defines a schema, a pre-save hook that hashes passwords, an instance method comparePassword, and a static findByEmail. The app works with clean model objects while Mongoose handles validation and the MongoDB plumbing.",
+    "followups": [
+      {
+        "q": "What's the difference between an instance method and a static?",
+        "a": "An instance method runs on a single document (this = the document); a static runs on the model itself (this = the model), useful for custom finders like findByEmail."
+      },
+      {
+        "q": "What are Mongoose hooks/middleware used for?",
+        "a": "Running logic around lifecycle events — e.g., a pre('save') hook to hash a password or set a slug, or a post hook for logging — keeping cross-cutting logic with the model."
+      },
+      {
+        "q": "ODM vs ORM — what's the distinction?",
+        "a": "ORM maps objects to relational tables; ODM maps objects to document stores like MongoDB. Mongoose is an ODM, but people often loosely call it an ORM."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Mongoose ORM code (Node + mongoose). The Node-runnable demo below verifies schema validation, instance methods, and queries so the behavior is verifiable here.",
+      "source": "// Mongoose ORM — schema, model, instance/static methods, and queries.\nconst mongoose = require(\"mongoose\");\n\nconst userSchema = new mongoose.Schema({\n  name: { type: String, required: true },\n  email: { type: String, required: true, unique: true },\n  passwordHash: String,\n});\n\n// Instance method: available on a document.\nuserSchema.methods.greet = function () {\n  return `Hi, I'm ${this.name}`;\n};\n\n// Static method: available on the model.\nuserSchema.statics.findByEmail = function (email) {\n  return this.findOne({ email });\n};\n\n// Virtual: computed field, not stored.\nuserSchema.virtual(\"displayName\").get(function () {\n  return this.name.toUpperCase();\n});\n\nconst User = mongoose.model(\"User\", userSchema);\n\nasync function demo() {\n  const user = await User.create({ name: \"Asha\", email: \"a@x.com\" });\n  console.log(user.greet(), user.displayName);\n  return User.findByEmail(\"a@x.com\");\n}\nmodule.exports = { User, demo };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Mongoose ORM — model with schema, instance method, and a query\nfunction model(name, schema){\n  const store = []; let seq = 0;\n  return {\n    create(doc){\n      for (const f in schema) if (schema[f].required && doc[f] == null) throw new Error(`${f} required`);\n      const rec = { _id: ++seq, ...doc,\n        greet(){ return `Hi, I'm ${this.name}`; } };       // instance method\n      store.push(rec); return rec;\n    },\n    find(q = {}){ return store.filter(d => Object.entries(q).every(([k, v]) => d[k] === v)); },\n    findById(id){ return store.find(d => d._id === id) || null; },\n  };\n}\nconst User = model(\"User\", { name: { required: true }, email: { required: true } });\nconst asha = User.create({ name: \"Asha\", email: \"a@x.com\" });\nUser.create({ name: \"Ravi\", email: \"r@x.com\" });\nconsole.log(\"Created:\", asha._id, \"|\", asha.greet());\nconsole.log(\"find name=Ravi:\", JSON.stringify(User.find({ name: \"Ravi\" }).map(u => u.email)));\ntry { User.create({ name: \"NoEmail\" }); } catch (e) { console.log(\"Validation:\", e.message); }\nconsole.assert(User.findById(1).name === \"Asha\", \"findById works\");\nconsole.log(\"Mongoose maps schemas+models to MongoDB collections with validation.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Created: 1 | Hi, I'm Asha\nfind name=Ravi: [\"r@x.com\"]\nValidation: email required\nMongoose maps schemas+models to MongoDB collections with validation.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

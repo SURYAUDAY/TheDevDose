@@ -1,0 +1,64 @@
+{
+  "id": "p1b-050",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 50,
+  "orderInPhase": 50,
+  "slug": "exclude-t-u",
+  "title": "Exclude<T, U>",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1b",
+    "exclude"
+  ],
+  "estMinutes": 3,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Computing 'all roles except admin' as `Exclude<Role, \"admin\">` derives a restricted role type from the full union — so adding a new role automatically flows…"
+  },
+  "sections": {
+    "simple_en": "`Exclude<T, U>` removes from union type `T` any members that are assignable to `U`, returning the remaining union. For example `Exclude<\"a\" | \"b\" | \"c\", \"a\">` is `\"b\" | \"c\"`. It operates on union members, not object properties (that's `Omit`).\n\nIt's built with a conditional type and is handy for filtering union/literal types — e.g. removing certain statuses, or computing keys. Its counterpart is `Extract<T, U>`, which keeps only the members assignable to `U`.",
+    "hinglish": "`Exclude<T, U>` union type `T` se woh members hata deta hai jo `U` ko assignable hain, baaki union return karke. Jaise `Exclude<\"a\" | \"b\" | \"c\", \"a\">` `\"b\" | \"c\"` hai. Ye union members par kaam karta hai, object properties par nahi (woh `Omit` hai).\nYe ek conditional type se bana hai aur union/literal types filter karne ke liye useful hai — jaise kuch statuses hatana, ya keys compute karna. Iska counterpart `Extract<T, U>` hai, jo sirf woh members rakhta hai jo `U` ko assignable hain.",
+    "keyPoints": [
+      "Removes union members of T that are assignable to U.",
+      "Operates on UNION types, not object properties (that's Omit).",
+      "Built on a conditional type.",
+      "Counterpart: `Extract<T, U>` keeps the matching members.",
+      "Useful for filtering literal unions and computing key sets."
+    ],
+    "real_world": "Computing 'all roles except admin' as `Exclude<Role, \"admin\">` derives a restricted role type from the full union — so adding a new role automatically flows through wherever that derived type is used.",
+    "followups": [
+      {
+        "q": "What does Exclude<T, U> do?",
+        "a": "It removes from the union T any members assignable to U, returning the remaining union. E.g. `Exclude<'a'|'b'|'c', 'a'|'b'>` is `'c'`."
+      },
+      {
+        "q": "Exclude vs Omit?",
+        "a": "`Exclude` filters members of a union type; `Omit` removes properties from an object type. They operate at different levels — union members vs object keys."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — Exclude on a union, plus a runtime filter mirroring it.\n\nexport type Role = \"admin\" | \"editor\" | \"viewer\";\nexport type NonAdminRole = Exclude<Role, \"admin\">; // \"editor\" | \"viewer\"\n\nconst ALL_ROLES: Role[] = [\"admin\", \"editor\", \"viewer\"];\n\n// runtime function reflecting the type-level Exclude\nexport function nonAdminRoles(): NonAdminRole[] {\n  return ALL_ROLES.filter((r): r is NonAdminRole => r !== \"admin\");\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { nonAdminRoles } from \"./solution\";\n\nconsole.log(nonAdminRoles()); // ['editor','viewer']\n\nconsole.assert(JSON.stringify(nonAdminRoles()) === '[\"editor\",\"viewer\"]', \"admin excluded\");\nconsole.assert(!nonAdminRoles().includes(\"admin\" as any), \"no admin in result\");\nconsole.log(\"Exclude assertions passed.\");",
+      "expectedOutput": "[ 'editor', 'viewer' ]\nExclude assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_26-50.docx.md"
+  }
+}

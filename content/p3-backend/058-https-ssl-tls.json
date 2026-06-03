@@ -1,0 +1,70 @@
+{
+  "id": "p3-058",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 58,
+  "orderInPhase": 58,
+  "slug": "https-ssl-tls",
+  "title": "HTTPS / SSL / TLS",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "https",
+    "ssl",
+    "tls"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "When you visit a banking site, TLS verifies the bank's certificate (so you're not on a fake site), encrypts everything you send (so Wi-Fi snoopers see only c…"
+  },
+  "sections": {
+    "simple_en": "HTTPS is HTTP over TLS (the modern successor to SSL). TLS provides three guarantees: encryption (eavesdroppers can't read the traffic), integrity (tampering is detected), and authentication (the certificate proves you're talking to the real server). It's essential for any site handling credentials or sensitive data.\n\nThe handshake combines asymmetric and symmetric cryptography: the client verifies the server's certificate against trusted Certificate Authorities, then they negotiate a shared symmetric session key (asymmetric crypto is used to establish it securely). The fast symmetric key then encrypts the actual data. In production, TLS is often terminated at a load balancer or Nginx.",
+    "hinglish": "HTTPS HTTP over TLS hai (SSL ka modern successor). TLS teen guarantees deta hai: encryption (sunne wale traffic nahi padh sakte), integrity (tampering detect hoti hai), aur authentication (certificate sabit karta hai aap real server se baat kar rahe ho). Credentials ya sensitive data handle karne wali kisi bhi site ke liye essential hai.\n\nHandshake asymmetric aur symmetric cryptography combine karta hai: client server ke certificate ko trusted Certificate Authorities ke against verify karta hai, phir dono ek shared symmetric session key negotiate karte hain (use securely establish karne ke liye asymmetric crypto). Fast symmetric key phir actual data encrypt karti hai. Production mein TLS aksar load balancer ya Nginx par terminate hota hai.",
+    "keyPoints": [
+      "HTTPS = HTTP over TLS (SSL's successor).",
+      "Provides encryption, integrity, and server authentication.",
+      "Cert verified against trusted CAs proves the server's identity.",
+      "Hybrid crypto: asymmetric to exchange a symmetric session key, then symmetric for data.",
+      "Often terminated at a load balancer / Nginx in production."
+    ],
+    "real_world": "When you visit a banking site, TLS verifies the bank's certificate (so you're not on a fake site), encrypts everything you send (so Wi-Fi snoopers see only ciphertext), and detects tampering. The padlock means the handshake succeeded and the channel is secure.",
+    "followups": [
+      {
+        "q": "What three things does TLS guarantee?",
+        "a": "Encryption (confidentiality), integrity (tamper detection), and authentication (the certificate proves the server's identity). Together they make the connection trustworthy."
+      },
+      {
+        "q": "Why does TLS use both asymmetric and symmetric crypto?",
+        "a": "Asymmetric crypto securely establishes a shared secret without prior key exchange, but it's slow. Symmetric crypto is fast, so the actual data is encrypted with the negotiated symmetric session key."
+      },
+      {
+        "q": "What's the role of a Certificate Authority?",
+        "a": "A CA vouches for a server's identity by signing its certificate. Browsers trust a set of CAs, so a cert signed by one proves the server is who it claims to be."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Node HTTPS server code. The Node-runnable demo below simulates the TLS handshake and certificate trust (with a real crypto-generated session key) so the flow is verifiable here.",
+      "source": "// HTTPS / SSL / TLS — terminate TLS in Node (usually a reverse proxy does this).\nconst https = require(\"https\");\nconst fs = require(\"fs\");\nconst express = require(\"express\");\nconst app = express();\n\napp.get(\"/\", (req, res) => res.send(\"Served over HTTPS\"));\n\n// Load the certificate + private key (e.g., from Let's Encrypt).\nconst options = {\n  key: fs.readFileSync(\"/etc/ssl/private/server.key\"),\n  cert: fs.readFileSync(\"/etc/ssl/certs/server.crt\"),\n};\n\nhttps.createServer(options, app).listen(443, () =>\n  console.log(\"HTTPS on :443\")\n);\n\n// In production, TLS is typically terminated at a load balancer or Nginx,\n// which handles certificates and forwards plain HTTP to the app internally.\n// TLS provides: encryption, integrity, and server authentication (via the cert).",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// HTTPS / SSL / TLS — simplified handshake + cert trust + hybrid encryption\nconst crypto = require(\"crypto\");\nfunction tlsHandshake(serverCert, trustedCAs){\n  const steps = [];\n  steps.push(\"1. ClientHello (supported ciphers, TLS version)\");\n  steps.push(\"2. ServerHello + certificate\");\n  const trusted = trustedCAs.includes(serverCert.issuer);     // verify cert chain\n  if (!trusted) return { secure: false, reason: \"untrusted certificate\", steps };\n  steps.push(\"3. Client verifies cert against trusted CAs \\u2014 OK\");\n  // Hybrid: asymmetric to exchange a symmetric session key, then fast symmetric encryption\n  const sessionKey = crypto.randomBytes(32).toString(\"hex\");\n  steps.push(\"4. Key exchange -> shared symmetric session key\");\n  steps.push(\"5. Encrypted application data (symmetric)\");\n  return { secure: true, sessionKey: sessionKey.slice(0, 8) + \"...\", steps };\n}\nconst cert = { subject: \"example.com\", issuer: \"DigiCert\" };\nconst result = tlsHandshake(cert, [\"DigiCert\", \"Let's Encrypt\"]);\nresult.steps.forEach(s => console.log(s));\nconsole.log(\"Secure session established:\", result.secure, \"| key:\", result.sessionKey);\nconsole.log(\"Untrusted cert:\", JSON.stringify(tlsHandshake({ issuer: \"EvilCA\" }, [\"DigiCert\"]).reason));\nconsole.assert(result.secure, \"trusted cert -> secure channel\");\nconsole.log(\"TLS gives encryption, integrity, and server authentication. HTTPS = HTTP over TLS.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "1. ClientHello (supported ciphers, TLS version)\n2. ServerHello + certificate\n3. Client verifies cert against trusted CAs — OK\n4. Key exchange -> shared symmetric session key\n5. Encrypted application data (symmetric)\nSecure session established: true | key: 1ee4d7bf...\nUntrusted cert: \"untrusted certificate\"\nTLS gives encryption, integrity, and server authentication. HTTPS = HTTP over TLS.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

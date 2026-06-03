@@ -1,0 +1,69 @@
+{
+  "id": "p3-081",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 81,
+  "orderInPhase": 81,
+  "slug": "kubernetes-basics",
+  "title": "Kubernetes basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "kubernetes",
+    "basics"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An e-commerce API runs as a Deployment with 3 replicas behind a Service."
+  },
+  "sections": {
+    "simple_en": "Kubernetes (k8s) is a container orchestrator that runs and manages containers across a cluster of machines. You declare the desired state — e.g., 'run 3 replicas of this image' — in YAML, and the control plane continuously reconciles actual state to match: if a pod dies, it starts a new one (self-healing); if you change the replica count, it scales.\n\nCore objects: a Pod (one or more containers, the smallest unit), a Deployment (manages replica Pods and rolling updates), a Service (a stable network endpoint that load-balances across Pods), and Ingress (external routing). ConfigMaps/Secrets inject config, and probes (liveness/readiness) inform restart and routing decisions. k8s shines for scaling, resilience, and rolling deployments.",
+    "hinglish": "Kubernetes (k8s) ek container orchestrator hai jo machines ke cluster ke across containers run aur manage karta hai. Aap desired state declare karte ho — jaise 'is image ke 3 replicas chalao' — YAML mein, aur control plane continuously actual state ko match karne ke liye reconcile karta hai: pod mar jaaye to naya start karta hai (self-healing); replica count badlo to scale karta hai.\n\nCore objects: Pod (ek ya zyada containers, smallest unit), Deployment (replica Pods aur rolling updates manage karta hai), Service (ek stable network endpoint jo Pods ke across load-balance karta hai), aur Ingress (external routing). ConfigMaps/Secrets config inject karte hain, aur probes (liveness/readiness) restart aur routing decisions batate hain. k8s scaling, resilience aur rolling deployments ke liye shine karta hai.",
+    "keyPoints": [
+      "Container orchestrator across a cluster; you declare desired state in YAML.",
+      "Control plane reconciles actual -> desired (self-healing, scaling).",
+      "Objects: Pod, Deployment, Service, Ingress, ConfigMap/Secret.",
+      "Service gives a stable endpoint + load balancing across Pods.",
+      "Probes (liveness/readiness) drive restarts and traffic routing."
+    ],
+    "real_world": "An e-commerce API runs as a Deployment with 3 replicas behind a Service. During a traffic surge, the team scales to 10 with one command; when a node fails, Kubernetes reschedules its pods elsewhere automatically — keeping the service available without manual intervention.",
+    "followups": [
+      {
+        "q": "What does 'desired state' mean in Kubernetes?",
+        "a": "You declare what you want (e.g., 3 replicas of an image with certain resources). The control plane continuously works to make the cluster's actual state match that declaration."
+      },
+      {
+        "q": "What's the difference between a Pod, Deployment, and Service?",
+        "a": "A Pod runs your container(s); a Deployment manages a set of identical Pods (scaling, rolling updates, self-healing); a Service provides a stable address and load-balances traffic across those Pods."
+      },
+      {
+        "q": "How does Kubernetes self-heal?",
+        "a": "Controllers watch actual vs desired state. If a Pod crashes or a node dies, Kubernetes creates replacement Pods to restore the declared replica count automatically."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "A real Kubernetes Deployment/Service manifest (configuration, not Node code). The Node-runnable demo below simulates the reconcile/self-healing control loop so the concept is verifiable here.",
+      "source": "// Kubernetes basics — declare desired state; the control plane maintains it.\n// File: deployment.yaml\nconst manifest = `\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: api\nspec:\n  replicas: 3                 # desired state: keep 3 pods running\n  selector:\n    matchLabels: { app: api }\n  template:\n    metadata:\n      labels: { app: api }\n    spec:\n      containers:\n        - name: api\n          image: myapp:1.0\n          ports: [{ containerPort: 3000 }]\n          readinessProbe:      # don't route traffic until ready\n            httpGet: { path: /readyz, port: 3000 }\n          livenessProbe:       # restart if unhealthy\n            httpGet: { path: /livez, port: 3000 }\n          resources:\n            requests: { cpu: \"100m\", memory: \"128Mi\" }\n            limits:   { cpu: \"500m\", memory: \"256Mi\" }\n---\napiVersion: v1\nkind: Service                 # stable network endpoint + load balancing\nmetadata: { name: api }\nspec:\n  selector: { app: api }\n  ports: [{ port: 80, targetPort: 3000 }]\n`;\n// kubectl apply -f deployment.yaml ; kubectl get pods ; kubectl scale --replicas=5\n// If a pod dies, the controller starts a new one to match 'replicas' (self-healing).\nmodule.exports = manifest;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Kubernetes basics — the control loop reconciles desired vs actual state (self-healing)\nfunction createCluster(desiredReplicas){\n  let pods = [];\n  let nextId = 1;\n  function reconcile(){                       // controller loop\n    while (pods.filter(p => p.healthy).length < desiredReplicas) pods.push({ id: nextId++, healthy: true });\n    return pods.filter(p => p.healthy).length;\n  }\n  return {\n    reconcile,\n    crash(id){ const p = pods.find(p => p.id === id); if (p) p.healthy = false; },\n    scale(n){ desiredReplicas = n; if (n < pods.filter(p => p.healthy).length){\n      let extra = pods.filter(p => p.healthy).length - n; for (const p of pods){ if (extra && p.healthy){ p.healthy = false; extra--; } } } },\n    running: () => pods.filter(p => p.healthy).length,\n  };\n}\nconst k8s = createCluster(3);\nconsole.log(\"Initial reconcile -> running:\", k8s.reconcile());\nk8s.crash(2);                                  // a pod dies\nconsole.log(\"After a pod crashes -> running:\", k8s.running());\nconsole.log(\"Reconcile (self-heal) -> running:\", k8s.reconcile());\nk8s.scale(5); console.log(\"Scaled to 5 -> running:\", k8s.reconcile());\nconsole.assert(k8s.reconcile() === 5, \"cluster converges to desired replicas\");\nconsole.log(\"k8s: declare desired state (Deployment); the control plane keeps actual == desired.\");\nconsole.log(\"Key objects: Pod, Deployment, Service, Ingress, ConfigMap/Secret.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Initial reconcile -> running: 3\nAfter a pod crashes -> running: 2\nReconcile (self-heal) -> running: 3\nScaled to 5 -> running: 5\nk8s: declare desired state (Deployment); the control plane keeps actual == desired.\nKey objects: Pod, Deployment, Service, Ingress, ConfigMap/Secret.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}

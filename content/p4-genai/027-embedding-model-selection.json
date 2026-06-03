@@ -1,0 +1,70 @@
+{
+  "id": "p4-027",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 27,
+  "orderInPhase": 27,
+  "slug": "embedding-model-selection",
+  "title": "Embedding model selection",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "embedding",
+    "model",
+    "selection"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A startup on a tight budget self-hosts all-MiniLM-L6-v2 (384 dims, free) for its English-only FAQ search."
+  },
+  "sections": {
+    "simple_en": "Choosing an embedding model means balancing quality, vector dimensions, cost, latency, and language/domain fit. Higher-quality models (check the MTEB leaderboard) retrieve more relevant results, but larger dimensions mean more storage and slower search, and hosted APIs bill per token while self-hosted models trade that for infrastructure.\n\nPractical guidance: smaller-dimensional models are cheaper to store and faster to search; multilingual or domain-tuned models matter when your content isn't general English; and consistency is essential — once you pick a model, you must use it for both documents and queries (and re-embed everything if you switch).",
+    "hinglish": "Embedding model choose karna matlab quality, vector dimensions, cost, latency, aur language/domain fit ko balance karna. Higher-quality models (MTEB leaderboard dekho) zyada relevant results retrieve karte hain, par bade dimensions matlab zyada storage aur slower search, aur hosted APIs per token bill karte hain jabki self-hosted models uske badle infrastructure lete hain.\n\nPractical guidance: chhote-dimensional models store karne mein cheaper aur search mein faster hain; multilingual ya domain-tuned models tab matter karte hain jab content general English na ho; aur consistency essential hai — ek baar model pick karne ke baad, use documents aur queries dono ke liye use karna padega (aur switch karo to sab re-embed karna padega).",
+    "keyPoints": [
+      "Balance quality, dimensions, cost, latency, and language/domain fit.",
+      "Check the MTEB leaderboard for quality on your task/language.",
+      "Fewer dimensions = cheaper storage + faster search.",
+      "Hosted bills per token; self-hosted trades cost for infrastructure.",
+      "Switching models means re-embedding everything — commit deliberately."
+    ],
+    "real_world": "A startup on a tight budget self-hosts all-MiniLM-L6-v2 (384 dims, free) for its English-only FAQ search. A later multilingual product switches to a hosted multilingual model for quality — accepting the re-embedding cost because retrieval accuracy matters more than infra savings there.",
+    "followups": [
+      {
+        "q": "What factors drive embedding model choice?",
+        "a": "Retrieval quality (e.g., MTEB scores), vector dimensions (storage/speed), cost (hosted per-token vs self-hosted infra), latency, and language/domain coverage."
+      },
+      {
+        "q": "Why do dimensions matter?",
+        "a": "More dimensions can capture more nuance but cost more to store and slow down similarity search. Smaller vectors are cheaper and faster, often with acceptable quality."
+      },
+      {
+        "q": "What happens if you change embedding models later?",
+        "a": "All stored vectors must be regenerated, because vectors from different models aren't comparable. Plan for that re-embedding cost before switching."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real OpenAI (hosted) and sentence-transformers (self-hosted) code. The Python-runnable demo below scores models by cost/quality/size so the selection logic is verifiable here.",
+      "source": "# Embedding model selection — choose by quality, dimensions, cost, speed, and domain.\n# OpenAI offers a small/cheap and a large/accurate model; dimensions are configurable.\nfrom openai import OpenAI\nclient = OpenAI()\n\ndef embed(texts, model=\"text-embedding-3-small\", dimensions=None):\n    kwargs = {\"model\": model, \"input\": texts}\n    if dimensions:\n        kwargs[\"dimensions\"] = dimensions   # 3-* models can shorten output dims to save space\n    return [d.embedding for d in client.embeddings.create(**kwargs).data]\n\n# Selection guidance:\n#   text-embedding-3-small : cheaper, faster, good default (1536 dims, reducible)\n#   text-embedding-3-large : higher quality for hard retrieval (3072 dims)\n# Open-source (self-host, free): all-MiniLM-L6-v2 (384d, fast), bge-large / e5-large (strong).\n# Check the MTEB leaderboard, your language/domain, latency budget, and storage cost.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Embedding model selection — trade off dimensions, cost, speed, and quality\nmodels = [\n    {\"name\": \"small-fast\",  \"dim\": 384,  \"cost_per_1k\": 0.00002, \"quality\": 0.82, \"latency_ms\": 8},\n    {\"name\": \"base\",        \"dim\": 768,  \"cost_per_1k\": 0.00005, \"quality\": 0.88, \"latency_ms\": 15},\n    {\"name\": \"large-best\",  \"dim\": 1536, \"cost_per_1k\": 0.00013, \"quality\": 0.93, \"latency_ms\": 32},\n]\n\ndef pick(models, priority):\n    # Choose by the dimension that matters most for the use case.\n    key = {\"quality\": lambda m: m[\"quality\"],\n           \"cost\": lambda m: -m[\"cost_per_1k\"],\n           \"speed\": lambda m: -m[\"latency_ms\"]}[priority]\n    return max(models, key=key)\n\nfor p in (\"quality\", \"cost\", \"speed\"):\n    print(f\"Priority={p:8} -> {pick(models, p)['name']}\")\nassert pick(models, \"quality\")[\"name\"] == \"large-best\"\nassert pick(models, \"cost\")[\"name\"] == \"small-fast\"\nassert pick(models, \"speed\")[\"name\"] == \"small-fast\"\nprint(\"Pick an embedding model by your priority: quality vs cost vs speed vs dimension size.\")\nprint(\"Higher dimensions usually mean better quality but more storage, cost, and latency.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Priority=quality  -> large-best\nPriority=cost     -> small-fast\nPriority=speed    -> small-fast\nPick an embedding model by your priority: quality vs cost vs speed vs dimension size.\nHigher dimensions usually mean better quality but more storage, cost, and latency.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

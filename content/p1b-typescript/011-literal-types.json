@@ -1,0 +1,65 @@
+{
+  "id": "p1b-011",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 11,
+  "orderInPhase": 11,
+  "slug": "literal-types",
+  "title": "Literal Types",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "literal",
+    "types"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Typing a button's `size` as `\"sm\" | \"md\" | \"lg\"` instead of `string` means the editor autocompletes the options and the compiler rejects a typo like `\"meduim…"
+  },
+  "sections": {
+    "simple_en": "A literal type restricts a value to one EXACT value rather than a whole primitive type. For example `type Direction = \"up\" | \"down\"` allows only those two strings — not any string. Literal types exist for strings, numbers, and booleans.\n\nCombined with unions, literal types model a fixed set of allowed options (like a status or a mode) far more safely than a plain `string`. The compiler then rejects any value outside the allowed set and powers exact autocomplete.",
+    "hinglish": "Literal type ek value ko poore primitive type ke bajaye ek EXACT value tak seemit karta hai. Jaise `type Direction = \"up\" | \"down\"` sirf un do strings ko allow karta hai — kisi bhi string ko nahi. Literal types strings, numbers, aur booleans ke liye hote hain.\nUnions ke saath mila kar, literal types allowed options ka ek fixed set model karte hain (jaise status ya mode) plain `string` se kaafi safe tarike se. Phir compiler allowed set ke bahar koi value reject karta hai aur exact autocomplete deta hai.",
+    "keyPoints": [
+      "Restricts a value to one exact literal (e.g. `\"GET\"`, `200`, `true`).",
+      "Usually combined with unions for a fixed option set.",
+      "Safer than `string`/`number` — rejects out-of-set values.",
+      "Enables precise autocomplete for allowed values.",
+      "Common for statuses, modes, HTTP methods, sizes."
+    ],
+    "real_world": "Typing a button's `size` as `\"sm\" | \"md\" | \"lg\"` instead of `string` means the editor autocompletes the options and the compiler rejects a typo like `\"meduim\"` immediately.",
+    "followups": [
+      {
+        "q": "What is a literal type?",
+        "a": "A type that allows only one specific value (e.g. the string `\"up\"` or the number `200`), rather than the entire primitive type. They're usually combined into unions for a fixed set of options."
+      },
+      {
+        "q": "Why use a literal union instead of `string`?",
+        "a": "It restricts values to a known set, catching typos at compile time and providing exact autocomplete — far safer than accepting any string for things like statuses or modes."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — literal types restrict to exact values.\n\nexport type Size = \"sm\" | \"md\" | \"lg\";\n\nexport function pixelSize(size: Size): number {\n  const map: Record<Size, number> = { sm: 12, md: 16, lg: 24 };\n  return map[size];\n}\n\nexport type HttpMethod = \"GET\" | \"POST\" | \"PUT\" | \"DELETE\";\nexport function isSafeMethod(method: HttpMethod): boolean {\n  return method === \"GET\";\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { pixelSize, isSafeMethod } from \"./solution\";\n\nconsole.log(pixelSize(\"md\"));      // 16\nconsole.log(pixelSize(\"lg\"));      // 24\nconsole.log(isSafeMethod(\"GET\"));  // true\nconsole.log(isSafeMethod(\"POST\")); // false\n// pixelSize(\"xl\"); // compile error: not assignable to Size\n\nconsole.assert(pixelSize(\"md\") === 16, \"md size\");\nconsole.assert(pixelSize(\"lg\") === 24, \"lg size\");\nconsole.assert(isSafeMethod(\"GET\") === true, \"GET is safe\");\nconsole.assert(isSafeMethod(\"POST\") === false, \"POST is not safe\");\nconsole.log(\"literal-types assertions passed.\");",
+      "expectedOutput": "16\n24\ntrue\nfalse\nliteral-types assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p2-052",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 52,
+  "orderInPhase": 52,
+  "slug": "react-server-components",
+  "title": "React Server Components",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "react",
+    "server",
+    "components"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A product page renders title, description, and reviews as server components (fetched directly, no client JS), while the 'Add to cart' button is a small clien…"
+  },
+  "sections": {
+    "simple_en": "React Server Components (RSC) render exclusively on the server and send a serialized result to the client — they ship zero JavaScript for themselves. They can fetch data directly (even hit a database) and keep heavy dependencies on the server, shrinking the client bundle.\n\nClient Components (marked with 'use client') handle interactivity — state, effects, event handlers — and do ship JS. The pattern is to keep most of the tree as server components and push interactivity to small client components at the leaves.",
+    "hinglish": "React Server Components (RSC) sirf server par render hote hain aur client ko ek serialized result bhejte hain — apne liye zero JavaScript ship karte hain. Ye data directly fetch kar sakte hain (database tak) aur heavy dependencies server par rakhte hain, isse client bundle chhota hota hai.\n\nClient Components ('use client' se marked) interactivity handle karte hain — state, effects, event handlers — aur JS ship karte hain. Pattern ye hai ki zyada tree server components ho aur interactivity chhote client components mein leaves par push ho.",
+    "keyPoints": [
+      "Server Components render on the server and ship no JS for themselves.",
+      "They can fetch data directly and keep heavy deps off the client bundle.",
+      "Client Components ('use client') add interactivity and do ship JS.",
+      "Default in Next.js App Router; opt into client components only where needed.",
+      "Server components can't use state/effects or browser APIs — those are client-only."
+    ],
+    "real_world": "A product page renders title, description, and reviews as server components (fetched directly, no client JS), while the 'Add to cart' button is a small client component. The page loads fast with minimal JavaScript, and only the interactive bit hydrates.",
+    "followups": [
+      {
+        "q": "What's the main benefit of Server Components?",
+        "a": "Less JavaScript shipped to the client (smaller bundles, faster loads) plus direct server-side data access, while still composing seamlessly with interactive client components."
+      },
+      {
+        "q": "What can't a Server Component do?",
+        "a": "Use state, effects, event handlers, or browser-only APIs. Anything interactive must live in a Client Component marked with 'use client'."
+      },
+      {
+        "q": "How do server and client components compose?",
+        "a": "Server components can render client components (and pass serializable props to them), but client components can't import server components directly — server components are passed in as children."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "A Next.js Server Component (runs only on the server). The Node-runnable demo below shows the server/client split and its effect on shipped JS.",
+      "source": "// React Server Components: server component fetches data, ships no client JS;\n// only the interactive child is a client component.\n// app/product/[id]/page.jsx  (Server Component by default)\n\nimport AddToCart from \"./AddToCart\"; // client component\n\nexport default async function ProductPage({ params }) {\n  // Runs on the server only — can fetch directly, sends HTML, no JS for this part.\n  const product = await fetch(`https://api.shop.com/products/${params.id}`).then((r) => r.json());\n\n  return (\n    <div>\n      <h1>{product.name} — ${product.price}</h1>\n      <p>{product.description}</p>\n      <AddToCart productId={product.id} /> {/* interactivity lives here */}\n    </div>\n  );\n}\n\n// AddToCart.jsx\n// \"use client\";  <-- marks this as a Client Component (ships JS, can use hooks)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React Server Components — server renders to a payload; client ships less JS\nlet clientBytes = 0;\nfunction ServerComponent(name, fn){ return { kind: \"server\", name, render: fn }; }\nfunction ClientComponent(name, jsSize, fn){ clientBytes += jsSize; return { kind: \"client\", name, render: fn }; }\n\n// Server component: runs on server, sends HTML/payload, NO JS to client\nconst ProductInfo = ServerComponent(\"ProductInfo\", (p) => `<h1>${p.name} - $${p.price}</h1>`);\n// Client component: needs interactivity, ships JS\nconst AddToCart = ClientComponent(\"AddToCart\", 15, () => `<button>Add to cart</button>`);\n\nconsole.log(\"Server render:\", ProductInfo.render({ name: \"Phone\", price: 699 }));\nconsole.log(\"Client render:\", AddToCart.render());\nconsole.log(\"JS shipped to client (KB):\", clientBytes, \"(only the interactive part)\");\nconsole.assert(clientBytes === 15, \"only client component adds JS\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Server render: <h1>Phone - $699</h1>\nClient render: <button>Add to cart</button>\nJS shipped to client (KB): 15 (only the interactive part)\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

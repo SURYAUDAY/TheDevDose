@@ -1,0 +1,69 @@
+{
+  "id": "p4-017",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 17,
+  "orderInPhase": 17,
+  "slug": "frequency-penalty",
+  "title": "frequency penalty",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "frequency",
+    "penalty"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A long product-description generator kept repeating 'high-quality' over and over."
+  },
+  "sections": {
+    "simple_en": "The frequency penalty reduces the likelihood of a token in proportion to how many times it has already appeared in the generated text. The more often a token has been used, the more its score is lowered — discouraging the model from repeating the same words or phrases and getting stuck in loops.\n\nIt ranges roughly from -2.0 to 2.0 (positive values discourage repetition). It's especially useful for longer generations that tend to repeat. It differs from the presence penalty, which applies a one-time penalty for any token that has appeared at all, regardless of count.",
+    "hinglish": "Frequency penalty ek token ki likelihood ko is proportion mein kam karti hai ki wo generated text mein kitni baar aa chuka hai. Token jitni baar use hua ho, uska score utna zyada kam hota hai — model ko same words ya phrases repeat karne aur loops mein phasne se discourage karke.\n\nYe lagbhag -2.0 se 2.0 tak hoti hai (positive values repetition discourage karti hain). Ye khaaskar lambi generations ke liye useful hai jo repeat karne lagti hain. Ye presence penalty se alag hai, jo kisi bhi token jo bilkul bhi aaya ho uspar ek one-time penalty lagati hai, count chahe jo ho.",
+    "keyPoints": [
+      "Lowers a token's probability based on how MANY times it has appeared.",
+      "Discourages repetition and getting stuck in loops.",
+      "Range roughly -2.0 to 2.0 (positive discourages repetition).",
+      "Useful for longer generations prone to repeating.",
+      "Differs from presence penalty (count-based vs one-time)."
+    ],
+    "real_world": "A long product-description generator kept repeating 'high-quality' over and over. Raising the frequency penalty made the model vary its wording — 'premium', 'well-made', 'durable' — producing more natural, less repetitive copy.",
+    "followups": [
+      {
+        "q": "What does frequency penalty do?",
+        "a": "It reduces the probability of tokens proportionally to how often they've already been generated, discouraging repetition and repetitive loops in the output."
+      },
+      {
+        "q": "Frequency penalty vs presence penalty?",
+        "a": "Frequency penalty scales with the number of occurrences (more uses = bigger penalty). Presence penalty is a flat, one-time penalty for any token that has appeared at all, pushing toward new topics."
+      },
+      {
+        "q": "When would you increase it?",
+        "a": "For long generations that repeat words or phrases, or when you want more lexical variety. Too high, though, can make the text avoid necessary words and read unnaturally."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI frequency_penalty code (needs an API key). The Python-runnable demo below applies a count-based logit penalty so the anti-repetition effect is verifiable here.",
+      "source": "# frequency_penalty — discourage repeating the same tokens (scaled by count).\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef generate(prompt: str, frequency_penalty: float) -> str:\n    response = client.chat.completions.create(\n        model=\"gpt-4o-mini\",\n        frequency_penalty=frequency_penalty,  # range -2.0..2.0; higher -> less repetition\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return response.choices[0].message.content\n\n# frequency_penalty lowers a token's probability in proportion to how MANY times it\n# has already appeared, reducing repetitive loops and verbatim repetition.\n# Useful for long generations that tend to repeat phrases.\n# varied = generate(\"List 20 creative startup names.\", frequency_penalty=0.8)",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# frequency penalty — lower the score of tokens proportional to how often they appeared\nimport math\nfrom collections import Counter\nbase_logits = {\"the\": 2.0, \"cat\": 1.5, \"dog\": 1.4, \"ran\": 1.0}\n\ndef apply_frequency_penalty(logits, counts, penalty):\n    # new_logit = logit - penalty * count(token_so_far)\n    return {t: l - penalty * counts.get(t, 0) for t, l in logits.items()}\n\ngenerated = [\"the\", \"the\", \"the\"]      # \"the\" has been used a lot already\ncounts = Counter(generated)\nadjusted = apply_frequency_penalty(base_logits, counts, penalty=0.8)\nprint(\"Counts so far:\", dict(counts))\nprint(\"Base logits:    \", {k: round(v, 2) for k, v in base_logits.items()})\nprint(\"After penalty:  \", {k: round(v, 2) for k, v in adjusted.items()})\nprint(\"New top token:\", max(adjusted, key=adjusted.get), \"(was 'the')\")\nassert adjusted[\"the\"] < base_logits[\"the\"], \"frequent token is penalized\"\nassert max(adjusted, key=adjusted.get) != \"the\", \"penalty discourages repetition\"\nprint(\"\\nFrequency penalty scales with how MANY times a token appeared -> reduces repetitive loops.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Counts so far: {'the': 3}\nBase logits:     {'the': 2.0, 'cat': 1.5, 'dog': 1.4, 'ran': 1.0}\nAfter penalty:   {'the': -0.4, 'cat': 1.5, 'dog': 1.4, 'ran': 1.0}\nNew top token: cat (was 'the')\n\nFrequency penalty scales with how MANY times a token appeared -> reduces repetitive loops.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p5-039",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 39,
+  "orderInPhase": 39,
+  "slug": "javascript-interview-questions",
+  "title": "JavaScript interview questions",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "javascript",
+    "interview",
+    "questions"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "An interviewer shows a for-loop pushing arrow functions and asks what they log."
+  },
+  "sections": {
+    "simple_en": "JavaScript interviews probe the language's mechanics, not just syntax. The most common areas are closures (an inner function remembering its outer scope), scope and hoisting, the difference between var and let/const, how `this` binds, the event loop (microtasks like Promises run before macrotasks like setTimeout), == vs === (coercion vs strict equality), prototypes, and async/await.\n\nInterviewers usually ask you to predict output and then explain why. The winning approach is to explain the underlying mechanism — e.g., that let is block-scoped per loop iteration (fixing the classic closure-in-loop bug), or that == coerces types while === does not. Knowing the 'why' demonstrates real understanding.",
+    "hinglish": "JavaScript interviews language ki mechanics probe karte hain, sirf syntax nahi. Sabse common areas hain closures (ek inner function apne outer scope ko yaad rakhta hua), scope aur hoisting, var aur let/const ka difference, `this` kaise bind hota hai, event loop (microtasks jaise Promises macrotasks jaise setTimeout se pehle chalte hain), == vs === (coercion vs strict equality), prototypes, aur async/await.\n\nInterviewers aam taur par aapse output predict karne aur phir explain karne ko kehte hain ki kyun. Winning approach hai underlying mechanism explain karna — jaise ki let har loop iteration mein block-scoped hai (classic closure-in-loop bug fix karke), ya ki == types coerce karta hai jabki === nahi. 'Why' jaanna real understanding demonstrate karta hai.",
+    "keyPoints": [
+      "Closures: an inner function retains access to its outer scope's variables.",
+      "let/const are block-scoped (fixes the closure-in-loop bug); var is function-scoped.",
+      "== coerces types; === compares without coercion (use ===).",
+      "Event loop: microtasks (Promises) run before macrotasks (setTimeout).",
+      "Also expect: this binding, hoisting, prototypes, async/await — explain the 'why'."
+    ],
+    "real_world": "An interviewer shows a for-loop pushing arrow functions and asks what they log. A candidate who explains that `let` creates a fresh binding per iteration (so it's [0,1,2], not [3,3,3]) — and why `var` would differ — demonstrates they understand scope, not just memorized the answer.",
+    "followups": [
+      {
+        "q": "What is a closure?",
+        "a": "A function that retains access to variables from the scope in which it was created, even after that outer function has returned. It's how JS implements private state and data encapsulation."
+      },
+      {
+        "q": "Why does microtask vs macrotask ordering matter?",
+        "a": "Promise callbacks (microtasks) run before setTimeout callbacks (macrotasks) after the current synchronous code. Knowing this lets you predict async execution order — a frequent interview question."
+      },
+      {
+        "q": "== vs === ?",
+        "a": "== performs type coercion before comparing (so 0 == '0' is true), while === compares value and type strictly (0 === '0' is false). Prefer === to avoid surprising coercion bugs."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript demonstrating closures, block scoping, == vs ===, and microtask ordering. The Node demo below runs each and verifies the classic behaviors.",
+      "source": "// JavaScript interview questions — the high-frequency concepts, with crisp answers.\n\n// Closures: a function retains access to its lexical scope even after the outer function returns.\nfunction makeCounter() { let c = 0; return () => ++c; }\n\n// Hoisting: declarations are processed first; `var` is hoisted (undefined), `let`/`const` are in\n// a temporal dead zone until initialized. Function declarations are fully hoisted.\n\n// `this`: determined by call-site. Regular functions get a dynamic `this`; arrow functions\n// capture `this` lexically from where they're defined (no own `this`).\n\n// Event loop: the call stack runs sync code; microtasks (Promise callbacks) drain before the\n// next macrotask (setTimeout). This is why Promise.then runs before a 0ms setTimeout.\n\n// == vs ===: == applies type coercion (0 == \"0\" is true); === compares type + value (stricter).\n// Prefer === to avoid surprising coercions.\n\n// Prototypes: objects inherit via the prototype chain; classes are syntactic sugar over it.\n// async/await: syntactic sugar over Promises for readable asynchronous code.\n\n// Interview tip: explain the MECHANISM (scope, call-site, the event loop), not just the output.\nmodule.exports = { makeCounter };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// JavaScript interview questions — closures, hoisting, this, async, equality (classic gotchas)\n// 1) Closures: an inner function remembers its outer scope's variables.\nfunction counter() { let c = 0; return () => ++c; }\nconst next = counter();\nconsole.log(\"closure counter:\", next(), next(), next());   // 1 2 3 (state persists)\n\n// 2) var vs let in loops: let is block-scoped (fixes the classic closure-in-loop bug).\nconst fns = [];\nfor (let i = 0; i < 3; i++) fns.push(() => i);\nconsole.log(\"let in loop:\", fns.map((f) => f()));          // [0,1,2], not [3,3,3]\n\n// 3) Equality: == coerces types, === does not.\nconsole.log(\"0 == '0':\", 0 == \"0\", \"| 0 === '0':\", 0 === \"0\");   // true | false\n\n// 4) Async ordering: microtasks (Promises) run before macrotasks (setTimeout).\nconst order = [];\norder.push(\"sync\");\nPromise.resolve().then(() => order.push(\"promise\"));\nconsole.log(\"sync part done; promise callback queued\");\n\nconsole.assert(next() === 4, \"closure keeps incrementing private state\");\nconsole.assert(JSON.stringify(fns.map((f) => f())) === \"[0,1,2]\", \"let is block-scoped per iteration\");\nconsole.assert((0 == \"0\") === true && (0 === \"0\") === false, \"== coerces, === is strict\");\nconsole.log(\"Key JS topics: closures, scope/hoisting, this binding, the event loop (micro vs macro tasks), == vs ===,\");\nconsole.log(\"prototypes, and async/await. Interviewers probe the 'why', so explain the mechanism, not just the output.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "closure counter: 1 2 3\nlet in loop: [ 0, 1, 2 ]\n0 == '0': true | 0 === '0': false\nsync part done; promise callback queued\nKey JS topics: closures, scope/hoisting, this binding, the event loop (micro vs macro tasks), == vs ===,\nprototypes, and async/await. Interviewers probe the 'why', so explain the mechanism, not just the output.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

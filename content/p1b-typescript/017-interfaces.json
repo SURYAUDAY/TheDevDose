@@ -1,0 +1,64 @@
+{
+  "id": "p1b-017",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 17,
+  "orderInPhase": 17,
+  "slug": "interfaces",
+  "title": "Interfaces",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "interfaces"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "Defining `interface User { id: number; name: string; email?: string }` as the contract for user objects across the app means every function that takes a `Use…"
+  },
+  "sections": {
+    "simple_en": "An interface describes the SHAPE of an object — its property names and types, and method signatures. It's the primary tool for typing objects, class contracts, and function parameters in TypeScript.\n\nInterfaces support optional (`?`) and readonly properties, method definitions, and can be extended and implemented by classes. A distinctive feature is declaration merging: declaring the same interface name twice merges them — useful for augmenting existing types.",
+    "hinglish": "Interface ek object ki SHAPE describe karta hai — uske property names aur types, aur method signatures. Ye TypeScript me objects, class contracts, aur function parameters ko type karne ka primary tool hai.\nInterfaces optional (`?`) aur readonly properties, method definitions support karte hain, aur classes inhe extend aur implement kar sakti hain. Ek khaas feature declaration merging hai: same interface naam do baar declare karne par woh merge ho jaate hain — existing types augment karne me useful.",
+    "keyPoints": [
+      "Describes object shape: properties, types, and methods.",
+      "Supports optional (`?`) and `readonly` members.",
+      "Can be `extends`-ed and `implements`-ed by classes.",
+      "Supports declaration merging (same-name interfaces combine).",
+      "Preferred for public object/class contracts."
+    ],
+    "real_world": "Defining `interface User { id: number; name: string; email?: string }` as the contract for user objects across the app means every function that takes a `User` agrees on its shape, and the optional `email` is handled safely.",
+    "followups": [
+      {
+        "q": "What is declaration merging?",
+        "a": "Declaring an interface with the same name more than once merges their members into one. It's useful for augmenting library types or extending global interfaces — something type aliases can't do."
+      },
+      {
+        "q": "When would you choose an interface over a type alias?",
+        "a": "For public object/class contracts that may need extending or merging. Interfaces communicate object shapes clearly and support `extends`/`implements`; aliases are better for unions and other non-object types."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — an interface as an object contract.\n\nexport interface User {\n  readonly id: number;   // can't be reassigned\n  name: string;\n  email?: string;        // optional\n  greet(): string;       // method signature\n}\n\nexport function createUser(id: number, name: string, email?: string): User {\n  return {\n    id,\n    name,\n    email,\n    greet() { return \"Hi, I'm \" + this.name; },\n  };\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { createUser } from \"./solution\";\n\nconst u = createUser(1, \"Asha\", \"asha@x.com\");\nconsole.log(u.greet());         // Hi, I'm Asha\nconsole.log(u.email);           // asha@x.com\nconst u2 = createUser(2, \"Ravi\");\nconsole.log(u2.email);          // undefined (optional)\n\nconsole.assert(u.id === 1 && u.name === \"Asha\", \"interface shape\");\nconsole.assert(u.greet() === \"Hi, I'm Asha\", \"method works\");\nconsole.assert(u2.email === undefined, \"optional property omitted\");\nconsole.log(\"interfaces assertions passed.\");",
+      "expectedOutput": "Hi, I'm Asha\nasha@x.com\nundefined\ninterfaces assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

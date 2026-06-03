@@ -1,0 +1,65 @@
+{
+  "id": "p1a-034",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 34,
+  "orderInPhase": 34,
+  "slug": "prototype-chain",
+  "title": "Prototype Chain",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "prototype",
+    "chain"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Calling `myArray.toString()` walks the chain: not on the array → found on `Array.prototype`?"
+  },
+  "sections": {
+    "simple_en": "The prototype chain is the series of linked prototype objects the engine walks when looking up a property. If a property isn't found on the object, it checks the object's prototype, then that prototype's prototype, and so on until it reaches `Object.prototype`, whose prototype is `null` (the end of the chain).\n\nIf the property is found, its value is returned; if the chain ends without finding it, the result is `undefined` (or a ReferenceError for variables). This single mechanism implements all inheritance in JavaScript.",
+    "hinglish": "Prototype chain woh linked prototype objects ki series hai jise engine property dhoondhte samay chalता hai. Agar property object par na mile, woh object ke prototype par dekhta hai, phir us prototype ke prototype par, aise hi `Object.prototype` tak jiska prototype `null` hota hai (chain ka end).\nProperty mil gayi to value return; chain khatam ho gayi bina mile to result `undefined`. Yahi ek mechanism JavaScript ki saari inheritance implement karta hai.",
+    "keyPoints": [
+      "Lookup walks: object → its prototype → ... → Object.prototype → null.",
+      "First match wins; if nothing matches, property access yields `undefined`.",
+      "`Object.prototype` is the top; its prototype is `null` (chain end).",
+      "Deeper chains mean slightly slower lookups for missing properties.",
+      "This chain is how inheritance and method sharing actually work."
+    ],
+    "real_world": "Calling `myArray.toString()` walks the chain: not on the array → found on `Array.prototype`? no → found on `Object.prototype`! That's why every object has `toString`, even if you never defined one.",
+    "followups": [
+      {
+        "q": "What is at the top of the prototype chain?",
+        "a": "`Object.prototype`. Its own prototype is `null`, which marks the end of the chain. If a property isn't found by then, the lookup returns `undefined`."
+      },
+      {
+        "q": "What's the performance implication of a long prototype chain?",
+        "a": "Property misses are slower because the engine must walk every link before concluding the property doesn't exist; keeping chains shallow helps lookup performance."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Building a small chain and observing lookups.\n\nconst base = { kind: \"base\", describe() { return \"I am \" + this.kind; } };\nconst mid = Object.create(base);   // mid.__proto__ = base\nmid.kind = \"mid\";\nconst leaf = Object.create(mid);   // leaf.__proto__ = mid\n\nfunction walk() {\n  return {\n    leafDescribe: leaf.describe(),                 // inherited from base\n    leafKind: leaf.kind,                           // mid (own of mid, inherited by leaf)\n    chainEndsAtNull: Object.getPrototypeOf(Object.prototype) === null,\n    arrToStringInherited: [].toString() === \"\",    // from Object/Array prototype\n  };\n}\n\nmodule.exports = { walk };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { walk } = require(\"./solution\");\n\nconsole.log(walk());\n\nconst r = walk();\nconsole.assert(r.leafDescribe === \"I am mid\", \"describe found up the chain, this.kind=mid\");\nconsole.assert(r.leafKind === \"mid\", \"kind inherited from mid\");\nconsole.assert(r.chainEndsAtNull === true, \"Object.prototype's prototype is null\");\nconsole.assert(r.arrToStringInherited === true, \"toString inherited via chain\");\nconsole.log(\"prototype chain assertions passed.\");",
+      "expectedOutput": "{ leafDescribe: 'I am mid', leafKind: 'mid', chainEndsAtNull: true, arrToStringInherited: true }\nprototype chain assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

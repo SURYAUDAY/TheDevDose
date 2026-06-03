@@ -1,0 +1,70 @@
+{
+  "id": "p2-063",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 63,
+  "orderInPhase": 63,
+  "slug": "browser-caching-cache-control",
+  "title": "Browser caching & Cache-Control",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "browser",
+    "caching",
+    "cache-control"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "After each deploy, filenames include a content hash (app.4f3a.js)."
+  },
+  "sections": {
+    "simple_en": "Browser caching stores responses locally so repeat visits avoid re-downloading unchanged resources. The server controls this with the Cache-Control header: max-age sets how long a response is fresh, no-cache means cache but revalidate before using, and no-store means never cache.\n\nA common strategy is to cache hashed, immutable build assets aggressively (max-age=1 year, immutable) while keeping HTML revalidated (no-cache) so users always get the latest app version. Validation with ETags/Last-Modified lets the browser confirm freshness cheaply with a 304 response.",
+    "hinglish": "Browser caching responses ko locally store karta hai taaki repeat visits par unchanged resources dobara download na ho. Server ise Cache-Control header se control karta hai: max-age batata hai response kitni der fresh hai, no-cache matlab cache karo par use se pehle revalidate karo, no-store matlab kabhi cache mat karo.\n\nCommon strategy: hashed immutable build assets ko aggressively cache karo (max-age=1 saal, immutable) jabki HTML ko revalidate rakho (no-cache) taaki users latest version paayein. ETags/Last-Modified se browser sasta freshness check (304) kar leta hai.",
+    "keyPoints": [
+      "Cache-Control header (server-set) governs how the browser caches a response.",
+      "max-age = fresh duration; no-cache = cache but revalidate; no-store = never cache.",
+      "Hashed immutable assets: cache hard (max-age=31536000, immutable).",
+      "HTML: use no-cache so users get the newest build after deploys.",
+      "ETag/Last-Modified enable cheap revalidation via 304 Not Modified."
+    ],
+    "real_world": "After each deploy, filenames include a content hash (app.4f3a.js). The server caches these for a year as immutable, so returning users skip re-downloading the framework, while the no-cache HTML always points to the newest hashed files.",
+    "followups": [
+      {
+        "q": "Difference between no-cache and no-store?",
+        "a": "no-cache lets the browser store the response but it must revalidate with the server before reusing it. no-store forbids storing at all — every use is a fresh fetch."
+      },
+      {
+        "q": "Why is 'immutable' safe for build assets?",
+        "a": "Because the filename includes a content hash; if the content changes, the filename changes too. So the old URL never needs to change — it can be cached forever."
+      },
+      {
+        "q": "What's the role of ETags?",
+        "a": "They let the browser ask 'has this changed?' cheaply; if not, the server returns 304 Not Modified with no body, saving bandwidth while confirming freshness."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "Server-side code (Node/Express) that sets caching headers. The Node-runnable demo below simulates how the browser interprets Cache-Control.",
+      "source": "// Browser caching & Cache-Control — set on the server response, read by browser.\n// Express example (Node) controlling how the browser caches each asset type.\nimport express from \"express\";\nconst app = express();\n\n// Hashed, immutable build assets: cache hard for a year.\napp.use(\"/assets\", express.static(\"dist/assets\", {\n  setHeaders: (res) => res.setHeader(\"Cache-Control\", \"public, max-age=31536000, immutable\"),\n}));\n\n// HTML should always be revalidated so users get the latest build.\napp.get(\"/\", (req, res) => {\n  res.setHeader(\"Cache-Control\", \"no-cache\"); // store but revalidate before use\n  res.send(\"<html>…</html>\");\n});\n\n// API data we never want cached:\napp.get(\"/api/me\", (req, res) => {\n  res.setHeader(\"Cache-Control\", \"no-store\");\n  res.json({ user: \"Asha\" });\n});",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Browser caching & Cache-Control — decide cache behavior from headers\nfunction cacheDecision(header){\n  if (/no-store/.test(header)) return \"never cache (always fetch)\";\n  if (/no-cache/.test(header)) return \"cache but revalidate before use\";\n  const m = header.match(/max-age=(\\d+)/);\n  if (m) return `cache fresh for ${m[1]}s`;\n  return \"no caching directive\";\n}\nconsole.log(\"max-age=3600     ->\", cacheDecision(\"max-age=3600\"));\nconsole.log(\"no-cache         ->\", cacheDecision(\"no-cache\"));\nconsole.log(\"no-store         ->\", cacheDecision(\"no-store\"));\nconsole.log(\"public, max-age=60 ->\", cacheDecision(\"public, max-age=60\"));\nconsole.assert(cacheDecision(\"max-age=3600\").includes(\"3600\"), \"max-age parsed\");\nconsole.assert(cacheDecision(\"no-store\").startsWith(\"never\"), \"no-store respected\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "max-age=3600     -> cache fresh for 3600s\nno-cache         -> cache but revalidate before use\nno-store         -> never cache (always fetch)\npublic, max-age=60 -> cache fresh for 60s\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

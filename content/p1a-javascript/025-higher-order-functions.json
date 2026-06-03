@@ -1,0 +1,65 @@
+{
+  "id": "p1a-025",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 25,
+  "orderInPhase": 25,
+  "slug": "higher-order-functions",
+  "title": "Higher-Order Functions",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "higher-order",
+    "functions"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "map",
+    "seedText": "Processing a list of orders: `orders.filter(o => o.paid).map(o => o.total).reduce((a,b) => a+b, 0)` reads like a sentence — 'take paid orders, get their tota…"
+  },
+  "sections": {
+    "simple_en": "A Higher-Order Function (HOF) is a function that does at least one of two things: takes another function as an argument, or returns a function. They are the backbone of functional programming in JavaScript.\n\nYou use HOFs constantly: `map`, `filter`, `reduce`, `forEach`, and `sort` all accept callback functions, and function factories (like `makeMultiplier`) return functions. HOFs enable reusable, composable, declarative code instead of repetitive loops.",
+    "hinglish": "Higher-Order Function (HOF) woh function hai jo do me se kam se kam ek kaam karta hai: ya to doosre function ko argument me leta hai, ya ek function return karta hai. Ye JavaScript me functional programming ki reedh ki haddi hain.\nAap HOFs roz use karte ho: `map`, `filter`, `reduce`, `forEach`, `sort` sab callback functions lete hain, aur function factories (jaise `makeMultiplier`) functions return karte hain. HOFs reusable, composable, declarative code dete hain — baar-baar loops likhne ke bajaye.",
+    "keyPoints": [
+      "An HOF either takes a function as an argument or returns a function (or both).",
+      "Built-in HOFs: map, filter, reduce, forEach, sort, some, every, find.",
+      "Function factories that return customised functions are HOFs.",
+      "They enable composition, reuse, and declarative style over manual loops.",
+      "Callbacks passed to HOFs are 'first-class functions' — values you can pass around."
+    ],
+    "real_world": "Processing a list of orders: `orders.filter(o => o.paid).map(o => o.total).reduce((a,b) => a+b, 0)` reads like a sentence — 'take paid orders, get their totals, sum them' — replacing a verbose manual loop with clear, chainable steps.",
+    "followups": [
+      {
+        "q": "What makes a function 'higher-order'?",
+        "a": "It takes one or more functions as arguments and/or returns a function. Examples include `map`/`filter`/`reduce` (take callbacks) and factories like `multiplier` (return a function)."
+      },
+      {
+        "q": "What are 'first-class functions' and how do they relate to HOFs?",
+        "a": "First-class functions means functions are values — they can be stored, passed, and returned. That language feature is exactly what makes higher-order functions possible."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// HOFs: taking functions, returning functions, and composing them.\n\n// 1) Takes a function as argument\nfunction applyTwice(fn, value) {\n  return fn(fn(value));\n}\n\n// 2) Returns a function\nfunction multiplier(factor) {\n  return (n) => n * factor;\n}\n\n// 3) compose: build a pipeline from several functions\nfunction compose(...fns) {\n  return (input) => fns.reduceRight((acc, fn) => fn(acc), input);\n}\n\n// 4) Real data pipeline using built-in HOFs\nfunction totalPaid(orders) {\n  return orders\n    .filter((o) => o.paid)\n    .map((o) => o.total)\n    .reduce((sum, t) => sum + t, 0);\n}\n\nmodule.exports = { applyTwice, multiplier, compose, totalPaid };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { applyTwice, multiplier, compose, totalPaid } = require(\"./solution\");\n\nconst double = multiplier(2);\nconsole.log(applyTwice(double, 5));          // 20\nconst addThenDouble = compose(double, (x) => x + 1);\nconsole.log(addThenDouble(4));               // double(4+1)=10\n\nconst orders = [\n  { total: 100, paid: true },\n  { total: 50, paid: false },\n  { total: 30, paid: true },\n];\nconsole.log(\"paid total:\", totalPaid(orders)); // 130\n\nconsole.assert(applyTwice(double, 5) === 20, \"applyTwice doubles twice\");\nconsole.assert(addThenDouble(4) === 10, \"compose applies right-to-left\");\nconsole.assert(totalPaid(orders) === 130, \"filter+map+reduce pipeline\");\nconsole.log(\"higher-order function assertions passed.\");",
+      "expectedOutput": "20\n10\npaid total: 130\nhigher-order function assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "p4-022",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 22,
+  "orderInPhase": 22,
+  "slug": "function-calling",
+  "title": "Function calling",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "function",
+    "calling"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A weather assistant: the user asks 'What's it like in Pune?', the model returns a call to get_weather(city='Pune'), the app runs the real weather API, return…"
+  },
+  "sections": {
+    "simple_en": "Function calling lets an LLM invoke your code with structured arguments. You describe available functions (name, parameters as a JSON schema); the model decides when to call one and returns the function name plus JSON arguments. Your application executes the real function and feeds the result back so the model can produce a final answer.\n\nCrucially, the model doesn't run the function — it only requests the call; you control execution. This bridges the LLM to real data and actions: fetching weather, querying a database, sending an email. The flow is: define schemas → model emits a call → you execute → return the result → model replies in natural language.",
+    "hinglish": "Function calling ek LLM ko aapke code ko structured arguments ke saath invoke karne deta hai. Aap available functions describe karte ho (name, parameters JSON schema ke roop mein); model decide karta hai kab call kare aur function name plus JSON arguments return karta hai. Aapki application real function execute karti hai aur result wapas feed karti hai taaki model final answer bana sake.\n\nKhaas baat: model function run nahi karta — ye sirf call request karta hai; execution aap control karte ho. Ye LLM ko real data aur actions se jodta hai: weather fetch karna, database query karna, email bhejna. Flow: schemas define karo → model ek call emit kare → aap execute karo → result return karo → model natural language mein reply kare.",
+    "keyPoints": [
+      "Describe functions (name + JSON-schema parameters) to the model.",
+      "The model returns a function name + JSON arguments when relevant.",
+      "Your app executes the real function — the model never runs it.",
+      "Feed the result back so the model produces a final answer.",
+      "Bridges the LLM to real data/actions (APIs, DBs, etc.)."
+    ],
+    "real_world": "A weather assistant: the user asks 'What's it like in Pune?', the model returns a call to get_weather(city='Pune'), the app runs the real weather API, returns the data, and the model replies 'It's 31°C and sunny in Pune.' — grounded in live data, not guesswork.",
+    "followups": [
+      {
+        "q": "Does the model execute the function itself?",
+        "a": "No — it only returns a structured request (the function name and JSON arguments). Your application is responsible for executing the function and returning the result to the model."
+      },
+      {
+        "q": "How does the model know which function to call?",
+        "a": "You provide each function's name, description, and parameter schema. The model matches the user's intent to a function and produces arguments conforming to its schema."
+      },
+      {
+        "q": "What is function calling used for?",
+        "a": "Connecting LLMs to real data and actions — fetching info from APIs/databases, performing operations, and returning structured data — turning a text model into an app that can do things."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI function-calling code (needs an API key). The Python-runnable demo below simulates the call → execute → respond loop so the mechanism is verifiable here.",
+      "source": "# Function calling — let the model call your Python function with structured args.\nimport json\nfrom openai import OpenAI\n\nclient = OpenAI()\n\ndef get_weather(city: str) -> dict:\n    return {\"city\": city, \"temp_c\": 31, \"condition\": \"sunny\"}\n\ntools = [{\n    \"type\": \"function\",\n    \"function\": {\n        \"name\": \"get_weather\",\n        \"description\": \"Get current weather for a city\",\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\": {\"city\": {\"type\": \"string\"}},\n            \"required\": [\"city\"],\n        },\n    },\n}]\n\ndef ask(user_message: str) -> str:\n    messages = [{\"role\": \"user\", \"content\": user_message}]\n    first = client.chat.completions.create(model=\"gpt-4o-mini\", messages=messages, tools=tools)\n    msg = first.choices[0].message\n    if msg.tool_calls:\n        call = msg.tool_calls[0]\n        args = json.loads(call.function.arguments)\n        result = get_weather(**args)                 # YOU execute the function\n        messages += [msg, {\"role\": \"tool\", \"tool_call_id\": call.id, \"content\": json.dumps(result)}]\n        second = client.chat.completions.create(model=\"gpt-4o-mini\", messages=messages)\n        return second.choices[0].message.content     # model answers using the result\n    return msg.content",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Function calling — the model returns a structured call; your code executes it\nimport json\n# 1) You describe available functions (name, params) to the model.\nfunction_schema = {\n    \"name\": \"get_weather\",\n    \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"]},\n}\n# 2) The model decides to call it and returns JSON arguments (simulated here).\nmodel_function_call = {\"name\": \"get_weather\", \"arguments\": json.dumps({\"city\": \"Pune\"})}\n\n# 3) Your app actually runs the real function.\ndef get_weather(city): return {\"city\": city, \"temp_c\": 31, \"condition\": \"sunny\"}\n\nname = model_function_call[\"name\"]\nargs = json.loads(model_function_call[\"arguments\"])\nresult = get_weather(**args)\nprint(\"Model asked to call:\", name, \"with\", args)\nprint(\"Function result:\", result)\n# 4) You feed the result back to the model for a natural-language answer.\nfinal_answer = f\"It's {result['temp_c']}\\u00b0C and {result['condition']} in {result['city']}.\"\nprint(\"Final answer:\", final_answer)\nassert name == \"get_weather\" and result[\"temp_c\"] == 31\nprint(\"\\nFunction calling lets the LLM invoke your code with structured args to fetch data or take actions.\")\nprint(\"Flow: define schema -> model emits a call -> you execute -> return result -> model replies.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Model asked to call: get_weather with {'city': 'Pune'}\nFunction result: {'city': 'Pune', 'temp_c': 31, 'condition': 'sunny'}\nFinal answer: It's 31°C and sunny in Pune.\n\nFunction calling lets the LLM invoke your code with structured args to fetch data or take actions.\nFlow: define schema -> model emits a call -> you execute -> return result -> model replies.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

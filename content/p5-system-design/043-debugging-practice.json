@@ -1,0 +1,69 @@
+{
+  "id": "p5-043",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 43,
+  "orderInPhase": 43,
+  "slug": "debugging-practice",
+  "title": "Debugging practice",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "debugging",
+    "practice"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A function silently drops the last element of every list."
+  },
+  "sections": {
+    "simple_en": "Debugging is a systematic process, not random guessing. The method: reproduce the bug reliably with a minimal case, isolate the cause (binary-search the code or inputs to narrow where it goes wrong), form a hypothesis about the root cause, apply a fix, and verify with tests — including edge cases — so it stays fixed.\n\nCommon bug sources include off-by-one errors (loop bounds), boundary conditions (empty or single-element inputs), incorrect assumptions about data, and async timing. Useful tactics are logging and breakpoints, checking boundaries, and adding a regression test so the bug can't silently return. In interviews, narrate this method as you work.",
+    "hinglish": "Debugging ek systematic process hai, random guessing nahi. Method: bug ko ek minimal case se reliably reproduce karo, cause ko isolate karo (code ya inputs ko binary-search karke narrow karo kahan galat hota hai), root cause ke baare mein ek hypothesis banao, ek fix apply karo, aur tests se verify karo — edge cases samet — taaki ye fixed rahe.\n\nCommon bug sources mein off-by-one errors (loop bounds), boundary conditions (empty ya single-element inputs), data ke baare mein incorrect assumptions, aur async timing shamil hain. Useful tactics hain logging aur breakpoints, boundaries check karna, aur ek regression test add karna taaki bug silently wapas na aa sake. Interviews mein, kaam karte hue is method ko narrate karo.",
+    "keyPoints": [
+      "Systematic method: reproduce -> isolate -> hypothesize -> fix -> verify.",
+      "Reproduce with a minimal case; binary-search to isolate the cause.",
+      "Common bugs: off-by-one, boundary conditions, bad assumptions, async timing.",
+      "Tactics: logging, breakpoints, check boundaries.",
+      "Add a regression test so the bug can't silently return."
+    ],
+    "real_world": "A function silently drops the last element of every list. Instead of guessing, you reproduce it with [1,2,3,4] (gets 6, expected 10), isolate the loop bound (`< length - 1`), fix it, and add tests for empty and single-element lists — turning a vague bug report into a verified, permanent fix.",
+    "followups": [
+      {
+        "q": "What's a systematic debugging method?",
+        "a": "Reproduce the bug reliably, isolate the cause (narrow down the code/inputs, e.g., by binary search), form a hypothesis, apply a fix, then verify with tests including edge cases — and add a regression test."
+      },
+      {
+        "q": "What are common sources of bugs?",
+        "a": "Off-by-one errors in loops, boundary conditions (empty/single-element inputs), incorrect assumptions about data shape or order, mutation side effects, and async timing/race conditions."
+      },
+      {
+        "q": "Why add a regression test after fixing?",
+        "a": "To lock in the fix — the test fails if the bug ever reappears, catching regressions automatically. It turns a one-time fix into permanent protection and documents the expected behavior."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript contrasting a buggy off-by-one sum with the fix and verifying it against edge cases. The Node demo below shows the systematic reproduce-isolate-fix-verify method.",
+      "source": "// Debugging practice — a repeatable method, not guesswork.\n\n// The method:\n//   1) Reproduce the bug reliably with a minimal input.\n//   2) Isolate the cause (binary-search the code/inputs; comment out or bisect commits).\n//   3) Hypothesize what's wrong (e.g., an off-by-one in a loop bound).\n//   4) Fix the root cause (not just the symptom).\n//   5) Verify with tests, including edge cases, and add a regression test.\n\n// Example: an off-by-one bug and its fix.\nfunction sumBuggy(arr) { let s = 0; for (let i = 0; i < arr.length - 1; i++) s += arr[i]; return s; }\nfunction sum(arr) { let s = 0; for (const x of arr) s += x; return s; }\n\n// Tools & tactics: console.log / debugger breakpoints, the call stack, checking boundaries and\n// off-by-ones, reading error messages carefully, rubber-duck explaining, and writing a failing\n// test first. Edge cases (empty, single element, large input, nulls) catch most real bugs.\nmodule.exports = { sumBuggy, sum };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Debugging practice — reproduce, isolate, hypothesize, fix, verify (a systematic method)\n// A buggy function: off-by-one means the last element is skipped.\nfunction sumBuggy(arr) { let s = 0; for (let i = 0; i < arr.length - 1; i++) s += arr[i]; return s; }\nfunction sumFixed(arr) { let s = 0; for (let i = 0; i < arr.length; i++) s += arr[i]; return s; }\n\nconst data = [1, 2, 3, 4];\nconsole.log(\"buggy result:\", sumBuggy(data), \"(expected 10)\");   // 6 — last item dropped\nconsole.log(\"fixed result:\", sumFixed(data));                    // 10\n\n// Method: 1) reproduce with a minimal case, 2) isolate (binary-search the code/inputs),\n// 3) form a hypothesis (the loop bound looks wrong), 4) fix, 5) verify with a test.\nconst cases = [[[], 0], [[5], 5], [[1, 2, 3, 4], 10]];   // edge cases pin the behavior\nlet allPass = true;\nfor (const [input, expected] of cases) {\n  const got = sumFixed(input);\n  console.log(`sum(${JSON.stringify(input)}) = ${got} (expected ${expected})`);\n  if (got !== expected) allPass = false;\n}\nconsole.assert(sumBuggy(data) === 6, \"the bug drops the last element\");\nconsole.assert(allPass, \"the fix passes all edge cases including empty and single-element\");\nconsole.log(\"Debugging method: reproduce reliably, isolate the cause, hypothesize, fix, then verify with tests.\");\nconsole.log(\"Tools/tactics: console/breakpoints, binary search the code, check boundaries/off-by-ones, and add a regression test.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "buggy result: 6 (expected 10)\nfixed result: 10\nsum([]) = 0 (expected 0)\nsum([5]) = 5 (expected 5)\nsum([1,2,3,4]) = 10 (expected 10)\nDebugging method: reproduce reliably, isolate the cause, hypothesize, fix, then verify with tests.\nTools/tactics: console/breakpoints, binary search the code, check boundaries/off-by-ones, and add a regression test.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

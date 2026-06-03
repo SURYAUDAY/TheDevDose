@@ -1,0 +1,69 @@
+{
+  "id": "p4-006",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 6,
+  "orderInPhase": 6,
+  "slug": "ai-memory",
+  "title": "AI memory",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "ai",
+    "memory"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A chatbot remembers your name across a session not because the model stores it, but because the app keeps the conversation and resends earlier turns."
+  },
+  "sections": {
+    "simple_en": "LLM API calls are stateless: the model remembers nothing between requests. 'Memory' in an AI app is an illusion the application creates by storing the conversation and resending the relevant history with each new call, so the model has the context it needs to stay coherent.\n\nBecause history consumes tokens, long conversations need memory strategies: send the full history (simple, but grows), a sliding window of recent turns, a running summary of older turns, or vector-store memory that retrieves only relevant past messages. Choosing the right strategy balances coherence, cost, and the context-window limit.",
+    "hinglish": "LLM API calls stateless hain: model requests ke beech kuch yaad nahi rakhta. AI app mein 'memory' ek illusion hai jo application banati hai conversation store karke aur har nayi call ke saath relevant history dobara bhej kar, taaki model ke paas coherent rehne ke liye zaroori context ho.\n\nKyunki history tokens consume karti hai, lambi conversations ko memory strategies chahiye: poori history bhejo (simple, par badhti hai), recent turns ka sliding window, purane turns ka running summary, ya vector-store memory jo sirf relevant past messages retrieve kare. Sahi strategy choose karna coherence, cost aur context-window limit ko balance karta hai.",
+    "keyPoints": [
+      "LLM calls are stateless — no memory between requests.",
+      "Apps fake memory by storing and resending conversation history.",
+      "History costs tokens, so long chats need a memory strategy.",
+      "Strategies: full history, sliding window, summary memory, vector-store memory.",
+      "Choice trades off coherence vs cost vs context-window limits."
+    ],
+    "real_world": "A chatbot remembers your name across a session not because the model stores it, but because the app keeps the conversation and resends earlier turns. For very long chats it summarizes old messages and retrieves relevant snippets so memory survives within the token budget.",
+    "followups": [
+      {
+        "q": "Do LLMs have memory between API calls?",
+        "a": "No — each call is independent. The application provides 'memory' by persisting the conversation and including the needed history in the next request's messages."
+      },
+      {
+        "q": "What are common memory strategies?",
+        "a": "Full conversation history (simple but token-heavy), a sliding window of recent turns, summarizing older turns into a compact note, and vector-store memory that retrieves only relevant past messages."
+      },
+      {
+        "q": "Why not just always send the entire history?",
+        "a": "It grows unbounded, increasing cost and latency, and eventually overflows the context window. Windowing, summarizing, or retrieval keeps memory effective without exceeding limits."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": false,
+      "note": "Real OpenAI conversation code (needs an API key). The Python-runnable demo below shows stateless vs history-passing calls so memory behavior is verifiable here.",
+      "source": "# AI memory — LLMs are stateless; persist and resend conversation history yourself.\nfrom openai import OpenAI\n\nclient = OpenAI()\n\nclass Conversation:\n    def __init__(self, system: str):\n        self.messages = [{\"role\": \"system\", \"content\": system}]\n\n    def ask(self, user_message: str) -> str:\n        self.messages.append({\"role\": \"user\", \"content\": user_message})\n        response = client.chat.completions.create(\n            model=\"gpt-4o-mini\", messages=self.messages,\n        )\n        reply = response.choices[0].message.content\n        self.messages.append({\"role\": \"assistant\", \"content\": reply})  # remember the turn\n        return reply\n\n# Because the API has no memory between calls, the app stores history and resends it.\n# For long chats, use a sliding window, a running summary, or vector-store memory.\nchat = Conversation(\"You are a helpful assistant.\")\n# chat.ask(\"My name is Asha\"); chat.ask(\"What is my name?\")  # remembers across turns",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# AI memory — LLM calls are stateless; \"memory\" means resending prior turns\ndef llm(messages):  # toy stand-in: echoes awareness of history length\n    user_turns = [m for m in messages if m[\"role\"] == \"user\"]\n    last = user_turns[-1][\"content\"]\n    if \"my name is\" in last.lower():\n        return \"Nice to meet you!\"\n    if \"what is my name\" in last.lower():\n        # Can only know if the earlier turn is included in 'messages'\n        for m in messages:\n            if \"my name is\" in m[\"content\"].lower():\n                return \"Your name is \" + m[\"content\"].split(\"is\")[-1].strip()\n        return \"I don't know your name.\"\n    return \"ok\"\n\n# Stateless: each call without history forgets everything\nprint(\"No memory:\", llm([{\"role\": \"user\", \"content\": \"What is my name?\"}]))\n# With memory: prior turns are resent as context\nhistory = [\n    {\"role\": \"user\", \"content\": \"My name is Asha\"},\n    {\"role\": \"assistant\", \"content\": \"Nice to meet you!\"},\n    {\"role\": \"user\", \"content\": \"What is my name?\"},\n]\nprint(\"With memory:\", llm(history))\nassert llm(history) == \"Your name is Asha\"\nprint(\"LLMs have no built-in memory between calls; apps store conversation history and resend it.\")\nprint(\"Strategies: full history, sliding window, summary memory, or vector-store (retrieval) memory.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "No memory: I don't know your name.\nWith memory: Your name is Asha\nLLMs have no built-in memory between calls; apps store conversation history and resend it.\nStrategies: full history, sliding window, summary memory, or vector-store (retrieval) memory.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

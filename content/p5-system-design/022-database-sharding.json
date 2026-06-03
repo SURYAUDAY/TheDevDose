@@ -1,0 +1,69 @@
+{
+  "id": "p5-022",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 22,
+  "orderInPhase": 22,
+  "slug": "database-sharding",
+  "title": "Database sharding",
+  "difficulty": "advanced",
+  "tags": [
+    "p5",
+    "database",
+    "sharding"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A social app with billions of users shards its user table by a hash of the user id across many database servers."
+  },
+  "sections": {
+    "simple_en": "Sharding partitions data horizontally across multiple databases (shards) so no single machine holds everything. A shard key (hashed or range-based) decides which shard each record lives on — the same key always routes to the same shard, keeping lookups deterministic. This lets you scale writes and storage beyond what one machine can handle.\n\nThe trade-offs are real: cross-shard queries and joins become expensive, rebalancing data when you add shards is hard, and a poorly chosen key can create 'hot' shards that get most of the traffic. Good shard-key design (even distribution, matching query patterns) is the crux of sharding well.",
+    "hinglish": "Sharding data ko multiple databases (shards) ke across horizontally partition karti hai taaki koi single machine sab kuch na rakhe. Ek shard key (hashed ya range-based) decide karti hai ki har record kaun se shard par rehta hai — same key hamesha same shard par route karti hai, lookups ko deterministic rakhke. Ye aapko writes aur storage ko ek machine ki capacity se aage scale karne deta hai.\n\nTrade-offs real hain: cross-shard queries aur joins mehnge ho jaate hain, shards add karne par data rebalance karna mushkil hai, aur ek poorly chosen key 'hot' shards bana sakti hai jo zyaadatar traffic paate hain. Achhi shard-key design (even distribution, query patterns se match) sharding achhe se karne ka crux hai.",
+    "keyPoints": [
+      "Partitions data horizontally across shards; no single DB holds all.",
+      "A shard key (hash or range) maps each record to a shard.",
+      "Same key -> same shard: deterministic routing.",
+      "Scales writes and storage beyond one machine.",
+      "Costs: cross-shard queries/joins, rebalancing, hot keys."
+    ],
+    "real_world": "A social app with billions of users shards its user table by a hash of the user id across many database servers. Each server holds a slice of users, so reads and writes spread out — but a query joining users across shards is now expensive and must be designed around.",
+    "followups": [
+      {
+        "q": "What is a shard key and why does it matter?",
+        "a": "It's the field used to decide which shard a record lives on. A good shard key distributes data and traffic evenly and matches common query patterns; a poor one creates hot shards or forces expensive cross-shard queries."
+      },
+      {
+        "q": "What problems does sharding introduce?",
+        "a": "Cross-shard queries and joins are slow or complex, transactions spanning shards are hard, rebalancing when adding shards is tricky, and uneven keys create hot shards. Sharding solves scale but adds significant complexity."
+      },
+      {
+        "q": "Hash-based vs range-based sharding?",
+        "a": "Hash-based spreads keys evenly (good distribution, but range scans hit all shards). Range-based keeps ordered keys together (efficient range queries, but risks hotspots if recent data clusters on one shard)."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "The code file explains shard keys and strategies; the runnable JavaScript demo below hashes keys to shards and verifies deterministic routing and full placement.",
+      "source": "// Database sharding — partition data horizontally across multiple databases by a shard key.\nimport crypto from \"crypto\";\n\n// Pick a shard key (e.g., user_id) and a routing function mapping keys -> shards.\nfunction getShard(key, shardCount) {\n  const hash = crypto.createHash(\"md5\").update(String(key)).digest();\n  return hash.readUInt32BE(0) % shardCount;        // hash-based sharding\n}\n\nclass ShardedUserStore {\n  constructor(shards) { this.shards = shards; }    // shards: array of DB connections\n  shardFor(userId) { return this.shards[getShard(userId, this.shards.length)]; }\n  async getUser(userId) { return this.shardFor(userId).query(\"SELECT * FROM users WHERE id=$1\", [userId]); }\n  async saveUser(user)  { return this.shardFor(user.id).query(\"INSERT INTO users ...\", [user]); }\n}\n\n// Strategies: HASH-based (even distribution, but range queries hard) or RANGE-based\n// (good for ranges, but risks hot shards). Sharding scales writes/storage beyond one machine.\n// Costs: cross-shard queries/joins are hard, rebalancing is complex, and hot keys skew load.\n// Consistent hashing minimizes data movement when adding/removing shards.\nexport { ShardedUserStore, getShard };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Database sharding — split data across shards by a key so no single DB holds everything\nfunction hashShard(key, shardCount) {\n  let hash = 0;\n  for (const ch of String(key)) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;  // simple hash\n  return hash % shardCount;                       // map key -> shard index\n}\nconst SHARDS = 4;\nconst users = [\"alice\", \"bob\", \"carol\", \"dave\", \"eve\", \"frank\"];\nconst placement = {};\nfor (const u of users) {\n  const shard = hashShard(u, SHARDS);\n  (placement[shard] ||= []).push(u);\n}\nconsole.log(\"Shard placement:\", placement);\n// Same key always routes to the same shard (deterministic).\nconsole.log(\"'alice' -> shard\", hashShard(\"alice\", SHARDS), \"(stable across lookups)\");\nconsole.assert(hashShard(\"alice\", SHARDS) === hashShard(\"alice\", SHARDS), \"deterministic routing\");\nconsole.assert(Object.values(placement).flat().length === users.length, \"all users placed\");\nconsole.log(\"Sharding partitions data horizontally across DBs by a shard key (hash or range based).\");\nconsole.log(\"It scales writes/storage beyond one machine, but adds complexity: cross-shard queries, rebalancing, hot keys.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Shard placement: {\n  '0': [ 'alice', 'dave', 'eve' ],\n  '1': [ 'bob', 'carol' ],\n  '2': [ 'frank' ]\n}\n'alice' -> shard 0 (stable across lookups)\nSharding partitions data horizontally across DBs by a shard key (hash or range based).\nIt scales writes/storage beyond one machine, but adds complexity: cross-shard queries, rebalancing, hot keys.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

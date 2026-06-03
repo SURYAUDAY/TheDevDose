@@ -1,0 +1,65 @@
+{
+  "id": "p1a-046",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 46,
+  "orderInPhase": 46,
+  "slug": "array-some-every",
+  "title": "Array.some() / every()",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "array.some",
+    "every"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "blueprint",
+    "seedText": "Form validation: `fields.every(f => f.valid)` enables the submit button only when all fields pass, while `cart.some(item => item.outOfStock)` shows a warning…"
+  },
+  "sections": {
+    "simple_en": "`some` returns `true` if at least one element satisfies the callback (and short-circuits on the first true). `every` returns `true` only if all elements satisfy the callback (and short-circuits on the first false). Both return a boolean.\n\nThink of them as logical OR (`some`) and logical AND (`every`) across an array. On an empty array, `some` returns false and `every` returns true (vacuously). They're perfect for validation and existence checks.",
+    "hinglish": "`some` `true` deta hai agar kam se kam ek element callback ko satisfy kare (aur pehle true par short-circuit). `every` `true` tabhi deta hai jab saare elements satisfy karein (aur pehle false par short-circuit). Dono boolean return karte hain.\nInhe array par logical OR (`some`) aur logical AND (`every`) samjho. Empty array par `some` false aur `every` true (vacuously) deta hai. Ye validation aur existence checks ke liye perfect hain.",
+    "keyPoints": [
+      "`some` → true if ANY element passes (logical OR); short-circuits on first true.",
+      "`every` → true only if ALL elements pass (logical AND); short-circuits on first false.",
+      "Both return a boolean.",
+      "Empty array: `some` → false, `every` → true (vacuous truth).",
+      "Great for validation, permission checks, and existence tests."
+    ],
+    "real_world": "Form validation: `fields.every(f => f.valid)` enables the submit button only when all fields pass, while `cart.some(item => item.outOfStock)` shows a warning if any item can't be purchased.",
+    "followups": [
+      {
+        "q": "What do some and every return on an empty array?",
+        "a": "`some` returns false (no element satisfies the condition) and `every` returns true (vacuously — there's no element that fails)."
+      },
+      {
+        "q": "How do some/every relate to logical operators?",
+        "a": "`some` is like OR across the array (true if any element passes); `every` is like AND (true only if all pass). Both short-circuit just like `||` and `&&`."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// some / every for checks and validation.\n\nfunction hasNegative(nums) {\n  return nums.some((n) => n < 0);\n}\n\nfunction allPositive(nums) {\n  return nums.every((n) => n > 0);\n}\n\nfunction formValid(fields) {\n  return fields.every((f) => f.valid);\n}\n\nmodule.exports = { hasNegative, allPositive, formValid };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { hasNegative, allPositive, formValid } = require(\"./solution\");\n\nconsole.log(hasNegative([1, 2, -3])); // true\nconsole.log(allPositive([1, 2, 3]));  // true\nconsole.log(allPositive([1, -2, 3])); // false\nconsole.log([].every((x) => x > 0));  // true (vacuous)\n\nconsole.assert(hasNegative([1, -1]) === true, \"some finds negative\");\nconsole.assert(hasNegative([1, 2]) === false, \"some none negative\");\nconsole.assert(allPositive([1, 2, 3]) === true, \"every positive\");\nconsole.assert(formValid([{ valid: true }, { valid: false }]) === false, \"one invalid fails every\");\nconsole.log(\"some/every assertions passed.\");",
+      "expectedOutput": "true\ntrue\nfalse\ntrue\nsome/every assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

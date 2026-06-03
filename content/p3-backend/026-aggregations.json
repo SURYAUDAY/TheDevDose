@@ -1,0 +1,68 @@
+{
+  "id": "p3-026",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 26,
+  "orderInPhase": 26,
+  "slug": "aggregations",
+  "title": "Aggregations",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "aggregations"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A sales dashboard runs SELECT customer, SUM(amount) ..."
+  },
+  "sections": {
+    "simple_en": "Aggregations collapse many rows into summary values using functions like COUNT, SUM, AVG, MIN, and MAX. Combined with GROUP BY, they compute one result per group — total sales per customer, average order value per region, and so on — turning raw rows into the numbers a report needs.\n\nTwo filters matter: WHERE removes rows before grouping, while HAVING filters the groups after aggregation (e.g., only customers whose total spend exceeds a threshold). This lets the database do heavy summarization efficiently instead of pulling all rows into the application.",
+    "hinglish": "Aggregations bahut saari rows ko summary values mein collapse karte hain functions se — COUNT, SUM, AVG, MIN, MAX. GROUP BY ke saath ye har group ka ek result dete hain — per customer total sales, per region average order value — raw rows ko report ke numbers mein badal kar.\n\nDo filters important hain: WHERE grouping se pehle rows hatata hai, jabki HAVING aggregation ke baad groups filter karta hai (jaise sirf wo customers jinka total spend threshold se zyada ho). Isse DB heavy summarization efficiently karta hai, app mein saari rows laaye bina.",
+    "keyPoints": [
+      "Aggregate functions: COUNT, SUM, AVG, MIN, MAX collapse rows into one value.",
+      "GROUP BY produces one aggregated row per group.",
+      "WHERE filters rows before grouping; HAVING filters groups after.",
+      "Aggregating in the DB is far cheaper than pulling all rows into the app.",
+      "Combine with JOINs to summarize across related tables."
+    ],
+    "real_world": "A sales dashboard runs SELECT customer, SUM(amount) ... GROUP BY customer HAVING SUM(amount) > 100 to show top spenders. The database returns a handful of summary rows instead of thousands of individual orders, keeping the dashboard fast.",
+    "followups": [
+      {
+        "q": "Difference between WHERE and HAVING?",
+        "a": "WHERE filters individual rows before grouping; HAVING filters the grouped results after aggregation. You use HAVING to filter on an aggregate like SUM or COUNT."
+      },
+      {
+        "q": "What does COUNT(*) vs COUNT(column) count?",
+        "a": "COUNT(*) counts all rows in the group; COUNT(column) counts only rows where that column is non-NULL. The distinction matters when columns can be NULL."
+      },
+      {
+        "q": "Why aggregate in the database instead of in code?",
+        "a": "The DB summarizes efficiently using indexes and optimized engines, transferring only small result sets. Pulling all rows into the app wastes bandwidth, memory, and time."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real SQL aggregation via node-postgres (runs against PostgreSQL). The Node-runnable demo below implements GROUP BY / COUNT / SUM / AVG so the output is verifiable here.",
+      "source": "// Aggregations — GROUP BY with aggregate functions (SQL) via node-postgres.\nconst { Pool } = require(\"pg\");\nconst pool = new Pool();\n\nasync function salesByCustomer() {\n  const { rows } = await pool.query(`\n    SELECT\n      customer,\n      COUNT(*)        AS order_count,\n      SUM(amount)     AS total,\n      AVG(amount)     AS avg_order,\n      MAX(amount)     AS biggest\n    FROM orders\n    WHERE status = 'paid'\n    GROUP BY customer\n    HAVING SUM(amount) > 100   -- filter on the aggregate, not raw rows\n    ORDER BY total DESC\n  `);\n  return rows;\n}\n\n// COUNT/SUM/AVG/MIN/MAX collapse many rows into one per group.\n// WHERE filters rows BEFORE grouping; HAVING filters groups AFTER aggregation.\nmodule.exports = { salesByCustomer };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Aggregations — GROUP BY with COUNT, SUM, AVG over rows\nconst orders = [\n  { id: 1, customer: \"Asha\", amount: 120, status: \"paid\" },\n  { id: 2, customer: \"Asha\", amount: 80,  status: \"paid\" },\n  { id: 3, customer: \"Ravi\", amount: 200, status: \"paid\" },\n  { id: 4, customer: \"Ravi\", amount: 50,  status: \"refunded\" },\n];\nfunction groupBy(rows, key, aggs){\n  const groups = {};\n  for (const r of rows){\n    const k = r[key];\n    (groups[k] ||= []).push(r);\n  }\n  return Object.entries(groups).map(([k, rs]) => {\n    const out = { [key]: k };\n    for (const name in aggs) out[name] = aggs[name](rs);\n    return out;\n  });\n}\n// SELECT customer, COUNT(*), SUM(amount), AVG(amount) FROM orders GROUP BY customer\nconst result = groupBy(orders, \"customer\", {\n  count: (rs) => rs.length,\n  total: (rs) => rs.reduce((s, r) => s + r.amount, 0),\n  avg:   (rs) => Math.round(rs.reduce((s, r) => s + r.amount, 0) / rs.length),\n});\nresult.forEach(r => console.log(`${r.customer}: count=${r.count} total=${r.total} avg=${r.avg}`));\nconst grand = orders.reduce((s, o) => s + o.amount, 0);\nconsole.log(\"Grand total (SUM all):\", grand);\nconsole.assert(result.find(r => r.customer === \"Asha\").total === 200, \"Asha total 200\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Asha: count=2 total=200 avg=100\nRavi: count=2 total=250 avg=125\nGrand total (SUM all): 450\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

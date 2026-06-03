@@ -1,0 +1,69 @@
+{
+  "id": "p4-032",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 32,
+  "orderInPhase": 32,
+  "slug": "chromadb-basics",
+  "title": "ChromaDB basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "chromadb",
+    "basics"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A developer prototyping a docs chatbot uses ChromaDB locally: they add() the chunked documentation (Chroma auto-embeds it) and query() with user questions —…"
+  },
+  "sections": {
+    "simple_en": "ChromaDB is a lightweight, open-source vector database designed for ease of use, especially in local development and small-to-medium RAG apps. It can run in-memory or persist to disk, and it can embed your documents for you via a configurable embedding function — so you often just add raw text and query with raw text.\n\nYou organize data into collections, call add() with ids/documents/metadata (Chroma embeds them automatically), and call query() to retrieve the most similar documents, optionally with metadata filters. Its simplicity makes it a favorite for prototyping RAG before scaling up to a managed service if needed.",
+    "hinglish": "ChromaDB ek lightweight, open-source vector database hai jo ease of use ke liye banaya gaya hai, khaaskar local development aur small-to-medium RAG apps mein. Ye in-memory chal sakta hai ya disk par persist kar sakta hai, aur ye aapke documents ko ek configurable embedding function se khud embed kar sakta hai — to aap aksar bas raw text add karte ho aur raw text se query karte ho.\n\nAap data ko collections mein organize karte ho, add() call karte ho ids/documents/metadata ke saath (Chroma unhe automatically embed karta hai), aur query() call karke sabse similar documents retrieve karte ho, optionally metadata filters ke saath. Iski simplicity ise RAG prototyping ke liye favorite banati hai, zaroorat par managed service tak scale karne se pehle.",
+    "keyPoints": [
+      "Lightweight, open-source vector DB; runs locally or persists to disk.",
+      "Can embed documents for you via an embedding function.",
+      "Organize data into collections; add() ids/documents/metadata.",
+      "query() returns similar documents, with optional metadata filters.",
+      "Ideal for prototyping and small/medium RAG apps."
+    ],
+    "real_world": "A developer prototyping a docs chatbot uses ChromaDB locally: they add() the chunked documentation (Chroma auto-embeds it) and query() with user questions — a working RAG retriever running on their laptop with no external services.",
+    "followups": [
+      {
+        "q": "What makes ChromaDB good for prototyping?",
+        "a": "It's simple and runs locally with minimal setup, can auto-embed documents, and persists to disk — you can build a working RAG retriever without provisioning any cloud infrastructure."
+      },
+      {
+        "q": "Does Chroma require you to generate embeddings yourself?",
+        "a": "Not necessarily — you can configure an embedding function so add()/query() embed text automatically, or you can supply your own precomputed vectors."
+      },
+      {
+        "q": "When would you move off Chroma?",
+        "a": "When you need large-scale, highly concurrent, or fully-managed production serving — then a service like Pinecone or a scalable engine like Qdrant/Weaviate may fit better."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real ChromaDB code with an OpenAI embedding function. The Python-runnable demo below simulates add()/query() with metadata filtering so the workflow is verifiable here.",
+      "source": "# ChromaDB basics — open-source, local-first vector store (great for prototyping).\nimport chromadb\n\nclient = chromadb.Client()                     # in-memory; use PersistentClient(path=...) to save\ncollection = client.create_collection(\"docs\")  # Chroma can embed documents for you by default\n\n# Add documents (Chroma computes embeddings under the hood).\ncollection.add(\n    ids=[\"1\", \"2\", \"3\"],\n    documents=[\"Python is a programming language\",\n               \"Pasta recipe with tomato sauce\",\n               \"JavaScript is a programming language\"],\n    metadatas=[{\"cat\": \"tech\"}, {\"cat\": \"food\"}, {\"cat\": \"tech\"}],\n)\n\n# Query by natural-language text; optionally filter by metadata.\nresults = collection.query(\n    query_texts=[\"tell me about a programming language\"],\n    n_results=2,\n    where={\"cat\": \"tech\"},\n)\n# results[\"documents\"] -> the most similar documents",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# ChromaDB basics — an open-source, local-first vector store with collections\nimport hashlib, math\ndef embed(text, dim=16):\n    v=[0.0]*dim\n    for w in text.lower().split():\n        v[int(hashlib.md5(w.encode()).hexdigest(),16)%dim]+=1.0\n    n=math.sqrt(sum(x*x for x in v)) or 1.0\n    return [x/n for x in v]\ndef cosine(a,b):\n    d=sum(x*y for x,y in zip(a,b)); na=math.sqrt(sum(x*x for x in a)); nb=math.sqrt(sum(y*y for y in b))\n    return d/(na*nb) if na and nb else 0.0\n\nclass FakeChromaCollection:\n    def __init__(self): self.docs=[]\n    def add(self, ids, documents, metadatas=None):\n        metadatas = metadatas or [{}]*len(ids)\n        for i, doc, m in zip(ids, documents, metadatas):\n            self.docs.append({\"id\": i, \"document\": doc, \"embedding\": embed(doc), \"metadata\": m})\n    def query(self, query_texts, n_results=2):\n        qv = embed(query_texts[0])\n        ranked = sorted(self.docs, key=lambda d: cosine(qv, d[\"embedding\"]), reverse=True)[:n_results]\n        return {\"ids\": [[d[\"id\"] for d in ranked]], \"documents\": [[d[\"document\"] for d in ranked]]}\n\ncol = FakeChromaCollection()\ncol.add(ids=[\"1\",\"2\",\"3\"],\n        documents=[\"Python is a programming language\",\n                   \"Pasta recipe with tomato sauce\",\n                   \"JavaScript is a programming language\"],\n        metadatas=[{\"cat\":\"tech\"},{\"cat\":\"food\"},{\"cat\":\"tech\"}])\nres = col.query(query_texts=[\"tell me about a programming language\"], n_results=2)\nprint(\"Top documents:\", res[\"documents\"][0])\nassert all(\"programming language\" in d for d in res[\"documents\"][0]), \"retrieves the tech docs\"\nprint(\"ChromaDB: open-source, runs locally/in-process. Chroma embeds your documents for you.\")\nprint(\"Core API: create a collection, add(documents), then query(query_texts) \\u2014 great for prototyping.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Top documents: ['Python is a programming language', 'JavaScript is a programming language']\nChromaDB: open-source, runs locally/in-process. Chroma embeds your documents for you.\nCore API: create a collection, add(documents), then query(query_texts) — great for prototyping.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

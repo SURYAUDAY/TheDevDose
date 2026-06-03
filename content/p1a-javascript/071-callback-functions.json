@@ -1,0 +1,65 @@
+{
+  "id": "p1a-071",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 71,
+  "orderInPhase": 71,
+  "slug": "callback-functions",
+  "title": "Callback Functions",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "callback",
+    "functions"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Reading a file in Node: `fs.readFile(path, (err, data) => { if (err) ...; else use(data); })`."
+  },
+  "sections": {
+    "simple_en": "A callback is a function passed as an argument to another function, to be called ('called back') later — either synchronously (like in `map`) or asynchronously (like after a timer or network request completes).\n\nCallbacks were the original way to handle asynchronous results in JavaScript. The common Node convention is 'error-first' callbacks: `callback(error, result)`, where you check the error before using the result. Heavy nesting of callbacks leads to 'callback hell' (next topic).",
+    "hinglish": "Callback ek function hai jo doosre function ko argument ke roop me pass hota hai, taaki baad me ('call back') call ho — ya to synchronously (jaise `map` me) ya asynchronously (jaise timer ya network request complete hone ke baad).\nCallbacks JavaScript me asynchronous results handle karne ka original tarika the. Node ka common convention 'error-first' callbacks hai: `callback(error, result)`, jisme result use karne se pehle error check karte ho. Callbacks ki bhaari nesting 'callback hell' banati hai (agla topic).",
+    "keyPoints": [
+      "A callback is a function passed to another function to run later.",
+      "Can be synchronous (map/filter) or asynchronous (timers, I/O).",
+      "Node convention: error-first callbacks `(err, result)`.",
+      "Always handle the error before using the result.",
+      "Deep nesting of async callbacks causes 'callback hell'."
+    ],
+    "real_world": "Reading a file in Node: `fs.readFile(path, (err, data) => { if (err) ...; else use(data); })`. The callback runs once the OS finishes reading, without blocking other work in the meantime.",
+    "followups": [
+      {
+        "q": "What is an error-first callback?",
+        "a": "A Node convention where the callback's first argument is an error (or null). You check `if (err)` first and only use the second argument (the result) when there's no error."
+      },
+      {
+        "q": "Are all callbacks asynchronous?",
+        "a": "No. Callbacks passed to `map`, `filter`, `forEach`, or `sort` run synchronously. Callbacks for timers, I/O, or network requests run asynchronously later."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Synchronous callback + async (error-first) callback.\n\nfunction processArray(arr, callback) {\n  return arr.map((item, i) => callback(item, i)); // sync callback\n}\n\n// Simulated async op with an error-first callback\nfunction fetchUser(id, callback) {\n  setTimeout(() => {\n    if (id <= 0) return callback(new Error(\"invalid id\"));\n    callback(null, { id, name: \"User\" + id });\n  }, 0);\n}\n\nmodule.exports = { processArray, fetchUser };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { processArray, fetchUser } = require(\"./solution\");\n\nconsole.log(processArray([1, 2, 3], (n) => n * 2)); // [2,4,6]\n\nfetchUser(5, (err, user) => {\n  console.log(\"success:\", user); // { id:5, name:'User5' }\n  console.assert(!err && user.id === 5, \"error-first success path\");\n\n  fetchUser(-1, (err2) => {\n    console.log(\"error:\", err2.message); // invalid id\n    console.assert(err2 instanceof Error, \"error-first error path\");\n    console.log(\"callback assertions passed.\");\n  });\n});\n\nconsole.assert(JSON.stringify(processArray([1,2,3], n => n*2)) === \"[2,4,6]\", \"sync callback\");",
+      "expectedOutput": "[ 2, 4, 6 ]\nsuccess: { id: 5, name: 'User5' }\nerror: invalid id\ncallback assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

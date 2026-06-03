@@ -1,0 +1,70 @@
+{
+  "id": "p3-050",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 50,
+  "orderInPhase": 50,
+  "slug": "api-key-protection",
+  "title": "API key protection",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "api",
+    "key",
+    "protection"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "lock",
+    "seedText": "A weather API issues each customer a key."
+  },
+  "sections": {
+    "simple_en": "API keys authenticate machine-to-machine or third-party access to your API. The client sends a key (best in a header like x-api-key, never in the URL), and middleware validates it before allowing the request. Keys identify and authorize a caller, and let you scope, rate-limit, and revoke access per client.\n\nProtect them like passwords: send only over HTTPS, store hashes rather than raw keys, compare in constant time to avoid timing attacks, scope each key to least privilege, rotate them periodically, and rate-limit per key. Never hard-code keys in client-side code, where anyone can read them.",
+    "hinglish": "API keys machine-to-machine ya third-party access ko authenticate karti hain. Client ek key bhejta hai (best ek header mein jaise x-api-key, kabhi URL mein nahi), aur middleware request allow karne se pehle use validate karta hai. Keys caller ko identify aur authorize karti hain, aur per client scope, rate-limit, revoke karne deti hain.\n\nInhe passwords ki tarah protect karo: sirf HTTPS par bhejo, raw keys ke bajaye hashes store karo, timing attacks se bachne ke liye constant time mein compare karo, har key ko least privilege tak scope karo, periodically rotate karo, aur per key rate-limit karo. Keys kabhi client-side code mein hard-code mat karo, jahan koi bhi padh sake.",
+    "keyPoints": [
+      "Authenticate machine/third-party access; send the key in a header, not the URL.",
+      "Validate via middleware before handling the request.",
+      "Store hashed keys (like passwords); compare in constant time.",
+      "Scope to least privilege, rate-limit per key, and rotate periodically.",
+      "Send only over HTTPS; never hard-code keys in client-side code."
+    ],
+    "real_world": "A weather API issues each customer a key. An Express middleware on /api hashes the incoming x-api-key, checks it against stored hashes with a constant-time compare, and rejects missing or invalid keys with 401/403 — while per-key rate limits prevent any one customer from overloading the service.",
+    "followups": [
+      {
+        "q": "Why send the API key in a header rather than the URL?",
+        "a": "URLs get logged in servers, proxies, and browser history, leaking the key. A header keeps it out of logs and caches (still, always use HTTPS)."
+      },
+      {
+        "q": "Why store hashed API keys?",
+        "a": "So a database leak doesn't expose usable keys — just like passwords. You hash the incoming key and compare to the stored hash, ideally in constant time."
+      },
+      {
+        "q": "API keys vs JWTs — when to use which?",
+        "a": "API keys suit server-to-server/third-party access and are simple to issue and revoke per client. JWTs carry user identity/claims for end-user auth. They solve different problems and are sometimes combined."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express + crypto API-key middleware code. The Node-runnable demo below verifies key validation with a constant-time compare so the behavior is verifiable here.",
+      "source": "// API key protection — authenticate machine clients with an API key.\nconst express = require(\"express\");\nconst crypto = require(\"crypto\");\nconst app = express();\n\n// Store HASHES of keys (like passwords), not the raw keys.\nconst validKeyHashes = new Set([\n  crypto.createHash(\"sha256\").update(process.env.API_KEY_1 || \"\").digest(\"hex\"),\n]);\n\nfunction apiKeyAuth(req, res, next) {\n  const key = req.header(\"x-api-key\");\n  if (!key) return res.status(401).json({ error: \"API key required\" });\n\n  const hash = crypto.createHash(\"sha256\").update(key).digest(\"hex\");\n  if (!validKeyHashes.has(hash)) return res.status(403).json({ error: \"Invalid API key\" });\n\n  next();\n}\n\napp.use(\"/api\", apiKeyAuth); // protect all /api routes\napp.get(\"/api/data\", (req, res) => res.json({ data: [1, 2, 3] }));\n\napp.listen(3000);\n// Best practices: send keys only over HTTPS, in a header (not the URL),\n// scope and rotate them, rate-limit per key, and store hashed, not plaintext.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// API key protection — validate a key from a header using constant-time compare\nconst crypto = require(\"crypto\");\nconst VALID_KEYS = new Set([\"key_live_abc123\", \"key_live_def456\"]);\n\nfunction safeEqual(a, b){\n  const ab = Buffer.from(a), bb = Buffer.from(b);\n  if (ab.length !== bb.length) return false;\n  return crypto.timingSafeEqual(ab, bb);            // avoids timing side-channels\n}\nfunction apiKeyMiddleware(headers){\n  const key = headers[\"x-api-key\"];\n  if (!key) return { status: 401, error: \"API key required\" };\n  const matched = [...VALID_KEYS].some(valid => safeEqual(key, valid));\n  if (!matched) return { status: 403, error: \"Invalid API key\" };\n  return { status: 200, ok: true };\n}\nconsole.log(\"No key:    \", JSON.stringify(apiKeyMiddleware({})));\nconsole.log(\"Bad key:   \", JSON.stringify(apiKeyMiddleware({ \"x-api-key\": \"key_live_wrong\" })));\nconsole.log(\"Valid key: \", JSON.stringify(apiKeyMiddleware({ \"x-api-key\": \"key_live_abc123\" })));\nconsole.assert(apiKeyMiddleware({ \"x-api-key\": \"key_live_abc123\" }).ok, \"valid key accepted\");\nconsole.assert(apiKeyMiddleware({}).status === 401, \"missing key rejected\");\nconsole.log(\"Send keys over HTTPS only; rotate them; never hard-code in clients.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "No key:     {\"status\":401,\"error\":\"API key required\"}\nBad key:    {\"status\":403,\"error\":\"Invalid API key\"}\nValid key:  {\"status\":200,\"ok\":true}\nSend keys over HTTPS only; rotate them; never hard-code in clients.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "p3-072",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 72,
+  "orderInPhase": 72,
+  "slug": "server-sent-events-sse-streaming",
+  "title": "Server-Sent Events (SSE) / streaming",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "server-sent",
+    "events",
+    "sse",
+    "streaming"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A dashboard streams live stock prices: the server keeps an SSE connection open and writes a new 'data:' event whenever a price changes."
+  },
+  "sections": {
+    "simple_en": "Server-Sent Events (SSE) let a server push a continuous, one-way stream of updates to the browser over a single long-lived HTTP response. The browser's EventSource API consumes it, and the format is simple text frames ('data:' lines ended by a blank line). SSE auto-reconnects and can resume using a last-event id.\n\nIt's ideal for one-directional realtime needs — live notifications, activity feeds, progress updates, streaming AI token output — where the client only receives. Compared to WebSockets, SSE is simpler, works over plain HTTP/HTTPS (and through most proxies), but is server-to-client only and text-based; choose WebSockets when you need two-way communication.",
+    "hinglish": "Server-Sent Events (SSE) server ko browser tak ek continuous, one-way stream of updates push karne dete hain ek single long-lived HTTP response par. Browser ka EventSource API ise consume karta hai, aur format simple text frames hai ('data:' lines blank line se end). SSE auto-reconnect karta hai aur last-event id se resume kar sakta hai.\n\nYe one-directional realtime needs ke liye ideal hai — live notifications, activity feeds, progress updates, streaming AI token output — jahan client sirf receive karta hai. WebSockets ke comparison mein SSE simpler hai, plain HTTP/HTTPS par (aur zyadatar proxies se) chalta hai, par server-to-client only aur text-based hai; two-way chahiye to WebSockets choose karo.",
+    "keyPoints": [
+      "Server pushes a one-way event stream over a single HTTP response.",
+      "Consumed by the browser's EventSource API; simple text frames.",
+      "Auto-reconnects; can resume via Last-Event-ID.",
+      "Great for notifications, feeds, progress, streaming AI tokens.",
+      "Simpler than WebSockets but one-way and text-only."
+    ],
+    "real_world": "A dashboard streams live stock prices: the server keeps an SSE connection open and writes a new 'data:' event whenever a price changes. The browser's EventSource updates the UI instantly, reconnecting automatically if the connection drops — all without WebSockets or polling.",
+    "followups": [
+      {
+        "q": "SSE vs WebSockets?",
+        "a": "SSE is one-way (server->client), text-based, runs over plain HTTP, and auto-reconnects — simpler for push-only use cases. WebSockets are full-duplex (two-way) and binary-capable — use them when the client also needs to send messages frequently."
+      },
+      {
+        "q": "How does the client consume SSE?",
+        "a": "With the browser's EventSource API: new EventSource('/events') and handlers like onmessage. It manages the connection and reconnection for you."
+      },
+      {
+        "q": "Where does SSE shine?",
+        "a": "One-directional realtime updates — notifications, live feeds, progress bars, and streaming generated text (e.g., AI responses token by token) — where simplicity and HTTP compatibility matter."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Express SSE code. The Node-runnable demo below builds valid SSE wire frames so the event format is verifiable here.",
+      "source": "// Server-Sent Events (SSE) — stream one-way updates over a single HTTP response.\nconst express = require(\"express\");\nconst app = express();\n\napp.get(\"/events\", (req, res) => {\n  res.set({\n    \"Content-Type\": \"text/event-stream\",\n    \"Cache-Control\": \"no-cache\",\n    Connection: \"keep-alive\",\n  });\n  res.flushHeaders();\n\n  // Push an event every second.\n  let id = 0;\n  const timer = setInterval(() => {\n    id++;\n    res.write(`id: ${id}\\n`);\n    res.write(`event: tick\\n`);\n    res.write(`data: ${JSON.stringify({ time: Date.now() })}\\n\\n`); // blank line ends event\n  }, 1000);\n\n  // Clean up when the client disconnects.\n  req.on(\"close\", () => clearInterval(timer));\n});\n\napp.listen(3000);\n// Browser: const es = new EventSource('/events'); es.onmessage = ...\n// SSE is one-way (server->client), auto-reconnects, and works over plain HTTP.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Server-Sent Events (SSE) — server pushes a one-way stream over HTTP\nfunction formatSSE(event){\n  let out = \"\";\n  if (event.id) out += `id: ${event.id}\\n`;\n  if (event.event) out += `event: ${event.event}\\n`;\n  out += `data: ${JSON.stringify(event.data)}\\n\\n`;     // blank line ends the event\n  return out;\n}\n// Simulate a server emitting a stream of events to a connected client:\nconst stream = [];\nfunction pushEvent(e){ stream.push(formatSSE(e)); }\npushEvent({ id: 1, event: \"price\", data: { symbol: \"ACME\", price: 100 } });\npushEvent({ id: 2, event: \"price\", data: { symbol: \"ACME\", price: 101 } });\npushEvent({ id: 3, event: \"done\", data: \"stream complete\" });\nconsole.log(\"SSE wire format:\\n\" + stream.join(\"\"));\nconsole.assert(stream[0].startsWith(\"id: 1\") && stream[0].includes(\"data:\"), \"valid SSE frame\");\nconsole.log(\"SSE is one-way (server->client), auto-reconnects, and rides on plain HTTP.\");\nconsole.log(\"Great for live feeds, notifications, progress \\u2014 use WebSockets when you need two-way.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "SSE wire format:\nid: 1\nevent: price\ndata: {\"symbol\":\"ACME\",\"price\":100}\n\nid: 2\nevent: price\ndata: {\"symbol\":\"ACME\",\"price\":101}\n\nid: 3\nevent: done\ndata: \"stream complete\"\n\n\nSSE is one-way (server->client), auto-reconnects, and rides on plain HTTP.\nGreat for live feeds, notifications, progress — use WebSockets when you need two-way.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_51-75.docx.md"
+  }
+}

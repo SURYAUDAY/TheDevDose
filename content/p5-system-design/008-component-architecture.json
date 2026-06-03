@@ -1,0 +1,69 @@
+{
+  "id": "p5-008",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 8,
+  "orderInPhase": 8,
+  "slug": "component-architecture",
+  "title": "Component architecture",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "component",
+    "architecture"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "container",
+    "seedText": "A shopping site reuses one presentational ProductCard everywhere — search, wishlist, recommendations — while a container fetches the data and passes it in."
+  },
+  "sections": {
+    "simple_en": "Component architecture means building UIs from small, reusable, single-responsibility pieces that compose into larger screens. Each component should do one thing well, expose a clear interface (props), and be easy to test and reuse. This keeps a growing UI maintainable instead of becoming a tangle.\n\nA common pattern separates container components (which own state, data fetching, and logic) from presentational components (which are pure: given props, they render UI with no side effects). This separation improves testability and reuse — presentational pieces work anywhere, and logic lives in one predictable place.",
+    "hinglish": "Component architecture ka matlab hai UIs ko chhote, reusable, single-responsibility pieces se banana jo bade screens mein compose hote hain. Har component ko ek cheez achhe se karni chahiye, ek clear interface (props) expose karna chahiye, aur test aur reuse karna aasaan hona chahiye. Ye ek growing UI ko maintainable rakhta hai ek tangle banne ke bajaye.\n\nEk common pattern container components (jo state, data fetching, aur logic own karte hain) ko presentational components (jo pure hain: props diye, wo bina side effects ke UI render karte hain) se separate karta hai. Ye separation testability aur reuse improve karta hai — presentational pieces kahin bhi kaam karte hain, aur logic ek predictable jagah rehta hai.",
+    "keyPoints": [
+      "Build UIs from small, reusable, single-responsibility components.",
+      "Each component does one thing and exposes a clear props interface.",
+      "Container components own state/data/logic.",
+      "Presentational components are pure: props in -> UI out.",
+      "This separation improves testability, reuse, and maintainability."
+    ],
+    "real_world": "A shopping site reuses one presentational ProductCard everywhere — search, wishlist, recommendations — while a container fetches the data and passes it in. The card never changes; only the container that feeds it does, so the UI stays consistent and easy to maintain.",
+    "followups": [
+      {
+        "q": "What is single responsibility for a component?",
+        "a": "A component should have one clear job — render a button, manage a form's state, or fetch a list — not several. Small, focused components are easier to understand, test, reuse, and change without side effects."
+      },
+      {
+        "q": "Container vs presentational components?",
+        "a": "Container components handle state, data fetching, and logic; presentational components are pure and just render based on props. Separating them keeps rendering reusable and logic centralized and testable."
+      },
+      {
+        "q": "How do you decide when to split a component?",
+        "a": "Split when it does more than one thing, grows hard to read, or contains a reusable piece. Watch for repeated markup, mixed concerns (data + presentation), or props lists that signal it's doing too much."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript modeling container vs presentational components in plain JS (no framework needed). The Node demo below builds a counter container and verifies it holds state.",
+      "source": "// Component architecture — small, composable, single-responsibility components (React).\nimport { useState } from \"react\";\n\n// Presentational: pure, receives data + callbacks via props, no own state/logic.\nfunction Button({ label, onClick }) {\n  return <button onClick={onClick}>{label}</button>;\n}\n\n// Presentational list, reused anywhere.\nfunction UserList({ users }) {\n  return <ul>{users.map((u) => <li key={u.id}>{u.name}</li>)}</ul>;\n}\n\n// Container: owns state and behavior, composes presentational components.\nfunction UsersPage() {\n  const [users, setUsers] = useState([]);\n  const addUser = () => setUsers((prev) => [...prev, { id: prev.length + 1, name: \"New\" }]);\n  return (\n    <div>\n      <UserList users={users} />\n      <Button label=\"Add user\" onClick={addUser} />\n    </div>\n  );\n}\n\n// Principles: single responsibility, composition over inheritance, props-down/events-up,\n// and separating \"smart\" containers (state/logic) from \"dumb\" presentational components.\nexport default UsersPage;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Component architecture — compose UIs from small, single-responsibility components\n// Container (logic/data) vs Presentational (pure render) separation, simulated in plain JS.\nfunction PresentationalButton({ label, onClick }) {        // pure: props in -> UI out\n  return { type: \"button\", label, onClick };\n}\nfunction CounterContainer() {                              // owns state + behavior\n  let count = 0;\n  const increment = () => ++count;\n  return {\n    render: () => PresentationalButton({ label: `Count: ${count}`, onClick: increment }),\n    increment,\n  };\n}\nconst counter = CounterContainer();\nconsole.log(\"Initial render:\", counter.render());\ncounter.increment(); counter.increment();\nconsole.log(\"After 2 increments:\", counter.render());\nconsole.assert(counter.render().label === \"Count: 2\", \"container holds state\");\nconsole.assert(typeof PresentationalButton({ label: \"x\", onClick: () => {} }).onClick === \"function\");\nconsole.log(\"Component architecture: small, reusable, single-responsibility pieces composed into UIs.\");\nconsole.log(\"Separate container (state/logic) from presentational (pure render) for testability and reuse.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Initial render: { type: 'button', label: 'Count: 0', onClick: [Function: increment] }\nAfter 2 increments: { type: 'button', label: 'Count: 2', onClick: [Function: increment] }\nComponent architecture: small, reusable, single-responsibility pieces composed into UIs.\nSeparate container (state/logic) from presentational (pure render) for testability and reuse.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

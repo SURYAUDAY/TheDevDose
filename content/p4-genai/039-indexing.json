@@ -1,0 +1,68 @@
+{
+  "id": "p4-039",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 39,
+  "orderInPhase": 39,
+  "slug": "indexing",
+  "title": "Indexing",
+  "difficulty": "advanced",
+  "tags": [
+    "p4",
+    "indexing"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "A docs search builds a FAISS index from the embedded chunks and saves it to disk."
+  },
+  "sections": {
+    "simple_en": "Indexing is the process of embedding all your chunks once and storing the vectors in a structure built for fast similarity search. It decouples the expensive embedding step (done up front) from cheap, repeated retrieval — so queries don't re-embed the corpus every time.\n\nSmall setups can store vectors in a simple list and scan them, but production indexes use ANN structures (HNSW, IVF) so search stays fast as the corpus grows to millions of vectors. Indexes are typically persisted to disk or a managed service, and you re-index when documents change. Good indexing is what makes retrieval scalable.",
+    "hinglish": "Indexing wo process hai jisme aap apne saare chunks ko ek baar embed karke vectors ko ek structure mein store karte ho jo fast similarity search ke liye bana ho. Ye expensive embedding step (pehle se kiya) ko cheap, repeated retrieval se decouple karta hai — to queries har baar corpus dobara embed nahi karti.\n\nChhote setups vectors ko ek simple list mein store karke scan kar sakte hain, par production indexes ANN structures (HNSW, IVF) use karte hain taaki corpus millions vectors tak badhne par bhi search fast rahe. Indexes aksar disk ya managed service par persist hote hain, aur documents badalne par aap re-index karte ho. Achhi indexing hi retrieval ko scalable banati hai.",
+    "keyPoints": [
+      "Embed all chunks once and store vectors for fast search.",
+      "Decouples expensive embedding from cheap, repeated retrieval.",
+      "Production uses ANN indexes (HNSW, IVF) to scale to millions.",
+      "Persist the index to disk or a managed service.",
+      "Re-index when documents change; good indexing makes retrieval scalable."
+    ],
+    "real_world": "A docs search builds a FAISS index from the embedded chunks and saves it to disk. The app loads that index on startup and serves thousands of queries without re-embedding anything — only re-indexing nightly when the documentation is updated.",
+    "followups": [
+      {
+        "q": "What does indexing accomplish?",
+        "a": "It precomputes and stores chunk embeddings in a search-optimized structure, so retrieval is fast and repeatable without re-embedding the corpus on every query."
+      },
+      {
+        "q": "Why use an ANN index?",
+        "a": "Brute-force search is linear in the number of vectors. ANN indexes (HNSW, IVF) give sub-linear search, keeping retrieval fast as the corpus scales to millions of vectors."
+      },
+      {
+        "q": "When do you re-index?",
+        "a": "When the underlying documents change — added, updated, or removed — so the index reflects current content. Many systems re-index incrementally or on a schedule."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real LangChain + FAISS indexing code. The Python-runnable demo below builds a reusable vector index over chunks so the embed-once/query-many idea is verifiable here.",
+      "source": "# Indexing — embed all chunks once and store them for fast repeated retrieval.\nfrom langchain_openai import OpenAIEmbeddings\nfrom langchain_community.vectorstores import FAISS\n\nembeddings = OpenAIEmbeddings(model=\"text-embedding-3-small\")\n\n# Build the index from chunks (embeds them and stores vectors + text + metadata).\n# vectorstore = FAISS.from_documents(chunks, embeddings)\n\n# Persist so you don't re-embed every run (re-embedding is the expensive part):\n# vectorstore.save_local(\"faiss_index\")\n# vectorstore = FAISS.load_local(\"faiss_index\", embeddings, allow_dangerous_deserialization=True)\n\n# Indexing is a one-time (or incremental) preprocessing step. At query time you reuse\n# the index; for large corpora an ANN index (HNSW/IVF) keeps search fast as data grows.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Indexing — precompute embeddings + a lookup structure so retrieval is fast\nimport hashlib, math\ndef embed(text, dim=8):\n    v=[0.0]*dim\n    for w in text.lower().split():\n        v[int(hashlib.md5(w.encode()).hexdigest(),16)%dim]+=1.0\n    n=math.sqrt(sum(x*x for x in v)) or 1.0\n    return [x/n for x in v]\n\nclass VectorIndex:\n    def __init__(self): self.ids=[]; self.vectors=[]; self.texts=[]\n    def build(self, documents):\n        # One-time: embed every chunk and store it for fast repeated queries.\n        for i, doc in enumerate(documents):\n            self.ids.append(i); self.texts.append(doc); self.vectors.append(embed(doc))\n        return len(self.vectors)\n    def stats(self):\n        return {\"vectors\": len(self.vectors), \"dim\": len(self.vectors[0]) if self.vectors else 0}\n\ndocs = [\"the cat sat\", \"the dog ran\", \"machine learning models\", \"deep neural networks\"]\nidx = VectorIndex()\nn = idx.build(docs)\nprint(\"Indexed\", n, \"documents ->\", idx.stats())\nassert idx.stats()[\"vectors\"] == 4 and idx.stats()[\"dim\"] == 8\nprint(\"Indexing = embedding all chunks up front and storing them (often in an ANN structure).\")\nprint(\"You index once; then every query reuses the index instead of re-embedding the corpus.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Indexed 4 documents -> {'vectors': 4, 'dim': 8}\nIndexing = embedding all chunks up front and storing them (often in an ANN structure).\nYou index once; then every query reuses the index instead of re-embedding the corpus.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_26-50.docx.md"
+  }
+}

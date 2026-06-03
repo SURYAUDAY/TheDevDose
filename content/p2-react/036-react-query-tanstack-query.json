@@ -1,0 +1,70 @@
+{
+  "id": "p2-036",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 36,
+  "orderInPhase": 36,
+  "slug": "react-query-tanstack-query",
+  "title": "React Query / TanStack Query",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "react",
+    "query",
+    "tanstack"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "A product page and a mini-cart both need the same product data."
+  },
+  "sections": {
+    "simple_en": "React Query (TanStack Query) manages server state — data that lives on a backend — separately from UI state. With useQuery you provide a query key and a fetch function, and the library handles caching, deduplication, background refetching, loading and error states, and stale-while-revalidate out of the box.\n\nIt dramatically reduces boilerplate compared to manual useEffect + useState fetching, and keeps data fresh automatically. The query key uniquely identifies cached data, so the same key shared across components reuses one cached result.",
+    "hinglish": "React Query (TanStack Query) server state — backend par rehne wala data — ko UI state se alag manage karta hai. useQuery mein aap ek query key aur fetch function dete ho, aur library caching, deduplication, background refetch, loading/error states sab khud handle karti hai.\n\nManual useEffect + useState fetching ke comparison mein ye bahut kam boilerplate leta hai aur data automatically fresh rakhta hai. Query key cached data ko uniquely identify karti hai, isliye same key wale components ek hi result reuse karte hain.",
+    "keyPoints": [
+      "Purpose-built for server state: caching, refetching, dedup, loading/error handling.",
+      "useQuery({ queryKey, queryFn }) returns data, isLoading, isError, and more.",
+      "queryKey identifies cached data; same key = shared cache, automatic dedup.",
+      "Stale-while-revalidate: show cached data instantly, refetch in the background.",
+      "Replaces hand-rolled useEffect fetching and its many edge cases."
+    ],
+    "real_world": "A product page and a mini-cart both need the same product data. With React Query keyed by ['product', id], they share one cached fetch — no duplicate request — and both update together when the data refetches in the background.",
+    "followups": [
+      {
+        "q": "What problem does React Query solve over useEffect fetching?",
+        "a": "It handles caching, deduplication, background refetch, retries, and loading/error states automatically — eliminating the boilerplate and bugs of manual data fetching."
+      },
+      {
+        "q": "What is the query key for?",
+        "a": "It uniquely identifies a piece of server data in the cache. The same key dedupes requests and shares cached results across components."
+      },
+      {
+        "q": "What is stale-while-revalidate?",
+        "a": "React Query shows cached (possibly stale) data immediately for a snappy UI, then refetches in the background and updates when fresh data arrives."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// React Query: fetch, cache, and auto-refetch server state with useQuery.\nimport React from \"react\";\nimport { useQuery } from \"@tanstack/react-query\";\n\nasync function fetchUser(id) {\n  const res = await fetch(`/api/users/${id}`);\n  if (!res.ok) throw new Error(\"Network error\");\n  return res.json();\n}\n\nexport default function Profile({ id }) {\n  const { data, isLoading, isError, error } = useQuery({\n    queryKey: [\"user\", id],        // cache key (dedupes + caches by id)\n    queryFn: () => fetchUser(id),\n    staleTime: 5000,               // treat data as fresh for 5s (no refetch)\n  });\n\n  if (isLoading) return <p>Loading…</p>;\n  if (isError) return <p>Error: {error.message}</p>;\n  return <h2>{data.name}</h2>;\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// React Query / TanStack Query — cache + dedupe + staleTime\nfunction createQueryClient(){\n  const cache = new Map();\n  let fetches = 0;\n  async function fetchQuery(key, fn, { staleTime = 0 } = {}){\n    const entry = cache.get(key);\n    const fresh = entry && (Date.now() - entry.time) < staleTime;\n    if (fresh) return entry.data;            // serve from cache, no fetch\n    fetches++;\n    const data = await fn();\n    cache.set(key, { data, time: Date.now() });\n    return data;\n  }\n  return { fetchQuery, fetchCount: () => fetches };\n}\n(async () => {\n  const qc = createQueryClient();\n  const getUser = () => Promise.resolve({ name: \"Asha\" });\n  await qc.fetchQuery(\"user\", getUser, { staleTime: 5000 });  // network\n  await qc.fetchQuery(\"user\", getUser, { staleTime: 5000 });  // cached (fresh)\n  console.log(\"Fetches made:\", qc.fetchCount());\n  console.assert(qc.fetchCount() === 1, \"second call served from cache\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "Fetches made: 1\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_26-50.docx.md"
+  }
+}

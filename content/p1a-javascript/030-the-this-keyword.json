@@ -1,0 +1,64 @@
+{
+  "id": "p1a-030",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 30,
+  "orderInPhase": 30,
+  "slug": "the-this-keyword",
+  "title": "The `this` Keyword",
+  "difficulty": "beginner",
+  "tags": [
+    "p1a",
+    "keyword"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Passing `element.addEventListener('click', this.handleClick)` from a class often breaks because `this` inside `handleClick` becomes the element."
+  },
+  "sections": {
+    "simple_en": "`this` is a special keyword whose value depends on how a function is called, not where it's defined (except for arrow functions). There are four main binding rules in order of precedence: `new` binding, explicit binding (`call`/`apply`/`bind`), implicit binding (called as a method), and default binding (standalone call).\n\nDefault binding gives the global object in sloppy mode or `undefined` in strict mode. The classic bug is extracting a method into a variable and losing its `this`. Arrow functions sidestep all of this by inheriting `this` lexically.",
+    "hinglish": "`this` ek special keyword hai jiski value is baat par depend karti hai ki function kaise call hua, kahan define hua isse nahi (arrow functions ke alawa). Char main binding rules hain precedence ke order me: `new` binding, explicit binding (`call`/`apply`/`bind`), implicit binding (method ki tarah call), aur default binding (standalone call).\nDefault binding sloppy mode me global object deta hai ya strict mode me `undefined`. Classic bug: method ko variable me nikaalna aur uska `this` kho dena. Arrow functions ye sab bypass kar dete hain kyunki woh `this` lexically inherit karte hain.",
+    "keyPoints": [
+      "`this` is determined by the call site (dynamic), except in arrow functions (lexical).",
+      "Precedence: new > explicit (call/apply/bind) > implicit (method) > default (standalone).",
+      "Default binding: global object (sloppy) or `undefined` (strict).",
+      "Extracting a method loses its implicit `this` — a very common bug.",
+      "Arrow functions inherit `this` from the enclosing scope."
+    ],
+    "real_world": "Passing `element.addEventListener('click', this.handleClick)` from a class often breaks because `this` inside `handleClick` becomes the element. Fixing it with `bind` or an arrow class field (`handleClick = () => {}`) preserves the instance.",
+    "followups": [
+      {
+        "q": "What are the four `this` binding rules in precedence order?",
+        "a": "new binding, then explicit binding (call/apply/bind), then implicit binding (method call), then default binding (standalone call → global or undefined in strict mode)."
+      },
+      {
+        "q": "Why does a method lose `this` when assigned to a variable?",
+        "a": "Because `this` is set by the call site. Calling the extracted variable as a plain function uses default binding, not implicit binding, so it no longer points to the original object."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// The four binding rules.\n\nfunction whoAmI() { return this && this.tag ? this.tag : \"default\"; }\n\nconst objImplicit = { tag: \"implicit\", whoAmI };\n\nfunction Person(name) { this.name = name; } // 'new' binding\n\nmodule.exports = {\n  whoAmI,\n  objImplicit,\n  // explicit binding via call\n  explicit: () => whoAmI.call({ tag: \"explicit\" }),\n  // new binding\n  makePerson: (n) => new Person(n),\n  // losing this: extracted method falls back to default\n  extracted: () => { const f = objImplicit.whoAmI; return f(); },\n};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst m = require(\"./solution\");\n\nconsole.log(\"implicit:\", m.objImplicit.whoAmI()); // implicit\nconsole.log(\"explicit:\", m.explicit());           // explicit\nconsole.log(\"new:\", m.makePerson(\"Asha\").name);   // Asha\nconsole.log(\"extracted:\", m.extracted());         // default (lost this)\n\nconsole.assert(m.objImplicit.whoAmI() === \"implicit\", \"implicit binding\");\nconsole.assert(m.explicit() === \"explicit\", \"explicit binding via call\");\nconsole.assert(m.makePerson(\"Asha\").name === \"Asha\", \"new binding\");\nconsole.assert(m.extracted() === \"default\", \"extracted method loses this\");\nconsole.log(\"this keyword assertions passed.\");",
+      "expectedOutput": "implicit: implicit\nexplicit: explicit\nnew: Asha\nextracted: default\nthis keyword assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_26-50.docx.md"
+  }
+}

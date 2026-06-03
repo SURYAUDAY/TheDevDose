@@ -1,0 +1,65 @@
+{
+  "id": "p1a-006",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 6,
+  "orderInPhase": 6,
+  "slug": "execution-phase",
+  "title": "Execution Phase",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "execution",
+    "phase"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "kitchen",
+    "seedText": "If the creation phase is the chef doing mise en place (prepping and laying out ingredients), the execution phase is the actual cooking — combining ingredient…"
+  },
+  "sections": {
+    "simple_en": "The Execution phase is the second phase of an execution context. After memory has been allocated, the engine runs the code line by line, assigning real values to variables, evaluating expressions, and invoking functions.\n\nIt is during this phase that `var x = 10` actually sets `x` to `10`, that function expressions get assigned, and that nested function calls push new contexts onto the call stack. The creation phase prepares the stage; the execution phase performs the play.",
+    "hinglish": "Execution phase context ka dusra phase hai. Memory allocate hone ke baad, engine code ko line-by-line chalata hai — variables me actual values daalta hai, expressions evaluate karta hai, aur functions ko call karta hai.\nIsi phase me `var x = 10` actually `x` ko `10` set karta hai, function expressions assign hote hain, aur nested function calls naye contexts ko call stack par push karte hain. Creation phase stage taiyaar karta hai; execution phase me actual khel hota hai.",
+    "keyPoints": [
+      "Second phase — runs after the memory creation phase.",
+      "Executes statements top-to-bottom, assigning real values.",
+      "Function invocations here create and push new function execution contexts.",
+      "Explains why a `var` is `undefined` above its assignment but correct below it.",
+      "Asynchronous callbacks are NOT run here — they are scheduled and run later via the event loop."
+    ],
+    "real_world": "If the creation phase is the chef doing mise en place (prepping and laying out ingredients), the execution phase is the actual cooking — combining ingredients in order to produce the dish.",
+    "followups": [
+      {
+        "q": "When does `var x = 5` actually assign 5?",
+        "a": "During the execution phase, at the line where the assignment appears. The creation phase only allocated `x` and set it to `undefined`."
+      },
+      {
+        "q": "Are setTimeout callbacks run during the execution phase?",
+        "a": "No. They are registered during execution but run later, after the call stack empties, via the event loop and the macrotask queue."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Shows the difference between creation-phase value and execution-phase value.\n\nfunction phaseTimeline() {\n  const log = [];\n  log.push(\"before: \" + value); // undefined (creation phase set it)\n  var value = \"assigned now\";   // execution phase assignment\n  log.push(\"after: \" + value);  // \"assigned now\"\n  return log;\n}\n\n// Order of execution across nested calls (push/pop happens here).\nfunction outer() { return \"outer(\" + inner() + \")\"; }\nfunction inner() { return \"inner\"; }\n\nmodule.exports = { phaseTimeline, outer };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { phaseTimeline, outer } = require(\"./solution\");\n\nconsole.log(phaseTimeline());\nconsole.log(outer());\n\nconsole.assert(phaseTimeline()[0] === \"before: undefined\", \"creation-phase undefined\");\nconsole.assert(phaseTimeline()[1] === \"after: assigned now\", \"execution-phase value\");\nconsole.assert(outer() === \"outer(inner)\", \"nested execution order\");\nconsole.log(\"Execution phase assertions passed.\");",
+      "expectedOutput": "[ 'before: undefined', 'after: assigned now' ]\nouter(inner)\nExecution phase assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_1-25.docx.md"
+  }
+}

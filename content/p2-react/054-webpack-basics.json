@@ -1,0 +1,69 @@
+{
+  "id": "p2-054",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 54,
+  "orderInPhase": 54,
+  "slug": "webpack-basics",
+  "title": "Webpack basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p2",
+    "webpack",
+    "basics"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A large enterprise app uses Webpack with custom loaders for SVGs and a splitChunks config that isolates React and other vendors into a long-cached chunk — so…"
+  },
+  "sections": {
+    "simple_en": "Webpack is a module bundler: it starts from an entry file, builds a dependency graph by following imports, and outputs one or more bundles the browser can load. Loaders transform non-JS files (JSX via Babel, CSS, images) into modules, and plugins hook into the build for tasks like generating HTML or extracting CSS.\n\nKey concepts are entry, output, loaders, plugins, and optimization (splitChunks for vendor/code splitting). Webpack is highly configurable and powers many production setups, though newer tools like Vite are often faster for development.",
+    "hinglish": "Webpack ek module bundler hai: ek entry file se shuru hoke imports follow karke dependency graph banata hai, aur ek ya zyada bundles output karta hai jo browser load kar sake. Loaders non-JS files (JSX via Babel, CSS, images) ko modules mein badalte hain, aur plugins build mein hook karte hain.\n\nKey concepts hain entry, output, loaders, plugins, aur optimization (splitChunks). Webpack bahut configurable hai aur kai production setups chalata hai, halaanki dev ke liye Vite jaise naye tools aksar fast hote hain.",
+    "keyPoints": [
+      "Bundles modules: entry -> dependency graph -> output bundle(s).",
+      "Loaders transform files (babel-loader for JSX, css-loader, etc.).",
+      "Plugins extend the build (HtmlWebpackPlugin, MiniCssExtractPlugin).",
+      "optimization.splitChunks separates vendor code for better caching.",
+      "Powerful and configurable; newer tools (Vite/esbuild) win on dev speed."
+    ],
+    "real_world": "A large enterprise app uses Webpack with custom loaders for SVGs and a splitChunks config that isolates React and other vendors into a long-cached chunk — so app code changes don't force users to re-download the framework.",
+    "followups": [
+      {
+        "q": "What's the difference between a loader and a plugin?",
+        "a": "Loaders transform individual files into modules (e.g., compile JSX, parse CSS). Plugins act on the whole build process (e.g., generate the HTML file, optimize chunks)."
+      },
+      {
+        "q": "What does splitChunks do?",
+        "a": "It extracts shared/vendor code into separate chunks so they can be cached independently — users re-download only what actually changed."
+      },
+      {
+        "q": "Why might you choose Vite over Webpack?",
+        "a": "Faster dev startup and HMR with simpler config. Webpack may still win when you need its mature plugin ecosystem or very custom builds."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "A Webpack configuration file. The Node-runnable demo below illustrates how a dependency graph is ordered into a bundle.",
+      "source": "// Webpack basics: entry, output, loaders, and plugins.\n// webpack.config.js\nconst path = require(\"path\");\nconst HtmlWebpackPlugin = require(\"html-webpack-plugin\");\n\nmodule.exports = {\n  entry: \"./src/index.js\",                       // dependency graph starts here\n  output: { path: path.resolve(__dirname, \"dist\"), filename: \"[name].[contenthash].js\" },\n  module: {\n    rules: [\n      { test: /\\.jsx?$/, exclude: /node_modules/, use: \"babel-loader\" }, // transform JS/JSX\n      { test: /\\.css$/, use: [\"style-loader\", \"css-loader\"] },           // import CSS\n    ],\n  },\n  plugins: [new HtmlWebpackPlugin({ template: \"./src/index.html\" })],\n  optimization: { splitChunks: { chunks: \"all\" } }, // separate vendor chunk\n};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Webpack basics — build a dependency graph and bundle into one output\nconst modules = {\n  \"index.js\": { deps: [\"math.js\"], code: \"import {add} from './math'; add(2,3)\" },\n  \"math.js\":  { deps: [], code: \"export const add = (a,b) => a+b\" },\n};\nfunction bundle(entry){\n  const order = [], visited = new Set();\n  (function visit(id){\n    if (visited.has(id)) return; visited.add(id);\n    modules[id].deps.forEach(visit);   // dependencies first\n    order.push(id);\n  })(entry);\n  return order;\n}\nconst order = bundle(\"index.js\");\nconsole.log(\"Bundle order (deps first):\", order.join(\" -> \"));\nconsole.log(\"Single output file contains:\", order.length, \"modules\");\nconsole.assert(order[0] === \"math.js\", \"dependency bundled before dependent\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Bundle order (deps first): math.js -> index.js\nSingle output file contains: 2 modules\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_51-72.docx.md"
+  }
+}

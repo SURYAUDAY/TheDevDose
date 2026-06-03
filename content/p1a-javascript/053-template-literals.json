@@ -1,0 +1,65 @@
+{
+  "id": "p1a-053",
+  "phaseId": "p1a-javascript",
+  "phaseCode": "P1A",
+  "number": 53,
+  "orderInPhase": 53,
+  "slug": "template-literals",
+  "title": "Template Literals",
+  "difficulty": "intermediate",
+  "tags": [
+    "p1a",
+    "template",
+    "literals"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "Building an HTML snippet or an email body: `` `Hi ${user.name}, your order #${id} totals ₹${amount}.` `` reads naturally and is far less error-prone than sti…"
+  },
+  "sections": {
+    "simple_en": "Template literals are strings written with backticks (`` ` ``) that support interpolation and multi-line text. You embed expressions with `${expression}`, which are evaluated and inserted into the string — no more clunky `+` concatenation.\n\nThey also preserve line breaks literally, so multi-line strings need no `\\n`. Any valid JavaScript expression can go inside `${...}` — variables, function calls, ternaries, arithmetic — making string building far more readable.",
+    "hinglish": "Template literals backticks (`` ` ``) se likhe strings hain jo interpolation aur multi-line text support karte hain. Aap `${expression}` se expressions embed karte ho, jo evaluate ho kar string me insert ho jaate hain — koi clunky `+` concatenation nahi.\nYe line breaks literally preserve karte hain, isliye multi-line strings me `\\n` ki zarurat nahi. `${...}` ke andar koi bhi valid JavaScript expression aa sakta hai — variables, function calls, ternaries, arithmetic — jisse string banana kaafi readable ho jaata hai.",
+    "keyPoints": [
+      "Written with backticks; interpolate via `${expression}`.",
+      "Any JS expression is allowed inside `${...}`.",
+      "Multi-line strings work directly — no `\\n` needed.",
+      "Cleaner than `+` concatenation for building strings.",
+      "Foundation for tagged templates (next topic)."
+    ],
+    "real_world": "Building an HTML snippet or an email body: `` `Hi ${user.name}, your order #${id} totals ₹${amount}.` `` reads naturally and is far less error-prone than stitching pieces with `+`.",
+    "followups": [
+      {
+        "q": "What can you put inside `${...}`?",
+        "a": "Any valid JavaScript expression — variables, arithmetic, function calls, ternaries. The expression is evaluated and its result is coerced to a string and inserted."
+      },
+      {
+        "q": "How do template literals handle multi-line strings?",
+        "a": "Line breaks inside the backticks are preserved literally, so you can write multi-line strings without explicit `\\n` escape sequences."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Interpolation, expressions, and multi-line strings.\n\nfunction greeting(name, count) {\n  return `Hi ${name}, you have ${count} ${count === 1 ? \"message\" : \"messages\"}.`;\n}\n\nfunction invoiceLine(item, qty, price) {\n  return `${item} x${qty} = ${qty * price}`; // arithmetic inside ${}\n}\n\nfunction multiLine(title, body) {\n  return `Title: ${title}\nBody: ${body}`; // real line break preserved\n}\n\nmodule.exports = { greeting, invoiceLine, multiLine };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// --- run: node test.js ---\nconst { greeting, invoiceLine, multiLine } = require(\"./solution\");\n\nconsole.log(greeting(\"Asha\", 1));   // Hi Asha, you have 1 message.\nconsole.log(greeting(\"Ravi\", 3));   // Hi Ravi, you have 3 messages.\nconsole.log(invoiceLine(\"Pen\", 4, 5)); // Pen x4 = 20\nconsole.log(multiLine(\"Hello\", \"World\"));\n\nconsole.assert(greeting(\"Asha\", 1) === \"Hi Asha, you have 1 message.\", \"singular\");\nconsole.assert(greeting(\"Ravi\", 3) === \"Hi Ravi, you have 3 messages.\", \"plural\");\nconsole.assert(invoiceLine(\"Pen\", 4, 5) === \"Pen x4 = 20\", \"arithmetic in literal\");\nconsole.assert(multiLine(\"Hello\", \"World\").includes(\"\\n\"), \"multi-line preserved\");\nconsole.log(\"template literal assertions passed.\");",
+      "expectedOutput": "Hi Asha, you have 1 message.\nHi Ravi, you have 3 messages.\nPen x4 = 20\nTitle: Hello\nBody: World\ntemplate literal assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "JavaScript_Foundations_P1A_51-75.docx.md"
+  }
+}

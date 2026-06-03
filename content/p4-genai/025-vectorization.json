@@ -1,0 +1,68 @@
+{
+  "id": "p4-025",
+  "phaseId": "p4-genai",
+  "phaseCode": "P4",
+  "number": 25,
+  "orderInPhase": 25,
+  "slug": "vectorization",
+  "title": "Vectorization",
+  "difficulty": "intermediate",
+  "tags": [
+    "p4",
+    "vectorization"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "library",
+    "seedText": "Building a RAG system, a team vectorizes thousands of document chunks with an embedding model and stores the vectors in a vector database."
+  },
+  "sections": {
+    "simple_en": "Vectorization is the general process of converting data — here, text — into numeric vectors that algorithms can compute on. It's the bridge from human-readable content to the math of similarity, search, and machine learning, since models and vector databases operate on numbers, not raw text.\n\nClassic techniques like bag-of-words and TF-IDF produce sparse, count-based vectors that capture which terms appear. Modern neural embeddings produce dense vectors that capture meaning. In GenAI applications, 'vectorization' usually means generating embeddings for your text so it can be stored in a vector database and retrieved by semantic similarity.",
+    "hinglish": "Vectorization data — yahan text — ko numeric vectors mein convert karne ka general process hai jin par algorithms compute kar sakte hain. Ye human-readable content se similarity, search aur machine learning ke math tak ka bridge hai, kyunki models aur vector databases numbers par operate karte hain, raw text par nahi.\n\nClassic techniques jaise bag-of-words aur TF-IDF sparse, count-based vectors banate hain jo capture karte hain kaun se terms aate hain. Modern neural embeddings dense vectors banate hain jo meaning capture karte hain. GenAI applications mein, 'vectorization' aksar matlab aapke text ke liye embeddings generate karna taaki use ek vector database mein store karke semantic similarity se retrieve kiya ja sake.",
+    "keyPoints": [
+      "Converting text (or other data) into numeric vectors for computation.",
+      "The bridge from raw content to similarity/search/ML math.",
+      "Classic: bag-of-words, TF-IDF (sparse, term-count based).",
+      "Modern: neural embeddings (dense, meaning-capturing).",
+      "In GenAI it usually means generating embeddings for storage/retrieval."
+    ],
+    "real_world": "Building a RAG system, a team vectorizes thousands of document chunks with an embedding model and stores the vectors in a vector database. At query time the question is vectorized the same way, and the closest chunk vectors are retrieved — all enabled by the initial vectorization step.",
+    "followups": [
+      {
+        "q": "What's the difference between vectorization and embeddings?",
+        "a": "Vectorization is the general act of turning data into numeric vectors. Embeddings are a specific kind — dense, meaning-capturing vectors from a neural model. In GenAI, vectorization usually means generating embeddings."
+      },
+      {
+        "q": "TF-IDF vs neural embeddings?",
+        "a": "TF-IDF makes sparse vectors based on term frequency (surface words), good for keyword matching. Neural embeddings make dense vectors capturing semantic meaning, enabling matches even when wording differs."
+      },
+      {
+        "q": "Why vectorize text at all?",
+        "a": "Because models, similarity metrics, and vector databases work on numbers. Vectorization turns text into a form you can search, cluster, classify, and retrieve by similarity."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "python",
+      "runnable": true,
+      "note": "Real OpenAI embeddings + scikit-learn TF-IDF code. The Python-runnable demo below builds bag-of-words vectors so the text-to-vector step is verifiable here.",
+      "source": "# Vectorization — convert text to numeric vectors for similarity/search.\n# Modern approach: neural embeddings (preferred for semantic meaning).\nfrom openai import OpenAI\nclient = OpenAI()\n\ndef vectorize(texts: list[str]) -> list[list[float]]:\n    resp = client.embeddings.create(model=\"text-embedding-3-small\", input=texts)\n    return [d.embedding for d in resp.data]   # batch-vectorize many texts at once\n\n# Classic approach (no model): TF-IDF turns a corpus into sparse count-based vectors.\nfrom sklearn.feature_extraction.text import TfidfVectorizer\n\ncorpus = [\"the cat sat\", \"the dog ran\", \"the cat ran fast\"]\ntfidf = TfidfVectorizer()\nmatrix = tfidf.fit_transform(corpus)          # rows = documents, columns = terms\n# print(tfidf.get_feature_names_out()); print(matrix.toarray())\n\n# Vectorization is the bridge from text to math: once text is a vector you can\n# measure similarity, cluster, retrieve, or feed it to downstream ML models.\n# Neural embeddings capture meaning; TF-IDF/bag-of-words capture surface terms.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "python",
+      "runnable": true,
+      "note": null,
+      "source": "# Vectorization — converting text into a numeric vector the model/DB can compare\ndef build_vocab(docs):\n    vocab = {}\n    for d in docs:\n        for w in d.lower().split():\n            vocab.setdefault(w, len(vocab))\n    return vocab\n\ndef vectorize(text, vocab):\n    # Bag-of-words count vector (a simple, classic vectorization).\n    vec = [0] * len(vocab)\n    for w in text.lower().split():\n        if w in vocab: vec[vocab[w]] += 1\n    return vec\n\ndocs = [\"the cat sat\", \"the dog ran\", \"the cat ran fast\"]\nvocab = build_vocab(docs)\nprint(\"Vocabulary:\", vocab)\nfor d in docs:\n    print(f\"{d!r} -> {vectorize(d, vocab)}\")\nv = vectorize(\"the cat sat\", vocab)\nassert len(v) == len(vocab), \"vector length equals vocabulary size\"\nassert v[vocab[\"the\"]] == 1 and v[vocab[\"cat\"]] == 1\nprint(\"\\nVectorization converts raw text into numbers (here bag-of-words; modern apps use neural embeddings).\")\nprint(\"Once text is a vector, you can measure similarity, search, and feed it to ML models.\")\nprint(\"All assertions passed.\")",
+      "expectedOutput": "Vocabulary: {'the': 0, 'cat': 1, 'sat': 2, 'dog': 3, 'ran': 4, 'fast': 5}\n'the cat sat' -> [1, 1, 1, 0, 0, 0]\n'the dog ran' -> [1, 0, 0, 1, 1, 0]\n'the cat ran fast' -> [1, 1, 0, 0, 1, 1]\n\nVectorization converts raw text into numbers (here bag-of-words; modern apps use neural embeddings).\nOnce text is a vector, you can measure similarity, search, and feed it to ML models.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "GenAI_P4_1-25.docx.md"
+  }
+}

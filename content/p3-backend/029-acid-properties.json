@@ -1,0 +1,69 @@
+{
+  "id": "p3-029",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 29,
+  "orderInPhase": 29,
+  "slug": "acid-properties",
+  "title": "ACID properties",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "acid",
+    "properties"
+  ],
+  "estMinutes": 7,
+  "metaphor": {
+    "templateId": "network",
+    "seedText": "An online store decrements stock and creates an order in one transaction."
+  },
+  "sections": {
+    "simple_en": "ACID describes the guarantees a reliable transactional database provides. Atomicity: a transaction is all-or-nothing. Consistency: each transaction moves the database from one valid state to another, keeping constraints satisfied. Isolation: concurrent transactions don't interfere as if they ran one at a time. Durability: once committed, data survives crashes.\n\nThese properties are why relational databases are trusted for critical data like payments. Isolation in particular has levels (Read Committed, Repeatable Read, Serializable) that trade strictness against concurrency — stricter levels prevent anomalies but can reduce throughput.",
+    "hinglish": "ACID wo guarantees describe karta hai jo ek reliable transactional database deta hai. Atomicity: transaction all-or-nothing. Consistency: har transaction database ko ek valid state se doosre valid state mein le jaata hai, constraints maintain karte hue. Isolation: concurrent transactions ek doosre mein interfere nahi karte, jaise ek-ek karke chale ho. Durability: commit hone ke baad data crash mein bhi bacha rehta hai.\n\nInhi properties ki wajah se relational databases payments jaise critical data ke liye trusted hain. Isolation ke khaas levels hote hain (Read Committed, Repeatable Read, Serializable) jo strictness aur concurrency ke beech trade-off karte hain — strict levels anomalies rokte hain par throughput kam kar sakte hain.",
+    "keyPoints": [
+      "Atomicity: all statements commit together or none do.",
+      "Consistency: constraints/invariants hold before and after each transaction.",
+      "Isolation: concurrent transactions behave as if run serially (by level).",
+      "Durability: committed data persists through crashes (via WAL/disk).",
+      "Isolation levels trade anomaly prevention against concurrency/performance."
+    ],
+    "real_world": "An online store decrements stock and creates an order in one transaction. Atomicity ensures stock isn't reduced if the order fails; isolation prevents two shoppers from buying the last item simultaneously; durability means a committed order survives a server crash.",
+    "followups": [
+      {
+        "q": "What does Isolation prevent?",
+        "a": "Anomalies from concurrent transactions — dirty reads, non-repeatable reads, and phantom reads. Higher isolation levels prevent more of these at some cost to concurrency."
+      },
+      {
+        "q": "How is Durability achieved?",
+        "a": "Databases write changes to a write-ahead log (WAL) on disk before confirming a commit, so committed data can be recovered even after a crash or power loss."
+      },
+      {
+        "q": "Do NoSQL databases provide ACID?",
+        "a": "Varies. Many traditionally favored availability/scale with weaker (eventual) consistency, but several now support ACID transactions (e.g., MongoDB multi-document transactions). It depends on the database and configuration."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real transactional code (PostgreSQL, with isolation level). The Node-runnable demo below shows atomicity preserving a consistency invariant.",
+      "source": "// ACID properties — what a transactional database guarantees.\n// A: Atomicity   — all statements in a transaction succeed or none do.\n// C: Consistency — the DB moves from one valid state to another (constraints hold).\n// I: Isolation   — concurrent transactions don't corrupt each other.\n// D: Durability  — once committed, data survives crashes (written to disk/WAL).\n\nconst { Pool } = require(\"pg\");\nconst pool = new Pool();\n\nasync function placeOrder(userId, items) {\n  const client = await pool.connect();\n  try {\n    // Isolation level controls how concurrent transactions interact.\n    await client.query(\"BEGIN ISOLATION LEVEL SERIALIZABLE\");\n\n    await client.query(\"INSERT INTO orders(user_id) VALUES($1)\", [userId]);\n    for (const it of items) {\n      // Will fail (and roll back the whole order) if stock would go negative.\n      await client.query(\n        \"UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1\",\n        [it.qty, it.productId]\n      );\n    }\n    await client.query(\"COMMIT\"); // Atomic + Durable once it returns\n  } catch (e) {\n    await client.query(\"ROLLBACK\");\n    throw e;\n  } finally {\n    client.release();\n  }\n}\nmodule.exports = { placeOrder };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// ACID properties — atomicity (rollback) keeps invariants consistent\n// Invariant: total balance across accounts is always conserved.\nfunction run(){\n  let accounts = { A: 100, B: 100 };\n  const totalBefore = accounts.A + accounts.B;\n\n  function atomicTransfer(from, to, amount){\n    const backup = { ...accounts };\n    accounts[from] -= amount;\n    if (accounts[from] < 0){ accounts = backup; return false; } // atomic: undo on failure\n    accounts[to] += amount;\n    return true;\n  }\n  const ok = atomicTransfer(\"A\", \"B\", 40);\n  const bad = atomicTransfer(\"A\", \"B\", 500);   // would overdraw -> rolled back\n  const totalAfter = accounts.A + accounts.B;\n\n  console.log(\"Transfer 40:\", ok, \"| Transfer 500:\", bad);\n  console.log(\"Accounts:\", JSON.stringify(accounts));\n  console.log(\"Total conserved (Consistency):\", totalBefore === totalAfter);\n  console.assert(totalBefore === totalAfter, \"Atomicity preserved Consistency\");\n  console.assert(bad === false, \"failed transfer rolled back\");\n}\nrun();\nconsole.log(\"ACID = Atomicity, Consistency, Isolation, Durability.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Transfer 40: true | Transfer 500: false\nAccounts: {\"A\":60,\"B\":140}\nTotal conserved (Consistency): true\nACID = Atomicity, Consistency, Isolation, Durability.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_26-50.docx.md"
+  }
+}

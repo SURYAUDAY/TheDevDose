@@ -1,0 +1,64 @@
+{
+  "id": "p1b-001",
+  "phaseId": "p1b-typescript",
+  "phaseCode": "P1B",
+  "number": 1,
+  "orderInPhase": 1,
+  "slug": "what-is-typescript",
+  "title": "What is TypeScript",
+  "difficulty": "beginner",
+  "tags": [
+    "p1b",
+    "typescript"
+  ],
+  "estMinutes": 4,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A large React/Node codebase uses TypeScript so a function expecting a `number` flags any caller passing a `string` at compile time — preventing 'undefined is…"
+  },
+  "sections": {
+    "simple_en": "TypeScript is a strongly-typed superset of JavaScript developed by Microsoft. It adds an optional static type system on top of JavaScript: every valid JavaScript program is also valid TypeScript, but TypeScript lets you annotate types that are checked at compile time.\n\nCrucially, types exist only during development — TypeScript is compiled (\"transpiled\") down to plain JavaScript, and all type annotations are erased. The browser/Node runs the resulting JavaScript; the types were just there to catch mistakes before the code ever ran.",
+    "hinglish": "TypeScript JavaScript ka ek strongly-typed superset hai jo Microsoft ne banaya. Ye JavaScript ke upar ek optional static type system add karta hai: har valid JavaScript program valid TypeScript bhi hai, par TypeScript aapko types annotate karne deta hai jo compile time par check hote hain.\nImportant: types sirf development ke dauraan hote hain — TypeScript compile (\"transpile\") ho kar plain JavaScript banta hai, aur saari type annotations hat (erase) jaati hain. Browser/Node resulting JavaScript chalata hai; types sirf isliye the ki code chalne se pehle galtiyaan pakdi jaayein.",
+    "keyPoints": [
+      "A typed superset of JavaScript — all valid JS is valid TS.",
+      "Adds an optional static type system checked at compile time.",
+      "Compiles to plain JavaScript; type annotations are erased at runtime.",
+      "Created and maintained by Microsoft; hugely popular in modern codebases.",
+      "Types catch bugs before running, improving safety and tooling (autocomplete, refactoring)."
+    ],
+    "real_world": "A large React/Node codebase uses TypeScript so a function expecting a `number` flags any caller passing a `string` at compile time — preventing 'undefined is not a function' style runtime crashes in production.",
+    "followups": [
+      {
+        "q": "Do TypeScript types exist at runtime?",
+        "a": "No. Types are erased during compilation to JavaScript. They exist only at compile time for checking; the running code is plain JS with no type information."
+      },
+      {
+        "q": "Is every JavaScript file valid TypeScript?",
+        "a": "Essentially yes — TypeScript is a superset, so valid JS is valid TS. You can adopt TypeScript incrementally by renaming `.js` to `.ts` and adding types gradually."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// solution.ts — TypeScript adds compile-time type checking.\n\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n\n// At RUNTIME, types are gone (erased). This proves types are compile-time only:\nexport function runtimeHasNoTypes(): string {\n  return typeof add; // \"function\" — there is no \"number\" type info at runtime\n}\n\n// The following would be a COMPILE error (not runtime), so it's commented out:\n//   add(\"2\", 3); // Error: Argument of type 'string' is not assignable to 'number'",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "typescript",
+      "runnable": true,
+      "note": null,
+      "source": "// test.ts — run: npx tsx test.ts\nimport { add, runtimeHasNoTypes } from \"./solution\";\n\nconsole.log(add(2, 3));            // 5\nconsole.log(runtimeHasNoTypes());  // function\n\nconsole.assert(add(2, 3) === 5, \"typed add works at runtime\");\nconsole.assert(runtimeHasNoTypes() === \"function\", \"types are erased at runtime\");\nconsole.log(\"What-is-TypeScript assertions passed.\");",
+      "expectedOutput": "5\nfunction\nWhat-is-TypeScript assertions passed.",
+      "requiresSolutionModule": true
+    }
+  ],
+  "source": {
+    "file": "TypeScript_P1B_1-25.docx.md"
+  }
+}

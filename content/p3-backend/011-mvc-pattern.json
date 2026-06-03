@@ -1,0 +1,69 @@
+{
+  "id": "p3-011",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 11,
+  "orderInPhase": 11,
+  "slug": "mvc-pattern",
+  "title": "MVC pattern",
+  "difficulty": "intermediate",
+  "tags": [
+    "p3",
+    "mvc",
+    "pattern"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A products feature splits into productModel (DB access), productController (handles requests, calls the model), and productRoutes (maps URLs to controller me…"
+  },
+  "sections": {
+    "simple_en": "MVC (Model-View-Controller) is a way to organize backend code by responsibility. The Model handles data and business rules (often via the database/ORM), the Controller receives requests, coordinates the model, and decides the response, and the View formats the output — in an API, the 'view' is usually the JSON serialization.\n\nSeparating these layers keeps code maintainable and testable: routes stay thin, business logic lives in models/services, and controllers glue them together. It's the conventional structure for Express apps and many frameworks (Rails, Laravel, NestJS).",
+    "hinglish": "MVC (Model-View-Controller) backend code ko responsibility ke hisaab se organize karne ka tarika hai. Model data aur business rules handle karta hai (aksar DB/ORM se), Controller requests le kar model ko coordinate karta hai aur response decide karta hai, aur View output format karta hai — API mein 'view' aksar JSON serialization hota hai.\n\nIn layers ko alag rakhna code ko maintainable aur testable banata hai: routes patle rehte hain, business logic models/services mein, aur controllers unhe jodte hain. Ye Express apps aur kai frameworks (Rails, Laravel, NestJS) ka conventional structure hai.",
+    "keyPoints": [
+      "Model: data + business rules (DB/ORM). Controller: request handling + coordination. View: output formatting (JSON in APIs).",
+      "Keeps routes thin and business logic out of handlers.",
+      "Improves maintainability, testability, and separation of concerns.",
+      "Often extended with a Service layer between controller and model.",
+      "Conventional structure across many web frameworks."
+    ],
+    "real_world": "A products feature splits into productModel (DB access), productController (handles requests, calls the model), and productRoutes (maps URLs to controller methods). A teammate fixing a pricing rule edits only the model, confident the controller and routes are unaffected.",
+    "followups": [
+      {
+        "q": "What is the 'View' in a JSON API?",
+        "a": "The response representation — typically the JSON serialization of the data. There's no HTML template, so 'view' just means how the output is shaped for the client."
+      },
+      {
+        "q": "Where does business logic belong in MVC?",
+        "a": "In the model (or a dedicated service layer), not in controllers. Controllers should coordinate and shape responses, keeping logic reusable and testable."
+      },
+      {
+        "q": "Why add a service layer to MVC?",
+        "a": "To hold complex business logic and orchestrate multiple models, keeping controllers thin and models focused on data — useful as apps grow."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real Node MVC code (Express). The Node-runnable demo below verifies the model → controller → view flow.",
+      "source": "// MVC pattern — separate Model (data), Controller (logic), routes (View = JSON).\n// models/productModel.js\nconst products = [{ id: 1, title: \"Node Book\", price: 30 }];\nconst ProductModel = {\n  findAll: () => products,\n  findById: (id) => products.find((p) => p.id === id),\n  create: (data) => { const p = { id: products.length + 1, ...data }; products.push(p); return p; },\n};\n\n// controllers/productController.js\nconst ProductController = {\n  index: (req, res) => res.json(ProductModel.findAll()),\n  show: (req, res) => {\n    const p = ProductModel.findById(Number(req.params.id));\n    p ? res.json(p) : res.status(404).json({ error: \"Not Found\" });\n  },\n  create: (req, res) => res.status(201).json(ProductModel.create(req.body)),\n};\n\n// routes/productRoutes.js\nconst router = require(\"express\").Router();\nrouter.get(\"/products\", ProductController.index);\nrouter.get(\"/products/:id\", ProductController.show);\nrouter.post(\"/products\", ProductController.create);\nmodule.exports = router;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// MVC pattern — Model (data) / Controller (logic) / View (formatting)\nconst Model = {\n  data: [{ id: 1, title: \"Node\", price: 0 }],\n  all(){ return this.data; },\n  find(id){ return this.data.find(p => p.id === id); },\n};\nconst View = {\n  list(items){ return items.map(i => `#${i.id} ${i.title}`).join(\"\\n\"); },\n  detail(item){ return item ? `${item.title} ($${item.price})` : \"Not found\"; },\n};\nconst Controller = {\n  index(){ return View.list(Model.all()); },             // controller coordinates\n  show(id){ return View.detail(Model.find(id)); },\n};\nconsole.log(\"INDEX:\\n\" + Controller.index());\nconsole.log(\"SHOW 1:\", Controller.show(1));\nconsole.log(\"SHOW 9:\", Controller.show(9));\nconsole.assert(Controller.show(1).includes(\"Node\"), \"controller -> model -> view\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "INDEX:\n#1 Node\nSHOW 1: Node ($0)\nSHOW 9: Not found\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_1-25.docx.md"
+  }
+}

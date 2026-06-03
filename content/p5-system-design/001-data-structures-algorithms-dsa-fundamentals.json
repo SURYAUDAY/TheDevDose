@@ -1,0 +1,72 @@
+{
+  "id": "p5-001",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 1,
+  "orderInPhase": 1,
+  "slug": "data-structures-algorithms-dsa-fundamentals",
+  "title": "Data Structures & Algorithms (DSA) fundamentals",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "data",
+    "structures",
+    "algorithms",
+    "dsa",
+    "fundamentals"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "stack",
+    "seedText": "A browser's back button is a stack (last page visited pops first); a print spooler is a queue (jobs print in order); a contacts app uses a hashmap for instan…"
+  },
+  "sections": {
+    "simple_en": "DSA fundamentals are about knowing the core data structures — arrays, hashmaps/objects, sets, stacks, queues, linked lists, trees, graphs — and the cost of their common operations. Choosing the structure whose fast operations match your access pattern is what makes a solution efficient.\n\nInterviewers test this constantly because the right structure often turns a slow brute force into an elegant solution. The skill is: given a problem, pick the structure (array for ordered/indexed data, map for keyed lookup, set for uniqueness, stack/queue for ordering) and state the Big-O of each operation you rely on.",
+    "hinglish": "DSA fundamentals ka matlab hai core data structures ko jaanna — arrays, hashmaps/objects, sets, stacks, queues, linked lists, trees, graphs — aur unke common operations ka cost. Wo structure choose karna jiske fast operations aapke access pattern se match karein, yahi solution ko efficient banata hai.\n\nInterviewers ise lagataar test karte hain kyunki sahi structure aksar ek slow brute force ko ek elegant solution mein badal deta hai. Skill ye hai: ek problem do, structure pick karo (ordered/indexed data ke liye array, keyed lookup ke liye map, uniqueness ke liye set, ordering ke liye stack/queue) aur har operation ka Big-O batao jis par aap depend karte ho.",
+    "keyPoints": [
+      "Array: O(1) index access; O(n) search and middle insert/delete.",
+      "Map/Object and Set: O(1) average lookup/insert; Set enforces uniqueness.",
+      "Stack is LIFO (push/pop); Queue is FIFO (enqueue/dequeue).",
+      "Linked list: O(1) insert/delete given a node, O(n) search.",
+      "Match the structure's fast operations to the problem's access pattern."
+    ],
+    "real_world": "A browser's back button is a stack (last page visited pops first); a print spooler is a queue (jobs print in order); a contacts app uses a hashmap for instant lookup by name. Picking the structure that fits the access pattern is the everyday version of this interview skill.",
+    "followups": [
+      {
+        "q": "How do you choose a data structure for a problem?",
+        "a": "Identify the operations you do most (lookup, ordering, uniqueness, range queries) and pick the structure whose fast operations match — e.g., a map for frequent keyed lookups, a set for membership, a queue for FIFO processing."
+      },
+      {
+        "q": "Why are hashmaps so common in interview solutions?",
+        "a": "They give O(1) average lookup/insert, which often collapses an O(n²) nested-loop brute force into a single O(n) pass — as in counting, deduping, and 'have I seen this before' problems."
+      },
+      {
+        "q": "Array vs linked list?",
+        "a": "Arrays give O(1) index access but O(n) middle insert/delete; linked lists give O(1) insert/delete at a known node but O(n) search and no random access. Choose by whether you need indexing or frequent structural edits."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Real, runnable JavaScript showing each core structure and its operation costs. The Node demo below exercises array/map/set/stack/queue so the behavior is verifiable.",
+      "source": "// DSA fundamentals — the core data structures and their typical operation costs.\n\n// Array: contiguous, index access O(1); search O(n); insert/delete in middle O(n).\nconst arr = [10, 20, 30];\narr.push(40);            // O(1) amortized at the end\nconst first = arr[0];    // O(1) by index\n\n// Map / Object: key -> value, average O(1) get/set/has.\nconst map = new Map();\nmap.set(\"user:1\", { name: \"Asha\" });\nmap.get(\"user:1\");       // O(1) average\n\n// Set: unique values, O(1) add/has — great for membership & dedupe.\nconst seen = new Set([1, 2, 2, 3]);   // -> {1,2,3}\n\n// Stack (LIFO) and Queue (FIFO) on top of arrays.\nconst stack = []; stack.push(1); stack.pop();         // last in, first out\nconst queue = []; queue.push(1); queue.shift();       // first in, first out\n\n// Linked list node (O(1) insert/delete given a node; O(n) search).\nclass ListNode { constructor(val) { this.val = val; this.next = null; } }\n\n// Interview skill: given a problem, choose the structure whose fast operations match\n// the access pattern, and state the Big-O of each operation you rely on.",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// DSA fundamentals — pick the right data structure; each has different operation costs\n// Array: indexed, ordered. Object/Map: keyed lookup. Set: unique membership. Stack/Queue: ordering.\nconst arr = [10, 20, 30];\nconsole.log(\"Array index access arr[1]:\", arr[1]);          // O(1)\n\nconst map = new Map([[\"a\", 1], [\"b\", 2]]);\nconsole.log(\"Map lookup get('b'):\", map.get(\"b\"));          // O(1) average\n\nconst set = new Set([1, 2, 2, 3]);\nconsole.log(\"Set dedupes [1,2,2,3] ->\", [...set]);          // unique members\n\nconst stack = []; stack.push(1); stack.push(2);\nconsole.log(\"Stack pop (LIFO):\", stack.pop());              // last in, first out\n\nconst queue = [1, 2]; const front = queue.shift();\nconsole.log(\"Queue dequeue (FIFO):\", front);                // first in, first out\n\nconsole.assert(arr[1] === 20, \"array index\");\nconsole.assert(map.get(\"b\") === 2, \"map lookup\");\nconsole.assert([...set].length === 3, \"set dedupe\");\nconsole.assert(stack.pop() === 1, \"stack LIFO\");\nconsole.assert(front === 1, \"queue FIFO\");\nconsole.log(\"Choosing the right structure (array/map/set/stack/queue) sets your operation costs.\");\nconsole.log(\"Interviews test this: know each structure's strengths and Big-O for common operations.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Array index access arr[1]: 20\nMap lookup get('b'): 2\nSet dedupes [1,2,2,3] -> [ 1, 2, 3 ]\nStack pop (LIFO): 2\nQueue dequeue (FIFO): 1\nChoosing the right structure (array/map/set/stack/queue) sets your operation costs.\nInterviews test this: know each structure's strengths and Big-O for common operations.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

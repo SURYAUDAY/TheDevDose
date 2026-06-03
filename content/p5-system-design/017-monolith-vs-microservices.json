@@ -1,0 +1,69 @@
+{
+  "id": "p5-017",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 17,
+  "orderInPhase": 17,
+  "slug": "monolith-vs-microservices",
+  "title": "Monolith vs Microservices",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "monolith",
+    "microservices"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A startup ships a monolith to move fast with a small team."
+  },
+  "sections": {
+    "simple_en": "A monolith is one deployable unit containing the whole application: simple to build, run locally, and deploy, with no network hops between parts — but it scales as a single unit, becomes a large shared codebase, and makes deploys riskier as it grows. Microservices split the app into many small, independently deployable services.\n\nMicroservices let you scale and deploy each service independently, use different tech per service, and isolate failures — at the cost of distributed-system complexity: network latency, harder debugging, and more operational overhead. The pragmatic advice is usually to start with a well-structured monolith and extract services only when scale or team size demands it.",
+    "hinglish": "Ek monolith ek deployable unit hai jismein poora application hai: build, locally run, aur deploy karna simple, parts ke beech koi network hops nahi — par ye ek single unit ke roop mein scale karta hai, ek bada shared codebase ban jaata hai, aur badhne par deploys ko riskier banata hai. Microservices app ko kai chhote, independently deployable services mein split karte hain.\n\nMicroservices aapko har service ko independently scale aur deploy karne, per service alag tech use karne, aur failures isolate karne dete hain — distributed-system complexity ke cost par: network latency, harder debugging, aur zyada operational overhead. Pragmatic advice aksar hai ek well-structured monolith se shuru karo aur services tabhi extract karo jab scale ya team size demand kare.",
+    "keyPoints": [
+      "Monolith: one deployable; simple to build/deploy; scales as a unit.",
+      "Microservices: many services; independent scaling/deploys; failure isolation.",
+      "Microservices cost: distributed complexity, latency, harder ops/debugging.",
+      "Monolith cons: one big codebase, scales together, riskier deploys at scale.",
+      "Pragmatic path: start monolith, extract services when scale/teams demand."
+    ],
+    "real_world": "A startup ships a monolith to move fast with a small team. Years later, the payments path needs to scale and deploy independently of everything else, so they extract a payments microservice — splitting only where the pain is, not rewriting the whole system into services up front.",
+    "followups": [
+      {
+        "q": "When does a monolith make sense?",
+        "a": "For small teams, early products, and modest scale — it's simpler to build, test, deploy, and debug, with no network overhead between components. A well-structured monolith can take you a long way."
+      },
+      {
+        "q": "What are the main costs of microservices?",
+        "a": "Distributed-system complexity: network latency and failures, data consistency across services, harder debugging and testing, and heavier operational/DevOps overhead. The independence they grant isn't free."
+      },
+      {
+        "q": "Why 'start monolith, split later'?",
+        "a": "You rarely know the right service boundaries up front, and premature microservices add huge complexity. Building a modular monolith first lets boundaries emerge, then you extract services where scale or team autonomy genuinely requires it."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript comparing the two architectures and a recommender based on team size and scale. The Node demo below verifies the recommendations.",
+      "source": "// Monolith vs Microservices — one deployable vs many independent services.\n\n// MONOLITH: all modules in one codebase/process; one deploy. Simple to build and run.\n//   app/\n//     users/  orders/  payments/   (modules, but one deployable)\n//   server.js  // starts the whole app\n// Pros: easy local dev, no network hops, simple transactions, straightforward deploys.\n// Cons: scales as one unit, large codebase over time, a bug/deploy affects everything.\n\n// MICROSERVICES: each capability is its own service, deployable and scalable independently.\n//   user-service     (own DB, own deploy)   <-- REST/gRPC/queue -->\n//   order-service    (own DB, own deploy)\n//   payment-service  (own DB, own deploy)\n// Pros: independent scaling/deploys, tech choice per service, fault isolation.\n// Cons: distributed-systems complexity — network failures, data consistency, tracing, ops.\n\n// Pragmatic guidance: start with a well-modularized monolith; extract services only when\n// scaling needs, team size, or independent deploy cadence justify the added complexity.\nexport {};",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Monolith vs Microservices — one deployable unit vs many independent services\nconst monolith = { deployables: 1, scaling: \"whole app together\", coupling: \"high\",\n                   pros: [\"simple to build/deploy\", \"easy local dev\", \"no network calls\"],\n                   cons: [\"scales as one\", \"one big codebase\", \"risky deploys at scale\"] };\nconst microservices = { deployables: \"many\", scaling: \"per service\", coupling: \"low\",\n                   pros: [\"scale independently\", \"tech per service\", \"isolated failures/deploys\"],\n                   cons: [\"distributed complexity\", \"network latency\", \"harder ops/debugging\"] };\nfunction recommend(teamSize, scaleNeeds) {\n  if (teamSize < 10 && scaleNeeds === \"modest\") return \"monolith\";\n  if (scaleNeeds === \"high\" && teamSize >= 20) return \"microservices\";\n  return \"start monolith, split later\";   // common pragmatic advice\n}\nconsole.log(\"Monolith: 1 deployable;\", monolith.pros[0]);\nconsole.log(\"Microservices: many deployables;\", microservices.pros[0]);\nconsole.log(\"Small team, modest scale ->\", recommend(5, \"modest\"));\nconsole.log(\"Large team, high scale ->\", recommend(30, \"high\"));\nconsole.assert(recommend(5, \"modest\") === \"monolith\");\nconsole.assert(recommend(30, \"high\") === \"microservices\");\nconsole.log(\"Monolith: simpler, one deploy, scales as a unit. Microservices: independent scaling/deploys, but distributed complexity.\");\nconsole.log(\"Pragmatic path: start with a (well-structured) monolith, extract services when scale/teams demand it.\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Monolith: 1 deployable; simple to build/deploy\nMicroservices: many deployables; scale independently\nSmall team, modest scale -> monolith\nLarge team, high scale -> microservices\nMonolith: simpler, one deploy, scales as a unit. Microservices: independent scaling/deploys, but distributed complexity.\nPragmatic path: start with a (well-structured) monolith, extract services when scale/teams demand it.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_1-25.docx.md"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "p5-031",
+  "phaseId": "p5-system-design",
+  "phaseCode": "P5",
+  "number": 31,
+  "orderInPhase": 31,
+  "slug": "design-a-news-feed",
+  "title": "Design a news feed",
+  "difficulty": "intermediate",
+  "tags": [
+    "p5",
+    "design",
+    "news",
+    "feed"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "When you open a social app, it pulls recent posts from everyone you follow and ranks them by a score that favors high engagement and freshness."
+  },
+  "sections": {
+    "simple_en": "A news feed gathers posts from the accounts a user follows and presents them in a useful order. The simplest approach is pull (build on read): when the user opens the app, fetch recent posts from followed accounts and rank them — often by a score combining engagement (likes/comments) with recency, so popular-and-fresh posts rise to the top.\n\nPull is simple but can be slow for users following many accounts. The alternative is push (fan-out on write): precompute each user's feed when posts are created, so reads are fast. Large systems use a hybrid — push for most users, pull for accounts with millions of followers (celebrities) to avoid massive fan-out — plus pagination and caching.",
+    "hinglish": "Ek news feed un accounts se posts gather karta hai jinhe ek user follow karta hai aur unhe ek useful order mein present karta hai. Simplest approach pull hai (build on read): jab user app kholta hai, followed accounts se recent posts fetch karke unhe rank karo — aksar ek score se jo engagement (likes/comments) ko recency ke saath combine kare, taaki popular-and-fresh posts top par aayein.\n\nPull simple hai par un users ke liye slow ho sakta hai jo bahut accounts follow karte hain. Alternative push hai (fan-out on write): har user ka feed precompute karo jab posts create hon, taaki reads fast hon. Bade systems ek hybrid use karte hain — zyaadatar users ke liye push, millions followers waale accounts (celebrities) ke liye pull taaki massive fan-out se bacha ja sake — plus pagination aur caching.",
+    "keyPoints": [
+      "Gather posts from followed accounts, then rank them.",
+      "Rank by a score combining engagement with recency (age decay).",
+      "Pull (build on read): simple, but slow for users following many.",
+      "Push (fan-out on write): precompute feeds for fast reads.",
+      "Hybrid for celebrities; add pagination and caching at scale."
+    ],
+    "real_world": "When you open a social app, it pulls recent posts from everyone you follow and ranks them by a score that favors high engagement and freshness. For accounts with tens of millions of followers, the system pulls their posts on read instead of fanning out to every follower's precomputed feed.",
+    "followups": [
+      {
+        "q": "Pull vs push (fan-out on write) for feeds?",
+        "a": "Pull builds the feed when the user reads — simple but can be slow for heavy-following users. Push precomputes each follower's feed when a post is created — fast reads but expensive writes. Large systems combine both."
+      },
+      {
+        "q": "Why use a hybrid approach for celebrities?",
+        "a": "Fanning out a celebrity's post to tens of millions of follower feeds (push) is hugely expensive. So their posts are pulled on read and merged into feeds, while normal accounts use push — balancing write and read costs."
+      },
+      {
+        "q": "How are feed posts ranked?",
+        "a": "By a relevance score, commonly blending engagement signals (likes, comments) with recency (decaying older posts), plus personalization. Pure reverse-chronological is simplest; ranked feeds aim to surface the most relevant content."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "Runnable JavaScript building a feed from followed accounts and ranking by an engagement-decayed-by-age score. The Node demo below verifies only followed authors appear and ranking works.",
+      "source": "// Design a news feed — generation strategies and ranking.\n\n// Two strategies:\n//   - Pull (fan-out on read): build the feed when the user opens the app by querying recent\n//     posts from followed accounts, then ranking. Simple; heavy reads for users following many.\n//   - Push (fan-out on write): when someone posts, write it into followers' precomputed feeds.\n//     Fast reads; expensive for users with millions of followers (celebrity problem).\n//   - Hybrid: push for normal users, pull for celebrities, merged at read time.\n\n// Ranking: order by a score combining recency and engagement, not just time.\nfunction score(post, now) {\n  const ageHours = (now - post.ts) / 3600;\n  return post.likes / Math.pow(ageHours + 2, 1.5);   // engagement decayed by age\n}\n\n// Also: pagination (cursor-based), deduplication, and caching hot feeds. The runnable demo\n// builds a pull-based feed and ranks it with this decay formula.\nmodule.exports = { score };",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// Design a news feed — assemble and rank posts from accounts a user follows\nfunction buildFeed(user, follows, posts, now) {\n  // Pull: gather posts from followed accounts, then rank by recency + engagement.\n  const relevant = posts.filter((p) => follows.includes(p.author));\n  return relevant\n    .map((p) => {\n      const ageHours = (now - p.ts) / 3600;\n      const score = p.likes / Math.pow(ageHours + 2, 1.5);   // engagement decayed by age\n      return { ...p, score: +score.toFixed(3) };\n    })\n    .sort((a, b) => b.score - a.score);   // highest score first\n}\nconst posts = [\n  { id: 1, author: \"tech\", text: \"New JS release\", likes: 100, ts: 0 },\n  { id: 2, author: \"food\", text: \"Best pasta\",     likes: 500, ts: 0 },   // not followed\n  { id: 3, author: \"tech\", text: \"Fresh hot take\",  likes: 20,  ts: 7200 }, // newer, fewer likes\n];\nconst feed = buildFeed(\"me\", [\"tech\"], posts, 10800);  // now = 3h\nconsole.log(\"Ranked feed:\", feed.map((p) => `#${p.id}(score ${p.score})`));\nconsole.assert(feed.every((p) => p.author === \"tech\"), \"only followed authors appear\");\nconsole.assert(feed.length === 2, \"the unfollowed 'food' post is excluded\");\nconsole.log(\"News feed: gather posts from followed accounts, rank by a score (engagement decayed by age), paginate.\");\nconsole.log(\"Pull (build on read) is simple; push/fan-out-on-write precomputes feeds for fast reads at scale (hybrid for celebrities).\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "Ranked feed: [ '#1(score 8.944)', '#3(score 3.849)' ]\nNews feed: gather posts from followed accounts, rank by a score (engagement decayed by age), paginate.\nPull (build on read) is simple; push/fan-out-on-write precomputes feeds for fast reads at scale (hybrid for celebrities).\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "SystemDesign_P5_26-51.docx.md"
+  }
+}

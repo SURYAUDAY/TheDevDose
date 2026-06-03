@@ -1,0 +1,68 @@
+{
+  "id": "p2-006",
+  "phaseId": "p2-react",
+  "phaseCode": "P2",
+  "number": 6,
+  "orderInPhase": 6,
+  "slug": "usereducer",
+  "title": "useReducer",
+  "difficulty": "intermediate",
+  "tags": [
+    "p2",
+    "usereducer"
+  ],
+  "estMinutes": 5,
+  "metaphor": {
+    "templateId": "generic",
+    "seedText": "A shopping cart with add, remove, change-quantity, and clear operations is a perfect fit: a single cartReducer handles every transition, and components just…"
+  },
+  "sections": {
+    "simple_en": "useReducer manages state with a reducer function: (state, action) => newState. Instead of calling setState directly, you dispatch action objects, and a single pure reducer decides how state transitions. This centralizes complex update logic in one predictable place.\n\nIt shines when the next state depends on the previous one, when state has multiple sub-values that change together, or when update logic is complex enough that scattered setState calls become hard to follow. It's also easier to test because the reducer is a pure function.",
+    "hinglish": "useReducer state ko ek reducer function se manage karta hai: (state, action) => newState. Aap setState seedha call karne ke bajaye action dispatch karte ho, aur ek pure reducer decide karta hai state kaise badlegi.\n\nYe tab kaam aata hai jab next state purani state par depend karti ho, ya state ke kai parts saath mein change hote ho. Test karna bhi easy hota hai kyunki reducer pure function hota hai.",
+    "keyPoints": [
+      "Signature: const [state, dispatch] = useReducer(reducer, initialState).",
+      "Reducer is a pure function (state, action) => newState — no side effects, no mutation.",
+      "Prefer it over useState when updates are complex or when next state depends on previous.",
+      "Actions are plain objects, conventionally { type, payload }, describing 'what happened'.",
+      "Easier to test and reason about; it's the same mental model as Redux."
+    ],
+    "real_world": "A shopping cart with add, remove, change-quantity, and clear operations is a perfect fit: a single cartReducer handles every transition, and components just dispatch { type: 'ADD_ITEM', payload } without knowing the internal update details.",
+    "followups": [
+      {
+        "q": "When choose useReducer over useState?",
+        "a": "When state is complex (multiple related fields), transitions are non-trivial, or the next state depends on the previous one. It centralizes logic and improves testability."
+      },
+      {
+        "q": "Can the reducer mutate state directly?",
+        "a": "No. It must return a new state object. Mutating the existing state breaks React's change detection and can cause stale UI."
+      },
+      {
+        "q": "How does useReducer relate to Redux?",
+        "a": "Same core idea (reducer + dispatch + actions), but useReducer is local to a component, while Redux provides a global store, middleware, and devtools."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "jsx",
+      "runnable": false,
+      "note": "This is real React component code (runs in the browser / a React app). A Node-runnable logic demo that verifies the same idea follows below.",
+      "source": "// useReducer: centralize counter logic in a pure reducer.\nimport React, { useReducer } from \"react\";\n\nfunction reducer(state, action) {\n  switch (action.type) {\n    case \"increment\": return { count: state.count + 1 };\n    case \"decrement\": return { count: state.count - 1 };\n    case \"reset\":     return { count: 0 };\n    default:          throw new Error(\"Unknown action: \" + action.type);\n  }\n}\n\nexport default function Counter() {\n  const [state, dispatch] = useReducer(reducer, { count: 0 });\n  return (\n    <div>\n      <h2>Count: {state.count}</h2>\n      <button onClick={() => dispatch({ type: \"increment\" })}>+</button>\n      <button onClick={() => dispatch({ type: \"decrement\" })}>-</button>\n      <button onClick={() => dispatch({ type: \"reset\" })}>Reset</button>\n    </div>\n  );\n}",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// useReducer — pure reducer + dispatch\nfunction reducer(state, action) {\n  switch (action.type) {\n    case \"increment\": return { count: state.count + 1 };\n    case \"decrement\": return { count: state.count - 1 };\n    case \"reset\":     return { count: 0 };\n    default: throw new Error(\"Unknown action: \" + action.type);\n  }\n}\nlet state = { count: 0 };\nconst dispatch = (action) => { state = reducer(state, action); };\n\ndispatch({ type: \"increment\" });\ndispatch({ type: \"increment\" });\ndispatch({ type: \"decrement\" });\nconsole.log(\"After +1 +1 -1 =>\", state.count);\ndispatch({ type: \"reset\" });\nconsole.log(\"After reset =>\", state.count);\nconsole.assert(state.count === 0, \"reset should zero it\");\nconsole.log(\"All assertions passed.\");",
+      "expectedOutput": "After +1 +1 -1 => 1\nAfter reset => 0\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "React_P2_1-25.docx.md"
+  }
+}

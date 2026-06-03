@@ -1,0 +1,70 @@
+{
+  "id": "p3-082",
+  "phaseId": "p3-backend",
+  "phaseCode": "P3",
+  "number": 82,
+  "orderInPhase": 82,
+  "slug": "ci-cd-basics",
+  "title": "CI/CD basics",
+  "difficulty": "advanced",
+  "tags": [
+    "p3",
+    "ci",
+    "cd",
+    "basics"
+  ],
+  "estMinutes": 6,
+  "metaphor": {
+    "templateId": "tree",
+    "seedText": "Every push opens a pull request that triggers CI: it installs deps, lints, and runs the test suite."
+  },
+  "sections": {
+    "simple_en": "CI/CD automates the path from code commit to production. Continuous Integration (CI) means every change is automatically built and tested, so problems are caught early and main stays releasable. Continuous Delivery/Deployment (CD) means passing builds are automatically released to staging or production.\n\nA pipeline runs stages — install, lint, test, build, deploy — and fails fast on the first failure, blocking broken code from advancing. The benefits are faster feedback, fewer integration headaches, consistent repeatable builds, and safer, more frequent releases. Tools include GitHub Actions, GitLab CI, Jenkins, and CircleCI.",
+    "hinglish": "CI/CD code commit se production tak ka path automate karta hai. Continuous Integration (CI) matlab har change automatically build aur test hota hai, taaki problems jaldi pakdi jaayein aur main releasable rahe. Continuous Delivery/Deployment (CD) matlab passing builds automatically staging ya production par release hote hain.\n\nPipeline stages chalata hai — install, lint, test, build, deploy — aur pehle failure par fail fast hota hai, broken code ko aage badhne se rokta hai. Faayde: faster feedback, kam integration headaches, consistent repeatable builds, aur safer, zyada frequent releases. Tools: GitHub Actions, GitLab CI, Jenkins, CircleCI.",
+    "keyPoints": [
+      "CI: every change is automatically built and tested — catch issues early.",
+      "CD: passing builds are automatically delivered/deployed.",
+      "Pipeline stages (install/lint/test/build/deploy) fail fast on first failure.",
+      "Keeps main releasable; gives fast, consistent feedback.",
+      "Tools: GitHub Actions, GitLab CI, Jenkins, CircleCI."
+    ],
+    "real_world": "Every push opens a pull request that triggers CI: it installs deps, lints, and runs the test suite. A broken test turns the check red and blocks merging — so bugs are caught in minutes, before code ever reaches the shared main branch or production.",
+    "followups": [
+      {
+        "q": "What's the difference between CI and CD?",
+        "a": "CI automatically builds and tests every change to integrate code safely. CD extends that by automatically delivering (delivery) or deploying (deployment) builds that pass, all the way to staging/production."
+      },
+      {
+        "q": "What does 'fail fast' mean in a pipeline?",
+        "a": "Stages run in order and the pipeline stops at the first failure, so broken code never advances to later stages like deploy — giving quick, clear feedback on what broke."
+      },
+      {
+        "q": "Why is CI/CD valuable?",
+        "a": "It catches bugs early, keeps the main branch releasable, makes builds consistent and repeatable, and enables safer, more frequent releases with less manual effort and risk."
+      }
+    ]
+  },
+  "snippets": [
+    {
+      "role": "example",
+      "language": "javascript",
+      "runnable": true,
+      "note": "A real GitHub Actions CI workflow (configuration, not Node code). The Node-runnable demo below simulates a fail-fast pipeline so the behavior is verifiable here.",
+      "source": "// CI/CD basics — automate integrate -> test -> deliver on every change.\n// CI (Continuous Integration): every push is built and tested automatically.\n// CD (Continuous Delivery/Deployment): passing builds are released/deployed.\n\n// Minimal GitHub Actions CI workflow (.github/workflows/ci.yml):\nconst ci = `\nname: CI\non: [push, pull_request]\njobs:\n  build-test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with: { node-version: 20 }\n      - run: npm ci\n      - run: npm run lint\n      - run: npm test\n      - run: npm run build\n`;\n// Benefits: catch bugs early, keep main always releasable, consistent builds,\n// fast feedback. A failing stage blocks the merge/deploy (fail fast).\nmodule.exports = ci;",
+      "expectedOutput": null,
+      "requiresSolutionModule": false
+    },
+    {
+      "role": "test",
+      "language": "javascript",
+      "runnable": true,
+      "note": null,
+      "source": "// CI/CD basics — automate build/test/deploy; fail fast on the first failing stage\nasync function runPipeline(stages){\n  const log = [];\n  for (const stage of stages){\n    const ok = await stage.run();\n    log.push(`${stage.name}: ${ok ? \"passed\" : \"FAILED\"}`);\n    if (!ok) return { success: false, log, failedAt: stage.name };   // stop on failure\n  }\n  return { success: true, log };\n}\n(async () => {\n  const goodPipeline = [\n    { name: \"install\", run: async () => true },\n    { name: \"lint\", run: async () => true },\n    { name: \"test\", run: async () => true },\n    { name: \"build\", run: async () => true },\n    { name: \"deploy\", run: async () => true },\n  ];\n  const result = await runPipeline(goodPipeline);\n  result.log.forEach(l => console.log(l));\n  console.log(\"Pipeline success:\", result.success);\n  // A failing test blocks deploy:\n  const failing = [...goodPipeline]; failing[2] = { name: \"test\", run: async () => false };\n  const blocked = await runPipeline(failing);\n  console.log(\"\\nWith failing tests -> deployed?\", blocked.success, \"| stopped at:\", blocked.failedAt);\n  console.assert(result.success && !blocked.success, \"bad build never reaches deploy\");\n  console.log(\"CI = integrate+test every change; CD = automatically deliver/deploy passing builds.\");\n  console.log(\"All assertions passed.\");\n})();",
+      "expectedOutput": "install: passed\nlint: passed\ntest: passed\nbuild: passed\ndeploy: passed\nPipeline success: true\n\nWith failing tests -> deployed? false | stopped at: test\nCI = integrate+test every change; CD = automatically deliver/deploy passing builds.\nAll assertions passed.",
+      "requiresSolutionModule": false
+    }
+  ],
+  "source": {
+    "file": "Backend_P3_76-95.docx.md"
+  }
+}
