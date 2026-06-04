@@ -46,6 +46,7 @@ model User {
   events         Event[]
   reviews        Review[]
   savedCode      SavedCode[]
+  notes          TopicNote[]
 }
 
 // --- NextAuth standard tables (used when OAuth is added later) ---
@@ -182,6 +183,20 @@ model Event {
   @@index([name])
   @@index([userId])
   @@index([ts])
+}
+
+// A learner's personal sticky note for a topic (one per user+topic). Anonymous
+// users fall back to localStorage.
+model TopicNote {
+  id        String   @id @default(cuid())
+  userId    String
+  topicId   String
+  body      String
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId])
 }
 
 // A learner's edited playground code, saved per (user, topic, file) so it syncs

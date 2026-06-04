@@ -20,6 +20,7 @@ import { resolveConceptKey } from "@/components/concept/concepts";
 import { generateMcqs } from "@/lib/quiz";
 import { TopicQuiz } from "@/components/quiz/TopicQuiz";
 import { TopicViewTracker } from "@/components/analytics/Trackers";
+import { TopicNotes } from "@/components/TopicNotes";
 
 export function generateStaticParams() {
   const params: { phase: string; topic: string }[] = [];
@@ -96,6 +97,10 @@ export default async function TopicPage({
           seedText={t.metaphor.seedText}
           topicId={t.id}
         />
+      </div>
+
+      <div className="mt-4">
+        <TopicNotes topicId={t.id} />
       </div>
 
       <div className="mt-6 space-y-6">
