@@ -29,6 +29,7 @@ model User {
   email         String   @unique
   name          String?
   image         String?
+  passwordHash  String?
   hinglishPref  Boolean  @default(false)
   isAdmin       Boolean  @default(false)
   xp            Int      @default(0)

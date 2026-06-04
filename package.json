@@ -16,6 +16,7 @@
     "lint": "next lint",
     "db:generate": "prisma generate",
     "db:verify": "tsx scripts/verify-backend.ts",
+    "db:seed-account": "tsx scripts/seed-account.ts",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "postinstall": "prisma generate"

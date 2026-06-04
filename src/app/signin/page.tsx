@@ -9,6 +9,7 @@ function SignInForm() {
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") || "/learn";
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -17,10 +18,10 @@ function SignInForm() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const res = await signIn("dev", { email, name, redirect: false });
+    const res = await signIn("dev", { email, password, name, redirect: false });
     setBusy(false);
     if (res?.error) {
-      setError("Enter a valid email address.");
+      setError("Invalid email or password.");
       return;
     }
     router.push(callbackUrl);
@@ -31,8 +32,8 @@ function SignInForm() {
     <div className="mx-auto max-w-sm px-4 py-20">
       <h1 className="text-2xl font-bold text-white">Sign in</h1>
       <p className="mt-1 text-sm text-slate-400">
-        Dev sign-in — just an email to start tracking your progress. (OAuth coming
-        soon.)
+        Use your account password, or just an email to start a new passwordless
+        learner profile. (OAuth coming soon.)
       </p>
       <form onSubmit={submit} className="mt-6 space-y-4">
         <div>
@@ -43,6 +44,16 @@ function SignInForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-brand-400"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-slate-400">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Leave blank for a passwordless learner profile"
             className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-slate-100 outline-none focus:border-brand-400"
           />
         </div>

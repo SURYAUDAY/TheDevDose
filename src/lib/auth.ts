@@ -1,11 +1,14 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "./db";
+import { verifyPassword } from "./password";
 
 /**
- * Auth.js (NextAuth v5). MVP uses a dev email login (no external provider) with
- * JWT sessions; GitHub/Google can be added to `providers` later without schema
- * changes (the Account/Session tables already exist).
+ * Auth.js (NextAuth v5), JWT sessions. The Credentials provider supports two
+ * modes on one form:
+ *   - password accounts (e.g. the seeded admin): email + password, verified.
+ *   - passwordless dev accounts: email only — created/found on the fly.
+ * GitHub/Google can be added later without schema changes.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
@@ -13,14 +16,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       id: "dev",
-      name: "Dev login",
+      name: "Login",
       credentials: {
         email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
         name: { label: "Name", type: "text" },
       },
       authorize: async (creds) => {
         const email = String(creds?.email ?? "").trim().toLowerCase();
         if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return null;
+        const password = String(creds?.password ?? "");
+
+        const existing = await prisma.user.findUnique({ where: { email } });
+
+        // Password-protected account (e.g. the admin): require a valid password.
+        if (existing?.passwordHash) {
+          if (!verifyPassword(password, existing.passwordHash)) return null;
+          return { id: existing.id, email: existing.email, name: existing.name, image: existing.image };
+        }
+
+        // Passwordless dev account: create/find on the fly.
         const name = String(creds?.name ?? "").trim() || email.split("@")[0];
         const user = await prisma.user.upsert({
           where: { email },
